@@ -1,0 +1,469 @@
+/**
+ * Kanban Board Styles - Glasmorphism Design System
+ * Reference: GLASMORPHISM_DESIGN_COMPLETE.md
+ * 
+ * Design System Colors:
+ * - Column 1 (Blue): #3b82f6 / #1e40af
+ */
+
+/* ==================== ENFORCE SOLID TEXT IN KANBAN ==================== */
+/* ALL kanban card text must be fully opaque */
+.kanban-board p, .kanban-board span,
+.kanban-column p, .kanban-column span,
+.kanban-card p, .kanban-card span,
+.kanban-card-title, .kanban-card-text,
+.issue-card h3, .issue-card h4, .issue-card p,
+.issue-key, .issue-title, .issue-description {
+  opacity: 1 !important;
+}
+
+/*
+ * Kanban Board Design System:
+ * - Column 2 (Purple): #d946ef / #c026d3
+ * - Column 3 (Cyan): #06b6d4 / #0891b2
+ * - Background: Transparent for AI backgrounds
+ * 
+ * Glassmorphism Effects:
+ * - Cards: Semi-transparent with high opacity for readability
+ * - Columns: Fully transparent to show AI backgrounds
+ * - Blur: Disabled to preserve background clarity
+ */
+
+/* ==================== KANBAN BOARD CONTAINER ==================== */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  min-height: 100%;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 1;
+}
+
+/* Auto-responsive: Add columns as space allows */
+/* Examples:
+   - 420px viewport: 1 column (420px - 60px padding)
+   - 900px viewport: 2 columns (each ~450px)
+   - 1350px viewport: 3 columns (each ~450px)
+   - 1800px viewport: 4 columns (each ~450px)
+   - 2250px viewport: 5 columns (each ~450px)
+   - Scales infinitely based on minmax(420px, 1fr)
+*/
+
+/* ==================== KANBAN COLUMNS ==================== */
+/* Base column styling - transparent for AI background visibility */
+.kanban-column {
+  /* TRANSPARENT - let AI backgrounds show through */
+  background: transparent;
+  /* Blur disabled to show AI backgrounds clearly */
+  /* backdrop-filter: blur(20px); */
+  /* -webkit-backdrop-filter: blur(20px); */
+  
+  /* Structure & layout */
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  margin: 0;
+  min-height: 100%;
+  max-height: 100%;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  flex: 1;
+  
+  /* Border & shadow (base blue) */
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-sm);
+  
+  /* Animation */
+  transition: all var(--transition-slow) var(--transition-cubic);
+  
+  /* Improved scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.4) transparent;
+}
+
+/* Colored top border bar */
+.kanban-column::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+  border-radius: 0;
+  z-index: 2;
+}
+
+/* ==================== COLUMN COLOR VARIANTS ==================== */
+
+/* Base color styling - using class-based system for unlimited columns */
+
+/* Column 1: Blue */
+.kanban-column.col-blue {
+  border-color: rgba(59, 130, 246, 0.1);
+  box-shadow: var(--shadow-sm);
+}
+
+.kanban-column.col-blue::before {
+  background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.kanban-column.col-blue:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.kanban-column.col-blue .issue-card {
+  border-left-color: #3b82f6;
+}
+
+/* Column 2: Purple/Pink */
+.kanban-column.col-purple {
+  border-color: rgba(217, 70, 239, 0.1);
+  box-shadow: 0 4px 12px rgba(217, 70, 239, 0.08);
+}
+
+.kanban-column.col-purple::before {
+  background: linear-gradient(90deg, #d946ef 0%, #c026d3 100%);
+}
+
+.kanban-column.col-purple:hover {
+  box-shadow: 0 8px 20px rgba(217, 70, 239, 0.15);
+}
+
+.kanban-column.col-purple .issue-card {
+  border-left-color: #d946ef;
+}
+
+/* Column 3: Cyan */
+.kanban-column.col-cyan {
+  border-color: rgba(6, 182, 212, 0.1);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.08);
+}
+
+.kanban-column.col-cyan::before {
+  background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.kanban-column.col-cyan:hover {
+  box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
+}
+
+.kanban-column.col-cyan .issue-card {
+  border-left-color: #06b6d4;
+}
+
+/* Column 4: Green */
+.kanban-column.col-green {
+  border-color: rgba(34, 197, 94, 0.1);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08);
+}
+
+.kanban-column.col-green::before {
+  background: linear-gradient(90deg, #22c55e 0%, #15803d 100%);
+}
+
+.kanban-column.col-green:hover {
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.15);
+}
+
+.kanban-column.col-green .issue-card {
+  border-left-color: #22c55e;
+}
+
+/* Column 5: Red */
+.kanban-column.col-red {
+  border-color: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.08);
+}
+
+.kanban-column.col-red::before {
+  background: linear-gradient(90deg, #ef4444 0%, #b91c1c 100%);
+}
+
+.kanban-column.col-red:hover {
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+}
+
+.kanban-column.col-red .issue-card {
+  border-left-color: #ef4444;
+}
+
+/* Column 6: Yellow */
+.kanban-column.col-yellow {
+  border-color: rgba(234, 179, 8, 0.1);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.08);
+}
+
+.kanban-column.col-yellow::before {
+  background: linear-gradient(90deg, #eab308 0%, #ca8a04 100%);
+}
+
+.kanban-column.col-yellow:hover {
+  box-shadow: 0 8px 20px rgba(234, 179, 8, 0.15);
+}
+
+.kanban-column.col-yellow .issue-card {
+  border-left-color: #eab308;
+}
+
+/* Column 7: Pink */
+.kanban-column.col-pink {
+  border-color: rgba(244, 114, 182, 0.1);
+  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.08);
+}
+
+.kanban-column.col-pink::before {
+  background: linear-gradient(90deg, #f472b6 0%, #ec4899 100%);
+}
+
+.kanban-column.col-pink:hover {
+  box-shadow: 0 8px 20px rgba(244, 114, 182, 0.15);
+}
+
+.kanban-column.col-pink .issue-card {
+  border-left-color: #f472b6;
+}
+
+/* Column 8: Indigo */
+.kanban-column.col-indigo {
+  border-color: rgba(99, 102, 241, 0.1);
+  box-shadow: var(--shadow-sm);
+}
+
+.kanban-column.col-indigo::before {
+  background: linear-gradient(90deg, #6366f1 0%, #4338ca 100%);
+}
+
+.kanban-column.col-indigo:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.kanban-column.col-indigo .issue-card {
+  border-left-color: #6366f1;
+}
+
+/* Column 9: Teal */
+.kanban-column.col-teal {
+  border-color: rgba(20, 184, 166, 0.1);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.08);
+}
+
+.kanban-column.col-teal::before {
+  background: linear-gradient(90deg, #14b8a6 0%, #0d9488 100%);
+}
+
+.kanban-column.col-teal:hover {
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.15);
+}
+
+.kanban-column.col-teal .issue-card {
+  border-left-color: #14b8a6;
+}
+
+/* Column 10: Orange */
+.kanban-column.col-orange {
+  border-color: rgba(249, 115, 22, 0.1);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.08);
+}
+
+.kanban-column.col-orange::before {
+  background: linear-gradient(90deg, #f97316 0%, #c2410c 100%);
+}
+
+.kanban-column.col-orange:hover {
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.15);
+}
+
+.kanban-column.col-orange .issue-card {
+  border-left-color: #f97316;
+}
+
+/* Generic hover state for all columns */
+.kanban-column:hover {
+  /* Blur controlled by transparency-manager.css */
+  /* backdrop-filter: blur(30px); */
+  /* -webkit-backdrop-filter: blur(30px); */
+  transform: translateY(-2px);
+}
+
+/* ==================== COLUMN HEADER ==================== */
+.kanban-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  margin-top: 12px; /* Space below color bar */
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* Title with gradient text */
+.kanban-column-title {
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #334155;
+}
+
+/* Count badge - glasmorphism style */
+.kanban-column-count {
+  background: transparent !important;
+  padding: 6px 12px;
+  border-radius: var(--border-radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  /* Blur controlled by transparency-manager.css */
+  /* backdrop-filter: blur(8px); */
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+}
+
+/* ==================== CARDS CONTAINER ==================== */
+.kanban-cards {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling */
+.kanban-cards::-webkit-scrollbar {
+  width: 8px;
+}
+
+.kanban-cards::-webkit-scrollbar-track {
+  background: transparent !important;
+  border-radius: var(--border-radius-full);
+}
+
+.kanban-cards::-webkit-scrollbar-thumb {
+  background: transparent !important;
+  border-radius: var(--border-radius-full);
+}
+
+.kanban-cards::-webkit-scrollbar-thumb:hover {
+  background: transparent !important;
+}
+
+/* ==================== ISSUE CARDS ==================== */
+.issue-card {
+  background: transparent !important;
+  /* Blur controlled by transparency-manager.css */
+  /* backdrop-filter: blur(15px); */
+  /* -webkit-backdrop-filter: blur(15px); */
+  padding: var(--spacing-md);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  /* Left border accent */
+  border-left: 3px solid #3b82f6;
+  
+  animation: slideInCard 0.3s ease-out;
+}
+
+.issue-card:hover {
+  /* Blur controlled by transparency-manager.css */
+  /* backdrop-filter: blur(20px); */
+  /* -webkit-backdrop-filter: blur(20px); */
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Card styling is now handled by color-based column classes above */
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes slideInCard {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+/* ==================== RESPONSIVE ==================== */
+
+/* Tablets and below: optimize padding and spacing */
+@media (max-width: 768px) {
+  .kanban-board {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    overflow-x: auto;
+  }
+  
+  .kanban-column {
+    min-height: 400px;
+    max-height: 70vh;
+    min-width: 0;
+    padding: var(--spacing-sm);
+  }
+  
+  .kanban-column-title {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  
+  .kanban-column-count {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+  
+  .kanban-column-header {
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+  }
+  
+  .issue-card {
+    padding: var(--spacing-sm);
+    border-left-width: 2px;
+  }
+  
+  .kanban-cards {
+    padding-right: var(--spacing-xs);
+  }
+}
+
+/* Medium and larger: plenty of space, columns auto-scale */
+@media (min-width: 769px) {
+  .kanban-board {
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  
+  .kanban-column {
+    min-height: 600px;
+    max-height: 80vh;
+    min-width: 0;
+  }
+}
+
+/* ==================== EMPTY STATE ==================== */
+.empty-state {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}

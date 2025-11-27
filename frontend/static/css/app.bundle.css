@@ -1,0 +1,119 @@
+/**
+ * SPEEDYFLOW - CSS Bundle Orchestrator
+ * =====================================
+ * Central entry point for all CSS imports
+ * Loads in strategic order: Foundation → Themes → Components → Layout → Utilities
+ * 
+ * Total: ~15 consolidated CSS files
+ * Max file size: 1100 lines (no file exceeds 2000 lines)
+ * Total lines: ~8,000 lines (consolidated from 12,000+)
+ * 
+ * Import Strategy:
+ * 1. Foundation files load first (design tokens, variables, base layout)
+ * 2. Theme files establish color palettes and effects
+ * 3. Component files define UI elements
+ * 4. Layout files handle page structure
+ * 5. Utility files add interactive features
+ * 6. Fallback file handles legacy support
+ */
+
+/* ============================================================
+   PHASE 1: FOUNDATION (Design tokens, variables, base layout)
+   ============================================================ */
+@import url('core/design-system.css');    /* Design tokens: colors, spacing, radius, typography */
+@import url('core/variables.css');        /* CSS custom properties for dynamic theming */
+@import url('core/layout.css');           /* Base layout: grid, flexbox, positioning */
+
+/* ============================================================
+   PHASE 2: THEME SYSTEM (Color palettes, effects, modes)
+   ============================================================ */
+@import url('themes-consolidated/theme-light.css');            /* Light theme palette */
+@import url('themes-consolidated/theme-dark.css');             /* Dark theme palette */
+@import url('utilities/transparency-exemptions.css');         /* Transparency exempt elements */
+@import url('themes-consolidated/background-manager.css');     /* Background selector styles */
+
+/* ============================================================
+   PHASE 3: COMPONENTS (UI elements - strategic consolidation)
+   ============================================================ */
+/* Common Base Styles (buttons, forms, cards, modals) */
+@import url('components/common.css');
+
+/* Cards, Modals & Containers (~500 lines) */
+@import url('components/cards-modals.css');
+
+/* Badges, SLA Indicators & Alerts (~350 lines) */
+@import url('components/badges-utilities.css');
+
+/* Specialized Components */
+@import url('components/header-enhanced.css'); /* Modern header with glassmorphic design */
+@import url('components/filter-bar-enhanced.css'); /* Modern filter bar with glassmorphic design */
+@import url('components/kanban.css');        /* Kanban board styling */
+@import url('components/cards-responsive.css');      /* Responsive card styling */
+@import url('components/comments.css');      /* Comments & mentions system */
+@import url('components/notifications.css'); /* Notification display */
+@import url('components/sidebar-actions.css');  /* Sidebar actions, toasts & notifications panel */
+
+/* ============================================================
+   PHASE 4: LAYOUT (Page structure - sidebars, header)
+   ============================================================ */
+@import url('components/sidebar-components.css');  /* Left & right sidebars (1100 lines consolidated) */
+@import url('components/header.css');              /* Old header - kept for compatibility */
+
+/* ============================================================
+   PHASE 5: UTILITIES (Interactive features & enhancements)
+   ============================================================ */
+@import url('utilities/state-indicators.css');        /* Status badges, state display */
+@import url('utilities/loading-dots.css');            /* Loading animations */
+@import url('utilities/sla-monitor.css');             /* SLA monitoring display */
+@import url('utilities/mentions-system.css');         /* @mentions & highlights */
+@import url('utilities/fonts.css');                   /* Font definitions & weights */
+
+/* ============================================================
+   PHASE 6: FALLBACK (Legacy support)
+   ============================================================ */
+@import url('main.css');  /* Fallback styles for unsupported features */
+
+/* ============================================================
+   PHASE 7: GLASSMORPHIC OVERRIDES (Must load LAST)
+   ============================================================ */
+@import url('themes-consolidated/transparency-manager.css');   /* Glassmorphism effects - FINAL WORD */
+
+/* ============================================================
+   END OF CSS BUNDLE
+   
+   Load Performance:
+   - All @imports are consolidated into single main bundle
+   - Reduces HTTP requests
+   - Files organized for easy maintenance
+   - Largest file: sidebar-components.css (1100 lines)
+   - Follows CSS Cascade best practices
+   
+   Maintenance Notes:
+   - Add new component files to appropriate PHASE section
+   - Keep files <2000 lines for readability
+   - Update import order if dependencies change
+   - Archive deprecated files to /archive folder
+   ============================================================ */
+
+/* ============================================================
+   FINAL OVERRIDES: Force transparency for AI backgrounds AND header consistency
+   ============================================================ */
+body {
+  background: transparent !important;
+}
+
+body.theme-dark,
+body.theme-light {
+  background: transparent !important;
+}
+
+body.theme-dark .main-wrapper,
+body.theme-light .main-wrapper,
+body.theme-dark .app-container,
+body.theme-light .app-container,
+body.theme-dark .board-wrapper,
+body.theme-light .board-wrapper {
+  background: transparent !important;
+}
+
+/* Header styles managed by transparency-manager.css - no overrides needed */

@@ -1,0 +1,405 @@
+/**
+ * SPEEDYFLOW - Light Theme
+ * Modern light theme with purple and blue accents
+ * Applied via: body.theme-light
+ * 
+ * Single source of truth for light theme colors and styles
+ */
+
+/* ==================== ENFORCE SOLID TEXT COLORS ==================== */
+/* ALL text elements must be fully opaque regardless of parent opacity */
+body.theme-light p,
+body.theme-light span,
+body.theme-light div,
+body.theme-light label,
+body.theme-light h1,
+body.theme-light h2,
+body.theme-light h3,
+body.theme-light h4,
+body.theme-light h5,
+body.theme-light h6,
+body.theme-light a,
+body.theme-light button,
+body.theme-light input,
+body.theme-light textarea,
+body.theme-light select,
+body.theme-light li,
+body.theme-light td,
+body.theme-light th,
+body.theme-light strong,
+body.theme-light em,
+body.theme-light code,
+body.theme-light pre,
+body.theme-light small,
+body.theme-light mark,
+body.theme-light .sidebar *,
+body.theme-light .action-label,
+body.theme-light .btn-theme-bubble,
+body.theme-light .btn-user-menu-sidebar,
+body.theme-light .form-group label,
+body.theme-light .form-group select,
+body.theme-light .form-group input {
+  opacity: 1 !important;
+  color: inherit !important;
+}
+
+body.theme-light {
+  /* ==================== LIGHT THEME - SOLO OVERRIDES DE COLOR ==================== */
+  /* Todas las variables centralizadas en variables.css */
+  /* Este archivo solo debe contener color overrides en selectores específicos */
+  
+  background: transparent; /* Allow app-background-container to show through */
+  color: #312e81; /* Light theme text color */
+}
+
+/* ==================== LIGHT THEME COMPONENT STYLES ==================== */
+
+body.theme-light .sidebar {
+  background: linear-gradient(180deg, rgba(243, 240, 255, 0.95), rgba(237, 233, 254, 0.9));
+  border-right: 1px solid var(--border-emphasis);
+}
+
+/* Header background and styles managed centrally by variables.css and transparency-manager.css */
+
+body.theme-light .kanban-board {
+  background: transparent !important;
+}
+
+body.theme-light .kanban-column {
+  background: rgba(255, 255, 255, 0.85) !important;
+  /* Blur disabled to show AI backgrounds clearly */
+  /* backdrop-filter: none !important; */
+  /* -webkit-backdrop-filter: none !important; */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+body.theme-light .issue-card {
+  background: white;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+}
+
+body.theme-light .issue-card:hover {
+  box-shadow: var(--shadow-md);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+body.theme-light .btn-primary {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+}
+
+body.theme-light .btn-primary:hover {
+  background: var(--accent-primary-dark);
+}
+
+body.theme-light input,
+body.theme-light textarea,
+body.theme-light select {
+  background: white;
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+body.theme-light input:focus,
+body.theme-light textarea:focus,
+body.theme-light select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+body.theme-light .modal,
+body.theme-light .dropdown,
+body.theme-light .tooltip {
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-emphasis);
+}
+
+body.theme-light .right-sidebar {
+  background: linear-gradient(180deg, rgba(245, 245, 245, 0.7), rgba(240, 240, 240, 0.5));
+  border-left: 1px solid var(--border-emphasis);
+  color: var(--text-primary);
+}
+
+/* Right sidebar components - light theme */
+body.theme-light .right-sidebar .column-header {
+  background: rgba(224, 242, 254, var(--opacity-medium)) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, var(--opacity-light)) !important;
+  color: #1f2937 !important;
+}
+
+body.theme-light .right-sidebar .column-header h3 {
+  color: #0369a1 !important;
+}
+
+body.theme-light .right-sidebar .column-content {
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: #1f2937 !important;
+}
+
+body.theme-light .right-sidebar .sidebar-column {
+  background: rgba(255, 255, 255, var(--opacity-strong)) !important;
+  border: 1px solid rgba(59, 130, 246, var(--opacity-subtle)) !important;
+}
+
+body.theme-light .right-sidebar .detail-label {
+  color: #0369a1 !important;
+}
+
+body.theme-light .right-sidebar .comment-count {
+  color: #6b7280 !important;
+}
+
+body.theme-light .right-sidebar .no-comments,
+body.theme-light .right-sidebar .no-transitions,
+body.theme-light .right-sidebar .no-activity {
+  color: #9ca3af !important;
+}
+
+body.theme-light .right-sidebar .comment-input {
+  background: rgba(255, 255, 255, 1) !important;
+  color: #1f2937 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+body.theme-light .right-sidebar .btn-add-comment {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.8)) !important;
+  color: white !important;
+  border: none !important;
+}
+
+body.theme-light .right-sidebar .btn-add-comment:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(6, 182, 212, 1)) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Right sidebar comments - light theme */
+body.theme-light .right-sidebar .comment {
+  background: rgba(224, 242, 254, 0.3) !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+body.theme-light .right-sidebar .comment:hover {
+  background: rgba(207, 250, 254, 0.5) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+body.theme-light .right-sidebar .comment-author {
+  color: #0369a1 !important;
+}
+
+body.theme-light .right-sidebar .comment-time {
+  color: #6b7280 !important;
+}
+
+body.theme-light .right-sidebar .comment-text {
+  color: #1f2937 !important;
+}
+
+body.theme-light .right-sidebar .detail-description {
+  background: rgba(224, 242, 254, 0.3) !important;
+  border-left-color: rgba(59, 130, 246, 0.5) !important;
+  color: #1f2937 !important;
+}
+
+body.theme-light .right-sidebar .btn-transition {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #0369a1 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+body.theme-light .right-sidebar .btn-transition:hover {
+  background: rgba(59, 130, 246, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15) !important;
+}
+
+body.theme-light .right-sidebar .panel-header {
+  background: rgba(224, 242, 254, 0.5) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2) !important;
+  color: #1f2937 !important;
+}
+
+body.theme-light .right-sidebar .panel-title {
+  color: #0369a1 !important;
+}
+
+/* ==================== THEME VISIBILITY ==================== */
+
+/* ==================== LIGHT THEME COMPONENT OVERRIDES ==================== */
+
+/* Page and body */
+body.theme-light {
+  background: transparent !important; /* Allow app-background-container to show through */
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure main content containers are transparent to show AI backgrounds */
+body.theme-light .app-container,
+body.theme-light .main-content,
+body.theme-light .board-wrapper {
+  background: transparent !important;
+}
+
+/* Sidebar light theme - blur controlled by transparency-manager.css */
+/* Sidebar styling managed by transparency-manager.css */
+body.theme-light .sidebar {
+  /* Background managed by transparency-manager.css */
+  border-right: 1px solid rgba(59, 130, 246, var(--opacity-subtle)) !important;
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.6), 2px 0 8px rgba(59, 130, 246, var(--opacity-subtle)) !important;
+}
+
+body.theme-light .sidebar h1,
+body.theme-light .sidebar-title {
+  color: #1f2937 !important;
+  text-shadow: 0 1px 2px rgba(7, 4, 4, 0.589) !important;
+}
+
+body.theme-light .sidebar-header {
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+
+body.theme-light .sidebar-header h2 {
+  color: #1f2937 !important;
+  text-shadow: none !important;
+}
+
+body.theme-light .sidebar .form-group label {
+  color: #101a27 !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+
+body.theme-light .sidebar .form-group select,
+body.theme-light .sidebar .form-group input {
+  background: rgba(255, 255, 255, 1) !important;
+  color: #1f2937 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 0 1px rgba(255, 255, 255, 0.3) inset, 0 2px 4px rgba(59, 130, 246, 0.05) !important;
+  opacity: 1 !important;
+}
+
+body.theme-light .sidebar .form-group select:focus,
+body.theme-light .sidebar .form-group input:focus {
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: rgba(37, 99, 235, 0.5) !important;
+  box-shadow: 0 0 1px rgba(255, 255, 255, 0.5) inset, 0 0 0 3px rgba(59, 130, 246, 0.1), 0 2px 8px rgba(59, 130, 246, 0.1) !important;
+}
+
+body.theme-light .sidebar button,
+body.theme-light .sidebar .btn {
+  background: linear-gradient(135deg, rgba(240, 244, 255, 0.98) 0%, rgba(224, 242, 254, 0.95) 100%) !important;
+  color: #0369a1 !important;
+  border: 1px solid rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 0 1px rgba(255, 255, 255, 0.8) inset, 0 2px 4px rgba(59, 130, 246, 0.08), 0 0 8px rgba(59, 130, 246, 0.08) !important;
+}
+
+body.theme-light .sidebar button:hover,
+body.theme-light .sidebar .btn:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(240, 248, 255, 1) 100%) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 0 1px rgba(255, 255, 255, 1) inset, 0 2px 8px rgba(59, 130, 246, 0.15), 0 0 12px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Sidebar menu items - light theme */
+body.theme-light .sidebar-menu-item {
+  color: #1f2937 !important;
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.6), rgba(207, 250, 254, 0.4)) !important;
+  border: 1.2px solid rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+body.theme-light .sidebar-menu-item:hover {
+  color: #0369a1 !important;
+  background: linear-gradient(135deg, rgba(207, 250, 254, 0.8), rgba(186, 230, 253, 0.6)) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15) !important;
+}
+
+body.theme-light .sidebar-menu-item.active {
+  color: #0369a1 !important;
+  background: linear-gradient(135deg, rgba(186, 230, 253, 0.9), rgba(165, 243, 252, 0.8)) !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Sidebar section labels - light theme */
+body.theme-light .sidebar-section-label {
+  color: #4b5563 !important;
+}
+
+/* Header and navbar */
+body.theme-light .navbar {
+  background: transparent !important;
+  border-bottom-color: rgba(59, 130, 246, 0.1) !important;
+  color: #1f2937;
+}
+/* Header background managed by transparency-manager.css */
+
+body.theme-light .header h1,
+body.theme-light .header h2,
+body.theme-light .navbar h1,
+body.theme-light .navbar h2 {
+  color: #1f2937 !important;
+}
+
+/* Cards and containers */
+body.theme-light .card,
+body.theme-light .ds-surface {
+  background: rgba(255, 255, 255, 1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.1) !important;
+  color: #1f2937;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.05) !important;
+}
+
+body.theme-light .section {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(59, 130, 246, 0.1) !important;
+  color: #1f2937;
+}
+
+/* Form elements */
+body.theme-light input,
+body.theme-light select,
+body.theme-light textarea {
+  background: rgba(255, 255, 255, 1) !important;
+  color: #1f2937 !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+}
+
+body.theme-light input:focus,
+body.theme-light select:focus,
+body.theme-light textarea:focus {
+  border-color: rgba(37, 99, 235, 0.5) !important;
+  background: rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+body.theme-light input::placeholder,
+body.theme-light textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* ==================== FINAL TRANSPARENCY OVERRIDE ==================== */
+/* Ensure NO text elements have any transparency issues */
+body.theme-light *:not(.background-overlay):not(.background-image-layer):not([class*="opacity"]) {
+  opacity: 1 !important;
+}
+
+body.theme-light .sidebar *,
+body.theme-light .header *,
+body.theme-light .kanban-board *,
+body.theme-light .issue-card *,
+body.theme-light .form-group *,
+body.theme-light label,
+body.theme-light button,
+body.theme-light span,
+body.theme-light div {
+  opacity: 1 !important;
+}

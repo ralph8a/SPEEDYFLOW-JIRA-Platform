@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SpeedyFlow - JIRA Service Desk Integration Platform">
+  <meta name="theme-color" content="#ffffff">
+  <title>SpeedyFlow - Ticket Management</title>
+  
+  <!-- ============================================================
+       CSS LOADING STRATEGY
+       ============================================================
+       1. Theme blocker loads first (prevents flash)
+       2. app.bundle.css imports all production CSS in order:
+          - Foundation (design tokens, variables, layout)
+          - Themes (light/dark/transparency)
+          - Components (UI elements)
+          - Layout (structure)
+          - Utilities (interactive features)
+          - Fallback (legacy support)
+       ============================================================ -->
+  
+  <!-- THEME BLOCKER: Prevents flash by applying theme BEFORE CSS renders -->
+  <script src="/static/js/theme-blocker.js"></script>
+  
+  <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
+  <link rel="stylesheet" href="/static/css/app.bundle.css">
+  
+</head>
+<body class="theme-light">
+  <div class="app-container" role="application" aria-label="SpeedyFlow Ticket Workspace">
+    <!-- SIDEBAR (UNIFIED REBUILD) -->
+    <aside class="sidebar" role="navigation" aria-label="Primary Navigation">
+      <header class="sidebar-header">
+        <div class="sidebar-logo" aria-label="App Logo">⚡</div>
+        <h1 class="sidebar-title" aria-label="Application Name">SpeedyFlow</h1>
+      </header>
+      <div class="sidebar-content">
+        <section class="sidebar-section sidebar-section-primary" aria-label="Primary Action">
+          <button id="newTicketBtn" class="btn-sidebar-primary" aria-label="Create Ticket">✚ Create Ticket</button>
+        </section>
+        <div class="sidebar-divider" aria-hidden="true"></div>
+        <section class="sidebar-section" aria-label="Navigation">
+          <span class="sidebar-section-label">Navigation</span>
+          <nav class="sidebar-menu" aria-label="Main">
+            <a href="#" class="sidebar-menu-item active" aria-current="page"><span class="icon">🗂️</span><span class="label">My Tickets</span></a>
+            <a href="#" class="sidebar-menu-item"><span class="icon">📋</span><span class="label">All Tickets</span></a>
+            <a href="#" class="sidebar-menu-item"><span class="icon">⭐</span><span class="label">Starred</span></a>
+          </nav>
+        </section>
+        <div class="sidebar-divider" aria-hidden="true"></div>
+        <section class="sidebar-section" aria-label="Utilities">
+          <span class="sidebar-section-label">Utilities</span>
+          <nav class="sidebar-menu" aria-label="Utilities">
+            <a href="#" class="sidebar-menu-item"><span class="icon">🔍</span><span class="label">Search</span></a>
+            <a href="#" class="sidebar-menu-item"><span class="icon">📊</span><span class="label">Reports</span></a>
+            <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications"><span class="icon">🔔</span><span class="label">Notifications</span></button>
+            <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh"><span class="icon">🔄</span><span class="label">Refresh</span></button>
+          </nav>
+        </section>
+        <div class="sidebar-divider" aria-hidden="true"></div>
+        <section class="sidebar-section" aria-label="Account">
+          <span class="sidebar-section-label">Account</span>
+          <nav class="sidebar-menu" aria-label="Account">
+            <a href="#" class="sidebar-menu-item"><span class="icon">⚙️</span><span class="label">Settings</span></a>
+            <a href="#" class="sidebar-menu-item"><span class="icon">❔</span><span class="label">Help Center</span></a>
+            <button type="button" class="sidebar-menu-item" id="userMenuBtn" aria-label="User Menu" aria-haspopup="true" aria-expanded="false"><span class="icon">👤</span><span class="label">Profile</span></button>
+          </nav>
+        </section>
+      </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="main-wrapper" role="main">
+      <!-- USER DROPDOWN (Hidden, shown on button click) -->
+      <div class="user-dropdown" id="userDropdown" style="display:none" role="menu" aria-label="User Menu">
+        <div class="user-dropdown-header"><span class="user-avatar-large">👤</span><div class="user-info"><div class="user-full-name" id="userFullName">John Doe</div><div class="user-email" id="userEmail">john@example.com</div></div></div>
+        <div class="user-dropdown-divider" aria-hidden="true"></div>
+        <a href="#" class="user-dropdown-item" role="menuitem">👤 My Profile</a>
+        <a href="#" class="user-dropdown-item" role="menuitem">🔒 Security</a>
+        <a href="#" class="user-dropdown-item" role="menuitem">⚙️ Preferences</a>
+        <div class="user-dropdown-divider" aria-hidden="true"></div>
+        <a href="#" class="user-dropdown-item" role="menuitem">📞 Support</a>
+        <a href="#" class="user-dropdown-item" role="menuitem">📘 Docs</a>
+        <div class="user-dropdown-divider" aria-hidden="true"></div>
+        <button id="logoutBtn" class="user-dropdown-item logout" role="menuitem">🚪 Logout</button>
+      </div>
+
+      <header class="header-enhanced" aria-label="Primary">
+        <div class="header-left-section">
+          <div class="header-brand">
+            <span class="brand-icon">⚡</span>
+            <span class="brand-text">SpeedyFlow</span>
+          </div>
+          <div class="header-divider-vertical"></div>
+          <h1 class="header-title">
+            <span class="title-icon">🎫</span>
+            <span class="title-text">My Tickets</span>
+          </h1>
+        </div>
+        
+        <div class="header-center-section">
+          <nav aria-label="Breadcrumb" class="breadcrumb-enhanced">
+            <span class="breadcrumb-item" id="deskBreadcrumb">Select Desk</span>
+            <span class="breadcrumb-separator" aria-hidden="true">›</span>
+            <span class="breadcrumb-item" id="queueBreadcrumb">Select Queue</span>
+          </nav>
+        </div>
+        
+        <div class="header-right-section">
+          <div class="header-status-badge">
+            <span class="status-indicator"></span>
+            <span class="status-text" id="filterStatus">Ready</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="filter-bar-enhanced" aria-label="Filters">
+        <div class="filter-bar-container">
+          <!-- Primary Filters -->
+          <div class="filter-section filter-primary">
+            <div class="filter-group">
+              <label for="serviceDeskSelectFilter" class="filter-label">
+                <span class="filter-icon">🏢</span>
+                <span class="filter-text">Service Desk</span>
+              </label>
+              <div class="filter-input-wrapper">
+                <select id="serviceDeskSelectFilter" class="filter-select">
+                  <option value="">Select Desk...</option>
+                </select>
+                <span class="filter-dropdown-icon">▼</span>
+              </div>
+            </div>
+            
+            <div class="filter-group">
+              <label for="queueSelectFilter" class="filter-label">
+                <span class="filter-icon">📋</span>
+                <span class="filter-text">Queue</span>
+              </label>
+              <div class="filter-input-wrapper filter-with-action">
+                <select id="queueSelectFilter" class="filter-select">
+                  <option value="">Select Queue...</option>
+                </select>
+                <span class="filter-dropdown-icon">▼</span>
+                <button id="saveFiltersBtn" class="filter-action-btn" title="Save current filters">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 3H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H7V5h8v4z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="filter-divider"></div>
+
+          <!-- View Controls -->
+          <div class="filter-section filter-controls">
+            <div class="filter-group">
+              <label class="filter-label">
+                <span class="filter-icon">👁️</span>
+                <span class="filter-text">View Mode</span>
+              </label>
+              <div class="view-toggle-enhanced" role="tablist">
+                <button class="view-btn active" data-view="kanban" aria-selected="true" role="tab">
+                  <span class="view-icon">📊</span>
+                  <span class="view-text">Board</span>
+                </button>
+                <button class="view-btn" data-view="list" role="tab">
+                  <span class="view-icon">📝</span>
+                  <span class="view-text">List</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="filter-divider"></div>
+
+          <!-- Theme Controls -->
+          <div class="filter-section filter-theme">
+            <div class="filter-group">
+              <label class="filter-label">
+                <span class="filter-icon">✨</span>
+                <span class="filter-text">Customize</span>
+              </label>
+              <div class="theme-controls">
+                <button id="bgSelectorHeaderBtn" class="theme-btn" title="Change background">
+                  <span class="theme-btn-icon">🎨</span>
+                  <span class="theme-btn-text">Background</span>
+                </button>
+                <button id="themeToggleBtn" class="theme-btn" title="Toggle theme">
+                  <span class="theme-btn-icon">🎭</span>
+                  <span class="theme-btn-text">Theme</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="board-wrapper" id="boardWrapper">
+        <div id="kanbanView" class="kanban-board" aria-live="polite">
+          <div class="placeholder-pro" id="kanbanPlaceholder">Loading tickets...</div>
+        </div>
+        <div id="listView" class="list-view" style="display:none" aria-live="polite">
+          <div class="placeholder-pro" id="listPlaceholder">Loading tickets...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR (TICKET DETAILS) -->
+    <div class="right-sidebar" id="rightSidebar" style="display: none;">
+      <!-- CLOSE BUTTON -->
+      <button class="btn-close-sidebar" id="closeSidebarBtn">✕</button>
+
+      <!-- TWO COLUMN LAYOUT -->
+      <div class="sidebar-two-columns">
+        
+        <!-- LEFT COLUMN: DETAILS -->
+        <div class="sidebar-column sidebar-details">
+          <div class="column-header">
+            <h3>Ticket Details</h3>
+          </div>
+
+          <div class="column-content">
+            <!-- ISSUE KEY -->
+            <div class="detail-group">
+              <div class="detail-label">Key</div>
+              <div class="detail-value" id="detailKey">—</div>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="detail-group">
+              <div class="detail-label">Summary</div>
+              <div class="detail-value detail-summary" id="detailSummary">—</div>
+            </div>
+
+            <!-- STATUS -->
+            <div class="detail-group">
+              <div class="detail-label">Status</div>
+              <div class="detail-value">
+                <span class="status-badge" id="detailStatus">Unknown</span>
+              </div>
+            </div>
+
+            <!-- SEVERITY -->
+            <div class="detail-group">
+              <div class="detail-label">Severity</div>
+              <div class="detail-value">
+                <span class="severity-badge" id="detailSeverity">Normal</span>
+              </div>
+            </div>
+
+            <!-- ASSIGNEE -->
+            <div class="detail-group">
+              <div class="detail-label">Assigned To</div>
+              <div class="detail-value" id="detailAssignee">Unassigned</div>
+            </div>
+
+            <!-- REPORTER (Who created the ticket) -->
+            <div class="detail-group">
+              <div class="detail-label">Reporter</div>
+              <div class="reporter-card" id="detailReporter">
+                <div class="reporter-placeholder">—</div>
+              </div>
+            </div>
+
+            <!-- TYPE -->
+            <div class="detail-group">
+              <div class="detail-label">Type</div>
+              <div class="detail-value" id="detailType">—</div>
+            </div>
+
+            <!-- CREATED -->
+            <div class="detail-group">
+              <div class="detail-label">Created</div>
+              <div class="detail-value detail-date" id="detailCreated">—</div>
+            </div>
+
+            <!-- UPDATED -->
+            <div class="detail-group">
+              <div class="detail-label">Updated</div>
+              <div class="detail-value detail-date" id="detailUpdated">—</div>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="detail-group">
+              <div class="detail-label">Description</div>
+              <div class="detail-value detail-description" id="detailDescription">—</div>
+            </div>
+
+            <!-- TRANSITIONS -->
+            <div class="detail-group">
+              <div class="detail-label">Available Actions</div>
+              <div class="detail-transitions" id="detailTransitions">
+                <p class="no-transitions">No transitions available</p>
+              </div>
+            </div>
+
+            <!-- SLA MONITOR CONTAINER -->
+            <div id="slaMonitorContainer" class="sidebar-feature-container">
+              <!-- SLA Monitor se renderiza aquí dinámicamente -->
+            </div>
+
+            <!-- TICKET PORTAL FORMS CONTAINER -->
+            <div id="ticketPortalFormsContainer" class="sidebar-feature-container">
+              <!-- Ticket Portal Forms se renderiza aquí dinámicamente -->
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: COMMENTS -->
+        <div class="sidebar-column sidebar-comments">
+          <div class="column-header">
+            <h3>Comments <span class="comment-count" id="commentCount">(0)</span></h3>
+          </div>
+
+          <div class="column-content">
+            <div class="comments-list" id="commentsList">
+              <p class="no-comments">Loading comments...</p>
+            </div>
+
+            <div class="add-comment-form">
+              <textarea 
+                id="commentText" 
+                class="comment-input" 
+                placeholder="Add a comment..."
+                rows="3">
+              </textarea>
+              <button class="btn-add-comment">Post</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ACTIVITY PANEL (Hidden by default, switchable) -->
+      <div class="sidebar-panel" id="activityPanel" style="display: none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Activity</h3>
+        </div>
+
+        <div class="panel-content">
+          <div class="activity-timeline" id="activityTimeline">
+            <p class="no-activity">No activity yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Detectar usuario actual desde JIRA
+    fetch('/api/user')
+      .then(r => r.json())
+      .then(data => {
+        const user = data.displayName || data.name || 'You';
+        localStorage.setItem('currentUser', user);
+        localStorage.setItem('userFullName', data.displayName || 'John Doe');
+        localStorage.setItem('userEmail', data.emailAddress || 'user@example.com');
+      })
+      .catch(() => {
+        localStorage.setItem('currentUser', 'You');
+        localStorage.setItem('userFullName', 'John Doe');
+        localStorage.setItem('userEmail', 'user@example.com');
+      });
+  </script>
+  
+  <!-- ===== CORE APPLICATION SCRIPTS ===== -->
+  <!-- Constants & Configuration (MUST load first) -->
+  <script src="/static/js/constants/card-sizing.js"></script>
+  
+  <!-- Theme Manager - Centralized theme control -->
+  <script src="/static/js/theme-manager.js"></script>
+  <script src="/static/js/sidebar-toggle.js"></script>
+  <script src="/static/js/modules/sidebar-actions.js"></script>
+  <script src="/static/js/floating-controls.js"></script>
+  <script src="/static/js/right-sidebar.js"></script>
+  <script src="/static/js/mentions-system.js"></script>
+  <script src="/static/js/sla-monitor.js"></script>
+  
+  <!-- ===== GLASSMORPHISM & TRANSPARENCY ===== -->
+  <script src="/static/js/transparency-manager.js"></script>
+  
+  <!-- ===== BACKGROUND & AI EFFECTS ===== -->
+  <script src="/static/js/background-manager.js"></script>
+  <script src="/static/js/background-selector-ui.js"></script>
+  
+  <!-- ===== UI ENHANCEMENTS ===== -->
+  <!-- Disabled: floating-theme-button.js - Theme button now integrated in sidebar -->
+  <script src="/static/js/app.js?v={{ timestamp }}"></script>
+  <script src="/static/js/auto-severity-config.js?v={{ timestamp }}"></script>
+  <script src="/static/js/layout-manager.js"></script>
+  <script src="/static/js/state-indicators.js"></script>
+  <script src="/static/js/loading-dots.js"></script>
+</body>
+</html>

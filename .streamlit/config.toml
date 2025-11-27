@@ -1,0 +1,22 @@
+[theme]
+# FORCE light theme - NO system setting override
+base = "light"
+primaryColor = "#0052cc"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f5f5f5"
+textColor = "#0f172a"
+font = "sans serif"
+
+[client]
+# Disable system theme override - always use light
+showErrorDetails = true
+toolbarMode = "minimal"
+# Prevent browser from using system dark mode
+disableSystemTheme = true
+
+[logger]
+level = "warning"
+
+[server]
+# Disable server-side file watching for performance
+watchFileSystemEvents = false

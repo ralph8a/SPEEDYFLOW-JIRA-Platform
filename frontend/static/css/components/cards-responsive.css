@@ -1,0 +1,116 @@
+/**
+ * TICKET CARD RESPONSIVENESS FIX
+ * Phase 17D - Fixes issue where cards don't expand to fill available space
+ */
+
+/* ===== KANBAN BOARD GRID FIX ===== */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: transparent;
+  min-height: 60vh;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ===== KANBAN COLUMN RESPONSIVE ===== */
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ===== ISSUE CARD RESPONSIVE ===== */
+.issue-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* Allows proper flex shrinking */
+  box-sizing: border-box;
+}
+
+/* ===== KANBAN CARDS CONTAINER FIX ===== */
+.kanban-cards {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* ===== TABLET BREAKPOINT (max 1024px) ===== */
+@media (max-width: 1024px) {
+  .kanban-board {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    min-height: auto;
+  }
+
+  .kanban-column {
+    min-height: 400px;
+    padding: var(--spacing-sm);
+  }
+
+  .issue-card {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+}
+
+/* ===== MOBILE BREAKPOINT (max 768px) ===== */
+@media (max-width: 768px) {
+  .kanban-board {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    min-height: auto;
+  }
+
+  .kanban-column {
+    min-height: 250px;
+    padding: var(--spacing-xs);
+  }
+
+  .issue-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+
+  .issue-card-key {
+    font-size: 10px;
+  }
+
+  .issue-card-summary {
+    font-size: 11px;
+    max-height: 2em;
+  }
+
+  .issue-card-meta,
+  .issue-card-footer {
+    font-size: 10px;
+  }
+
+  .kanban-cards {
+    gap: var(--spacing-xs);
+  }
+}
+
+/* ===== ENSURE FLEX GROWS PROPERLY ===== */
+.kanban-cards {
+  flex: 1 1 auto;
+  min-height: 0; /* Critical for flex containers with overflow */
+}
+
+.issue-card {
+  flex-shrink: 0; /* Prevent cards from shrinking below natural size */
+}

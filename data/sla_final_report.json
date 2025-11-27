@@ -1,0 +1,93 @@
+{
+  "timestamp": "2025-11-20T09:41:28.142145",
+  "total_tickets": 8,
+  "active_sla": 2,
+  "completed_sla": 0,
+  "pending_sla": 6,
+  "tickets": [
+    {
+      "key": "MSM-6810",
+      "sla_status": "ACTIVE",
+      "goal": "24 h",
+      "remaining": 74442508,
+      "elapsed": 11957492,
+      "breached": false
+    },
+    {
+      "key": "MSM-6802",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6847",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6729",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6834",
+      "sla_status": "ACTIVE",
+      "goal": "72 h",
+      "remaining": 255394013,
+      "elapsed": 3805987,
+      "breached": false
+    },
+    {
+      "key": "MSM-6852",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6700",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6703",
+      "sla_status": "PENDING"
+    }
+  ],
+  "active_tickets": [
+    {
+      "key": "MSM-6810",
+      "sla_status": "ACTIVE",
+      "goal": "24 h",
+      "remaining": 74442508,
+      "elapsed": 11957492,
+      "breached": false
+    },
+    {
+      "key": "MSM-6834",
+      "sla_status": "ACTIVE",
+      "goal": "72 h",
+      "remaining": 255394013,
+      "elapsed": 3805987,
+      "breached": false
+    }
+  ],
+  "pending_tickets": [
+    {
+      "key": "MSM-6802",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6847",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6729",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6852",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6700",
+      "sla_status": "PENDING"
+    },
+    {
+      "key": "MSM-6703",
+      "sla_status": "PENDING"
+    }
+  ]
+}

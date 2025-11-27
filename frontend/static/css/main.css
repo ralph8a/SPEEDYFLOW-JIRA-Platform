@@ -1,0 +1,89 @@
+/**
+ * SPEEDYFLOW - CSS Fallback
+ * ========================
+ * Last resort fallback for any missing styles
+ * 
+ * IMPORTANT: This file should remain minimal
+ * All production styles are imported via app.bundle.css
+ * 
+ * This file handles:
+ * - Legacy browser compatibility
+ * - Unsupported feature fallbacks
+ * - Emergency safe defaults
+ */
+
+/* ============================================================
+   FALLBACK: Basic Resets (if needed)
+   ============================================================ */
+
+/* Ensure body has minimal styling if all else fails */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: transparent !important;
+  color: #000000;
+}
+
+/* Ensure links are visible */
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Ensure buttons work */
+button {
+  cursor: pointer;
+  border: none;
+  background: #f0f0f0;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+button:hover {
+  background: #e0e0e0;
+}
+
+/* ============================================================
+   UTILITY CLASSES FOR INLINE STYLES REMOVAL
+   ============================================================ */
+
+/* Display utilities */
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
+/* Filter bar groups */
+.group {
+  /* Used in filter-bar-pro */
+}
+
+.group[data-min-width="140px"] {
+  min-width: 140px;
+}
+
+.group[data-min-width="150px"] {
+  min-width: 150px;
+}
+
+/* Panels and dropdowns */
+.panel-hidden {
+  display: none;
+}
+
+.panel-visible {
+  display: block;
+}
+
+/* ============================================================
+   NOTE: All production styles load from app.bundle.css
+   This file is a safety net only
+   ============================================================ */
