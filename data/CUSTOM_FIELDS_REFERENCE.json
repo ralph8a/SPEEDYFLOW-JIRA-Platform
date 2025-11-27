@@ -1,0 +1,507 @@
+{
+  "description": "Complete reference of all custom fields found on MSM-6810 ticket. Use these field IDs to fetch, map, or display custom field data.",
+  "last_updated": "2025-11-20T10:22:18.503457",
+  "ticket": "MSM-6810",
+  "total_count": 76,
+  "metadata": {
+    "source": "JIRA Cloud API v3",
+    "endpoint": "/rest/api/3/issues/MSM-6810",
+    "note": "Fields are categorized by type and usage. Add new fields here as they're discovered."
+  },
+  "categories": {
+    "form_fields": {
+      "description": "Request-type form fields (Formularios adjuntos in JIRA UI)",
+      "fields": {
+        "customfield_10125": {
+          "label": "Criticidad",
+          "type": "select",
+          "example_value": "Mayor",
+          "in_use": true
+        },
+        "customfield_10156": {
+          "label": "Tipo de Solicitud",
+          "type": "select",
+          "example_value": "Soporte HUB",
+          "in_use": true
+        },
+        "customfield_10168": {
+          "label": "Área",
+          "type": "select",
+          "example_value": "Aplicaciones",
+          "in_use": true
+        },
+        "customfield_10169": {
+          "label": "Plataforma",
+          "type": "select",
+          "example_value": "SMT",
+          "in_use": true
+        },
+        "customfield_10143": {
+          "label": "Empresa",
+          "type": "text",
+          "example_value": "Bemobi",
+          "in_use": true
+        },
+        "customfield_10144": {
+          "label": "Producto",
+          "type": "text",
+          "example_value": "noc",
+          "in_use": true
+        },
+        "customfield_10149": {
+          "label": "Notas/Análisis",
+          "type": "text",
+          "example_value": "se inicia analisis",
+          "in_use": true
+        },
+        "customfield_10151": {
+          "label": "Resolución",
+          "type": "text",
+          "example_value": "se ha dado respuesta a lo que generaba el problema...",
+          "in_use": true
+        },
+        "customfield_10165": {
+          "label": "País",
+          "type": "select",
+          "example_value": "Dominica",
+          "in_use": true
+        },
+        "customfield_10167": {
+          "label": "País/Código",
+          "type": "select",
+          "example_value": "Chile: +56",
+          "in_use": true
+        }
+      }
+    },
+    "contact_info": {
+      "description": "Contact and communication fields",
+      "fields": {
+        "customfield_10141": {
+          "label": "Email",
+          "type": "text",
+          "example_value": "soporte.amovil.latam@bemobi.com",
+          "in_use": true
+        },
+        "customfield_10142": {
+          "label": "Phone",
+          "type": "text",
+          "example_value": "(+56 2) 2 424 15 00 (Anexo: 501,502,503,504)",
+          "in_use": true
+        },
+        "customfield_10111": {
+          "label": "Reporter/Informador",
+          "type": "user",
+          "example_value": "[1 items]",
+          "in_use": true
+        }
+      }
+    },
+    "sla_fields": {
+      "description": "SLA-related fields (mostly links to SLA definitions)",
+      "fields": {
+        "customfield_10170": {
+          "label": "SLA's Incidente HUB",
+          "type": "link",
+          "example_value": "SLA´s Incidente HUB",
+          "in_use": false
+        },
+        "customfield_10176": {
+          "label": "Cierre Ticket",
+          "type": "link",
+          "example_value": "Cierre Ticket",
+          "in_use": false
+        },
+        "customfield_10181": {
+          "label": "SLA's Servicios Streaming",
+          "type": "link",
+          "example_value": "SLA's Servicios Streaming",
+          "in_use": false
+        },
+        "customfield_10182": {
+          "label": "SLA's Servicios Streaming (Service Request)",
+          "type": "link",
+          "example_value": "SLA's Servicios Streaming (Service Request)",
+          "in_use": false
+        },
+        "customfield_10183": {
+          "label": "SLA's Solicitud de CDRs Captura Logs",
+          "type": "link",
+          "example_value": "SLA's Solicitud de CDRs Captura Logs (Service Requ...",
+          "in_use": false
+        },
+        "customfield_10184": {
+          "label": "SLA's Cotización Orden de Compra",
+          "type": "link",
+          "example_value": "SLA's Cotización Orden de Compra (Service Request)",
+          "in_use": false
+        },
+        "customfield_10185": {
+          "label": "SLA's Errores Pruebas de Integración",
+          "type": "link",
+          "example_value": "SLA's Errores Pruebas de Integración (Service Requ...",
+          "in_use": false
+        },
+        "customfield_10186": {
+          "label": "SLA's Actualización de SDK",
+          "type": "link",
+          "example_value": "SLA's Actualización de SDK (Service Request)",
+          "in_use": false
+        },
+        "customfield_10187": {
+          "label": "SLA's Splunk",
+          "type": "link",
+          "example_value": "SLA's Splunk (Incident)",
+          "in_use": false
+        },
+        "customfield_10190": {
+          "label": "SLA's Soporte Aplicaciones",
+          "type": "link",
+          "example_value": "SLA's Soporte Aplicaciones (Incident)",
+          "in_use": false
+        },
+        "customfield_10259": {
+          "label": "SLA War Room",
+          "type": "link",
+          "example_value": "SLA War Room",
+          "in_use": false
+        }
+      }
+    },
+    "system_fields": {
+      "description": "System and tracking fields (mostly numeric/empty)",
+      "fields": {
+        "customfield_10002": {
+          "label": "Unknown System Field",
+          "type": "array",
+          "example_value": "[1 items]",
+          "in_use": false
+        },
+        "customfield_10010": {
+          "label": "Request Type",
+          "type": "object",
+          "example_value": "Service Desk API response",
+          "in_use": true
+        },
+        "customfield_10019": {
+          "label": "Unknown Field",
+          "type": "text",
+          "example_value": "1|i00eb3:",
+          "in_use": false
+        },
+        "customfield_10024": {
+          "label": "Timestamp",
+          "type": "datetime",
+          "example_value": "2025-11-14T04:47:41.185-0600",
+          "in_use": false
+        },
+        "customfield_10027": {
+          "label": "Numeric Field",
+          "type": "number",
+          "example_value": 0.0,
+          "in_use": false
+        },
+        "customfield_10028": {
+          "label": "Numeric Field",
+          "type": "number",
+          "example_value": 0.0,
+          "in_use": false
+        },
+        "customfield_10029": {
+          "label": "Numeric Field",
+          "type": "number",
+          "example_value": 1.0,
+          "in_use": false
+        },
+        "customfield_10030": {
+          "label": "Numeric Field",
+          "type": "number",
+          "example_value": 1.0,
+          "in_use": false
+        },
+        "customfield_10041": {
+          "label": "Numeric Field",
+          "type": "number",
+          "example_value": 0.0,
+          "in_use": false
+        },
+        "customfield_10042": {
+          "label": "Numeric Field",
+          "type": "number",
+          "example_value": 0.0,
+          "in_use": false
+        },
+        "customfield_10061": {
+          "label": "Status Transition Log",
+          "type": "text",
+          "example_value": "||Transiciona||Partida:||Transicion||Destino:||Asignado||fecha||",
+          "in_use": false
+        },
+        "customfield_10110": {
+          "label": "Issue Category",
+          "type": "text",
+          "example_value": "Incidents",
+          "in_use": false
+        },
+        "customfield_10115": {
+          "label": "Language",
+          "type": "select",
+          "example_value": "español",
+          "in_use": true
+        },
+        "customfield_10124": {
+          "label": "Unknown Field",
+          "type": "array",
+          "example_value": "[1 items]",
+          "in_use": false
+        },
+        "customfield_10148": {
+          "label": "Empty Array Field",
+          "type": "array",
+          "example_value": "[]",
+          "in_use": false
+        },
+        "customfield_10157": {
+          "label": "Empty Array Field",
+          "type": "array",
+          "example_value": "[]",
+          "in_use": false
+        },
+        "customfield_10159": {
+          "label": "Empty Array Field",
+          "type": "array",
+          "example_value": "[]",
+          "in_use": false
+        },
+        "customfield_10166": {
+          "label": "Country (Alternative)",
+          "type": "select",
+          "example_value": "Chile",
+          "in_use": false
+        }
+      }
+    },
+    "numeric_fields": {
+      "description": "Numeric tracking fields (mostly 0.0 values)",
+      "fields": {
+        "customfield_10196": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10197": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10198": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10205": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10206": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10218": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10221": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10224": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10227": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10230": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10233": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10236": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10237": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10238": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10239": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10240": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10241": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10242": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10249": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10279": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10280": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10289": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10292": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10295": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10301": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10341": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10677": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10717": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10718": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10719": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10720": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10733": {
+          "type": "number",
+          "value": 0.0
+        },
+        "customfield_10734": {
+          "type": "number",
+          "value": 0.0
+        }
+      }
+    },
+    "other": {
+      "description": "Other miscellaneous fields",
+      "fields": {
+        "customfield_11957": {
+          "label": "Salud de Servicios",
+          "type": "link",
+          "example_value": "Salud de Servicios",
+          "in_use": false
+        }
+      }
+    }
+  },
+  "quick_reference": {
+    "form_field_ids": [
+      "customfield_10125",
+      "customfield_10156",
+      "customfield_10168",
+      "customfield_10169",
+      "customfield_10143",
+      "customfield_10144",
+      "customfield_10149",
+      "customfield_10151",
+      "customfield_10165",
+      "customfield_10167"
+    ],
+    "contact_field_ids": [
+      "customfield_10141",
+      "customfield_10142",
+      "customfield_10111"
+    ],
+    "all_in_use_fields": [
+      "customfield_10010",
+      "customfield_10111",
+      "customfield_10115",
+      "customfield_10125",
+      "customfield_10141",
+      "customfield_10142",
+      "customfield_10143",
+      "customfield_10144",
+      "customfield_10149",
+      "customfield_10151",
+      "customfield_10156",
+      "customfield_10165",
+      "customfield_10167",
+      "customfield_10168",
+      "customfield_10169"
+    ]
+  },
+  "usage_examples": {
+    "python_backend": {
+      "description": "Use in core/api.py when fetching full issue details",
+      "example": "client.get_issue(issue_key, fields=['customfield_10125', 'customfield_10156', 'customfield_10168', 'customfield_10169', ...])"
+    },
+    "javascript_frontend": {
+      "description": "Use in frontend/static/js/modules/custom-fields.js for rendering",
+      "example": "const formFieldMap = { 'customfield_10125': 'Criticidad', 'customfield_10156': 'Tipo de Solicitud', ... }"
+    },
+    "jira_api": {
+      "description": "Direct JIRA Cloud API calls",
+      "example": "GET /rest/api/3/issues/MSM-6810?fields=customfield_10125,customfield_10156,..."
+    }
+  },
+  "notes": {
+    "future_improvements": [
+      "Map field labels from JIRA's field metadata API for dynamic labeling",
+      "Discover which fields are specific to 'Soporte HUB' request type vs generic",
+      "Identify SLA field relationships and create SLA display section",
+      "Consider caching this mapping in the backend for performance"
+    ],
+    "discovered_patterns": [
+      "Form fields (10125, 10156, 10168, 10169) are select/option types with .value property",
+      "Text fields (10143, 10144, 10149, 10151) are direct strings",
+      "Numeric fields are all 0.0 (unused)",
+      "SLA fields are links/objects (not needed for current display)",
+      "Large gap in field IDs (10186-10196, 10196+) suggests different JIRA instances or versions"
+    ]
+  },
+  "sla_times": {
+    "SLA's Aplicaciones": {
+      "start": "10/oct/25 3:38 PM",
+      "goal": "64 h",
+      "elapsed": "18 m",
+      "remaining": "63 h 41 m",
+      "breached": false
+    }
+  }
+}

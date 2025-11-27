@@ -1,0 +1,102 @@
+[
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "AuthenticationError"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "Error"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "FetchError"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "async-inline-assets"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "css-assets"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "early-common-flush"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "early-route-flush"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "feature-flags"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "fetch-conditional-manifest"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 27,
+    "name": "fetch-early-app-scripts"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "AuthenticationError"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "Error"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "FetchError"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "async-inline-assets"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "css-assets"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "early-common-flush"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "early-route-flush"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "feature-flags"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "fetch-conditional-manifest"
+  },
+  {
+    "project": "MSM",
+    "queue_id": 28,
+    "name": "fetch-early-app-scripts"
+  }
+]

@@ -1,0 +1,173 @@
+/* 
+ * APTOS FONT FAMILY - GLOBAL OVERRIDE (PURE APTOS STACK)
+ * All fonts in the application are now Aptos family only
+ * Date: November 22, 2025
+ * 
+ * NOTE: Google Fonts import removed due to CORS/MIME-type restrictions in dev server.
+ * Falls back to system fonts (Segoe UI, Roboto, etc. contain similar metrics to Aptos)
+ */
+
+/* Google Fonts import disabled - using system font fallback
+@import url('https://fonts.googleapis.com/css2?family=Aptos:wght@400;500;600;700&family=Aptos+Display:wght@400;600;700&family=Aptos+Mono:wght@400;500;600;700&display=swap');
+*/
+
+/* Root font stack - PURE APTOS */
+:root {
+  --font-primary: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif;
+  --font-display: 'Aptos Display', 'Aptos', 'Aptos Mono', sans-serif;
+  --font-mono: 'Aptos Mono', 'Aptos', 'Aptos Display', sans-serif;
+}
+
+/* Global font application - PURE APTOS */
+* {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+html,
+body,
+html body {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Headings with display font */
+h1, h2, h3, h4, h5, h6,
+.heading,
+.title {
+  font-family: 'Aptos Display', 'Aptos', 'Aptos Mono', sans-serif !important;
+}
+
+/* Form elements */
+input,
+textarea,
+select,
+button,
+.btn,
+.form-control,
+.input-group {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Code and monospace elements */
+code,
+pre,
+.code,
+.monospace,
+.highlight {
+  font-family: 'Aptos Mono', 'Aptos', 'Aptos Display', sans-serif !important;
+}
+
+/* UI Components */
+.nav,
+.navbar,
+.sidebar,
+.card,
+.panel,
+.modal,
+.dropdown,
+.tooltip {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Text elements */
+p,
+span,
+div,
+li,
+td,
+th {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Label and form text */
+label,
+.label,
+.text-muted,
+.text-secondary {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Badge and badge-like elements */
+.badge,
+.tag,
+.chip,
+.label-inline {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Button text */
+button,
+.btn,
+a.btn,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Notification and alert text */
+.alert,
+.notification,
+.toast,
+.popover {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Table elements */
+table,
+.table,
+th,
+td {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Dark mode support */
+[data-theme="dark"],
+.dark-mode,
+body.dark-theme {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+[data-theme="dark"] *,
+.dark-mode *,
+body.dark-theme * {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Streamlit-specific */
+.stTextInput,
+.stNumberInput,
+.stSelectbox,
+.stMultiSelect,
+.stButton,
+.stSlider,
+.stDateInput,
+.stTimeInput {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Chat and message elements */
+.message,
+.chat-bubble,
+.comment {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Menu and dropdown items */
+.menu-item,
+.dropdown-item,
+.nav-item {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Metric and stat display */
+.metric,
+.stat,
+.counter {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
+
+/* Footer text */
+footer,
+.footer {
+  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+}
