@@ -1,0 +1,564 @@
+/**
+ * TRANSITION BAR VERTICAL - Drag & Drop Transitions
+ * Barra vertical que emerge entre columnas mostrando transiciones disponibles
+ */
+
+/* ============================================
+   KANBAN BOARD - Estado Drag Active
+   ============================================ */
+
+.kanban-board {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Backdrop cuando está en drag mode */
+.kanban-board.drag-active::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 9998;
+  animation: fadeInBackdrop 0.3s ease;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Columnas se separan durante drag */
+.kanban-board.drag-active .kanban-column {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  will-change: transform;
+}
+
+/* Primera mitad: mueve a la izquierda */
+.kanban-board.drag-active .kanban-column:nth-child(-n+2) {
+  transform: translateX(-140px) !important;
+}
+
+/* Segunda mitad: mueve a la derecha */
+.kanban-board.drag-active .kanban-column:nth-child(n+3) {
+  transform: translateX(140px) !important;
+}
+
+/* ============================================
+   TRANSITION BAR - Container Principal
+   ============================================ */
+
+.transition-bar-vertical {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.85);
+  z-index: 9999;
+  
+  /* Glassmorphism Effect */
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(40px) saturate(200%);
+  
+  /* Borders & Shadows */
+  border: 3px solid rgba(99, 102, 241, 0.3);
+  border-radius: 24px;
+  box-shadow: 
+    0 30px 80px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    0 0 60px rgba(99, 102, 241, 0.2);
+  
+  /* Dimensions */
+  width: 280px;
+  max-height: 75vh;
+  min-height: 200px;
+  
+  /* Overflow */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  
+  /* Initial state: hidden */
+  opacity: 0;
+  pointer-events: none;
+  
+  /* Transition */
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Show state */
+.transition-bar-vertical.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: all;
+}
+
+/* ============================================
+   HEADER - Título y contexto
+   ============================================ */
+
+.transition-bar-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  
+  /* Gradient background */
+  background: linear-gradient(135deg, 
+    #667eea 0%, 
+    #764ba2 50%,
+    #f093fb 100%);
+  
+  padding: 20px 24px;
+  text-align: center;
+  border-radius: 21px 21px 0 0;
+  color: white;
+  
+  /* Shadow */
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Close button */
+.transition-bar-header .close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.transition-bar-header .close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.transition-bar-header .close-button:active {
+  transform: scale(0.95);
+}
+
+.transition-bar-header .icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
+  animation: pulseIcon 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes pulseIcon {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.15); 
+  }
+}
+
+.transition-bar-header .text {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  opacity: 0.95;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.transition-bar-header .issue-key {
+  font-size: 18px;
+  font-weight: 800;
+  display: block;
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+/* ============================================
+   TRANSITION ZONES - Lista de transiciones
+   ============================================ */
+
+.transition-zones-vertical {
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.5) rgba(0, 0, 0, 0.05);
+}
+
+/* Webkit scrollbar */
+.transition-zones-vertical::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transition-zones-vertical::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+.transition-zones-vertical::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.transition-zones-vertical::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* ============================================
+   TRANSITION ZONE - Cada opción individual
+   ============================================ */
+
+.transition-zone-vertical {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  
+  /* Background gradient sutil */
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.08) 0%, 
+    rgba(118, 75, 162, 0.08) 100%);
+  
+  /* Border */
+  border: 2px solid rgba(99, 102, 241, 0.15);
+  border-radius: 14px;
+  
+  /* Cursor */
+  cursor: grab;
+  user-select: none;
+  
+  /* Transitions */
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer effect al pasar */
+.transition-zone-vertical::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.4), 
+    transparent);
+  transition: left 0.6s ease;
+}
+
+.transition-zone-vertical:hover::before {
+  left: 100%;
+}
+
+/* Hover state */
+.transition-zone-vertical:hover {
+  transform: translateX(10px) scale(1.03);
+  border-color: rgba(99, 102, 241, 0.6);
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.15) 0%, 
+    rgba(118, 75, 162, 0.15) 100%);
+  box-shadow: 
+    0 8px 28px rgba(99, 102, 241, 0.25),
+    0 0 0 1px rgba(99, 102, 241, 0.3) inset;
+  cursor: pointer;
+}
+
+/* Active state (drag over) */
+.transition-zone-vertical.drag-over {
+  transform: translateX(15px) scale(1.08);
+  border-color: #667eea;
+  border-width: 3px;
+  
+  /* Gradient completo */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  
+  /* Shadow intenso */
+  box-shadow: 
+    0 16px 40px rgba(102, 126, 234, 0.6),
+    0 0 0 4px rgba(255, 255, 255, 0.4) inset,
+    0 0 30px rgba(102, 126, 234, 0.4);
+}
+
+.transition-zone-vertical.drag-over .transition-icon {
+  animation: bounceIcon 0.6s ease infinite;
+  transform: scale(1.2);
+}
+
+@keyframes bounceIcon {
+  0%, 100% { 
+    transform: translateY(0) scale(1.2); 
+  }
+  50% { 
+    transform: translateY(-6px) scale(1.2); 
+  }
+}
+
+/* ============================================
+   ICON & INFO - Contenido de cada zona
+   ============================================ */
+
+.transition-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+  transition: all 0.3s ease;
+}
+
+.transition-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.transition-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: 0.3px;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transition-zone-vertical:hover .transition-name {
+  color: #667eea;
+}
+
+.transition-zone-vertical.drag-over .transition-name {
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.transition-target {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transition-target::before {
+  content: '→';
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.transition-zone-vertical:hover .transition-target {
+  color: #475569;
+}
+
+.transition-zone-vertical.drag-over .transition-target {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   SLA PAUSE BADGE
+   ============================================ */
+
+.sla-pause-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  margin-top: 4px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.transition-zone-vertical.pauses-sla {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(245, 158, 11, 0.08) 0%, 
+    rgba(251, 191, 36, 0.08) 100%);
+}
+
+.transition-zone-vertical.pauses-sla:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: linear-gradient(135deg, 
+    rgba(245, 158, 11, 0.15) 0%, 
+    rgba(251, 191, 36, 0.15) 100%);
+}
+
+.transition-zone-vertical.pauses-sla.drag-over {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  border-color: #f59e0b;
+}
+
+.transition-zone-vertical.pauses-sla.drag-over .sla-pause-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================
+   EMPTY STATE - Sin transiciones
+   ============================================ */
+
+.transition-empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.transition-empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.transition-empty-state .empty-text {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.transition-empty-state .empty-hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.transition-loading {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.transition-loading .spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 4px solid rgba(99, 102, 241, 0.2);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.transition-loading .loading-text {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ============================================
+   RESPONSIVE - Mobile
+   ============================================ */
+
+@media (max-width: 768px) {
+  .transition-bar-vertical {
+    width: 90vw;
+    max-width: 320px;
+    max-height: 70vh;
+  }
+  
+  .kanban-board.drag-active .kanban-column {
+    transform: none !important;
+  }
+  
+  .kanban-board.drag-active::before {
+    backdrop-filter: blur(4px);
+  }
+  
+  .transition-zone-vertical {
+    padding: 14px 16px;
+  }
+  
+  .transition-icon {
+    font-size: 28px;
+  }
+  
+  .transition-name {
+    font-size: 14px;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.transition-zone-vertical:focus {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .transition-bar-vertical,
+  .transition-zone-vertical,
+  .kanban-board.drag-active .kanban-column {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   DARK THEME SUPPORT
+   ============================================ */
+
+.theme-dark .transition-bar-vertical {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.theme-dark .transition-zone-vertical {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.12) 0%, 
+    rgba(118, 75, 162, 0.12) 100%);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+.theme-dark .transition-name {
+  color: #e2e8f0;
+}
+
+.theme-dark .transition-target {
+  color: #94a3b8;
+}

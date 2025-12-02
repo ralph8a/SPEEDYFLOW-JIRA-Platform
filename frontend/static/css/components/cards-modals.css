@@ -1259,6 +1259,36 @@ body.theme-light .bg-variant-item.active { outline-color: rgba(99,102,241,.8); }
   white-space: nowrap;
 }
 
+/* AI Suggest Button */
+.btn-ai-suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.btn-ai-suggest:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-ai-suggest .ai-icon {
+  font-size: 12px;
+}
+
+.btn-ai-suggest .ai-text {
+  letter-spacing: 0.5px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .issue-card {

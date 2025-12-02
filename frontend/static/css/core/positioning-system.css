@@ -1,0 +1,298 @@
+/**
+ * SPEEDYFLOW - Positioning System Controller
+ * Centralizes all position, display, and z-index management
+ * Last Updated: December 1, 2025
+ */
+
+/* ==================== Z-INDEX SYSTEM ==================== */
+:root {
+  /* Base layers (0-99) - Background and foundational elements */
+  --z-base: 1;
+  --z-background: 10;
+  --z-content: 20;
+  --z-overlay-bg: 30;
+  
+  /* UI layers (100-999) - Interface elements */
+  --z-sidebar-btn: 100;
+  --z-filter-bar: 150;
+  --z-sidebar: 200;
+  --z-header: 250;
+  --z-main-content: 400;
+  
+  /* Interactive layers (1000-1999) - Dropdowns, modals, etc. */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-notification: 1080;
+  --z-context-menu: 1090;
+  
+  /* System layers (2000+) - Critical system elements */
+  --z-system-tooltip: 2000;
+  --z-loading-overlay: 8000;
+  --z-debug: 9000;
+  --z-critical: 9999;
+}
+
+/* ==================== POSITION SYSTEM ==================== */
+:root {
+  /* Sidebar positioning */
+  --sidebar-collapsed-width: 70px;
+  --sidebar-expanded-width: 280px;
+  --sidebar-transition-duration: 0.3s;
+  --sidebar-transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Header positioning */
+  --header-height: 64px;
+  --header-z-index: var(--z-header);
+  
+  /* Tooltip positioning */
+  --tooltip-offset: 10px;
+  --tooltip-arrow-size: 6px;
+  
+  /* Modal positioning */
+  --modal-margin: 20px;
+  --modal-max-width: 90vw;
+  --modal-max-height: 90vh;
+  
+  /* Dropdown positioning */
+  --dropdown-offset: 4px;
+  --dropdown-max-height: 300px;
+}
+
+/* ==================== DISPLAY SYSTEM ==================== */
+:root {
+  /* Layout displays */
+  --display-flex: flex;
+  --display-grid: grid;
+  --display-block: block;
+  --display-inline-block: inline-block;
+  --display-none: none;
+  --display-inline-flex: inline-flex;
+  
+  /* Flex configurations */
+  --flex-row: row;
+  --flex-column: column;
+  --flex-wrap: wrap;
+  --flex-nowrap: nowrap;
+  
+  /* Alignment */
+  --align-start: flex-start;
+  --align-center: center;
+  --align-end: flex-end;
+  --align-stretch: stretch;
+  
+  --justify-start: flex-start;
+  --justify-center: center;
+  --justify-end: flex-end;
+  --justify-between: space-between;
+  --justify-around: space-around;
+  --justify-evenly: space-evenly;
+}
+
+/* ==================== OVERFLOW SYSTEM ==================== */
+:root {
+  --overflow-visible: visible;
+  --overflow-hidden: hidden;
+  --overflow-scroll: scroll;
+  --overflow-auto: auto;
+}
+
+/* ==================== POSITIONING UTILITIES ==================== */
+.pos-relative { position: relative !important; }
+.pos-absolute { position: absolute !important; }
+.pos-fixed { position: fixed !important; }
+.pos-sticky { position: sticky !important; }
+
+/* Display utilities */
+.d-none { display: var(--display-none) !important; }
+.d-block { display: var(--display-block) !important; }
+.d-flex { display: var(--display-flex) !important; }
+.d-inline-flex { display: var(--display-inline-flex) !important; }
+.d-grid { display: var(--display-grid) !important; }
+
+/* Flex utilities */
+.flex-row { flex-direction: var(--flex-row) !important; }
+.flex-column { flex-direction: var(--flex-column) !important; }
+.flex-wrap { flex-wrap: var(--flex-wrap) !important; }
+.flex-nowrap { flex-wrap: var(--flex-nowrap) !important; }
+
+/* Alignment utilities */
+.align-start { align-items: var(--align-start) !important; }
+.align-center { align-items: var(--align-center) !important; }
+.align-end { align-items: var(--align-end) !important; }
+.align-stretch { align-items: var(--align-stretch) !important; }
+
+.justify-start { justify-content: var(--justify-start) !important; }
+.justify-center { justify-content: var(--justify-center) !important; }
+.justify-end { justify-content: var(--justify-end) !important; }
+.justify-between { justify-content: var(--justify-between) !important; }
+.justify-around { justify-content: var(--justify-around) !important; }
+.justify-evenly { justify-content: var(--justify-evenly) !important; }
+
+/* Z-index utilities */
+.z-base { z-index: var(--z-base) !important; }
+.z-background { z-index: var(--z-background) !important; }
+.z-content { z-index: var(--z-content) !important; }
+.z-header { z-index: var(--z-header) !important; }
+.z-sidebar { z-index: var(--z-sidebar) !important; }
+.z-dropdown { z-index: var(--z-dropdown) !important; }
+.z-modal { z-index: var(--z-modal) !important; }
+.z-tooltip { z-index: var(--z-tooltip) !important; }
+.z-critical { z-index: var(--z-critical) !important; }
+
+/* Overflow utilities */
+.overflow-visible { overflow: var(--overflow-visible) !important; }
+.overflow-hidden { overflow: var(--overflow-hidden) !important; }
+.overflow-scroll { overflow: var(--overflow-scroll) !important; }
+.overflow-auto { overflow: var(--overflow-auto) !important; }
+
+.overflow-x-visible { overflow-x: var(--overflow-visible) !important; }
+.overflow-x-hidden { overflow-x: var(--overflow-hidden) !important; }
+.overflow-x-scroll { overflow-x: var(--overflow-scroll) !important; }
+.overflow-x-auto { overflow-x: var(--overflow-auto) !important; }
+
+.overflow-y-visible { overflow-y: var(--overflow-visible) !important; }
+.overflow-y-hidden { overflow-y: var(--overflow-hidden) !important; }
+.overflow-y-scroll { overflow-y: var(--overflow-scroll) !important; }
+.overflow-y-auto { overflow-y: var(--overflow-auto) !important; }
+
+/* ==================== COMPONENT SPECIFIC POSITIONING ==================== */
+
+/* Sidebar positioning rules */
+.sidebar {
+  z-index: var(--z-sidebar);
+  width: var(--sidebar-expanded-width);
+  transition: width var(--sidebar-transition-duration) var(--sidebar-transition-ease);
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+  max-width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-collapse-btn {
+  z-index: var(--z-sidebar-btn);
+}
+
+/* Header positioning moved to glassmorphism.css */
+
+/* Modal positioning */
+.modal-backdrop {
+  z-index: var(--z-modal-backdrop);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.modal {
+  z-index: var(--z-modal);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: var(--modal-max-width);
+  max-height: var(--modal-max-height);
+}
+
+/* Dropdown positioning */
+.dropdown {
+  z-index: var(--z-dropdown);
+  position: absolute;
+  max-height: var(--dropdown-max-height);
+  overflow-y: auto;
+}
+
+/* Tooltip positioning */
+.tooltip {
+  z-index: var(--z-tooltip);
+  position: absolute;
+}
+
+.tooltip-fixed {
+  z-index: var(--z-system-tooltip);
+  position: fixed;
+}
+
+/* Right sidebar positioning */
+.right-sidebar {
+  z-index: var(--z-modal);
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+}
+
+.btn-close-sidebar {
+  z-index: calc(var(--z-modal) + 1);
+  position: absolute;
+}
+
+/* Filter bar positioning moved to filter-bar-standalone.css */
+
+/* User dropdown positioning */
+.user-dropdown {
+  z-index: var(--z-dropdown);
+  position: absolute;
+}
+
+/* Loading overlay positioning */
+.loading-overlay {
+  z-index: var(--z-loading-overlay);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Notification positioning */
+.notification {
+  z-index: var(--z-notification);
+  position: fixed;
+}
+
+/* Debug elements positioning */
+.debug-info {
+  z-index: var(--z-debug);
+  position: fixed;
+}
+
+/* ==================== RESPONSIVE POSITIONING ==================== */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-expanded-width: 100vw;
+    --sidebar-collapsed-width: 60px;
+    --modal-margin: 10px;
+    --header-height: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --sidebar-collapsed-width: 50px;
+    --modal-margin: 5px;
+    --tooltip-offset: 5px;
+  }
+}
+
+/* ==================== PRINT POSITIONING ==================== */
+@media print {
+  .sidebar,
+  .modal-backdrop,
+  .tooltip,
+  .dropdown,
+  .notification {
+    display: none !important;
+  }
+  
+  .main-content {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+}

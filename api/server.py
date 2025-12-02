@@ -7,80 +7,95 @@ import sys
 import os
 import logging
 from datetime import datetime, timedelta
-from flask import Flask, jsonify, request, send_from_directory, render_template  # type: ignore
-from flask_cors import CORS  # type: ignore
+from flask import Flask, jsonify, request, send_from_directory, render_template
+from flask_cors import CORS
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.config import config  # noqa: E402
-from utils.decorators import handle_api_error, json_response, log_request as log_decorator, require_credentials  # noqa: E402
-from utils.common import _make_request, _get_credentials, _get_auth_header  # noqa: E402
-from utils.api_migration import get_service_desks, get_queues, get_current_user  # type: ignore  # noqa: E402
-from api.blueprints.issues import issues_bp  # type: ignore  # noqa: E402
-from api.blueprints.comments import comments_bp  # type: ignore  # noqa: E402
-from api.blueprints.attachments import attachments_bp  # type: ignore  # noqa: E402
-from api.blueprints.transitions import transitions_bp  # type: ignore  # noqa: E402
-from api.blueprints.ai import ai_bp  # type: ignore  # noqa: E402
-from api.blueprints.sla import sla_bp  # type: ignore  # noqa: E402
-from api.blueprints.notifications import notifications_bp  # type: ignore  # noqa: E402
-from api.blueprints.exports import exports_bp  # type: ignore  # noqa: E402
-from api.blueprints.automations import automations_bp  # type: ignore  # noqa: E402
-from api.blueprints.backgrounds import backgrounds_bp  # type: ignore  # noqa: E402
-from api.blueprints.webhooks import webhooks_bp  # type: ignore  # noqa: E402
-from api.blueprints.kanban import kanban_bp  # type: ignore  # noqa: E402
-from utils.db import init_db  # type: ignore  # noqa: E402
+from utils.decorators import (  # noqa: E402
+    handle_api_error,
+    json_response,
+    log_request as log_decorator,
+    require_credentials
+)
+from utils.api_migration import (  # noqa: E402
+    get_service_desks,
+    get_queues,
+    get_current_user
+)
+from utils.db import init_db  # noqa: E402
+
+# Blueprint imports
+from api.blueprints.issues import issues_bp  # noqa: E402
+from api.blueprints.comments_v2 import comments_v2_bp  # noqa: E402
+from api.blueprints.attachments import attachments_bp  # noqa: E402
+from api.blueprints.transitions import transitions_bp  # noqa: E402
+from api.blueprints.ai import ai_bp  # noqa: E402
+from api.blueprints.notifications import notifications_bp  # noqa: E402
+from api.blueprints.exports import exports_bp  # noqa: E402
+from api.blueprints.automations import automations_bp  # noqa: E402
+from api.blueprints.backgrounds import backgrounds_bp  # noqa: E402
+from api.blueprints.webhooks import webhooks_bp  # noqa: E402
+from api.blueprints.kanban import kanban_bp  # noqa: E402
+from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
+from api.blueprints.sync import sync_bp  # noqa: E402
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
         get_dashboard_summary,
-        get_current_user_name,
         list_available_queues,
         list_available_projects,
-        load_queue_issues,
     )
 except ImportError:  # pragma: no cover
-    # Provide lightweight stubs so the server can still run without core package.
-    # Consolidated into a single block to minimize duplication.
-    def _stub(_name):  # internal helper
-        return lambda *args, **kwargs: [] if 'list_available' in _name else (
-            ({
-                'total_issues': 0,
-                'unassigned_count': 0,
-                'critical_issues': 0,
-                'reporter_issues_count': 0,
-                'by_status': {},
-                'by_assignee': {},
-                'by_desk': {},
-            } if _name == 'get_dashboard_summary' else 'Unknown')
-        )
-    get_dashboard_summary = _stub('get_dashboard_summary')  # type: ignore
-    get_current_user_name = _stub('get_current_user_name')  # type: ignore
-    list_available_queues = _stub('list_available_queues')  # type: ignore
-    list_available_projects = _stub('list_available_projects')  # type: ignore
-    def load_queue_issues(*_a, **_k):  # type: ignore
-        return None, 'core.api unavailable'
+    # Stubs for when core package is unavailable
+    def _stub(_name):
+        return lambda *args, **kwargs: [] if 'list_available' in _name else {
+            'total_issues': 0,
+            'unassigned_count': 0,
+            'critical_issues': 0,
+            'reporter_issues_count': 0,
+            'by_status': {},
+            'by_assignee': {},
+            'by_desk': {},
+        }
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    get_dashboard_summary = _stub('get_dashboard_summary')
+    list_available_queues = _stub('list_available_queues')
+    list_available_projects = _stub('list_available_projects')
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_FOLDER = os.path.join(BASE_DIR, 'frontend', 'static')
 TEMPLATE_FOLDER = os.path.join(BASE_DIR, 'frontend', 'templates')
 
-app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path='/static', template_folder=TEMPLATE_FOLDER)
-init_db()  # Initialize lightweight SQLite persistence (notifications)
+app = Flask(
+    __name__,
+    static_folder=STATIC_FOLDER,
+    static_url_path='/static',
+    template_folder=TEMPLATE_FOLDER
+)
+init_db()
 CORS(app)
+
+# Register active blueprints
 app.register_blueprint(issues_bp)
-app.register_blueprint(comments_bp)
+app.register_blueprint(comments_v2_bp)
 app.register_blueprint(attachments_bp)
 app.register_blueprint(transitions_bp)
 app.register_blueprint(ai_bp)
-app.register_blueprint(sla_bp)
+app.register_blueprint(sync_bp)
 app.register_blueprint(notifications_bp)
 app.register_blueprint(exports_bp)
 app.register_blueprint(automations_bp)
 app.register_blueprint(backgrounds_bp)
 app.register_blueprint(webhooks_bp)
 app.register_blueprint(kanban_bp)
+app.register_blueprint(ai_suggestions_bp)
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
@@ -122,8 +137,8 @@ def _log_req():
 
 @app.after_request
 def add_cache_headers(response):
-    """Add cache-busting headers to prevent JavaScript caching issues"""
-    if request.path.endswith('.js') or request.path.endswith('.css'):
+    """Add cache-busting headers to prevent JavaScript/CSS/HTML caching issues"""
+    if request.path.endswith('.js') or request.path.endswith('.css') or request.path.endswith('.html') or request.path == '/' or request.path == '/app':
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
@@ -266,8 +281,11 @@ def api_get_user():
     """Return authenticated JIRA user info (no local fallback)."""
     user = get_current_user()
     # Ensure timestamp and success meta
-    user['timestamp'] = datetime.now().isoformat()
-    return {'user': user}
+    return {
+        'success': True,
+        'user': user,
+        'timestamp': datetime.now().isoformat()
+    }
 
 @app.route('/api/projects', methods=['GET'])
 @handle_api_error
@@ -322,6 +340,14 @@ def api_enrich_issue(issue_key):
             enriched_data['reporter'] = fields['reporter'].get('displayName')
             enriched_data['reporterEmail'] = fields['reporter'].get('emailAddress')
         
+        # Get reporter contact info from custom fields
+        if fields.get('customfield_10141'):  # Email
+            enriched_data['reporterEmail'] = fields['customfield_10141']
+        if fields.get('customfield_10142'):  # Phone
+            enriched_data['reporterPhone'] = fields['customfield_10142']
+        if fields.get('customfield_10143'):  # Empresa (Company)
+            enriched_data['reporterCompany'] = fields['customfield_10143']
+        
         # Get description from API (no fallbacks)
         if fields.get('description'):
             enriched_data['description'] = fields['description']
@@ -362,22 +388,24 @@ def api_enrich_issue(issue_key):
         return {'error': str(e), 'issue_key': issue_key}, 500
 
 def _extract_severity_from_fields(fields):
-    """Extract severity from JIRA fields using custom fields dictionary"""
+    """Extract severity from JIRA fields using known custom field IDs"""
     try:
-        # Load custom fields dictionary
-        with open('custom_fields_dictionary.json', 'r', encoding='utf-8') as f:
-            custom_fields_dict = json.load(f)
+        # Priority list of severity field IDs (from CUSTOM_FIELDS_REFERENCE.json)
+        severity_field_ids = [
+            'customfield_10125',  # Criticidad (MSM project - PRIMARY)
+            'customfield_10020',  # Alternative severity field
+            'customfield_10138',  # Criticality
+            'customfield_10129',  # Alternate severity
+            'customfield_10048',  # Another common one
+        ]
         
-        # Get severity field IDs from dictionary
-        severity_fields = custom_fields_dict.get('categories', {}).get('severity_priority', [])
-        
-        for severity_field in severity_fields:
-            field_id = severity_field['id']
+        # Try each severity field ID
+        for field_id in severity_field_ids:
             if field_id in fields and fields[field_id] is not None:
                 value = fields[field_id]
                 extracted = _extract_field_value(value)
                 if extracted:
-                    logger.info(f"Severity found in {field_id} ({severity_field['name']}): {extracted}")
+                    logger.info(f"Severity found in {field_id}: {extracted}")
                     return str(extracted)
         
         # Fallback: check standard severity field

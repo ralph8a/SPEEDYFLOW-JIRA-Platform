@@ -114,12 +114,24 @@ def api_get_kanban():
         columns_map.setdefault(status_val, []).append(rec)
 
     # Sort statuses (preserving a common order if present)
-    order_hint = ['To Do', 'Todo', 'Pending', 'En espera', 'Backlog', 'Selected for Development', 'In Progress', 'En curso', 'Doing', 'Review', 'QA', 'Blocked', 'Done', 'Closed', 'Resolved']
+    # Order matches actual MSM project workflow
+    order_hint = [
+        'Backlog', 'To Do', 'Todo', 'Pending', 'Pendiente',
+        'En Progreso', 'In Progress', 'En curso', 'Doing',
+        'En espera', 'En espera de cliente', 'Waiting for customer',
+        'Review', 'QA', 'Testing',
+        'Validación de solución', 'Solution validation', 'Validation',
+        'Blocked', 'Bloqueado',
+        'Cancelado', 'Cancelled', 'Canceled',
+        'Done', 'Cerrado', 'Closed', 'Resolved', 'Resuelto'
+    ]
     def status_sort_key(s: str) -> int:
-        try:
-            return order_hint.index(s)
-        except ValueError:
-            return len(order_hint) + hash(s) % 1000
+        # Case-insensitive matching for better flexibility
+        s_lower = s.lower()
+        for idx, hint in enumerate(order_hint):
+            if hint.lower() == s_lower:
+                return idx
+        return len(order_hint) + hash(s) % 1000
     sorted_statuses = sorted(columns_map.keys(), key=status_sort_key)
 
     columns: List[Dict[str, Any]] = []

@@ -19,7 +19,8 @@ class SeverityEnricher:
     
     # Mapeo de campos custom de severidad por ID
     SEVERITY_FIELD_IDS = [
-        'customfield_10125',  # Severity (común en JIRA Cloud)
+        'customfield_10125',  # Criticidad (MSM project - MAIN FIELD)
+        'customfield_10020',  # Severity (alternative)
         'customfield_10138',  # Criticality
         'customfield_10129',  # Alternate severity
         'customfield_10048',  # Another common one

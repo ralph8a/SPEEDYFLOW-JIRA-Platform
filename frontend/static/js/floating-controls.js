@@ -73,8 +73,17 @@ function setupThemeToggleButton() {
 
 // ===== USER MENU =====
 function setupUserMenu() {
-  // User menu disabled - visual only mode
-  console.log('User menu disabled - visual only');
+  const userMenuBtn = document.getElementById('userMenuBtn');
+  
+  if (userMenuBtn) {
+    userMenuBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showProfileModal();
+    });
+    console.log('✓ User profile button enabled');
+  }
+  
   // Update user info for display only
   updateUserInfo();
 }

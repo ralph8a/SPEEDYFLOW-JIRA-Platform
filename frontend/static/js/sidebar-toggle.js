@@ -1,6 +1,6 @@
 /**
  * SPEEDYFLOW - Sidebar Toggle Controller
- * Manejo de expansión/colapso del sidebar
+ * Manejo de expansión/colapso del sidebar con modo iconos
  */
 
 const sidebarToggleState = {
@@ -9,35 +9,37 @@ const sidebarToggleState = {
 
 // ===== INITIALIZE SIDEBAR TOGGLE =====
 function initSidebarToggle() {
-  // Sidebar toggle disabled - visual only
-  console.log('Sidebar toggle disabled - visual only');
+  const sidebarComponent = document.querySelector('.sidebar-content-component');
+  const toggleBtn = document.querySelector('#sidebarToggleBtn');
+  
+  if (!sidebarComponent || !toggleBtn) return;
+
+  // Event listener
+  toggleBtn.addEventListener('click', toggleSidebar);
 }
 
 // ===== TOGGLE SIDEBAR =====
 function toggleSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  const toggleBtn = document.getElementById('sidebarToggleBtn');
-  const toggleIcon = document.querySelector('.toggle-icon');
+  const sidebarHeader = document.querySelector('.sidebar-header-component');
+  const sidebarContent = document.querySelector('.sidebar-content-component');
+  
+  if (!sidebarHeader || !sidebarContent) return;
 
   sidebarToggleState.isExpanded = !sidebarToggleState.isExpanded;
   localStorage.setItem('sidebarExpanded', sidebarToggleState.isExpanded);
 
   if (sidebarToggleState.isExpanded) {
     // Expand
-    sidebar.style.width = 'var(--sidebar-width)';
-    sidebar.style.minWidth = 'var(--sidebar-width)';
-    toggleIcon.textContent = '◀';
-    sidebar.classList.remove('collapsed');
+    sidebarHeader.classList.remove('collapsed');
+    sidebarContent.classList.remove('collapsed');
   } else {
-    // Collapse
-    sidebar.style.width = '60px';
-    sidebar.style.minWidth = '60px';
-    toggleIcon.textContent = '▶';
-    sidebar.classList.add('collapsed');
+    // Collapse (show icons only)
+    sidebarHeader.classList.add('collapsed');
+    sidebarContent.classList.add('collapsed');
   }
-
-  // Animate icon
-  toggleIcon.style.transform = sidebarToggleState.isExpanded ? 'rotateY(0)' : 'rotateY(180deg)';
+  
+  // Trigger layout recalculation
+  window.dispatchEvent(new Event('sidebarToggled'));
 }
 
 // ===== RESTORE SIDEBAR STATE =====

@@ -68,6 +68,7 @@ const state = {
   theme: localStorage.getItem('theme') || 'light',
   currentUser: null,
   filteredIssues: [],
+  filterMode: 'all', // 'all' or 'myTickets'
   severityValues: null, // Cache for severity values from JIRA
   severityMapping: null // Mapping for severity classification
 };
@@ -133,15 +134,22 @@ function setupEventListeners() {
     serviceDeskFilterSelect.addEventListener('change', async (e) => {
       state.currentDesk = e.target.value;
       console.log(`📂 Service Desk changed to: ${state.currentDesk}`);
+      console.log(`🔍 Current state:`, { desk: state.currentDesk, queue: state.currentQueue });
+      
+      // Update breadcrumb with desk name
+      const desk = state.desks.find(d => d.id === state.currentDesk);
+      if (desk && window.headerMenus && window.headerMenus.updateBreadcrumb) {
+        window.headerMenus.updateBreadcrumb(desk.name || desk.displayName, 'Select Queue');
+      }
       
       // Fetch desks to find queues
-      const desk = state.desks.find(d => d.id === state.currentDesk);
       if (desk && desk.queues) {
         await loadQueues(desk.queues);
       }
       
       // Clear issues when desk changes
       state.issues = [];
+      state.currentQueue = null; // Reset queue when desk changes
       renderKanban();
     });
   }
@@ -152,12 +160,27 @@ function setupEventListeners() {
     queueFilterSelect.addEventListener('change', async (e) => {
       state.currentQueue = e.target.value;
       console.log(`📋 Queue changed to: ${state.currentQueue}`);
+      console.log(`🔍 Current state:`, { desk: state.currentDesk, queue: state.currentQueue });
+      
+      // Update breadcrumb with queue name
+      if (state.currentQueue) {
+        const desk = state.desks.find(d => d.id === state.currentDesk);
+        const deskName = desk ? (desk.name || desk.displayName) : 'Select Desk';
+        const queueName = e.target.options[e.target.selectedIndex].text;
+        
+        if (window.headerMenus && window.headerMenus.updateBreadcrumb) {
+          window.headerMenus.updateBreadcrumb(deskName, queueName);
+        }
+      }
       
       if (state.currentDesk && state.currentQueue) {
         await loadIssues(state.currentQueue);
       }
     });
   }
+  
+  // Make state globally accessible for AI analyzer
+  window.state = state;
 
   // Auto-refresh every 10 minutes
   setInterval(refreshIssues, 600000);
@@ -407,35 +430,51 @@ async function loadIssues(queueId) {
     // Preserve raw issues for kanban fallback
     window.app = window.app || {};
     window.app.currentIssues = allIssues;
-    // Use current user from state (loaded from API)
-    let currentUser = state.currentUser || localStorage.getItem('currentUser') || '';
-    if (typeof currentUser === 'object' && currentUser !== null) {
-      currentUser = currentUser.displayName || currentUser.name || '';
+    // Check filter mode
+    const shouldFilterByAssignee = state.filterMode === 'myTickets';
+    
+    console.log(`🔍 Filter mode: ${state.filterMode}, All issues length: ${allIssues.length}`);
+    
+    // Apply assignee filter only if in "My Tickets" mode
+    if (shouldFilterByAssignee) {
+      let currentUser = state.currentUser || localStorage.getItem('currentUser') || '';
+      if (typeof currentUser === 'object' && currentUser !== null) {
+        currentUser = currentUser.displayName || currentUser.name || '';
+      }
+      
+      console.log(`🔍 Filtering by assignee: "${currentUser}"`);
+      
+      state.filteredIssues = allIssues.length ? allIssues.filter(issue => {
+        // Try different assignee field locations
+        const assignee = 
+          issue.assignee?.displayName || 
+          issue.assignee?.name ||
+          issue.fields?.assignee?.displayName ||
+          issue.fields?.assignee?.name ||
+          issue.assigned_to ||
+          issue.asignado_a ||
+          '';
+        
+        // Exact match or partial match
+        if (!assignee) return false;
+        
+        return assignee.toLowerCase() === currentUser.toLowerCase() ||
+               assignee.toLowerCase().includes(currentUser.toLowerCase());
+      }) : [];
+      
+      state.issues = state.filteredIssues;
+      console.log(`✅ Filtered to ${state.issues.length} tickets assigned to ${currentUser}`);
+    } else {
+      // Show all tickets
+      state.issues = allIssues;
+      state.filteredIssues = allIssues;
+      console.log(`✅ Showing all ${state.issues.length} tickets`);
     }
-    console.log(`🔍 Current user: "${currentUser}", All issues length: ${allIssues.length}`);
-    
-    // Filtrar por "Assigned to Me" - buscar en diferentes campos posibles
-  state.filteredIssues = allIssues.length ? allIssues.filter(issue => {
-      // Try different assignee field locations
-      const assignee = 
-        issue.assignee?.displayName || 
-        issue.assignee?.name ||
-        issue.fields?.assignee?.displayName ||
-        issue.fields?.assignee?.name ||
-        issue.assigned_to ||
-        issue.asignado_a ||
-        '';
-      
-      // Exact match or partial match
-      if (!assignee) return false;
-      
-      return assignee.toLowerCase() === currentUser.toLowerCase() ||
-             assignee.toLowerCase().includes(currentUser.toLowerCase());
-  }) : [];
-    
-    state.issues = state.filteredIssues.length > 0 ? state.filteredIssues : allIssues;
     
     console.log(`✅ Issues loaded: ${state.issues.length}/${allIssues.length} (filtered for: "${currentUser}")`);
+    
+    // PERFORMANCE: Enrichment desactivado - el backend ya envía todos los datos necesarios
+    // await enrichIssuesWithCustomFields();
     
     // Update breadcrumb
     if (window.headerMenus && window.headerMenus.syncQueueBreadcrumb) {
@@ -451,8 +490,8 @@ async function loadIssues(queueId) {
     // Cargar transiciones para cada ticket
     await loadIssueTransitions();
     
-    // Enriquecer datos de tickets con custom fields usando APIs reales
-    await enrichIssuesWithCustomFields();
+    // PERFORMANCE: Enrichment desactivado - backend ya envía datos completos
+    // await enrichIssuesWithCustomFields();
     
     renderView();
     if (statusEl) {
@@ -477,7 +516,9 @@ async function loadIssues(queueId) {
  * NO usa datos hardcodeados - solo busquedas alternativas con APIs
  */
 async function enrichIssuesWithCustomFields() {
-  console.log(`🔍 Enrichment iniciado para ${state.issues.length} issues (usando SOLO APIs reales)`);
+  // NOTA: Esta función está DESACTIVADA para mejorar performance
+  // El backend ya envía todos los datos necesarios en /api/issues
+  console.log(`⚠️ Enrichment llamado (debería estar desactivado) - ${state.issues.length} issues`);
   
   // Get field definitions once for all issues
   let fieldDefinitions = null;
@@ -493,14 +534,9 @@ async function enrichIssuesWithCustomFields() {
   }
   
   // Enrich each issue using API calls (no hardcoded data)
+  // PERFORMANCE: Este loop es lento (2 requests x N issues)
   for (const issue of state.issues) {
     try {
-      console.log(`🔍 Enriching ${issue.key} - Original data:`, {
-        severity: issue.severity || 'null',
-        assignee: issue.assignee || 'null',
-        reporter: issue.reporter || 'null',
-        status: issue.status || 'null'
-      });
       
       // STEP 1: Get enriched data from JIRA REST API (no hardcoded fallbacks)
       try {
@@ -513,36 +549,34 @@ async function enrichIssuesWithCustomFields() {
             const apiData = enrichData.enriched_data;
             
             // Preservar severity original del backend (CRÍTICO)
-            console.log(`🔒 ${issue.key} - Preserving original severity: ${issue.severity}`);
             
             // Solo enriquecer campos que están vacíos o undefined (COMPLEMENTAR, no sobrescribir)
             if (!issue.assignee && apiData.assignee !== undefined) {
               issue.assignee = apiData.assignee;
-              console.log(`👤 ${issue.key} - Enriched assignee: ${apiData.assignee}`);
             }
             if (!issue.reporter && apiData.reporter !== undefined) {
               issue.reporter = apiData.reporter;
-              console.log(`📝 ${issue.key} - Enriched reporter: ${apiData.reporter}`);
             }
             if (!issue.reporterEmail && apiData.reporterEmail !== undefined) {
               issue.reporterEmail = apiData.reporterEmail;
-              console.log(`📧 ${issue.key} - Enriched reporter email: ${apiData.reporterEmail}`);
+            }
+            if (!issue.reporterPhone && apiData.reporterPhone !== undefined) {
+              issue.reporterPhone = apiData.reporterPhone;
+            }
+            if (!issue.reporterCompany && apiData.reporterCompany !== undefined) {
+              issue.reporterCompany = apiData.reporterCompany;
             }
             if (!issue.summary && apiData.summary !== undefined) {
               issue.summary = apiData.summary;
-              console.log(`📋 ${issue.key} - Enriched summary: ${apiData.summary?.substring(0, 30)}...`);
             }
             if (!issue.description && apiData.description !== undefined) {
               issue.description = apiData.description;
-              console.log(`📄 ${issue.key} - Enriched description`);
             }
             if (!issue.status && apiData.status !== undefined) {
               issue.status = apiData.status;
-              console.log(`🏷️ ${issue.key} - Enriched status: ${apiData.status}`);
             }
             if (!issue.type && apiData.type !== undefined) {
               issue.type = apiData.type;
-              console.log(`🔖 ${issue.key} - Enriched type: ${apiData.type}`);
             }
             if (!issue.created && apiData.created !== undefined) {
               issue.created = apiData.created;
@@ -550,11 +584,17 @@ async function enrichIssuesWithCustomFields() {
             if (!issue.updated && apiData.updated !== undefined) {
               issue.updated = apiData.updated;
             }
+            // CRÍTICO: Enriquecer severity desde API si no existe
+            if (!issue.severity && !issue.criticidad && apiData.severity !== undefined) {
+              issue.severity = apiData.severity;
+              issue.criticidad = apiData.severity; // Alias para compatibilidad
+            }
             
             console.log(`✅ ${issue.key} - Enriched from JIRA REST API:`, {
               assignee: issue.assignee || '(null from API)',
               reporter: issue.reporter || '(null from API)', 
               status: issue.status || '(null from API)',
+              severity: issue.severity || issue.criticidad || '(no severity)',
               source: 'jira_rest_api'
             });
           }
@@ -580,7 +620,6 @@ async function enrichIssuesWithCustomFields() {
               if (lowerFieldName.includes('phone') || lowerFieldName.includes('telefono')) {
                 if (!issue.reporterPhone && fieldValue) {
                   issue.reporterPhone = fieldValue;
-                  console.log(`📞 ${issue.key} - Phone from custom field '${fieldName}': ${fieldValue}`);
                 }
               }
               
@@ -588,7 +627,6 @@ async function enrichIssuesWithCustomFields() {
               if (lowerFieldName.includes('company') || lowerFieldName.includes('empresa') || lowerFieldName.includes('organization')) {
                 if (!issue.reporterCompany && fieldValue) {
                   issue.reporterCompany = fieldValue;
-                  console.log(`🏢 ${issue.key} - Company from custom field '${fieldName}': ${fieldValue}`);
                 }
               }
               
@@ -596,55 +634,46 @@ async function enrichIssuesWithCustomFields() {
               if (lowerFieldName.includes('email') || lowerFieldName.includes('correo')) {
                 if (!issue.reporterEmail && fieldValue) {
                   issue.reporterEmail = fieldValue;
-                  console.log(`📧 ${issue.key} - Email from custom field '${fieldName}': ${fieldValue}`);
                 }
               }
             }
             
             // Store all custom fields for access
             issue.allFields = customFields;
-            
-            console.log(`🔧 ${issue.key} - Custom fields loaded: ${Object.keys(customFields).length} fields`);
           }
         }
       } catch (error) {
-        console.warn(`⚠️ Could not get custom fields for ${issue.key}:`, error);
+        // Silent fail - not critical
       }
       
-      console.log(`✅ ${issue.key} - Enrichment complete (preserved + enriched):`, {
-        summary: issue.summary?.substring(0, 50) || '(null)',
-        assignee: issue.assignee || '(null)',
-        severity: issue.severity || '(null - PRESERVED from backend)',
-        reporter: issue.reporter || '(null)',
-        status: issue.status || '(null)',
-        customFieldsCount: Object.keys(issue.allFields || {}).length,
-        source: 'backend_preserved + api_enriched'
-      });
-      
     } catch (error) {
-      console.warn(`⚠️ Could not enrich issue ${issue.key}:`, error);
+      // Silent fail
     }
   }
   
-  console.log(`✅ Enrichment completado - SOLO datos de APIs reales (sin hardcoded)`);
+  console.log(`✅ Enrichment completado (${state.issues.length} issues)`);
 }
 
 /**
  * Cargar transiciones disponibles para cada ticket
  * Las transiciones son los cambios de estado posibles
+ * OPTIMIZADO: Requests en paralelo en lugar de secuencial
  */
 async function loadIssueTransitions() {
   try {
-    for (const issue of state.issues) {
+    // PERFORMANCE: Hacer todas las peticiones en paralelo
+    const promises = state.issues.map(async (issue) => {
       try {
         const response = await fetch(`/api/issues/${issue.key}/transitions`);
         const json = await response.json();
         state.issueTransitions[issue.key] = json.transitions || [];
-        // Transitions now auto-calculate card height in applyCardLayout()
       } catch (error) {
         state.issueTransitions[issue.key] = [];
       }
-    }
+    });
+    
+    await Promise.all(promises);
+    console.log(`✅ Loaded transitions for ${state.issues.length} issues (parallel)`);
   } catch (error) {
     console.error('❌ Error loading transitions:', error);
   }
@@ -792,7 +821,7 @@ function renderView() {
   }
 }
 
-function renderKanban() {
+async function renderKanban() {
   const kanbanView = document.getElementById('kanbanView');
   
   if (state.issues.length === 0) {
@@ -800,24 +829,78 @@ function renderKanban() {
     return;
   }
 
-  // Agrupar por ESTADO ACTUAL (current status)
-  const columns = {};
-  state.issues.forEach(issue => {
-    const currentStatus = issue.status || issue.fields?.status?.name || 'Sin Estado';
-    if (!columns[currentStatus]) columns[currentStatus] = [];
-    columns[currentStatus].push(issue);
-  });
+  // Usar endpoint /api/kanban del backend para obtener orden correcto
+  let kanbanData = null;
+  try {
+    const params = new URLSearchParams({
+      desk_id: state.currentDesk,
+      queue_id: state.currentQueue || 'all'
+    });
+    const response = await fetch(`/api/kanban?${params.toString()}`);
+    if (response.ok) {
+      kanbanData = await response.json();
+      console.log('✅ Kanban data from backend:', kanbanData.columns?.length, 'columns');
+    }
+  } catch (error) {
+    console.warn('⚠️ Failed to fetch kanban from backend, falling back to local grouping:', error);
+  }
+
+  // Si el backend respondió con columnas ordenadas, usarlas
+  let columnsToRender = [];
+  if (kanbanData && kanbanData.columns && kanbanData.statuses) {
+    // Usar columnas del backend (ya ordenadas)
+    columnsToRender = kanbanData.statuses.map(status => {
+      const column = kanbanData.columns.find(c => c.status === status);
+      return {
+        status: status,
+        issues: column ? column.issues : []
+      };
+    });
+  } else {
+    // Fallback: agrupar localmente con orden manual
+    const columns = {};
+    state.issues.forEach(issue => {
+      const currentStatus = issue.status || issue.fields?.status?.name || 'Sin Estado';
+      if (!columns[currentStatus]) columns[currentStatus] = [];
+      columns[currentStatus].push(issue);
+    });
+
+    const statusOrder = [
+      'Backlog', 'To Do', 'Todo', 'Pending', 'Pendiente',
+      'En Progreso', 'In Progress', 'En curso', 'Doing',
+      'En espera', 'En espera de cliente', 'Waiting for customer',
+      'Review', 'QA', 'Testing',
+      'Validación de solución', 'Solution validation', 'Validation',
+      'Blocked', 'Bloqueado',
+      'Cancelado', 'Cancelled', 'Canceled',
+      'Done', 'Cerrado', 'Closed', 'Resolved', 'Resuelto'
+    ];
+
+    const sortedStatuses = Object.keys(columns).sort((a, b) => {
+      const indexA = statusOrder.findIndex(s => s.toLowerCase() === a.toLowerCase());
+      const indexB = statusOrder.findIndex(s => s.toLowerCase() === b.toLowerCase());
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    columnsToRender = sortedStatuses.map(status => ({
+      status: status,
+      issues: columns[status]
+    }));
+  }
 
   let html = '';
   let colIndex = 0;
-  // Expanded color palette - supports unlimited columns with rotating colors
   const colors = ['col-blue', 'col-purple', 'col-cyan', 'col-green', 'col-red', 'col-yellow', 'col-pink', 'col-indigo', 'col-teal', 'col-orange'];
 
-  Object.entries(columns).forEach(([status, issues]) => {
+  columnsToRender.forEach(({ status, issues }) => {
+    if (!issues || issues.length === 0) return; // Skip empty columns
     const color = colors[colIndex % colors.length];
     colIndex++;
     
-    html += `<div class="kanban-column ${color}" data-status="${status}">
+    html += `<div class="kanban-column glassmorphic-secondary ${color}" data-status="${status}">
       <div class="kanban-column-header">
         <div class="kanban-column-title">${status}</div>
         <div class="kanban-column-count">${issues.length}</div>
@@ -828,7 +911,7 @@ function renderKanban() {
       const transitions = state.issueTransitions[issue.key] || [];
       
       // ✅ Usar severity directamente sin fallback
-      const severity = issue.severity;
+      const severity = issue.severity || issue.criticidad || issue.customfield_10125?.value || '';
       
       const criticality = issue.criticality || '';
       
@@ -840,8 +923,8 @@ function renderKanban() {
       
       const status = issue.status || 'Unknown';
       const type = issue.type || issue.issue_type || 'Task';
-      const reporter = issue.reporter || 'Unknown';
-      const reporterEmail = issue.reporterEmail || '';
+      const reporter = issue.reporter || issue.informer || issue.fields?.reporter?.displayName || 'Unknown';
+      const reporterEmail = issue.reporterEmail || issue.fields?.reporter?.emailAddress || '';
       // Extract reporter phone and company (from enriched fields)
       const reporterPhone = issue.reporterPhone || '';
       const reporterCompany = issue.reporterCompany || (issue.labels?.find(l => l.startsWith('company-')) || '');
@@ -855,15 +938,17 @@ function renderKanban() {
 
       // ✅ Determinar estilo de severity con función centralizada
       const severityStyle = getSeverityStyle(severity);
-      
-      console.log(`✅ ${issue.key} - Direct severity: ${severity || 'null'} ${severityStyle ? `(${severityStyle.className})` : '(no badge)'}`);
 
       const severityBadgeHtml = severityStyle ? 
         `<span class="severity-badge ${severityStyle.className}" title="Severity: ${severity}">
            ${severityStyle.emoji} ${severity}
          </span>` : '';
 
-      html += `<div class="${cardClass}" data-issue="${issue.key}" onclick="openIssueDetails('${issue.key}')">
+      html += `<div class="${cardClass} kanban-card" 
+                    data-issue="${issue.key}" 
+                    data-issue-key="${issue.key}" 
+                    draggable="true"
+                    onclick="openIssueDetails('${issue.key}')">
         <!-- HEADER: Key + Type + Severity Badge (if exists) -->
         <div class="issue-card-header">
           <div class="issue-card-key">${issue.key}</div>
@@ -881,18 +966,17 @@ function renderKanban() {
         
         <!-- SLA INDICATOR - rendered in right sidebar SLA monitor -->
         
-        <!-- FOOTER: Reporter + Company/Phone + Assignee + Actions count -->
+        <!-- FOOTER: Reporter info + Assignee -->
         <div class="issue-card-footer">
           <div class="footer-row">
             <span class="reporter" title="Reporter: ${reporter}">📢 ${reporter}</span>
-            <span class="actions-count">${transitions.length} actions</span>
           </div>
-          <!-- ALWAYS VISIBLE: Reporter contact info -->
+          ${reporterCompany || reporterMobile || reporterEmail ? `
           <div class="footer-row footer-row-extended footer-row-always-visible">
-            ${reporterCompany ? `<span class="reporter-company" title="Company: ${reporterCompany}">🏢 ${reporterCompany.substring(0, 18)}</span>` : ''}
-            ${reporterMobile ? `<span class="reporter-phone" title="Phone: ${reporterMobile}">📱 ${reporterMobile}</span>` : ''}
-            ${reporterEmail ? `<span class="reporter-email" title="Email: ${reporterEmail}">✉️ ${reporterEmail.substring(0, 15)}</span>` : ''}
-          </div>
+            ${reporterCompany ? `<span class="reporter-company" title="Company: ${reporterCompany}">🏢 ${reporterCompany.substring(0, 20)}</span>` : ''}
+            ${reporterMobile ? `<span class="reporter-phone" title="Phone: ${reporterMobile}">📱 ${reporterMobile.substring(0, 18)}</span>` : ''}
+            ${reporterEmail ? `<span class="reporter-email" title="Email: ${reporterEmail}">✉️ ${reporterEmail.substring(0, 20)}</span>` : ''}
+          </div>` : ''}
           <div class="footer-row">
             <span class="assignee ${assignee === 'No assignee' ? 'assignee-unassigned' : ''}" title="Assigned to: ${assignee}">👤 ${assignee}</span>
           </div>
@@ -916,6 +1000,12 @@ function renderKanban() {
   });
 
   kanbanView.innerHTML = html;
+  
+  // Apply transparency effects to kanban columns
+  if (window.transparencyManager) {
+    window.transparencyManager.applyToKanbanColumns();
+  }
+  
   applyCardLayout();
 }
 

@@ -60,22 +60,22 @@ class SidebarActions {
    * Navigation: My Tickets, All Tickets, Starred
    */
   initNavigationItems() {
-    const navItems = document.querySelectorAll('.sidebar-section[aria-label="Navigation"] .sidebar-menu-item');
+    const navItems = document.querySelectorAll('.sidebar-section[aria-label="Navigation"] .sidebar-menu-item:not(#newTicketBtn)');
     
     navItems.forEach((item, index) => {
       item.addEventListener('click', (e) => {
         e.preventDefault();
         
-        // Remove active class from all
+        // Remove active class from all navigation items (excluding Create Ticket)
         navItems.forEach(nav => nav.classList.remove('active'));
         
-        // Add active to clicked
+        // Add active to clicked navigation item
         item.classList.add('active');
         
         const label = item.querySelector('.label')?.textContent || '';
         console.log(`📂 Navigation: ${label}`);
         
-        // Handle different navigation types
+        // Handle different navigation types (excluding Create Ticket button)
         switch(index) {
           case 0: // My Tickets
             this.filterMyTickets();
@@ -93,39 +93,215 @@ class SidebarActions {
 
   /**
    * Filter: My Tickets
+   * Auto-selects the current user's desk and "assigned to me" queue
    */
-  filterMyTickets() {
+  async filterMyTickets() {
     console.log('🔍 Filtering: My Tickets');
     
-    // Get current user from state or API response
-    const currentUser = window.state?.currentUser || window.state?.user?.name;
-    
-    if (!currentUser) {
-      // Try to get from first assigned ticket as fallback
+    try {
+      // Set filter mode to myTickets
+      if (window.state) {
+        window.state.filterMode = 'myTickets';
+        console.log('✅ Set filter mode to: myTickets');
+      }
+      
+      // First, get current user information from API
+      const currentUser = await this.getCurrentUserInfo();
+      if (!currentUser) {
+        this.showNotification('My Tickets', 'No se pudo detectar el usuario actual. Intenta refrescar la página.', 'warning');
+        return;
+      }
+
+      console.log('✅ Current user detected:', currentUser);
+      
+      // Store current user in state
+      if (window.state) {
+        window.state.currentUser = currentUser;
+      }
+
+      // Auto-select user's desk and "assigned to me" queue
+      await this.autoSelectUserDeskAndQueue(currentUser);
+      
+      // Reload issues to apply the filter
+      if (window.loadIssues) {
+        await window.loadIssues();
+      }
+      
+      this.showNotification('My Tickets', `Showing tickets assigned to ${currentUser.displayName}`, 'success');
+      
+    } catch (error) {
+      console.error('❌ Error in filterMyTickets:', error);
+      this.showNotification('My Tickets', 'Error al configurar vista personal. Intenta refrescar.', 'error');
+    }
+  }
+
+  /**
+   * Get current user information from API
+   */
+  async getCurrentUserInfo() {
+    try {
+      // Check if already cached
+      if (window.state?.currentUser && window.state.currentUser.displayName) {
+        return window.state.currentUser;
+      }
+
+      // Fetch from API
+      const response = await fetch('/api/user');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.success && data.user) {
+        // Cache in state
+        if (!window.state) window.state = {};
+        window.state.currentUser = data.user;
+        return data.user;
+      }
+      
+      throw new Error('Invalid user response');
+      
+    } catch (error) {
+      console.error('❌ Error fetching current user:', error);
+      
+      // Fallback: try to get from existing tickets
       const issues = window.state?.issues || [];
       const assignedIssue = issues.find(i => i.assignee || i.asignado_a);
       const fallbackUser = assignedIssue?.assignee || assignedIssue?.asignado_a;
       
-      if (fallbackUser) {
-        console.log('Using fallback user from tickets:', fallbackUser);
-        this.applyQuickFilter('assignee', fallbackUser);
-        this.showNotification('My Tickets', `Showing tickets for ${fallbackUser}`, 'success');
-      } else {
-        this.showNotification('My Tickets', 'No user information available. Please assign yourself to a ticket first.', 'warning');
+      if (fallbackUser && fallbackUser !== 'Unassigned') {
+        console.log('🔄 Using fallback user from tickets:', fallbackUser);
+        return { displayName: fallbackUser, source: 'fallback' };
       }
-      return;
+      
+      return null;
     }
-    
-    // Apply assignee filter using FilterManager
-    this.applyQuickFilter('assignee', currentUser);
-    this.showNotification('My Tickets', `Showing tickets assigned to ${currentUser}`, 'success');
+  }
+
+  /**
+   * Auto-select the user's desk and "assigned to me" queue
+   */
+  async autoSelectUserDeskAndQueue(currentUser) {
+    try {
+      // Get available desks
+      const desksResponse = await fetch('/api/desks');
+      if (!desksResponse.ok) {
+        throw new Error(`Failed to fetch desks: ${desksResponse.status}`);
+      }
+      
+      const desksData = await desksResponse.json();
+      const desks = desksData || [];
+      
+      if (desks.length === 0) {
+        console.warn('⚠️ No desks available');
+        return;
+      }
+
+      // Find user's primary desk (first one they have access to, or first available)
+      let userDesk = desks[0]; // Default to first desk if no specific one found
+      
+      // Try to find a desk that matches user's domain or is specifically assigned
+      const userEmail = currentUser.emailAddress || '';
+      if (userEmail) {
+        const userDomain = userEmail.split('@')[1];
+        const matchingDesk = desks.find(desk => 
+          desk.name && (
+            desk.name.toLowerCase().includes(userDomain.toLowerCase()) ||
+            desk.name.toLowerCase().includes(currentUser.displayName.toLowerCase())
+          )
+        );
+        if (matchingDesk) {
+          userDesk = matchingDesk;
+          console.log('🎯 Found user-specific desk:', userDesk.name);
+        }
+      }
+
+      // Auto-select the desk in UI
+      await this.selectDesk(userDesk);
+      
+      // Find "assigned to me" or similar queue
+      const queues = userDesk.queues || [];
+      const assignedQueue = queues.find(queue => 
+        queue.name && (
+          queue.name.toLowerCase().includes('assigned to me') ||
+          queue.name.toLowerCase().includes('asignado a mí') ||
+          queue.name.toLowerCase().includes('mis tickets') ||
+          queue.name.toLowerCase().includes('my tickets') ||
+          queue.name.toLowerCase().includes('assigned')
+        )
+      );
+
+      if (assignedQueue) {
+        console.log('🎯 Found assigned queue:', assignedQueue.name);
+        await this.selectQueue(assignedQueue);
+      } else {
+        console.log('🔍 No specific "assigned to me" queue found, using first available');
+        if (queues.length > 0) {
+          await this.selectQueue(queues[0]);
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Error auto-selecting desk and queue:', error);
+    }
+  }
+
+  /**
+   * Select desk in UI
+   */
+  async selectDesk(desk) {
+    const deskSelect = document.getElementById('deskSelect');
+    if (deskSelect && desk) {
+      deskSelect.value = desk.id;
+      
+      // Trigger change event to load queues
+      const event = new Event('change', { bubbles: true });
+      deskSelect.dispatchEvent(event);
+      
+      // Update state
+      if (window.state) {
+        window.state.currentDesk = desk;
+      }
+      
+      console.log('✅ Auto-selected desk:', desk.name);
+    }
+  }
+
+  /**
+   * Select queue in UI  
+   */
+  async selectQueue(queue) {
+    // Wait a bit for queues to load after desk selection
+    setTimeout(() => {
+      const queueSelect = document.getElementById('queueSelect');
+      if (queueSelect && queue) {
+        queueSelect.value = queue.id;
+        
+        // Trigger change event to load issues
+        const event = new Event('change', { bubbles: true });
+        queueSelect.dispatchEvent(event);
+        
+        // Update state
+        if (window.state) {
+          window.state.currentQueue = queue;
+        }
+        
+        console.log('✅ Auto-selected queue:', queue.name);
+      }
+    }, 500);
   }
 
   /**
    * Filter: All Tickets
    */
-  filterAllTickets() {
+  async filterAllTickets() {
     console.log('🔍 Filtering: All Tickets');
+    
+    // Set filter mode to all
+    if (window.state) {
+      window.state.filterMode = 'all';
+      console.log('✅ Set filter mode to: all');
+    }
     
     // Clear all filters using FilterManager
     if (window.filterManager && typeof window.filterManager.clearAllFilters === 'function') {
@@ -145,6 +321,11 @@ class SidebarActions {
       if (window.filterManager && typeof window.filterManager.applyFilters === 'function') {
         window.filterManager.applyFilters();
       }
+    }
+    
+    // Reload issues to show all tickets
+    if (window.loadIssues) {
+      await window.loadIssues();
     }
     
     const totalCount = window.state?.issues?.length || 0;
@@ -884,17 +1065,20 @@ class SidebarActions {
     let filterInput;
     switch (filterType) {
       case 'assignee':
-        filterInput = document.getElementById('assigneeFilter') || 
+        filterInput = document.getElementById('assigneeFilterInput') || 
                      document.querySelector('input[placeholder*="Assignee"]') ||
-                     document.querySelector('input[placeholder*="Asignado"]');
+                     document.querySelector('input[placeholder*="Asignado"]') ||
+                     document.querySelector('.filter-input[placeholder*="assignee" i]');
         break;
       case 'status':
-        filterInput = document.getElementById('statusFilter') ||
-                     document.querySelector('select.status-filter');
+        filterInput = document.getElementById('statusFilterSelect') ||
+                     document.querySelector('select.status-filter') ||
+                     document.querySelector('#statusSelectFilter');
         break;
       case 'priority':
-        filterInput = document.getElementById('priorityFilter') ||
-                     document.querySelector('select.priority-filter');
+        filterInput = document.getElementById('priorityFilterSelect') ||
+                     document.querySelector('select.priority-filter') ||
+                     document.querySelector('#prioritySelectFilter');
         break;
     }
 
@@ -1171,6 +1355,14 @@ class SidebarActions {
                   <option value="auto">Auto (System)</option>
                 </select>
               </div>
+              
+              <!-- Font Family Customization -->
+              <div class="font-customization-section">
+                <h4>Font Family</h4>
+                <p class="section-description">Choose a font combination that matches your workflow and aesthetic preferences.</p>
+                <div id="fontPresetSelector"></div>
+              </div>
+              
               <div class="setting-item">
                 <label for="compactMode">Compact mode</label>
                 <input type="checkbox" id="compactMode">
@@ -1291,6 +1483,13 @@ class SidebarActions {
     if (settings.animationSpeed) {
       document.getElementById('animationSpeed').value = settings.animationSpeed;
     }
+    
+    // Initialize font family selector
+    this.initializeFontSelector();
+    
+    // Apply saved font preset
+    const savedPreset = localStorage.getItem('fontPreset') || 'business';
+    this.applyFontPreset(savedPreset);
     
     // Notifications
     if (settings.enableNotifications !== undefined) {
@@ -1525,6 +1724,142 @@ class SidebarActions {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
     }, 3000);
+  }
+
+  /**
+   * Initialize Font Selector
+   */
+  initializeFontSelector() {
+    const container = document.getElementById('fontPresetSelector');
+    if (!container) {
+      console.warn('⚠️ Font preset selector container not found');
+      return;
+    }
+
+    // Generate font preset selector HTML directly
+    const selectorHTML = this.generateFontPresetHTML();
+    container.innerHTML = selectorHTML;
+    
+    // Setup event handlers
+    this.setupFontPresetHandlers();
+    
+    console.log('✅ Font selector initialized');
+  }
+
+  /**
+   * Generate Font Preset Selector HTML
+   */
+  generateFontPresetHTML() {
+    return `
+      <div class="font-preset-selector">
+        <div class="font-preset-option" data-preset="business">
+          <div class="preset-header">
+            <h4>Business Classic</h4>
+            <span class="preset-badge default">Default</span>
+          </div>
+          <div class="preset-fonts">
+            <span class="font-ui">Segoe UI</span> + <span class="font-content">Georgia</span>
+          </div>
+          <p class="preset-description">Familiar and professional - Perfect for corporate environments</p>
+        </div>
+        
+        <div class="font-preset-option" data-preset="modern">
+          <div class="preset-header">
+            <h4>Modern Professional</h4>
+            <span class="preset-badge tech">Tech</span>
+          </div>
+          <div class="preset-fonts">
+            <span class="font-ui">Inter</span> + <span class="font-content">Source Serif Pro</span>
+          </div>
+          <p class="preset-description">Clean and technological - Optimized for digital interfaces</p>
+        </div>
+        
+        <div class="font-preset-option" data-preset="corporate">
+          <div class="preset-header">
+            <h4>Corporate Executive</h4>
+            <span class="preset-badge premium">Premium</span>
+          </div>
+          <div class="preset-fonts">
+            <span class="font-ui">IBM Plex Sans</span> + <span class="font-content">Playfair Display</span>
+          </div>
+          <p class="preset-description">Elegant and executive - Sophisticated corporate design</p>
+        </div>
+        
+        <div class="font-preset-option" data-preset="creative">
+          <div class="preset-header">
+            <h4>Creative Studio</h4>
+            <span class="preset-badge creative">Creative</span>
+          </div>
+          <div class="preset-fonts">
+            <span class="font-ui">Poppins</span> + <span class="font-content">Crimson Text</span>
+          </div>
+          <p class="preset-description">Approachable and creative - Perfect for innovative teams</p>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Setup Font Preset Event Handlers
+   */
+  setupFontPresetHandlers() {
+    const options = document.querySelectorAll('.font-preset-option');
+    
+    options.forEach(option => {
+      option.addEventListener('click', (e) => {
+        const presetId = option.getAttribute('data-preset');
+        this.applyFontPreset(presetId);
+        
+        // Update active state
+        options.forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+      });
+    });
+    
+    // Load current preset
+    const currentPreset = localStorage.getItem('fontPreset') || 'business';
+    const currentOption = document.querySelector(`[data-preset="${currentPreset}"]`);
+    if (currentOption) {
+      currentOption.classList.add('active');
+    }
+  }
+
+  /**
+   * Apply Font Preset
+   */
+  applyFontPreset(presetId) {
+    // Remove existing preset classes
+    const presets = ['business', 'modern', 'corporate', 'creative'];
+    presets.forEach(preset => {
+      document.body.classList.remove(`font-preset-${preset}`);
+      document.documentElement.classList.remove(`font-preset-${preset}`);
+    });
+    
+    // Apply new preset
+    document.body.classList.add(`font-preset-${presetId}`);
+    document.documentElement.classList.add(`font-preset-${presetId}`);
+    
+    // Save to localStorage
+    localStorage.setItem('fontPreset', presetId);
+    
+    // Log adaptation details
+    this.logFontAdaptation(presetId);
+    
+    console.log(`✅ Font preset applied: ${presetId}`);
+  }
+
+  /**
+   * Log Font Adaptation Details
+   */
+  logFontAdaptation(presetId) {
+    const adaptations = {
+      'business': 'Segoe UI + Georgia → Aptos + Century (0.95x line-height, +0.005em spacing)',
+      'modern': 'Inter + Source Serif Pro → Aptos + Century (1.02x line-height, -0.002em spacing)',
+      'corporate': 'IBM Plex + Playfair → Aptos + Century (1.05x line-height, +0.008em spacing)',
+      'creative': 'Poppins + Crimson Text → Aptos + Century (1.08x line-height, +0.003em spacing)'
+    };
+
+    console.log(`🎨 Font Adaptation: ${adaptations[presetId]}`);
   }
 
   /**

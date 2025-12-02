@@ -20,9 +20,9 @@ class TransparencyManager {
         }
       },
       dark: {
-        primary: 0.75,     // .dark .glassmorphic-primary: rgba(10, 10, 25, 0.75)
-        secondary: 0.6,    // Based on .glassmorphic-secondary
-        tertiary: 0.5,     // Based on .glassmorphic-tertiary
+        primary: 0.7,      // Matched to light theme primary (0.7) for consistency
+        secondary: 0.65,   // Matched to light theme secondary (0.65) - KANBAN COLUMNS
+        tertiary: 0.6,     // Matched to light theme tertiary (0.6) for consistency
         overlay: 0.0,      // Dark overlay opacity - COMPLETELY TRANSPARENT
         blur: {
           primary: 20,     // Primary blur px
@@ -182,14 +182,14 @@ class TransparencyManager {
       '.main-header-pro': 'secondary',
       '.right-sidebar': 'primary',
       '.filter-bar-enhanced': 'tertiary',
-      '.board-wrapper': 'secondary',
       '.modal': 'secondary',
-      '.navbar': 'tertiary'
+      '.navbar': 'tertiary',
+      '.kanban-column': 'secondary'
     };
 
     Object.entries(mainContainers).forEach(([selector, level]) => {
-      const element = document.querySelector(selector);
-      if (element) {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(element => {
         const opacity = themeSettings[level];
         const blur = themeSettings.blur?.[level] || 15;
         
@@ -199,13 +199,19 @@ class TransparencyManager {
         if (this.currentTheme === 'dark') {
           if (element.classList.contains('sidebar') || element.classList.contains('right-sidebar')) {
             bgColor = `rgba(26, 26, 26, ${opacity})`;
-          } else if (element.classList.contains('board-wrapper') || element.classList.contains('main-header-pro')) {
+          } else if (element.classList.contains('main-header-pro')) {
             bgColor = `rgba(37, 37, 37, ${opacity})`;
+          } else if (element.classList.contains('kanban-column')) {
+            bgColor = `rgba(32, 32, 42, ${opacity})`;
           } else {
             bgColor = `rgba(42, 42, 42, ${opacity})`;
           }
         } else {
-          bgColor = `rgba(255, 255, 255, ${opacity})`;
+          if (element.classList.contains('kanban-column')) {
+            bgColor = `rgba(248, 250, 252, ${opacity})`;
+          } else {
+            bgColor = `rgba(255, 255, 255, ${opacity})`;
+          }
         }
         
         element.style.backgroundColor = bgColor;
@@ -219,14 +225,14 @@ class TransparencyManager {
           element.style.backdropFilter = `blur(${blur}px) saturate(180%)`;
         } else if (selector === '.filter-bar-enhanced') {
           element.style.backdropFilter = `blur(${blur}px) saturate(120%)`;
-        } else if (selector === '.board-wrapper') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(150%)`;
         } else if (selector === '.modal') {
           element.style.backdropFilter = `blur(${blur}px) saturate(150%)`;
         } else if (selector === '.navbar') {
           element.style.backdropFilter = `blur(${blur}px) saturate(120%)`;
+        } else if (selector === '.kanban-column') {
+          element.style.backdropFilter = `blur(${blur}px) saturate(140%)`;
         }
-      }
+      });
     });
 
     // Apply overlay opacity
@@ -255,9 +261,9 @@ class TransparencyManager {
       '.main-header-pro',
       '.right-sidebar',
       '.filter-bar-enhanced',
-      '.board-wrapper',
       '.modal',
-      '.navbar'
+      '.navbar',
+      '.kanban-column'
     ];
     
     elements.forEach(el => {
@@ -358,6 +364,35 @@ class TransparencyManager {
   forceReapply() {
     console.log('🔄 Force reapplying transparency...');
     this.applyTransparency();
+  }
+
+  /**
+   * Apply transparency to newly created kanban columns
+   * Call this after kanban board is rendered
+   */
+  applyToKanbanColumns() {
+    const columns = document.querySelectorAll('.kanban-column');
+    const themeSettings = this.settings[this.currentTheme];
+    
+    if (!themeSettings || columns.length === 0) return;
+
+    const opacity = themeSettings.secondary;
+    const blur = themeSettings.blur?.secondary || 15;
+
+    columns.forEach(column => {
+      let bgColor;
+      if (this.currentTheme === 'dark') {
+        bgColor = `rgba(32, 32, 42, ${opacity})`;
+      } else {
+        bgColor = `rgba(248, 250, 252, ${opacity})`;
+      }
+      
+      column.style.backgroundColor = bgColor;
+      column.style.backdropFilter = `blur(${blur}px) saturate(140%)`;
+      column.style.webkitBackdropFilter = `blur(${blur}px) saturate(140%)`;
+    });
+
+    console.log(`✅ Applied transparency to ${columns.length} kanban columns`);
   }
 
   /**

@@ -58,27 +58,15 @@ body {
   }
 }
 
-/* ==================== SIDEBAR ==================== */
-.sidebar {
-  position: relative;
-  top: 0;
-  left: 0;
-  width: var(--sidebar-width);
-  height: 100vh;
-  padding: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  z-index: var(--z-fixed);
-  transition: transform var(--transition-slow) ease;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  /* Background, colors, and theme-specific styles moved to theme files */
-}
+/* ==================== SIDEBAR (COMPONENTS) ==================== */
+/* Sidebar styles moved to glassmorphism.css:
+ * - .sidebar-header-component
+ * - .sidebar-content-component
+ */
 
 @media (max-width: 768px) {
-  .sidebar {
+  .sidebar-header-component,
+  .sidebar-content-component {
     width: 100%;
     height: auto;
     position: static;
@@ -179,11 +167,7 @@ body {
   padding: var(--spacing-sm);
 }
 
-.sidebar-content {
-  flex: 1;
-  padding: var(--spacing-md) 0;
-  overflow-y: auto;
-}
+/* .sidebar-content moved to glassmorphism.css to avoid conflicts */
 
 /* ==================== MAIN CONTENT ==================== */
 .main-content,
@@ -199,8 +183,10 @@ body {
   -webkit-backdrop-filter: none !important;
   z-index: 2;
   width: 100%;
+  margin-left: var(--sidebar-expanded-width);
+  padding: 0 16px 16px 16px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   /* Inmune a efectos de glasmorfismo */
   opacity: 1 !important;
 }
@@ -210,6 +196,11 @@ body {
   .main-wrapper {
     min-height: auto;
   }
+}
+
+/* When sidebar is collapsed, reduce margin */
+.sidebar-content-component.collapsed ~ .main-wrapper {
+  margin-left: var(--sidebar-collapsed-width) !important;
 }
 
 /* ==================== HEADER/NAVBAR ==================== */
@@ -680,6 +671,38 @@ body {
   .content-area,
   .content-container {
     padding: var(--spacing-sm);
+  }
+}
+
+/* ==================== RIGHT SIDEBAR LAYOUT ==================== */
+/* Right sidebar styles moved to components/right-sidebar.css for better organization */
+
+/* Right sidebar responsive */
+@media (max-width: 1400px) {
+  .right-sidebar {
+    width: 500px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .sidebar-two-columns {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .sidebar-column {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .right-sidebar {
+    width: 100vw;
+  }
+  
+  .sidebar-two-columns {
+    padding: 12px;
+    gap: 12px;
   }
 }
 
