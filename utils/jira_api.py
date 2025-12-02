@@ -8,8 +8,6 @@ import logging
 from typing import Optional, Dict, List, Any, Union
 from datetime import datetime, timedelta
 import json
-from functools import wraps
-import time
 
 from .common import (
     _get_credentials,
@@ -17,27 +15,9 @@ from .common import (
     _make_request,
     JiraApiError
 )
+from .http_utils import retry_on_error
 
 logger = logging.getLogger(__name__)
-
-def retry_on_error(max_retries: int = 3, delay: float = 1.0):
-    """Decorator for retrying API calls on failure"""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            last_error = None
-            for attempt in range(max_retries):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    last_error = e
-                    if attempt < max_retries - 1:
-                        wait_time = delay * (2 ** attempt)  # Exponential backoff
-                        logger.warning(f"Attempt {attempt + 1} failed, retrying in {wait_time}s...")
-                        time.sleep(wait_time)
-            raise last_error
-        return wrapper
-    return decorator
 
 class JiraAPI:
     @retry_on_error()

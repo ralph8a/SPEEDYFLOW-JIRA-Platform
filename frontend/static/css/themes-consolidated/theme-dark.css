@@ -62,10 +62,7 @@ body.theme-dark {
 /* Main layout components - Keep sidebars with proper glassmorphic backgrounds */
 /* Sidebar styling managed by transparency-manager.css */
 body.theme-dark .sidebar,
-body.theme-dark .right-sidebar {
-  border: 1px solid var(--border-emphasis);
-  color: var(--text-primary);
-}
+/* Right sidebar styles consolidated in components/right-sidebar.css */
 
 /* Ensure main content area is transparent to show AI backgrounds */
 body.theme-dark .app-container,
@@ -76,10 +73,6 @@ body.theme-dark .board-wrapper {
 
 body.theme-dark .sidebar {
   border-right: 1px solid var(--border-emphasis);
-}
-
-body.theme-dark .right-sidebar {
-  border-left: 1px solid var(--border-emphasis);
 }
 
 /* Header background and styles managed centrally by variables.css and transparency-manager.css */
@@ -209,7 +202,7 @@ body.theme-dark .kanban-cards::-webkit-scrollbar-thumb:hover {
 
 /* Issue cards in dark theme - base styles */
 body.theme-dark .issue-card {
-  background: rgba(30, 30, 30, 0.3);
+  background: rgba(30, 30, 30, 0.8);
   /* backdrop-filter: blur(...); */) saturate(150%)
   -webkit-/* backdrop-filter: blur(...); */) saturate(150%)
   border: 1px solid rgba(128, 128, 128, var(--opacity-subtle));
@@ -219,10 +212,10 @@ body.theme-dark .issue-card {
 }
 
 body.theme-dark .issue-card:hover {
-  background: rgba(30, 41, 59, 0.85);
+  background: rgba(30, 41, 59, 0.95);
   /* backdrop-filter: blur(...); */) saturate(180%)
   -webkit-/* backdrop-filter: blur(...); */) saturate(180%)
-  box-shadow: 0 4px 12px rgba(128, 128, 128, 0.2);
+  box-shadow: 0 4px 12px rgba(128, 128, 128, 0.3);
   border-color: rgba(128, 128, 128, 0.25);
 }
 
@@ -469,33 +462,7 @@ body.theme-dark .tooltip::after {
   color: #e0e0e0;
 }
 
-/* Right Sidebar - Dark Theme Text Colors */
-body.theme-dark .right-sidebar .no-comments,
-body.theme-dark .right-sidebar .no-transitions,
-body.theme-dark .right-sidebar .no-activity {
-  color: #b0b8c8 !important;
-}
-
-body.theme-dark .right-sidebar .comment-input {
-  background: rgba(52, 52, 62, 0.8) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(100, 181, 246, 0.2) !important;
-}
-
-body.theme-dark .right-sidebar .comment-input::placeholder {
-  color: rgba(176, 184, 200, 0.5) !important;
-}
-
-body.theme-dark .right-sidebar .btn-add-comment {
-  background: linear-gradient(135deg, rgba(100, 100, 100, 0.8), rgba(80, 80, 80, 0.8)) !important;
-  color: white !important;
-  border: none !important;
-}
-
-body.theme-dark .right-sidebar .btn-add-comment:hover {
-  background: linear-gradient(135deg, rgba(120, 120, 120, 1), rgba(100, 100, 100, 1)) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}
+/* Right sidebar styles consolidated in components/right-sidebar.css */
 
 /* ==================== FINAL TRANSPARENCY OVERRIDE ==================== */
 /* Ensure NO text elements have any transparency issues */

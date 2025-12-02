@@ -24,25 +24,29 @@
   <script src="/static/js/theme-blocker.js"></script>
   
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
-  <link rel="stylesheet" href="/static/css/app.bundle.css">
+  <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
+  
+  <!-- DRAG & DROP TRANSITIONS STYLING -->
+  <link rel="stylesheet" href="/static/css/components/transition-bar-vertical.css?v={{ timestamp }}">
   
 </head>
 <body class="theme-light">
   <div class="app-container" role="application" aria-label="SpeedyFlow Ticket Workspace">
     <!-- SIDEBAR (UNIFIED REBUILD) -->
-    <aside class="sidebar" role="navigation" aria-label="Primary Navigation">
-      <header class="sidebar-header">
-        <div class="sidebar-logo" aria-label="App Logo">⚡</div>
-        <h1 class="sidebar-title" aria-label="Application Name">SpeedyFlow</h1>
-      </header>
+    <!-- SIDEBAR HEADER (Toggle Button) -->
+    <aside class="sidebar-header-component" role="banner" aria-label="Sidebar Toggle">
+      <button id="sidebarToggleBtn" class="sidebar-toggle-btn" aria-label="Toggle Sidebar">
+        <span class="toggle-icon">☰</span>
+      </button>
+    </aside>
+
+    <!-- SIDEBAR CONTENT (Navigation Menu) -->
+    <aside class="sidebar-content-component" role="navigation" aria-label="Primary Navigation">
       <div class="sidebar-content">
-        <section class="sidebar-section sidebar-section-primary" aria-label="Primary Action">
-          <button id="newTicketBtn" class="btn-sidebar-primary" aria-label="Create Ticket">✚ Create Ticket</button>
-        </section>
-        <div class="sidebar-divider" aria-hidden="true"></div>
         <section class="sidebar-section" aria-label="Navigation">
           <span class="sidebar-section-label">Navigation</span>
           <nav class="sidebar-menu" aria-label="Main">
+            <button type="button" id="newTicketBtn" class="sidebar-menu-item" aria-label="Create Ticket"><span class="icon">✚</span><span class="label">Create Ticket</span></button>
             <a href="#" class="sidebar-menu-item active" aria-current="page"><span class="icon">🗂️</span><span class="label">My Tickets</span></a>
             <a href="#" class="sidebar-menu-item"><span class="icon">📋</span><span class="label">All Tickets</span></a>
             <a href="#" class="sidebar-menu-item"><span class="icon">⭐</span><span class="label">Starred</span></a>
@@ -93,9 +97,8 @@
             <span class="brand-text">SpeedyFlow</span>
           </div>
           <div class="header-divider-vertical"></div>
-          <h1 class="header-title">
-            <span class="title-icon">🎫</span>
-            <span class="title-text">My Tickets</span>
+          <h1 class="header-page-title">
+            <span class="page-title-text">Tickets</span>
           </h1>
         </div>
         
@@ -108,6 +111,10 @@
         </div>
         
         <div class="header-right-section">
+          <button id="mlAnalyzeBtn" class="header-action-btn" title="Analyze with ML">
+            <span class="header-btn-icon">🤖</span>
+            <span class="header-btn-text">Analyze ML</span>
+          </button>
           <div class="header-status-badge">
             <span class="status-indicator"></span>
             <span class="status-text" id="filterStatus">Ready</span>
@@ -115,10 +122,9 @@
         </div>
       </header>
 
-      <section class="filter-bar-enhanced" aria-label="Filters">
-        <div class="filter-bar-container">
-          <!-- Primary Filters -->
-          <div class="filter-section filter-primary">
+      <div class="filter-bar-enhanced" aria-label="Filters">
+        <!-- Primary Filters -->
+        <div class="filter-section filter-primary">
             <div class="filter-group">
               <label for="serviceDeskSelectFilter" class="filter-label">
                 <span class="filter-icon">🏢</span>
@@ -197,7 +203,6 @@
             </div>
           </div>
         </div>
-      </section>
 
       <div class="board-wrapper" id="boardWrapper">
         <div id="kanbanView" class="kanban-board" aria-live="polite">
@@ -207,10 +212,9 @@
           <div class="placeholder-pro" id="listPlaceholder">Loading tickets...</div>
         </div>
       </div>
-    </div>
 
-    <!-- RIGHT SIDEBAR (TICKET DETAILS) -->
-    <div class="right-sidebar" id="rightSidebar" style="display: none;">
+      <!-- RIGHT SIDEBAR (TICKET DETAILS) -->
+      <div class="right-sidebar" id="rightSidebar" style="display: none;">
       <!-- CLOSE BUTTON -->
       <button class="btn-close-sidebar" id="closeSidebarBtn">✕</button>
 
@@ -290,11 +294,14 @@
               <div class="detail-value detail-description" id="detailDescription">—</div>
             </div>
 
-            <!-- TRANSITIONS -->
-            <div class="detail-group">
-              <div class="detail-label">Available Actions</div>
-              <div class="detail-transitions" id="detailTransitions">
-                <p class="no-transitions">No transitions available</p>
+            <!-- ALL FIELDS SECTION (DYNAMIC) -->
+            <div class="detail-group detail-group-all-fields">
+              <div class="detail-label">
+                <span>📋 All Fields</span>
+                <span class="detail-label-hint">(All ticket data)</span>
+              </div>
+              <div id="allFieldsContainer" class="all-fields-container">
+                <!-- Populated dynamically by right-sidebar.js -->
               </div>
             </div>
 
@@ -320,16 +327,52 @@
             <div class="comments-list" id="commentsList">
               <p class="no-comments">Loading comments...</p>
             </div>
+          </div>
 
-            <div class="add-comment-form">
-              <textarea 
-                id="commentText" 
-                class="comment-input" 
-                placeholder="Add a comment..."
-                rows="3">
-              </textarea>
-              <button class="btn-add-comment">Post</button>
+          <!-- COMMENT INPUT AREA -->
+          <div class="comment-input-container">
+            <!-- MENTIONS & ATTACHMENTS TOOLBAR -->
+            <div class="comment-toolbar">
+              <button class="comment-toolbar-btn" id="mentionBtn" title="@Mention someone">
+                <span class="toolbar-icon">@</span>
+                <span class="toolbar-text">Mention</span>
+              </button>
+              <button class="comment-toolbar-btn" id="attachBtn" title="Attach file">
+                <span class="toolbar-icon">📎</span>
+                <span class="toolbar-text">Attach</span>
+              </button>
+              <div class="visibility-toggle">
+                <input type="checkbox" id="commentInternal" />
+                <label for="commentInternal" class="visibility-label">🔓 Public</label>
+              </div>
             </div>
+
+            <!-- MENTIONS DROPDOWN -->
+            <div class="mentions-dropdown" id="mentionsDropdown">
+              <input 
+                type="text" 
+                class="mentions-search" 
+                id="mentionsSearch" 
+                placeholder="Search users..."
+              >
+              <div class="mentions-list" id="mentionsList"></div>
+            </div>
+
+            <!-- ATTACHMENTS PREVIEW -->
+            <div class="attachments-preview" id="attachmentsPreview">
+              <div class="attachments-list" id="attachmentsList"></div>
+            </div>
+
+            <!-- COMMENT TEXTAREA -->
+            <textarea 
+              id="commentText" 
+              class="comment-input" 
+              placeholder="Add a comment... (Press Ctrl+Enter to post)"
+              rows="4">
+            </textarea>
+
+            <!-- POST BUTTON -->
+            <button class="btn-add-comment">Post Comment</button>
           </div>
         </div>
 
@@ -346,6 +389,7 @@
             <p class="no-activity">No activity yet</p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -372,27 +416,66 @@
   <script src="/static/js/constants/card-sizing.js"></script>
   
   <!-- Theme Manager - Centralized theme control -->
-  <script src="/static/js/theme-manager.js"></script>
-  <script src="/static/js/sidebar-toggle.js"></script>
-  <script src="/static/js/modules/sidebar-actions.js"></script>
-  <script src="/static/js/floating-controls.js"></script>
-  <script src="/static/js/right-sidebar.js"></script>
-  <script src="/static/js/mentions-system.js"></script>
-  <script src="/static/js/sla-monitor.js"></script>
+  <script src="/static/js/theme-manager.js?v={{ timestamp }}"></script>
+  <script src="/static/js/sidebar-toggle.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/sidebar-actions.js?v={{ timestamp }}"></script>
+  <script src="/static/js/floating-controls.js?v={{ timestamp }}"></script>
+  <script src="/static/js/right-sidebar.js?v={{ timestamp }}"></script>
+  <script src="/static/js/mentions-system.js?v={{ timestamp }}"></script>
+  <script src="/static/js/sla-monitor.js?v={{ timestamp }}"></script>
   
   <!-- ===== GLASSMORPHISM & TRANSPARENCY ===== -->
-  <script src="/static/js/transparency-manager.js"></script>
+  <script src="/static/js/transparency-manager.js?v={{ timestamp }}"></script>
   
   <!-- ===== BACKGROUND & AI EFFECTS ===== -->
-  <script src="/static/js/background-manager.js"></script>
-  <script src="/static/js/background-selector-ui.js"></script>
+  <script src="/static/js/background-manager.js?v={{ timestamp }}"></script>
+  <script src="/static/js/background-selector-ui.js?v={{ timestamp }}"></script>
   
   <!-- ===== UI ENHANCEMENTS ===== -->
   <!-- Disabled: floating-theme-button.js - Theme button now integrated in sidebar -->
   <script src="/static/js/app.js?v={{ timestamp }}"></script>
   <script src="/static/js/auto-severity-config.js?v={{ timestamp }}"></script>
-  <script src="/static/js/layout-manager.js"></script>
-  <script src="/static/js/state-indicators.js"></script>
-  <script src="/static/js/loading-dots.js"></script>
+  <script src="/static/js/layout-manager.js?v={{ timestamp }}"></script>
+  <script src="/static/js/state-indicators.js?v={{ timestamp }}"></script>
+  <script src="/static/js/loading-dots.js?v={{ timestamp }}"></script>
+
+  <!-- ===== AI & ML MODULES ===== -->
+  <script src="/static/js/modules/ai-queue-analyzer.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/view-toggle-filters.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/ai-field-suggestions.js?v={{ timestamp }}"></script>
+
+  <!-- ===== DRAG & DROP TRANSITIONS ===== -->
+  <script src="/static/js/modules/drag-transition-vertical.js?v={{ timestamp }}"></script>
+
+  <!-- ===== DIAGNOSTIC SCRIPT ===== -->
+  <script>
+    // Check if new comment elements are loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const mentionBtn = document.getElementById('mentionBtn');
+        const attachBtn = document.getElementById('attachBtn');
+        const commentToolbar = document.querySelector('.comment-toolbar');
+        
+        console.log('=== Right Sidebar Diagnostic ===');
+        console.log('✓ mentionBtn exists:', !!mentionBtn);
+        console.log('✓ attachBtn exists:', !!attachBtn);
+        console.log('✓ comment-toolbar exists:', !!commentToolbar);
+        
+        if (!mentionBtn) {
+          console.warn('⚠️ mentionBtn NOT FOUND - check HTML structure');
+        }
+        if (!attachBtn) {
+          console.warn('⚠️ attachBtn NOT FOUND - check HTML structure');
+        }
+        if (!commentToolbar) {
+          console.warn('⚠️ comment-toolbar NOT FOUND - check CSS loading');
+        }
+        
+        // Check if setupMentionSystem function exists
+        console.log('✓ setupMentionSystem function exists:', typeof window.setupMentionSystem === 'function');
+        console.log('✓ setupAttachmentsSystem function exists:', typeof window.setupAttachmentsSystem === 'function');
+      }, 500);
+    });
+  </script>
 </body>
 </html>

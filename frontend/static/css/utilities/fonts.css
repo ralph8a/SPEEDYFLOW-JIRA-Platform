@@ -1,173 +1,133 @@
 /* 
- * APTOS FONT FAMILY - GLOBAL OVERRIDE (PURE APTOS STACK)
- * All fonts in the application are now Aptos family only
- * Date: November 22, 2025
+ * SPEEDYFLOW TYPOGRAPHY SYSTEM - Aptos + Century
+ * Sistema coherente y cohesivo de fuentes profesional
+ * Date: December 1, 2025
  * 
- * NOTE: Google Fonts import removed due to CORS/MIME-type restrictions in dev server.
- * Falls back to system fonts (Segoe UI, Roboto, etc. contain similar metrics to Aptos)
+ * ESTRATEGIA:
+ * - Aptos: UI moderna, navegación, interacción (sans-serif)
+ * - Century: Contenido editorial, texto largo, profesionalismo (serif)
+ * - Jerarquía clara y consistente
  */
 
-/* Google Fonts import disabled - using system font fallback
-@import url('https://fonts.googleapis.com/css2?family=Aptos:wght@400;500;600;700&family=Aptos+Display:wght@400;600;700&family=Aptos+Mono:wght@400;500;600;700&display=swap');
-*/
+/* Font imports - system fonts primero para fallback */
+@import url('https://fonts.googleapis.com/css2?family=Aptos:wght@300;400;500;600;700;800&family=Aptos+Display:wght@400;500;600;700;800&family=Aptos+Mono:wght@400;500;600;700&display=swap');
 
-/* Root font stack - PURE APTOS */
+/* Century está disponible en Windows por defecto, fallback a Georgia/Times */
+/* No necesita @import, es una fuente del sistema */
+
+/* DEPRECATED - Legacy font stacks (mantenido por compatibilidad) */
 :root {
-  --font-primary: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif;
-  --font-display: 'Aptos Display', 'Aptos', 'Aptos Mono', sans-serif;
-  --font-mono: 'Aptos Mono', 'Aptos', 'Aptos Display', sans-serif;
+  --font-primary: 'Aptos', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Aptos Display', 'Aptos', 'Segoe UI Semibold', sans-serif;
+  --font-mono: 'Aptos Mono', 'Consolas', 'Courier New', monospace;
 }
 
-/* Global font application - PURE APTOS */
+/* SISTEMA COHESIVO - Referencia a typography-system.css */
+/* El nuevo sistema está en core/typography-system.css */
+
+/* Global base - Aptos para UI por defecto */
 * {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+  font-family: var(--font-ui, 'Aptos', 'Segoe UI', system-ui, sans-serif);
 }
 
-html,
-body,
-html body {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+html, body {
+  font-family: var(--font-interface, 'Aptos', 'Segoe UI', system-ui, sans-serif);
 }
 
-/* Headings with display font */
+/* Headings - Aptos Display para jerarquía visual */
 h1, h2, h3, h4, h5, h6,
-.heading,
-.title {
-  font-family: 'Aptos Display', 'Aptos', 'Aptos Mono', sans-serif !important;
+.heading, .title {
+  font-family: var(--font-heading, 'Aptos Display', 'Aptos', 'Segoe UI Semibold', sans-serif);
 }
 
-/* Form elements */
-input,
-textarea,
-select,
-button,
-.btn,
-.form-control,
-.input-group {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Contenido editorial - Century para legibilidad */
+p, .paragraph, .content, .description, .article {
+  font-family: var(--font-body, 'Century', 'Century Gothic', 'Times New Roman', serif);
 }
 
-/* Code and monospace elements */
-code,
-pre,
-.code,
-.monospace,
-.highlight {
-  font-family: 'Aptos Mono', 'Aptos', 'Aptos Display', sans-serif !important;
+/* Form elements - Aptos para consistencia UI */
+input, textarea, select, button, .btn, .form-control, .input-group {
+  font-family: var(--font-interface, 'Aptos', 'Segoe UI', system-ui, sans-serif);
 }
 
-/* UI Components */
-.nav,
-.navbar,
-.sidebar,
-.card,
-.panel,
-.modal,
-.dropdown,
-.tooltip {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Code elements - Aptos Mono */
+code, pre, .code, .monospace, .highlight {
+  font-family: var(--font-code, 'Aptos Mono', 'Consolas', 'Courier New', monospace);
 }
 
-/* Text elements */
-p,
-span,
-div,
-li,
-td,
-th {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* UI Components - Sistema cohesivo */
+.nav, .navbar, .sidebar, .card, .panel, .modal, .dropdown, .tooltip {
+  font-family: var(--font-interface);
 }
 
-/* Label and form text */
-label,
-.label,
-.text-muted,
-.text-secondary {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Labels y badges - Aptos para consistencia UI */
+label, .label, .text-muted, .text-secondary {
+  font-family: var(--font-interface);
 }
 
-/* Badge and badge-like elements */
-.badge,
-.tag,
-.chip,
-.label-inline {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+.badge, .tag, .chip, .label-inline {
+  font-family: var(--font-interface);
 }
 
-/* Button text */
-button,
-.btn,
-a.btn,
-input[type="button"],
-input[type="submit"],
-input[type="reset"] {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Notificaciones y alertas - Aptos para claridad */
+.alert, .notification, .toast, .popover {
+  font-family: var(--font-interface);
 }
 
-/* Notification and alert text */
-.alert,
-.notification,
-.toast,
-.popover {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Tablas - Century para legibilidad de datos */
+table, .table, th, td {
+  font-family: var(--font-body);
 }
 
-/* Table elements */
-table,
-.table,
-th,
-td {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* APLICACIONES ESPECÍFICAS */
+
+/* Issue cards - Sistema mixto optimizado */
+.issue-card .issue-title {
+  font-family: var(--font-heading); /* Aptos Display */
 }
 
-/* Dark mode support */
-[data-theme="dark"],
-.dark-mode,
-body.dark-theme {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+.issue-card .issue-description {
+  font-family: var(--font-body); /* Century */  
 }
 
-[data-theme="dark"] *,
-.dark-mode *,
-body.dark-theme * {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+.issue-card .issue-meta {
+  font-family: var(--font-interface); /* Aptos */
 }
 
-/* Streamlit-specific */
-.stTextInput,
-.stNumberInput,
-.stSelectbox,
-.stMultiSelect,
-.stButton,
-.stSlider,
-.stDateInput,
-.stTimeInput {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Kanban board */
+.kanban-column-title {
+  font-family: var(--font-heading); /* Aptos Display */
 }
 
-/* Chat and message elements */
-.message,
-.chat-bubble,
-.comment {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Streamlit components - Aptos para consistencia */
+.stTextInput, .stNumberInput, .stSelectbox, .stMultiSelect, 
+.stButton, .stSlider, .stDateInput, .stTimeInput {
+  font-family: var(--font-interface);
 }
 
-/* Menu and dropdown items */
-.menu-item,
-.dropdown-item,
-.nav-item {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Mensajes y comentarios - Century para legibilidad */
+.message, .chat-bubble, .comment {
+  font-family: var(--font-body);
 }
 
-/* Metric and stat display */
-.metric,
-.stat,
-.counter {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Navegación - Aptos para UI */
+.menu-item, .dropdown-item, .nav-item {
+  font-family: var(--font-interface);
 }
 
-/* Footer text */
-footer,
-.footer {
-  font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif !important;
+/* Métricas - Aptos Display para impacto visual */
+.metric, .stat, .counter {
+  font-family: var(--font-heading);
 }
+
+/* Footer - Century para legibilidad */
+footer, .footer {
+  font-family: var(--font-body);
+}
+
+/* ==================== LEGACY COMPATIBILITY ==================== */
+/* Mantiene compatibilidad con clases existentes */
+.font-aptos { font-family: var(--font-interface); }
+.font-century { font-family: var(--font-body); }
+.font-display { font-family: var(--font-heading); }
+.font-mono { font-family: var(--font-code); }

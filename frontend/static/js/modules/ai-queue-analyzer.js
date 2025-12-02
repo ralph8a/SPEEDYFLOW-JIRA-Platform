@@ -1,0 +1,328 @@
+/**
+ * AI Queue Analyzer Module
+ * Analiza todos los tickets de la cola actual y muestra solo los que necesitan mejoras
+ * Similar a Atlassian Intelligence
+ */
+
+class AIQueueAnalyzer {
+  constructor() {
+    console.log('🧠 Initializing AIQueueAnalyzer...');
+    this.modal = null;
+    this.results = null;
+    this.selectedUpdates = new Map(); // Map<issueKey, Set<fieldName>>
+    this.init();
+  }
+
+  init() {
+    console.log('🔗 Setting up AIQueueAnalyzer event listeners...');
+    this.attachButton();
+    console.log('✅ AIQueueAnalyzer initialized successfully');
+  }
+
+  attachButton() {
+    // Try primary button ID
+    const btn = document.getElementById('mlAnalyzeBtn');
+    if (btn) {
+      console.log('✅ Found mlAnalyzeBtn (primary)');
+      btn.addEventListener('click', () => {
+        console.log('🖱️ mlAnalyzeBtn clicked');
+        this.analyze();
+      });
+    } else {
+      console.warn('⚠️ mlAnalyzeBtn not found (it should be in header)');
+    }
+    
+    // Fallback: try secondary button ID
+    const btnAlt = document.getElementById('aiAnalyzeBtn');
+    if (btnAlt && btnAlt !== btn) {
+      console.log('✅ Found aiAnalyzeBtn (fallback)');
+      btnAlt.addEventListener('click', () => {
+        console.log('🖱️ aiAnalyzeBtn clicked');
+        this.analyze();
+      });
+    }
+  }
+
+  async analyze() {
+    // Require desk/queue selection
+    if (!window.state || !window.state.currentDesk || !window.state.currentQueue) {
+      alert('Por favor selecciona un Service Desk y una Cola primero');
+      console.error('❌ Missing desk or queue:', { desk: window.state?.currentDesk, queue: window.state?.currentQueue });
+      return;
+    }
+    
+    console.log('🧠 Starting ML analysis:', { desk: window.state.currentDesk, queue: window.state.currentQueue });
+    
+    this.showModal();
+    this.showLoading();
+
+    try {
+      const body = {
+        desk_id: window.state.currentDesk,
+        queue_id: window.state.currentQueue
+      };
+      
+      console.log('📤 Sending request to /api/ai/analyze-queue:', body);
+      
+      const response = await fetch('/api/ai/analyze-queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('❌ HTTP Error:', response.status, error);
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      let data = await response.json();
+      console.log('✅ AI Analysis Response:', data);
+      
+      // El decorador @json_response envuelve la respuesta en {success, data, timestamp}
+      // Extraer los datos reales si están envueltos
+      if (data.success && data.data) {
+        console.log('📦 Unwrapping response from json_response decorator');
+        data = data.data;
+      }
+      
+      console.log('✅ Processed data:', data);
+      console.log('📊 Response keys:', Object.keys(data));
+      this.results = data;
+
+      // Verificar si hay error en la respuesta
+      if (data.error) {
+        console.error('❌ API returned error:', data.error);
+        this.showError(data.error);
+        return;
+      }
+
+      // Validar estructura de datos
+      if (!data.suggestions || !Array.isArray(data.suggestions)) {
+        console.error('❌ Invalid response structure:', data);
+        console.error('   Expected suggestions to be array but got:', typeof data.suggestions);
+        this.showError(`Respuesta inválida del servidor. suggestions=${typeof data.suggestions}. Ver consola.`);
+        return;
+      }
+
+      if (data.issues_with_suggestions === 0) {
+        console.log('✅ No suggestions needed for any tickets');
+        this.showNoSuggestions(data.analyzed_count);
+      } else {
+        console.log(`✅ Found ${data.issues_with_suggestions} tickets with suggestions`);
+        this.renderResults(data);
+      }
+
+    } catch (error) {
+      console.error('❌ Analysis Error:', error);
+      this.showError(error.message || 'Unknown error occurred');
+    }
+  }
+
+  showModal() {
+    let modal = document.getElementById('aiQueueModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'aiQueueModal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-container ai-queue-modal">
+          <div class="modal-header">
+            <div class="modal-title-section">
+              <span class="modal-icon">🧠</span>
+              <h2 class="modal-title">Sugerencias de ML para la cola</h2>
+              <small style="color: #64748b; font-size: 12px; font-weight: normal; margin-left: 8px;">Machine Learning con patrones globales</small>
+            </div>
+            <button class="modal-close" onclick="window.aiQueueAnalyzer.closeModal()">×</button>
+          </div>
+          <div class="modal-body" id="aiQueueContent"></div>
+          <div class="modal-footer" id="aiQueueFooter" style="display:none">
+            <button class="btn-secondary" onclick="window.aiQueueAnalyzer.closeModal()">
+              Cancelar
+            </button>
+            <button class="btn-primary" onclick="window.aiQueueAnalyzer.applySelected()">
+              Aplicar cambios seleccionados
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      this.modal = modal;
+    }
+    modal.style.display = 'flex';
+  }
+
+  closeModal() {
+    if (this.modal) {
+      this.modal.style.display = 'none';
+    }
+  }
+
+  showLoading() {
+    const content = document.getElementById('aiQueueContent');
+    content.innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Analizando tickets de la cola...</p>
+        <small style="color: #64748b; margin-top: 8px;">Usando patrones del caché global para mejores sugerencias</small>
+      </div>
+    `;
+  }
+
+  showNoSuggestions(analyzedCount) {
+    const content = document.getElementById('aiQueueContent');
+    content.innerHTML = `
+      <div class="success-state">
+        <div class="success-icon">✅</div>
+        <h3>Todos los tickets están correctos</h3>
+        <p>Se analizaron <strong>${analyzedCount}</strong> tickets de la cola y no se encontraron campos que necesiten actualizarse.</p>
+        <small style="color: #64748b; margin-top: 12px;">💡 El análisis usa patrones aprendidos de todos los tickets sincronizados.</small>
+      </div>
+    `;
+    document.getElementById('aiQueueFooter').style.display = 'none';
+  }
+
+  showError(message) {
+    const content = document.getElementById('aiQueueContent');
+    content.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">❌</div>
+        <h3>Error al analizar</h3>
+        <p>${message}</p>
+      </div>
+    `;
+    document.getElementById('aiQueueFooter').style.display = 'none';
+  }
+
+  renderResults(data) {
+    const content = document.getElementById('aiQueueContent');
+    
+    let html = `
+      <div class="ai-results-summary">
+        <p>
+          🎯 <strong>${data.issues_with_suggestions}</strong> de <strong>${data.analyzed_count}</strong> 
+          tickets de la cola tienen campos que pueden mejorarse
+        </p>
+        <small style="color: #64748b; font-size: 12px;">Análisis basado en ${data.cache_size || 'múltiples'} tickets del caché global</small>
+      </div>
+      <div class="ai-results-list">
+    `;
+
+    data.suggestions.forEach(issue => {
+      html += `
+        <div class="ai-issue-card">
+          <div class="ai-issue-header">
+            <span class="ai-issue-key">${issue.issue_key}</span>
+            <span class="ai-issue-summary">${issue.issue_summary}</span>
+          </div>
+          <div class="ai-suggestions-list">
+      `;
+
+      issue.suggestions.forEach((sug, idx) => {
+        const fieldId = `${issue.issue_key}_${sug.field_name}`;
+        html += `
+          <div class="ai-suggestion-item">
+            <input type="checkbox" 
+                   id="${fieldId}" 
+                   data-issue="${issue.issue_key}"
+                   data-field="${sug.field}"
+                   data-value="${JSON.stringify(sug.suggested_value).replace(/"/g, '&quot;')}">
+            <label for="${fieldId}">
+              <div class="suggestion-header">
+                <strong>${sug.field_label}</strong>
+                <span class="confidence confidence-${this.getConfidenceClass(sug.confidence)}">
+                  ${Math.round(sug.confidence * 100)}%
+                </span>
+              </div>
+              <div class="suggestion-change">
+                <span class="current-value">${sug.current_value || '(vacío)'}</span>
+                <span class="arrow">→</span>
+                <span class="suggested-value">${this.formatValue(sug.suggested_value)}</span>
+              </div>
+              <div class="suggestion-reason">${sug.reason}</div>
+            </label>
+          </div>
+        `;
+      });
+
+      html += `
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+    content.innerHTML = html;
+    document.getElementById('aiQueueFooter').style.display = 'flex';
+  }
+
+  getConfidenceClass(confidence) {
+    if (confidence >= 0.8) return 'high';
+    if (confidence >= 0.6) return 'medium';
+    return 'low';
+  }
+
+  formatValue(value) {
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    }
+    return value;
+  }
+
+  async applySelected() {
+    const checkboxes = document.querySelectorAll('#aiQueueContent input[type="checkbox"]:checked');
+    
+    if (checkboxes.length === 0) {
+      alert('Selecciona al menos un campo para actualizar');
+      return;
+    }
+
+    const updates = {};
+    checkboxes.forEach(cb => {
+      const issueKey = cb.dataset.issue;
+      const field = cb.dataset.field;
+      const value = JSON.parse(cb.dataset.value);
+      
+      if (!updates[issueKey]) {
+        updates[issueKey] = { fields: {} };
+      }
+      updates[issueKey].fields[field] = value;
+    });
+
+    // Aplicar updates
+    let success = 0;
+    let errors = 0;
+
+    for (const [issueKey, data] of Object.entries(updates)) {
+      try {
+        const response = await fetch(`/api/issues/${issueKey}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          success++;
+        } else {
+          errors++;
+        }
+      } catch (error) {
+        errors++;
+      }
+    }
+
+    alert(`✅ ${success} tickets actualizados\n${errors > 0 ? `❌ ${errors} errores` : ''}`);
+    this.closeModal();
+    
+    // Refresh issues
+    if (window.loadIssues && window.state && window.state.currentQueue) {
+      await window.loadIssues(window.state.currentQueue);
+    }
+  }
+}
+
+// Initialize
+if (typeof window !== 'undefined') {
+  window.aiQueueAnalyzer = new AIQueueAnalyzer();
+  console.log('✅ AI Queue Analyzer initialized');
+}

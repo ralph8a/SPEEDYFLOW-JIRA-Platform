@@ -610,22 +610,42 @@ def _normalize_severity_value(severity_obj: Any, custom_fields: Dict[str, Any], 
     Returns:
         Normalized severity string
     """
+    # Severity mapping (Spanish to English if needed)
+    severity_map = {
+        'mayor': 'High',
+        'menor': 'Low', 
+        'crítico': 'Critical',
+        'critico': 'Critical',
+        'normal': 'Medium',
+        'alta': 'High',
+        'baja': 'Low',
+        'media': 'Medium',
+        # Keep English values as-is
+        'critical': 'Critical',
+        'high': 'High',
+        'medium': 'Medium',
+        'low': 'Low',
+    }
+    
     # Try direct severity field first
     if severity_obj:
         if isinstance(severity_obj, dict):
-            severity_name = severity_obj.get("name")
+            severity_name = severity_obj.get("name") or severity_obj.get("value")
             if severity_name:
-                logger.debug(f"🔍 {issue_key} - Severity: {severity_name} (from field object)")
-                return severity_name
+                normalized = severity_map.get(str(severity_name).lower(), severity_name)
+                logger.debug(f"🔍 {issue_key} - Severity: {normalized} (from field object)")
+                return normalized
         elif isinstance(severity_obj, str):
-            logger.debug(f"🔍 {issue_key} - Severity: {severity_obj} (from field string)")
-            return severity_obj
+            normalized = severity_map.get(severity_obj.lower(), severity_obj)
+            logger.debug(f"🔍 {issue_key} - Severity: {normalized} (from field string)")
+            return normalized
     
     # Fallback to custom fields
     severity_field = custom_fields.get('severity')
     if severity_field:
-        logger.debug(f"🔍 {issue_key} - Severity: {severity_field} (from custom field)")
-        return str(severity_field)
+        normalized = severity_map.get(str(severity_field).lower(), str(severity_field))
+        logger.debug(f"🔍 {issue_key} - Severity: {normalized} (from custom field)")
+        return normalized
     
     # No fallback - retornar None cuando no hay severity
     logger.debug(f"⚠️ {issue_key} - No severity data found")
@@ -649,7 +669,8 @@ def _extract_service_desk_custom_fields(fields: Dict[str, Any]) -> Dict[str, Any
         'customfield_10001': 'epic_link',
         'customfield_10002': 'sprint',
         'customfield_10003': 'story_points',
-        'customfield_10020': 'severity',  # Common severity field
+        'customfield_10125': 'severity',  # Criticidad field (MSM project)
+        'customfield_10020': 'severity_alt',  # Alternative severity field
         'customfield_10021': 'urgency',   # Common urgency field
         'customfield_10022': 'impact',    # Common impact field
         'customfield_10030': 'sla_time',  # SLA fields
@@ -753,9 +774,6 @@ def load_queue_issues(
                 break
                 
             start = response.get("start", start) + len(page_issues)
-            
-            if len(issues) >= page_limit:
-                break
         
         if not issues:
             logger.warning(f"No issues found in queue {queue_id} (desk {service_desk_id}) after {request_count} request(s); bytes={bytes_accumulated}")
@@ -794,12 +812,28 @@ def load_queue_issues(
             severity_obj = _get_field_value(fields, "severity", "severidad")
             severity_name = _normalize_severity_value(severity_obj, service_desk_custom_fields, issue_key)
             
+            # Additional debug for severity
+            if not severity_name:
+                logger.warning(f"⚠️ {issue_key} - No severity found in: severity_obj={severity_obj}, custom_fields={list(service_desk_custom_fields.keys())}")
+            
             reporter_obj = _get_field_value(fields, "reporter", "reportero")
             reporter_name = "Unknown"
+            reporter_email = ""
+            reporter_phone = ""
+            reporter_company = ""
             if reporter_obj and isinstance(reporter_obj, dict):
                 reporter_name = reporter_obj.get("displayName") or reporter_obj.get("name", "Unknown")
+                reporter_email = reporter_obj.get("emailAddress", "")
             elif isinstance(reporter_obj, str):
                 reporter_name = reporter_obj
+            
+            # Extract reporter contact info from custom fields
+            if "customfield_10141" in service_desk_custom_fields:
+                reporter_email = service_desk_custom_fields["customfield_10141"] or reporter_email
+            if "customfield_10142" in service_desk_custom_fields:
+                reporter_phone = service_desk_custom_fields["customfield_10142"]
+            if "customfield_10143" in service_desk_custom_fields:
+                reporter_company = service_desk_custom_fields["customfield_10143"]
             
             summary = _get_field_value(
                 fields, 
@@ -832,6 +866,9 @@ def load_queue_issues(
                 "assignee": assignee_name,
                 "assignee_id": assignee_id,
                 "reporter": reporter_name,
+                "reporterEmail": reporter_email,
+                "reporterPhone": reporter_phone,
+                "reporterCompany": reporter_company,
                 "created": created,
                 "updated": updated,
                 "resolved": resolved,
@@ -839,7 +876,7 @@ def load_queue_issues(
                 "issue_type": issue_type_name,
                 "labels": [],
                 "components": [],
-                "custom_fields": service_desk_custom_fields  # Use Service Desk custom fields
+                "custom_fields": service_desk_custom_fields
             }
             
             # STEP 3: Make secondary request to JIRA REST API for enriched data
@@ -893,6 +930,21 @@ def load_queue_issues(
                             custom_value = jira_fields.get(custom_key)
                             if custom_value is not None:
                                 formatted["custom_fields"][custom_key] = custom_value
+                        
+                        # Extract reporter contact info from JIRA custom fields
+                        if jira_fields.get('customfield_10141'):
+                            formatted["reporterEmail"] = jira_fields['customfield_10141']
+                        if jira_fields.get('customfield_10142'):
+                            formatted["reporterPhone"] = jira_fields['customfield_10142']
+                        if jira_fields.get('customfield_10143'):
+                            formatted["reporterCompany"] = jira_fields['customfield_10143']
+                        
+                        # Also update reporter from JIRA if available
+                        jira_reporter = jira_fields.get("reporter")
+                        if jira_reporter and isinstance(jira_reporter, dict):
+                            formatted["reporter"] = jira_reporter.get("displayName", formatted["reporter"])
+                            if not formatted.get("reporterEmail"):
+                                formatted["reporterEmail"] = jira_reporter.get("emailAddress", "")
                         
                         logger.info(f"✓ Enriched {issue_key} from JIRA REST API")
                 except Exception as e:

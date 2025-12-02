@@ -148,3 +148,182 @@ def _batch_inject_sla(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.warning(f"Batch SLA enrichment failed, falling back to per-record: {e}")
         return [_inject_sla_stub(r) for r in records]
+
+
+@issues_bp.route('/api/issues/<issue_key>/activity', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@rate_limited(max_calls=30, period=60)
+@require_credentials
+def api_get_issue_activity(issue_key):
+    """
+    Get issue activity (changelog and comments)
+    
+    GET /api/issues/<issue_key>/activity
+    """
+    try:
+        from core.api import get_api_client
+        from utils.common import _make_request
+        
+        client = get_api_client()
+        
+        # Obtener changelog
+        changelog_url = f"{client.site}/rest/api/2/issue/{issue_key}?expand=changelog"
+        changelog_response = _make_request("GET", changelog_url, client.headers)
+        changelog = changelog_response.get('changelog', {}).get('histories', [])
+        
+        # Obtener comentarios
+        comments_url = f"{client.site}/rest/api/2/issue/{issue_key}/comment"
+        comments_response = _make_request("GET", comments_url, client.headers)
+        comments = comments_response.get('comments', [])
+        
+        # Combinar y ordenar por fecha
+        activity = []
+        
+        for entry in changelog:
+            activity.append({
+                'type': 'changelog',
+                'created': entry.get('created'),
+                'author': entry.get('author', {}).get('displayName', 'Unknown'),
+                'items': entry.get('items', [])
+            })
+        
+        for comment in comments:
+            activity.append({
+                'type': 'comment',
+                'created': comment.get('created'),
+                'author': comment.get('author', {}).get('displayName', 'Unknown'),
+                'body': comment.get('body', '')
+            })
+        
+        # Ordenar por fecha descendente
+        activity.sort(key=lambda x: x.get('created', ''), reverse=True)
+        
+        logger.info(f"✅ Retrieved {len(activity)} activity entries for {issue_key}")
+        
+        return {
+            'success': True,
+            'issue_key': issue_key,
+            'activity': activity,
+            'count': len(activity)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting activity for {issue_key}: {e}")
+        return {'error': str(e), 'issue_key': issue_key}, 500
+
+
+@issues_bp.route('/api/servicedesk/request/<issue_key>', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@rate_limited(max_calls=50, period=60)
+@require_credentials
+def api_get_servicedesk_request(issue_key):
+    """
+    Get complete Service Desk request details with ALL fields
+    
+    GET /api/servicedesk/request/<issue_key>
+    
+    Returns complete issue data from both JIRA API and Service Desk API
+    """
+    try:
+        from core.api import get_api_client
+        from utils.common import _make_request
+        
+        client = get_api_client()
+        
+        # First get standard JIRA issue data
+        jira_url = f"{client.site}/rest/api/2/issue/{issue_key}"
+        jira_data = _make_request("GET", jira_url, client.headers)
+        
+        # Then try to get Service Desk specific data
+        try:
+            # Get Service Desk request details
+            # (includes custom fields and portal data)
+            sd_url = f"{client.site}/rest/servicedeskapi/request/{issue_key}"
+            sd_data = _make_request("GET", sd_url, client.headers)
+            
+            # Get SLA data with millis
+            sla_data = {}
+            try:
+                sla_url = (
+                    f"{client.site}/rest/servicedeskapi/"
+                    f"request/{issue_key}/sla"
+                )
+                sla_response = _make_request("GET", sla_url, client.headers)
+                sla_data = sla_response.get('values', [])
+            except Exception as sla_err:
+                logger.debug(f"SLA data not available: {sla_err}")
+            
+            # Merge both datasets
+            merged_data = {
+                **jira_data,
+                'serviceDesk': sd_data,
+                'slaData': sla_data,
+                'fields': {
+                    **jira_data.get('fields', {}),
+                    **sd_data.get('requestFieldValues', {}),
+                }
+            }
+            
+            logger.info(
+                f"✅ Retrieved complete Service Desk data for {issue_key}"
+            )
+            return merged_data
+            
+        except Exception as sd_error:
+            logger.warning(
+                f"Service Desk API failed for {issue_key}, "
+                f"using JIRA data only: {sd_error}"
+            )
+            return jira_data
+        
+    except Exception as e:
+        logger.error(f"Error getting Service Desk request {issue_key}: {e}")
+        return {'error': str(e), 'issue_key': issue_key}, 500
+
+
+@issues_bp.route('/api/issues/<issue_key>', methods=['PUT'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@rate_limited(max_calls=20, period=60)
+@require_credentials
+def api_update_issue(issue_key):
+    """
+    Update issue fields
+    
+    PUT /api/issues/<issue_key>
+    Body: {"fields": {"customfield_10125": {"value": "Mayor"}}}
+    """
+    try:
+        from core.api import get_api_client
+        from utils.common import _make_request
+        
+        data = request.get_json() or {}
+        fields = data.get('fields', {})
+        
+        if not fields:
+            return {'error': 'No fields provided to update'}, 400
+        
+        client = get_api_client()
+        url = f"{client.site}/rest/api/2/issue/{issue_key}"
+        
+        _make_request("PUT", url, client.headers, json={"fields": fields})
+        
+        logger.info(
+            f"✅ Updated issue {issue_key} fields: "
+            f"{list(fields.keys())}"
+        )
+        
+        return {
+            'success': True,
+            'issue_key': issue_key,
+            'updated_fields': list(fields.keys())
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating issue {issue_key}: {e}")
+        return {'error': str(e), 'issue_key': issue_key}, 500

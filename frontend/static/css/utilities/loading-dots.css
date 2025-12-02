@@ -19,7 +19,7 @@
   height: 12px;
   border-radius: 50%;
   background-color: currentColor;
-  animation: none;
+  animation: dotPulse 1.4s infinite ease-in-out;
   opacity: 0.6;
 }
 
@@ -35,16 +35,7 @@
   animation-delay: 0s;
 }
 
-@keyframes dotPulse {
-  0%, 60%, 100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  30% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+/* Animation dotPulse is now imported from core/animations.css */
 
 /* ===== LOADING TEXT ===== */
 .loading-text {

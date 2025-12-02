@@ -16,6 +16,7 @@ Note: Service Desk API is separate from Platform API and has different endpoints
 from typing import Dict, List, Optional, Any
 import logging
 from utils.common import _make_request, _get_credentials, _get_auth_header
+from utils.http_utils import retry_on_error
 from utils.config import config
 
 logger = logging.getLogger(__name__)

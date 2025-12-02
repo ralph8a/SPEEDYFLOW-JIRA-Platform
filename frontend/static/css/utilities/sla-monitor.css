@@ -505,17 +505,7 @@
 /* ============================================================
    ANIMATIONS
    ============================================================ */
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* Animation slideUp is now imported from core/animations.css */
 
 /* ============================================================
    RESPONSIVE DESIGN

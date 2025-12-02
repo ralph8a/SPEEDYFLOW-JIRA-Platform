@@ -22,6 +22,11 @@
    ============================================================ */
 @import url('core/design-system.css');    /* Design tokens: colors, spacing, radius, typography */
 @import url('core/variables.css');        /* CSS custom properties for dynamic theming */
+@import url('core/animations.css');       /* Centralized CSS animations and keyframes */
+@import url('core/font-presets.css');     /* Font family presets system */
+@import url('core/typography-system.css'); /* Cohesive typography system: Aptos + Century */
+@import url('core/font-glyph-adaptations.css'); /* Adaptations for combining fonts with Aptos/Century */
+@import url('core/positioning-system.css'); /* Centralized positioning, display, z-index system */
 @import url('core/layout.css');           /* Base layout: grid, flexbox, positioning */
 
 /* ============================================================
@@ -29,7 +34,8 @@
    ============================================================ */
 @import url('themes-consolidated/theme-light.css');            /* Light theme palette */
 @import url('themes-consolidated/theme-dark.css');             /* Dark theme palette */
-@import url('utilities/transparency-exemptions.css');         /* Transparency exempt elements */
+@import url('core/glassmorphism.css');                       /* Centralized glassmorphism system */
+/* Transparency exemptions consolidated into glassmorphism.css */
 @import url('themes-consolidated/background-manager.css');     /* Background selector styles */
 
 /* ============================================================
@@ -45,18 +51,21 @@
 @import url('components/badges-utilities.css');
 
 /* Specialized Components */
-@import url('components/header-enhanced.css'); /* Modern header with glassmorphic design */
-@import url('components/filter-bar-enhanced.css'); /* Modern filter bar with glassmorphic design */
+@import url('components/filter-bar-standalone.css'); /* Clean standalone filter bar */
 @import url('components/kanban.css');        /* Kanban board styling */
 @import url('components/cards-responsive.css');      /* Responsive card styling */
-@import url('components/comments.css');      /* Comments & mentions system */
+@import url('components/right-sidebar.css');         /* Right sidebar with ticket details & comments */
+@import url('components/comments.css');      /* Comments & mentions system (includes v2) */
 @import url('components/notifications.css'); /* Notification display */
 @import url('components/sidebar-actions.css');  /* Sidebar actions, toasts & notifications panel */
+@import url('components/ai-suggestions.css');  /* AI field suggestions modal */
+@import url('components/ai-queue-analyzer.css');  /* AI queue analyzer global button & modal */
+@import url('components/font-preset-selector.css');  /* Font family customization selector */
 
 /* ============================================================
    PHASE 4: LAYOUT (Page structure - sidebars, header)
    ============================================================ */
-@import url('components/sidebar-components.css');  /* Left & right sidebars (1100 lines consolidated) */
+/* sidebar-components.css consolidated into glassmorphism.css and layout.css */
 @import url('components/header.css');              /* Old header - kept for compatibility */
 
 /* ============================================================
@@ -85,7 +94,7 @@
    - All @imports are consolidated into single main bundle
    - Reduces HTTP requests
    - Files organized for easy maintenance
-   - Largest file: sidebar-components.css (1100 lines)
+   - Styles consolidated: glassmorphism.css + layout.css
    - Follows CSS Cascade best practices
    
    Maintenance Notes:
@@ -117,3 +126,5 @@ body.theme-light .board-wrapper {
 }
 
 /* Header styles managed by transparency-manager.css - no overrides needed */
+
+/* Sidebar title color fix consolidated into glassmorphism.css */

@@ -1,0 +1,345 @@
+/**
+ * SPEEDYFLOW - Font Preset Selector Styles
+ * Estilos para el selector de familias de fuentes en configuración
+ */
+
+/* ==================== SETTINGS MODAL INTEGRATION ==================== */
+.font-customization-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: rgba(var(--color-background-secondary-rgb), 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(var(--color-border-rgb), 0.2);
+}
+
+.font-customization-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.font-customization-section .section-description {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Compact layout for settings modal */
+.settings-panel .font-preset-selector {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Preset badges */
+.preset-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preset-badge.default {
+  background: var(--glass-bg-primary);
+  color: var(--color-primary);
+}
+
+.preset-badge.tech {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.preset-badge.premium {
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+}
+
+.preset-badge.creative {
+  background: rgba(236, 72, 153, 0.2);
+  color: #ec4899;
+}
+
+/* Font display styles */
+.preset-fonts {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 0.5rem 0;
+}
+
+.preset-fonts .font-ui {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.preset-fonts .font-content {
+  font-style: italic;
+  color: var(--color-text-tertiary);
+}
+
+/* ==================== FONT PRESET SELECTOR ==================== */
+.font-preset-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.font-preset-option {
+  position: relative;
+  padding: var(--spacing-lg);
+  border: 2px solid var(--glass-border-light);
+  border-radius: var(--border-radius-lg);
+  background: var(--glass-bg-secondary);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  cursor: pointer;
+  transition: all var(--transition-normal) var(--transition-cubic);
+  overflow: hidden;
+}
+
+.font-preset-option:hover {
+  border-color: var(--primary-color);
+  background: var(--glass-bg-primary);
+  box-shadow: var(--glass-shadow-medium);
+  transform: translateY(-2px);
+}
+
+.font-preset-option.active {
+  border-color: var(--primary-color);
+  background: var(--glass-bg-primary);
+  box-shadow: var(--glass-shadow-heavy);
+}
+
+.font-preset-option.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary-gradient);
+}
+
+/* ==================== PRESET HEADER ==================== */
+.preset-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.preset-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.preset-category {
+  font-family: var(--font-interface);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: var(--border-radius-sm);
+}
+
+.preset-category.badge-professional {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.preset-category.badge-modern {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.preset-category.badge-executive {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.preset-category.badge-creative {
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+/* ==================== PRESET DESCRIPTION ==================== */
+.preset-description {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: var(--spacing-sm) 0;
+  line-height: var(--leading-relaxed);
+}
+
+/* ==================== FONT PREVIEW ==================== */
+.preset-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Dark theme adjustments */
+body.theme-dark .preset-preview {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.preset-preview span {
+  display: block;
+  font-size: var(--text-sm);
+  padding: 2px 0;
+  position: relative;
+}
+
+.preset-preview span::before {
+  content: attr(class);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-interface);
+  margin-right: var(--spacing-sm);
+  min-width: 60px;
+  display: inline-block;
+}
+
+.preview-ui::before { content: "UI: "; }
+.preview-content::before { content: "Content: "; }
+.preview-display::before { content: "Display: "; }
+
+/* ==================== ACTIVE INDICATOR ==================== */
+.preset-active-indicator {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: var(--success-color);
+  color: white;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  font-family: var(--font-interface);
+}
+
+/* ==================== SETTINGS INTEGRATION ==================== */
+.settings-panel .font-customization-section {
+  margin: var(--spacing-xl) 0;
+}
+
+.font-customization-section h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+}
+
+.font-customization-section .section-description {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+  line-height: var(--leading-relaxed);
+}
+
+/* ==================== PREVIEW ANIMATIONS ==================== */
+@keyframes fontChange {
+  0% { opacity: 0.7; transform: scale(0.98); }
+  50% { opacity: 0.9; transform: scale(1.01); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.font-preset-option:hover .preset-preview {
+  animation: fontChange 0.3s ease-out;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .font-preset-selector {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+  
+  .font-preset-option {
+    padding: var(--spacing-md);
+  }
+  
+  .preset-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .preset-active-indicator {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-top: var(--spacing-sm);
+    align-self: flex-start;
+  }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.font-preset-option:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.font-preset-option[aria-selected="true"] {
+  border-color: var(--primary-color);
+  background: var(--glass-bg-primary);
+}
+
+/* ==================== LOADING STATES ==================== */
+.font-preset-selector.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.font-preset-selector.loading .font-preset-option {
+  background: var(--glass-bg-tertiary);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
+/* ==================== THEME VARIATIONS ==================== */
+/* Light theme specific adjustments */
+body.theme-light .font-preset-option {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .font-preset-option:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark theme specific adjustments */
+body.theme-dark .font-preset-option {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-dark .font-preset-option:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
