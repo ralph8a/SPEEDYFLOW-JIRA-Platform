@@ -37,7 +37,7 @@ kanban_bp = Blueprint('kanban', __name__)
 # In-memory cache with simple TTL for kanban aggregations to avoid recomputing grouping
 # Keyed by (desk_id, queue_id, include_empty) -> { 'expires': ts, 'data': {...} }
 _KANBAN_CACHE: Dict[str, Dict[str, Any]] = {}
-_KANBAN_DEFAULT_TTL_SECONDS = 300  # 5 minutes aligns with issue cache TTL
+_KANBAN_DEFAULT_TTL_SECONDS = 900  # 15 minutes aligns with issue cache TTL
 
 @kanban_bp.route('/api/kanban', methods=['GET'])
 @handle_api_error

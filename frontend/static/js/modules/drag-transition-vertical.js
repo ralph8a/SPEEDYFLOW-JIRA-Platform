@@ -15,6 +15,7 @@ class DragTransitionVertical {
     this.currentTicket = null;
     this.availableTransitions = [];
     this.isDragging = false;
+    this.isExecutingTransition = false;
     this.dragStartTimeout = null;
     
     console.log('🎯 DragTransitionVertical: Constructor initialized');
@@ -39,8 +40,12 @@ class DragTransitionVertical {
       }
     });
     
-    document.addEventListener('dragend', () => {
-      this.onDragEnd();
+    document.addEventListener('dragend', (e) => {
+      // Only clean up if no transition is executing
+      // (transition cleanup happens in drop handler)
+      if (!this.isExecutingTransition) {
+        this.onDragEnd();
+      }
     });
     
     // Prevent default dragover on document to allow custom drop zones
@@ -115,9 +120,15 @@ class DragTransitionVertical {
    * Handle drag start event
    */
   async onDragStart(e, card) {
-    // Prevent opening issue details
-    e.preventDefault();
+    // IMPORTANTE: NO llamar e.preventDefault() aquí o el drag no funcionará
+    // Solo stopPropagation para evitar que abra los detalles del ticket
     e.stopPropagation();
+    
+    // Set drag data (required for drag to work)
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.issueKey || '');
+    }
     
     // Extract issue key from card
     const issueKey = this.extractIssueKey(card);
@@ -333,8 +344,14 @@ class DragTransitionVertical {
           z.classList.remove('drag-over');
         });
         
-        // Execute transition
-        await this.executeTransition(transitionId, targetStatus);
+        // Execute transition (don't await to prevent blocking)
+        this.executeTransition(transitionId, targetStatus).then(() => {
+          // Clean up after transition completes
+          this.onDragEnd();
+        }).catch(() => {
+          // Clean up even on error
+          this.onDragEnd();
+        });
       });
     });
   }
@@ -343,8 +360,19 @@ class DragTransitionVertical {
    * Execute transition via API
    */
   async executeTransition(transitionId, targetStatus) {
+    this.isExecutingTransition = true;
+    
+    // Store issue key before any async operations
+    const issueKey = this.currentTicket?.issueKey;
+    
+    if (!issueKey) {
+      console.error('❌ No issue key available for transition');
+      this.isExecutingTransition = false;
+      return;
+    }
+    
     console.log('🚀 Executing transition:', { 
-      issueKey: this.currentTicket.issueKey,
+      issueKey,
       transitionId, 
       targetStatus 
     });
@@ -356,7 +384,7 @@ class DragTransitionVertical {
         header.textContent = '⏳';
       }
       
-      const response = await fetch(`/api/issues/${this.currentTicket.issueKey}/transitions`, {
+      const response = await fetch(`/api/issues/${issueKey}/transitions`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
@@ -374,7 +402,7 @@ class DragTransitionVertical {
       console.log('✅ Transition successful');
       
       // Show success notification
-      this.showNotification(`✅ ${this.currentTicket.issueKey} → ${targetStatus}`, 'success');
+      this.showNotification(`✅ ${issueKey} → ${targetStatus}`, 'success');
       
       // Animate card to new column
       await this.animateCardTransition(targetStatus);
@@ -388,6 +416,8 @@ class DragTransitionVertical {
     } catch (error) {
       console.error('❌ Transition error:', error);
       this.showNotification(`❌ Error: ${error.message}`, 'error');
+    } finally {
+      this.isExecutingTransition = false;
     }
   }
   

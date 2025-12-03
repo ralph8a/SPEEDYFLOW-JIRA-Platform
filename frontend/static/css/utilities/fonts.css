@@ -10,7 +10,8 @@
  */
 
 /* Font imports - system fonts primero para fallback */
-@import url('https://fonts.googleapis.com/css2?family=Aptos:wght@300;400;500;600;700;800&family=Aptos+Display:wght@400;500;600;700;800&family=Aptos+Mono:wght@400;500;600;700&display=swap');
+/* Aptos es una fuente del sistema de Microsoft (Windows 11+), no está en Google Fonts */
+/* Fallback a Segoe UI (Windows 7+) y system-ui para máxima compatibilidad */
 
 /* Century está disponible en Windows por defecto, fallback a Georgia/Times */
 /* No necesita @import, es una fuente del sistema */

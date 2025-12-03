@@ -30,14 +30,54 @@ class MentionSystem {
   }
 
   /**
-   * Load users from API
+   * Load users from API with 7-day cache
    */
   async loadUsers() {
     try {
+      // Check cache first (7-day TTL)
+      const cacheKey = 'mentions_users_cache';
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        try {
+          const { users, timestamp } = JSON.parse(cached);
+          const age = Date.now() - timestamp;
+          const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+          
+          if (age < maxAge) {
+            this.users = users;
+            console.log(`✅ Loaded ${this.users.length} users for mentions (from cache, ${Math.floor(age / 86400000)} days old)`);
+            return;
+          }
+        } catch (e) {
+          // Invalid cache, proceed to fetch
+          console.log('⚠️ Invalid cache, fetching fresh users');
+        }
+      }
+      
+      // Fetch from API
       const response = await fetch('/api/users');
       const data = await response.json();
-      this.users = data.users || data.data || [];
-      console.log(`✅ Loaded ${this.users.length} users for mentions`);
+      
+      // Handle both flat array and wrapped response formats
+      if (Array.isArray(data)) {
+        this.users = data;
+      } else if (data.users && Array.isArray(data.users)) {
+        this.users = data.users;
+      } else if (data.data && Array.isArray(data.data)) {
+        this.users = data.data;
+      } else {
+        console.warn('⚠️ Unexpected API response format:', data);
+        this.users = [];
+      }
+      
+      // Save to cache
+      localStorage.setItem(cacheKey, JSON.stringify({
+        users: this.users,
+        timestamp: Date.now()
+      }));
+      
+      console.log(`✅ Loaded ${this.users.length} users for mentions (fresh from API)`);
     } catch (error) {
       console.error('Error loading users:', error);
       this.users = [];

@@ -343,18 +343,34 @@ class JiraPlatformAPI:
     
     def get_current_user(self) -> Optional[Dict[str, Any]]:
         """
-        Get current user details
+        Get current user details with groups
         
         GET /rest/api/3/myself
         Docs: https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-myself/#api-rest-api-3-myself-get
         
         Returns:
-            User object or None if error
+            User object with groups or None if error
         """
         url = f"{self.base_url}/myself"
         
         try:
-            return _make_request("GET", url, self.headers)
+            user_data = _make_request("GET", url, self.headers)
+            
+            # Try to get user's groups
+            if user_data and 'accountId' in user_data:
+                try:
+                    groups_url = f"{self.base_url}/user/groups"
+                    groups_params = {"accountId": user_data['accountId']}
+                    groups_response = _make_request("GET", groups_url, self.headers, params=groups_params)
+                    
+                    if groups_response:
+                        user_data['groups'] = groups_response
+                        logger.info(f"✅ Fetched {len(groups_response)} groups for user")
+                except Exception as group_error:
+                    logger.warning(f"⚠️ Could not fetch user groups: {group_error}")
+                    user_data['groups'] = []
+            
+            return user_data
         except Exception as e:
             logger.error(f"❌ Error fetching current user: {e}")
             return None
