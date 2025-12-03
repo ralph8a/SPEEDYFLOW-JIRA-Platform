@@ -65,6 +65,16 @@ def api_get_issues_by_queue(queue_id):
     if df is not None and getattr(df, 'empty', True) is False:
         raw_records: List[Dict[str, Any]] = list(df.to_dict('records'))  # type: ignore
         records = _batch_inject_sla(raw_records)
+        
+        # Debug: Log first record to verify customfields are present
+        if records and len(records) > 0:
+            first_record = records[0]
+            logger.info(f"🔍 First API record keys: {list(first_record.keys())}")
+            logger.info(f"   customfield_10111: {first_record.get('customfield_10111')}")
+            logger.info(f"   customfield_10125: {first_record.get('customfield_10125')}")
+            logger.info(f"   customfield_10141: {first_record.get('customfield_10141')}")
+            logger.info(f"   customfield_10142: {first_record.get('customfield_10142')}")
+            logger.info(f"   customfield_10143: {first_record.get('customfield_10143')}")
     return {'data': records, 'count': len(records)}
 
 
