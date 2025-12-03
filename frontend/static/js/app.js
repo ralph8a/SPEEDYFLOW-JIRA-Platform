@@ -1134,35 +1134,59 @@ async function renderKanban() {
       
       // Debug: Log first issue to see structure
       if (issues.indexOf(issue) === 0) {
-        console.log('🔍 First issue structure:', {
-          key: fullIssue.key,
-          severity: fullIssue.severity,
-          customfield_10125: fullIssue.customfield_10125,
-          customfield_10111: fullIssue.customfield_10111,
-          customfield_10141: fullIssue.customfield_10141,
-          customfield_10142: fullIssue.customfield_10142,
-          customfield_10143: fullIssue.customfield_10143,
-          fields_keys: fullIssue.fields ? Object.keys(fullIssue.fields).filter(k => k.startsWith('custom')).slice(0, 5) : []
-        });
+        console.log('🔍 First issue FULL structure:');
+        console.log('   All root keys:', Object.keys(fullIssue));
+        console.log('   Customfield keys:', Object.keys(fullIssue).filter(k => k.startsWith('customfield')));
+        console.log('   customfield_10111:', fullIssue.customfield_10111);
+        console.log('   customfield_10125:', fullIssue.customfield_10125);
+        console.log('   customfield_10141:', fullIssue.customfield_10141);
+        console.log('   customfield_10142:', fullIssue.customfield_10142);
+        console.log('   customfield_10143:', fullIssue.customfield_10143);
+        if (fullIssue.fields) {
+          console.log('   fields.customfield keys:', Object.keys(fullIssue.fields).filter(k => k.startsWith('customfield')).slice(0, 10));
+        }
       }
       
       // ✅ Extract data from customfields (backend provides all customfields directly)
       const severity = fullIssue.severity || fullIssue.customfield_10125?.value || fullIssue.customfield_10125 || '';
-      const assignee = fullIssue.fields?.assignee?.displayName || 'No assignee';
       
-      // Reporter/Informer from customfield_10111
-      const reporterObj = fullIssue.customfield_10111;
-      const reporter = reporterObj?.displayName || reporterObj?.name || reporterObj || '';
+      // Assignee from root level (backend normalized field)
+      const assignee = fullIssue.assignee || 'No assignee';
       
-      // Contact info from customfields
-      const reporterEmailObj = fullIssue.customfield_10141;
-      const reporterEmail = reporterEmailObj?.value || reporterEmailObj || '';
+      // Contact info from customfields (extract FIRST, needed for reporter name)
+      const reporterEmail = typeof fullIssue.customfield_10141 === 'string' 
+        ? fullIssue.customfield_10141 
+        : (fullIssue.customfield_10141?.value || '');
       
-      const reporterPhoneObj = fullIssue.customfield_10142;
-      const reporterPhone = reporterPhoneObj?.value || reporterPhoneObj || '';
+      const reporterPhone = typeof fullIssue.customfield_10142 === 'string' 
+        ? fullIssue.customfield_10142 
+        : (fullIssue.customfield_10142?.value || '');
       
-      const reporterCompanyObj = fullIssue.customfield_10143;
-      const reporterCompany = reporterCompanyObj?.value || reporterCompanyObj || '';
+      const reporterCompany = typeof fullIssue.customfield_10143 === 'string' 
+        ? fullIssue.customfield_10143 
+        : (fullIssue.customfield_10143?.value || '');
+      
+      // Reporter/Informer - Priority: creator > customfield_10111 (reporter is usually current user)
+      let reporterObj = fullIssue.creator || fullIssue.customfield_10111;
+      
+      if (Array.isArray(reporterObj) && reporterObj.length > 0) {
+        reporterObj = reporterObj[0]; // Take first element if array
+      }
+      
+      // Extract reporter name with smart fallback
+      let reporter = reporterObj?.displayName || reporterObj?.name || reporterObj?.emailAddress || '';
+      
+      // If reporter is generic "Soporte" or empty, extract real name from contact email
+      if (!reporter || reporter === 'Soporte' || reporter === 'Support') {
+        if (reporterEmail && reporterEmail.includes('@')) {
+          // Extract name from email (e.g., "eduardo.valora@speedymovil.com" -> "Eduardo Valora")
+          const namePart = reporterEmail.split('@')[0];
+          const nameParts = namePart.split('.');
+          reporter = nameParts
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(' ');
+        }
+      }
       
       // Determinación dinámica de clase basada en transiciones
       // IMPORTANT: Uses CARD_SIZING constants synchronized with CSS
@@ -1178,13 +1202,14 @@ async function renderKanban() {
            ${severityStyle.emoji} ${severity}
          </span>` : '';
 
-      // Calculate time since last update
-      const updated = fullIssue.fields?.updated || fullIssue.updated;
-      const updatedTime = updated ? new Date(updated) : null;
+      // Calculate time since last REAL change (comment/transition/field change)
+      // Use last_real_change from backend (calculated from changelog + comments)
+      const lastChange = fullIssue.last_real_change || fullIssue.updated || fullIssue.fields?.updated;
+      const lastChangeTime = lastChange ? new Date(lastChange) : null;
       const now = new Date();
       let timeAgo = '';
-      if (updatedTime) {
-        const diffMs = now - updatedTime;
+      if (lastChangeTime) {
+        const diffMs = now - lastChangeTime;
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
@@ -1201,27 +1226,29 @@ async function renderKanban() {
                     data-issue-key="${issue.key}" 
                     draggable="true"
                     onclick="openIssueDetails('${issue.key}')">
-        <!-- HEADER: Key + Severity Badge + Time -->
+        <!-- HEADER: Key + Severity + Time -->
         <div class="issue-card-header">
           <div class="issue-card-key">${issue.key}</div>
           ${severityBadgeHtml}
-          ${timeAgo ? `<span class="issue-card-time" title="Last updated: ${updated}">🕒 ${timeAgo}</span>` : ''}
+          ${timeAgo ? `<span class="issue-card-time">🕒 ${timeAgo}</span>` : ''}
         </div>
         
         <!-- SUMMARY (main content) -->
         <div class="issue-card-summary">${fullIssue.summary || fullIssue.fields?.summary || 'No summary'}</div>
         
-        <!-- METADATA: Reporter + Severidad -->
-        <div class="issue-card-metadata">
-          ${reporter ? `<span class="meta-reporter" title="Reporter: ${reporter}${reporterEmail ? ' - ' + reporterEmail : ''}${reporterPhone ? ' - ' + reporterPhone : ''}">📢 ${reporter.split(' ')[0]}</span>` : ''}
-          ${severity && severity !== 'Medium' && severity !== 'Baja' ? `<span class="meta-priority priority-${severity.toLowerCase()}" title="Severidad: ${severity}">${severity}</span>` : ''}
-        </div>
+        <!-- INFORMER SECTION (Reporter with all contact info) -->
+        ${reporter ? `
+        <div class="issue-card-informer">
+          <div class="informer-name">📢 Informer: ${reporter}</div>
+          ${reporterEmail ? `<div class="informer-email">📧 ${reporterEmail}</div>` : ''}
+          ${reporterPhone ? `<div class="informer-phone">📱 ${reporterPhone}</div>` : ''}
+          ${reporterCompany ? `<div class="informer-company">🏢 ${reporterCompany}</div>` : ''}
+        </div>` : ''}
         
-        
-        <!-- FOOTER: Assignee + Company (if exists) -->
-        <div class="issue-card-footer">
-          <span class="assignee ${assignee === 'No assignee' ? 'assignee-unassigned' : ''}" title="Assigned to: ${assignee}">👤 ${assignee.split(' ')[0]}</span>
-          ${reporterCompany ? `<span class="company-badge" title="Company: ${reporterCompany}">🏢 ${reporterCompany.substring(0, 15)}</span>` : ''}
+        <!-- ASSIGNEE SECTION -->
+        <div class="issue-card-assignee">
+          <span class="assignee-label">👤 Assigned:</span>
+          <span class="assignee-name ${assignee === 'No assignee' ? 'assignee-unassigned' : ''}">${assignee}</span>
         </div>`;
 
       // Renderizar botones de transición (solo si hay espacio)

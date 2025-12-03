@@ -794,30 +794,83 @@ def load_queue_issues(
         # STEP 2: Fetch all customfields from JIRA API in ONE batch call (JQL search)
         issue_keys = [issue.get("key") for issue in issues if issue.get("key")]
         jql_query = f"key in ({','.join(issue_keys)})"
-        jira_batch_url = f"{client.site}/rest/api/2/search"
+        # Use new JQL enhanced search endpoint (replaces deprecated /search)
+        jira_batch_url = f"{client.site}/rest/api/3/search/jql"
         jira_batch_params = {
             "jql": jql_query,
-            "fields": "customfield_10111,customfield_10125,customfield_10141,customfield_10142,customfield_10143,labels,components",
+            "fields": ["assignee", "creator", "reporter", "customfield_10111", "customfield_10125", "customfield_10141", "customfield_10142", "customfield_10143", "labels", "components", "comment"],
+            "expand": "changelog",
             "maxResults": len(issue_keys)
         }
         
         enriched_data = {}
         try:
+            logger.info(f"🔄 Fetching batch customfields for {len(issue_keys)} issues via JQL: {jql_query[:100]}")
             jira_batch_response = _make_request("GET", jira_batch_url, client.headers, params=jira_batch_params)
             if jira_batch_response and "issues" in jira_batch_response:
+                # Debug: Log first issue from JIRA API to see structure
+                if jira_batch_response["issues"]:
+                    first_jira = jira_batch_response["issues"][0]
+                    logger.info(f"🔍 First JIRA API issue fields: {list(first_jira.get('fields', {}).keys())}")
+                    
                 for jira_issue in jira_batch_response["issues"]:
                     key = jira_issue.get("key")
                     fields = jira_issue.get("fields", {})
+                    changelog = jira_issue.get("changelog", {})
+                    
+                    # Calculate last real change (changelog, comments, or updated)
+                    last_change = None
+                    
+                    # Check changelog (transitions, field changes)
+                    if changelog and "histories" in changelog:
+                        histories = changelog.get("histories", [])
+                        if histories:
+                            # Get most recent history entry
+                            last_history = max(histories, key=lambda h: h.get("created", ""))
+                            last_change = last_history.get("created")
+                    
+                    # Check comments
+                    comments = fields.get("comment", {}).get("comments", [])
+                    if comments:
+                        last_comment = max(comments, key=lambda c: c.get("created", ""))
+                        comment_date = last_comment.get("created")
+                        if not last_change or (comment_date and comment_date > last_change):
+                            last_change = comment_date
+                    
+                    # Fallback to updated field if no changelog/comments
+                    if not last_change:
+                        last_change = fields.get("updated")
+                    
+                    # Log customfield_10111 structure for debugging
+                    cf_10111 = fields.get("customfield_10111")
+                    if cf_10111:
+                        logger.info(f"🔍 {key} customfield_10111 type: {type(cf_10111)}, value: {cf_10111}")
+                    
+                    # Extract assignee from JIRA API (more reliable than Service Desk)
+                    assignee_obj = fields.get("assignee")
+                    assignee_name = None
+                    if assignee_obj and isinstance(assignee_obj, dict):
+                        assignee_name = assignee_obj.get("displayName") or assignee_obj.get("name")
+                    
                     enriched_data[key] = {
-                        "customfield_10111": fields.get("customfield_10111"),
+                        "assignee": assignee_name,
+                        "creator": fields.get("creator"),
+                        "reporter": fields.get("reporter"),
+                        "customfield_10111": cf_10111,
                         "customfield_10125": fields.get("customfield_10125"),
                         "customfield_10141": fields.get("customfield_10141"),
                         "customfield_10142": fields.get("customfield_10142"),
                         "customfield_10143": fields.get("customfield_10143"),
                         "labels": fields.get("labels", []),
-                        "components": fields.get("components", [])
+                        "components": fields.get("components", []),
+                        "last_real_change": last_change
                     }
                 logger.info(f"✓ Batch enriched {len(enriched_data)} issues from JIRA API")
+                
+                # Debug: Log first enriched data
+                if enriched_data:
+                    first_key = list(enriched_data.keys())[0]
+                    logger.info(f"🔍 First enriched data ({first_key}): {enriched_data[first_key]}")
         except Exception as e:
             logger.warning(f"Could not batch enrich from JIRA API: {e}")
         
@@ -909,7 +962,11 @@ def load_queue_issues(
                 jira_enriched = enriched_data[issue_key]
                 for cf_key, cf_value in jira_enriched.items():
                     if cf_value is not None:
-                        formatted[cf_key] = cf_value
+                        # Special handling for assignee: overwrite Service Desk value
+                        if cf_key == "assignee":
+                            formatted["assignee"] = cf_value
+                        else:
+                            formatted[cf_key] = cf_value
                 
                 # Debug: Log enriched data for first issue
                 if not formatted_issues:
@@ -921,6 +978,16 @@ def load_queue_issues(
                     logger.info(f"   customfield_10143: {jira_enriched.get('customfield_10143')}")
             
             formatted_issues.append(formatted)
+        
+        # Debug: Log structure of first formatted issue
+        if len(formatted_issues) == 1:
+            logger.info(f"🔍 First formatted issue structure:")
+            logger.info(f"   Root keys: {list(formatted.keys())}")
+            logger.info(f"   customfield_10111: {formatted.get('customfield_10111')}")
+            logger.info(f"   customfield_10125: {formatted.get('customfield_10125')}")
+            logger.info(f"   customfield_10141: {formatted.get('customfield_10141')}")
+            logger.info(f"   customfield_10142: {formatted.get('customfield_10142')}")
+            logger.info(f"   customfield_10143: {formatted.get('customfield_10143')}")
         
         # Convert to DataFrame
         df = pd.DataFrame(formatted_issues)

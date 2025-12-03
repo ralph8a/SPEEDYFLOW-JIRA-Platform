@@ -1080,6 +1080,14 @@ body.theme-light .bg-variant-item.active { outline-color: rgba(99,102,241,.8); }
   flex-wrap: wrap;
 }
 
+/* Time ago badge in header */
+.issue-card-time {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
 /* Card badges container */
 .issue-card-badges {
   display: flex;
@@ -1122,7 +1130,63 @@ body.theme-light .bg-variant-item.active { outline-color: rgba(99,102,241,.8); }
   color: #2563eb;
 }
 
-/* Card metadata */
+/* Card metadata row (Reporter + Priority) */
+.issue-card-metadata {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+
+.meta-reporter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(59, 130, 246, 0.08);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #4b5563;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.meta-priority {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.meta-priority.priority-critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.meta-priority.priority-high {
+  background: rgba(249, 115, 22, 0.15);
+  color: #ea580c;
+}
+
+.meta-priority.priority-alta {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.meta-priority.priority-baja {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+/* Card metadata (LEGACY) */
 .issue-card-meta {
   display: flex;
   justify-content: space-between;
@@ -1248,6 +1312,88 @@ body.theme-light .bg-variant-item.active { outline-color: rgba(99,102,241,.8); }
 .issue-card-footer .assignee.assignee-unassigned {
   color: #dc2626;
   font-style: italic;
+}
+
+/* Company badge in footer */
+.company-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(139, 92, 246, 0.12);
+  color: #7c3aed;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+/* Informer Section (Reporter with contact info) */
+.issue-card-informer {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(59, 130, 246, 0.05);
+  border-left: 3px solid rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.issue-card-informer .informer-name {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 11px;
+}
+
+.issue-card-informer .informer-email,
+.issue-card-informer .informer-phone,
+.issue-card-informer .informer-company {
+  color: #4b5563;
+  font-size: 10px;
+  padding-left: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Assignee Section */
+.issue-card-assignee {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: rgba(139, 92, 246, 0.05);
+  border-left: 3px solid rgba(139, 92, 246, 0.3);
+  border-radius: 4px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.issue-card-assignee .assignee-label {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.issue-card-assignee .assignee-name {
+  font-weight: 700;
+  color: #7c3aed;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.issue-card-assignee .assignee-name.assignee-unassigned {
+  color: #dc2626;
+  font-style: italic;
+  font-weight: 500;
 }
 
 .issue-card-footer .actions-count {
