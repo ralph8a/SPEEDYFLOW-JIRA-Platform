@@ -400,27 +400,37 @@ def get_severity_values() -> List[Dict[str, str]]:
 @st.cache_data(ttl=3600)
 def get_current_user_name() -> Optional[str]:
     """
-    Fetch current user's name from JIRA
+    Fetch current user's name from JIRA profile (myself endpoint)
     
     Returns:
         Display name of current user or None if not found
     """
     try:
         client = get_api_client()
+        # Try API v3 first (Cloud)
         url = f"{client.site}/rest/api/3/myself"
-        data = _make_request("GET", url, client.headers)
-        
-        if data:
-            name = data.get("displayName") or data.get("name")
-            if name:
-                logger.info(f"User: {name}")
+        try:
+            data = _make_request("GET", url, client.headers)
+            if data and ('displayName' in data or 'name' in data):
+                name = data.get("displayName") or data.get("name")
+                email = data.get("emailAddress", "")
+                logger.info(f"✓ Current user: {name} ({email})")
+                return name
+        except Exception as e3:
+            # Try API v2 fallback (Server/Data Center)
+            logger.debug(f"API v3 failed, trying v2: {e3}")
+            url_v2 = f"{client.site}/rest/api/2/myself"
+            data = _make_request("GET", url_v2, client.headers)
+            if data and ('displayName' in data or 'name' in data):
+                name = data.get("displayName") or data.get("name")
+                logger.info(f"✓ Current user (v2): {name}")
                 return name
                 
-        logger.warning("Could not get user name from API response")
+        logger.warning("⚠️ Could not get user from API response")
         return None
         
     except Exception as e:
-        logger.error(f"Error getting current user name: {e}")
+        logger.error(f"❌ Error getting current user: {e}")
         return None
 
 
@@ -684,34 +694,36 @@ def _extract_service_desk_custom_fields(fields: Dict[str, Any]) -> Dict[str, Any
     }
     
     # Extract all custom fields from Service Desk response
+    customfield_count = 0
     for field_key, field_value in fields.items():
         if field_key.startswith('customfield_'):
-            # Get friendly name or use original key
-            friendly_name = custom_field_mappings.get(field_key, field_key)
+            customfield_count += 1
+            # Store with original ID (customfield_xxx)
+            custom_fields[field_key] = field_value
             
-            # Handle different field value types
-            if isinstance(field_value, dict):
-                # Complex objects (users, options, etc)
-                if 'displayName' in field_value:
-                    custom_fields[friendly_name] = field_value['displayName']
-                elif 'name' in field_value:
-                    custom_fields[friendly_name] = field_value['name']
-                elif 'value' in field_value:
-                    custom_fields[friendly_name] = field_value['value']
-                else:
-                    custom_fields[friendly_name] = str(field_value)
-            elif isinstance(field_value, list):
-                # Arrays (multiple values)
-                if field_value:
-                    if isinstance(field_value[0], dict):
+            # Also store with friendly name if mapped
+            friendly_name = custom_field_mappings.get(field_key)
+            if friendly_name and friendly_name != field_key:
+                # Extract simple value for friendly name
+                if isinstance(field_value, dict):
+                    if 'displayName' in field_value:
+                        custom_fields[friendly_name] = field_value['displayName']
+                    elif 'name' in field_value:
+                        custom_fields[friendly_name] = field_value['name']
+                    elif 'value' in field_value:
+                        custom_fields[friendly_name] = field_value['value']
+                    else:
+                        custom_fields[friendly_name] = str(field_value)
+                elif isinstance(field_value, list):
+                    if field_value and isinstance(field_value[0], dict):
                         custom_fields[friendly_name] = [item.get('name', str(item)) for item in field_value]
                     else:
                         custom_fields[friendly_name] = field_value
-            else:
-                # Simple values
-                custom_fields[friendly_name] = field_value
-                
-            logger.debug(f"Custom field {field_key} → {friendly_name}: {custom_fields.get(friendly_name)}")
+                else:
+                    custom_fields[friendly_name] = field_value
+    
+    if customfield_count == 0:
+        logger.warning(f"⚠️ No customfields found in Service Desk API response! Available fields: {list(fields.keys())[:10]}")
     
     return custom_fields
 
@@ -779,7 +791,37 @@ def load_queue_issues(
             logger.warning(f"No issues found in queue {queue_id} (desk {service_desk_id}) after {request_count} request(s); bytes={bytes_accumulated}")
             return None, "No issues found in queue"
         
-        # STEP 2: Enrich data from JIRA REST API
+        # STEP 2: Fetch all customfields from JIRA API in ONE batch call (JQL search)
+        issue_keys = [issue.get("key") for issue in issues if issue.get("key")]
+        jql_query = f"key in ({','.join(issue_keys)})"
+        jira_batch_url = f"{client.site}/rest/api/2/search"
+        jira_batch_params = {
+            "jql": jql_query,
+            "fields": "customfield_10111,customfield_10125,customfield_10141,customfield_10142,customfield_10143,labels,components",
+            "maxResults": len(issue_keys)
+        }
+        
+        enriched_data = {}
+        try:
+            jira_batch_response = _make_request("GET", jira_batch_url, client.headers, params=jira_batch_params)
+            if jira_batch_response and "issues" in jira_batch_response:
+                for jira_issue in jira_batch_response["issues"]:
+                    key = jira_issue.get("key")
+                    fields = jira_issue.get("fields", {})
+                    enriched_data[key] = {
+                        "customfield_10111": fields.get("customfield_10111"),
+                        "customfield_10125": fields.get("customfield_10125"),
+                        "customfield_10141": fields.get("customfield_10141"),
+                        "customfield_10142": fields.get("customfield_10142"),
+                        "customfield_10143": fields.get("customfield_10143"),
+                        "labels": fields.get("labels", []),
+                        "components": fields.get("components", [])
+                    }
+                logger.info(f"✓ Batch enriched {len(enriched_data)} issues from JIRA API")
+        except Exception as e:
+            logger.warning(f"Could not batch enrich from JIRA API: {e}")
+        
+        # STEP 3: Format issues with enriched data
         formatted_issues = []
         for issue in issues:
             issue_key = issue.get("key", "")
@@ -816,24 +858,7 @@ def load_queue_issues(
             if not severity_name:
                 logger.warning(f"⚠️ {issue_key} - No severity found in: severity_obj={severity_obj}, custom_fields={list(service_desk_custom_fields.keys())}")
             
-            reporter_obj = _get_field_value(fields, "reporter", "reportero")
-            reporter_name = "Unknown"
-            reporter_email = ""
-            reporter_phone = ""
-            reporter_company = ""
-            if reporter_obj and isinstance(reporter_obj, dict):
-                reporter_name = reporter_obj.get("displayName") or reporter_obj.get("name", "Unknown")
-                reporter_email = reporter_obj.get("emailAddress", "")
-            elif isinstance(reporter_obj, str):
-                reporter_name = reporter_obj
-            
-            # Extract reporter contact info from custom fields
-            if "customfield_10141" in service_desk_custom_fields:
-                reporter_email = service_desk_custom_fields["customfield_10141"] or reporter_email
-            if "customfield_10142" in service_desk_custom_fields:
-                reporter_phone = service_desk_custom_fields["customfield_10142"]
-            if "customfield_10143" in service_desk_custom_fields:
-                reporter_company = service_desk_custom_fields["customfield_10143"]
+            # Reporter info (will be extracted from customfields)
             
             summary = _get_field_value(
                 fields, 
@@ -865,10 +890,6 @@ def load_queue_issues(
                 "severity": severity_name,
                 "assignee": assignee_name,
                 "assignee_id": assignee_id,
-                "reporter": reporter_name,
-                "reporterEmail": reporter_email,
-                "reporterPhone": reporter_phone,
-                "reporterCompany": reporter_company,
                 "created": created,
                 "updated": updated,
                 "resolved": resolved,
@@ -876,79 +897,28 @@ def load_queue_issues(
                 "issue_type": issue_type_name,
                 "labels": [],
                 "components": [],
-                "custom_fields": service_desk_custom_fields
+                "fields": fields
             }
             
-            # STEP 3: Make secondary request to JIRA REST API for enriched data
-            if issue_key:
-                try:
-                    # Specify essential fields including custom fields for better data quality
-                    fields_params = "assignee,summary,status,priority,reporter,created,updated,issuetype,labels,components,customfield_*"
-                    url_jira = f"{client.site}/rest/api/2/issue/{issue_key}?fields={fields_params}"
-                    jira_data = _make_request("GET", url_jira, client.headers)
-                    
-                    if jira_data:
-                        jira_fields = jira_data.get("fields", {})
-                        
-                        # Update assignee with more complete data from JIRA API
-                        jira_assignee = jira_fields.get("assignee")
-                        if jira_assignee and isinstance(jira_assignee, dict):
-                            formatted["assignee"] = jira_assignee.get("displayName") or jira_assignee.get("name", "Unassigned")
-                            formatted["assignee_id"] = jira_assignee.get("accountId")
-                        
-                        # ✅ Update severity with JIRA API data using centralized function
-                        jira_custom_fields = {k: v for k, v in jira_fields.items() if k.startswith('customfield_')}
-                        jira_severity_obj = jira_fields.get('severity')
-                        
-                        # Try to get severity from JIRA (may override Service Desk value)
-                        jira_severity = _normalize_severity_value(jira_severity_obj, jira_custom_fields, issue_key)
-                        
-                        if jira_severity and jira_severity != formatted['severity']:
-                            logger.info(f"🔍 {issue_key} - JIRA API Severity override: {formatted['severity']} → {jira_severity}")
-                            formatted["severity"] = jira_severity
-                        
-                        logger.info(f"📌 {issue_key} - Final severity: {formatted['severity']}")
-                        
-                        # Update status with more complete data from JIRA API
-                        jira_status = jira_fields.get("status")
-                        if jira_status and isinstance(jira_status, dict):
-                            formatted["status"] = jira_status.get("name", "Unknown")
-                        
-                        # Get labels
-                        labels = jira_fields.get("labels", [])
-                        if isinstance(labels, list):
-                            formatted["labels"] = labels
-                        
-                        # Get components
-                        components = jira_fields.get("components", [])
-                        if isinstance(components, list):
-                            formatted["components"] = [c.get("name", "") for c in components if isinstance(c, dict)]
-                        
-                        # Get additional custom fields
-                        custom_field_keys = [k for k in jira_fields.keys() if k.startswith("customfield_")]
-                        for custom_key in custom_field_keys:
-                            custom_value = jira_fields.get(custom_key)
-                            if custom_value is not None:
-                                formatted["custom_fields"][custom_key] = custom_value
-                        
-                        # Extract reporter contact info from JIRA custom fields
-                        if jira_fields.get('customfield_10141'):
-                            formatted["reporterEmail"] = jira_fields['customfield_10141']
-                        if jira_fields.get('customfield_10142'):
-                            formatted["reporterPhone"] = jira_fields['customfield_10142']
-                        if jira_fields.get('customfield_10143'):
-                            formatted["reporterCompany"] = jira_fields['customfield_10143']
-                        
-                        # Also update reporter from JIRA if available
-                        jira_reporter = jira_fields.get("reporter")
-                        if jira_reporter and isinstance(jira_reporter, dict):
-                            formatted["reporter"] = jira_reporter.get("displayName", formatted["reporter"])
-                            if not formatted.get("reporterEmail"):
-                                formatted["reporterEmail"] = jira_reporter.get("emailAddress", "")
-                        
-                        logger.info(f"✓ Enriched {issue_key} from JIRA REST API")
-                except Exception as e:
-                    logger.debug(f"Could not enrich {issue_key} from JIRA: {e}")
+            # Add all customfields directly (from Service Desk API)
+            for cf_key, cf_value in service_desk_custom_fields.items():
+                formatted[cf_key] = cf_value
+            
+            # Add enriched customfields from JIRA API batch
+            if issue_key in enriched_data:
+                jira_enriched = enriched_data[issue_key]
+                for cf_key, cf_value in jira_enriched.items():
+                    if cf_value is not None:
+                        formatted[cf_key] = cf_value
+                
+                # Debug: Log enriched data for first issue
+                if not formatted_issues:
+                    logger.info(f"✓ Enriched {issue_key} with: {list(jira_enriched.keys())}")
+                    logger.info(f"   customfield_10111: {jira_enriched.get('customfield_10111')}")
+                    logger.info(f"   customfield_10125: {jira_enriched.get('customfield_10125')}")
+                    logger.info(f"   customfield_10141: {jira_enriched.get('customfield_10141')}")
+                    logger.info(f"   customfield_10142: {jira_enriched.get('customfield_10142')}")
+                    logger.info(f"   customfield_10143: {jira_enriched.get('customfield_10143')}")
             
             formatted_issues.append(formatted)
         

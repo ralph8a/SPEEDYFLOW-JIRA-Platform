@@ -40,6 +40,7 @@ from api.blueprints.webhooks import webhooks_bp  # noqa: E402
 from api.blueprints.kanban import kanban_bp  # noqa: E402
 from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
 from api.blueprints.sync import sync_bp  # noqa: E402
+from api.blueprints.sla import sla_bp  # noqa: E402
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -96,6 +97,7 @@ app.register_blueprint(backgrounds_bp)
 app.register_blueprint(webhooks_bp)
 app.register_blueprint(kanban_bp)
 app.register_blueprint(ai_suggestions_bp)
+app.register_blueprint(sla_bp)
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
@@ -286,6 +288,91 @@ def api_get_user():
         'user': user,
         'timestamp': datetime.now().isoformat()
     }
+
+@app.route('/api/users', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def api_get_users():
+    """
+    Get list of users for mentions system.
+    
+    Query Parameters:
+        - query: Optional search query to filter users
+        - maxResults: Maximum results to return (default: 50)
+    
+    Returns:
+        {
+            "success": true,
+            "users": [
+                {
+                    "accountId": "...",
+                    "displayName": "John Doe",
+                    "emailAddress": "john@example.com",
+                    "avatarUrl": "...",
+                    "username": "john.doe"
+                }
+            ],
+            "count": 10
+        }
+    """
+    from core.api import get_api_client
+    
+    query = request.args.get('query', '')
+    max_results = int(request.args.get('maxResults', 50))
+    
+    client = get_api_client()
+    
+    try:
+        # Use JIRA Platform API v3 user search
+        url = f"{client.site}/rest/api/3/user/search"
+        params = {
+            'maxResults': max_results
+        }
+        
+        if query:
+            params['query'] = query
+        
+        from core.api import _make_request
+        response = _make_request('GET', url, client.headers, params=params)
+        
+        users = []
+        if response and isinstance(response, list):
+            for user in response:
+                account_id = user.get('accountId', '')
+                if account_id:
+                    display_name = user.get('displayName', '')
+                    # Build username from available fields
+                    username = (
+                        user.get('name', '') or
+                        user.get('key', '') or
+                        display_name.lower().replace(' ', '.')
+                    )
+                    
+                    users.append({
+                        'accountId': account_id,
+                        'displayName': display_name,
+                        'emailAddress': user.get('emailAddress', ''),
+                        'avatarUrl': user.get('avatarUrls', {}).get('48x48', ''),
+                        'username': username
+                    })
+        
+        return {
+            'success': True,
+            'users': users,
+            'count': len(users),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching users: {e}")
+        return {
+            'success': False,
+            'error': str(e),
+            'users': [],
+            'count': 0
+        }, 500
 
 @app.route('/api/projects', methods=['GET'])
 @handle_api_error

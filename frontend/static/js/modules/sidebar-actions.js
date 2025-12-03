@@ -8,6 +8,123 @@ class SidebarActions {
     this.initialized = false;
     this.notificationsPanel = null;
     this.userDropdown = null;
+    
+    // Background cache for sidebar data
+    this.cache = {
+      currentUser: null,
+      serviceDesks: null,
+      notifications: [],
+      starred: [],
+      lastRefresh: null
+    };
+    
+    // Start background caching immediately
+    this.startBackgroundCaching();
+  }
+
+  /**
+   * Start background caching of sidebar data
+   */
+  startBackgroundCaching() {
+    console.log('💾 Starting background cache for sidebar...');
+    
+    // Cache current user immediately
+    this.cacheCurrentUser();
+    
+    // Cache service desks
+    this.cacheServiceDesks();
+    
+    // Cache notifications periodically
+    this.cacheNotifications();
+    
+    // Refresh cache every 5 minutes
+    setInterval(() => {
+      this.refreshCache();
+    }, 5 * 60 * 1000);
+  }
+  
+  /**
+   * Cache current user data in background
+   */
+  async cacheCurrentUser() {
+    try {
+      const response = await fetch('/api/user');
+      const json = await response.json();
+      
+      if (json.success && json.user) {
+        this.cache.currentUser = json.user;
+        console.log('💾 Cached current user:', json.user.displayName);
+        
+        // Store in window state for immediate access
+        if (window.state) {
+          window.state.currentUser = json.user.displayName || json.user.name;
+          window.state.currentUserAccountId = json.user.accountId;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to cache current user:', error);
+    }
+  }
+  
+  /**
+   * Cache service desks data in background
+   */
+  async cacheServiceDesks() {
+    try {
+      const response = await fetch('/api/desks');
+      const json = await response.json();
+      
+      if (json.success) {
+        this.cache.serviceDesks = json.data || json;
+        console.log('💾 Cached service desks:', this.cache.serviceDesks.length);
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to cache service desks:', error);
+    }
+  }
+  
+  /**
+   * Cache notifications in background
+   */
+  async cacheNotifications() {
+    try {
+      // Simulate notifications API (replace with actual endpoint)
+      this.cache.notifications = [];
+      console.log('💾 Cached notifications: 0');
+    } catch (error) {
+      console.warn('⚠️ Failed to cache notifications:', error);
+    }
+  }
+  
+  /**
+   * Refresh all cached data
+   */
+  async refreshCache() {
+    console.log('🔄 Refreshing sidebar cache...');
+    this.cache.lastRefresh = new Date();
+    
+    await Promise.all([
+      this.cacheCurrentUser(),
+      this.cacheServiceDesks(),
+      this.cacheNotifications()
+    ]);
+    
+    console.log('✅ Sidebar cache refreshed');
+  }
+  
+  /**
+   * Get cached data (instant access)
+   */
+  getCachedUser() {
+    return this.cache.currentUser;
+  }
+  
+  getCachedServiceDesks() {
+    return this.cache.serviceDesks;
+  }
+  
+  getCachedNotifications() {
+    return this.cache.notifications;
   }
 
   /**
@@ -105,8 +222,17 @@ class SidebarActions {
         console.log('✅ Set filter mode to: myTickets');
       }
       
-      // First, get current user information from API
-      const currentUser = await this.getCurrentUserInfo();
+      // Get current user from cache (instant) or API (fallback)
+      let currentUser = this.getCachedUser();
+      
+      if (currentUser) {
+        console.log('💾 Using cached user data:', currentUser.displayName);
+        currentUser = currentUser.displayName || currentUser.name;
+      } else {
+        console.log('⚠️ Cache not ready, fetching user...');
+        currentUser = await this.getCurrentUserInfo();
+      }
+      
       if (!currentUser) {
         this.showNotification('My Tickets', 'No se pudo detectar el usuario actual. Intenta refrescar la página.', 'warning');
         return;
@@ -120,14 +246,18 @@ class SidebarActions {
       }
 
       // Auto-select user's desk and "assigned to me" queue
-      await this.autoSelectUserDeskAndQueue(currentUser);
+      const selected = await this.autoSelectUserDeskAndQueue(currentUser);
       
-      // Reload issues to apply the filter
-      if (window.loadIssues) {
-        await window.loadIssues();
+      if (selected) {
+        // Reload issues to apply the filter
+        console.log(`🔄 Reloading issues for queue: ${window.state.currentQueue}`);
+        await window.loadIssues(window.state.currentQueue);
+        
+        const issueCount = window.state?.issues?.length || 0;
+        this.showNotification('My Tickets', `Showing ${issueCount} ticket${issueCount !== 1 ? 's' : ''} assigned to ${currentUser}`, 'success');
+      } else {
+        this.showNotification('My Tickets', 'Could not find "Assigned to me" queue. Please select Service Desk and Queue manually.', 'warning');
       }
-      
-      this.showNotification('My Tickets', `Showing tickets assigned to ${currentUser.displayName}`, 'success');
       
     } catch (error) {
       console.error('❌ Error in filterMyTickets:', error);
@@ -140,12 +270,31 @@ class SidebarActions {
    */
   async getCurrentUserInfo() {
     try {
-      // Check if already cached
-      if (window.state?.currentUser && window.state.currentUser.displayName) {
-        return window.state.currentUser;
+      // Check memory cache first (instant)
+      if (this.cache.currentUser) {
+        const userName = this.cache.currentUser.displayName || this.cache.currentUser.name;
+        console.log('💾 Using cached user from memory:', userName);
+        return userName;
+      }
+      
+      // Check window state cache second (should be a string)
+      if (window.state?.currentUser) {
+        const userName = typeof window.state.currentUser === 'string' 
+          ? window.state.currentUser 
+          : (window.state.currentUser.displayName || window.state.currentUser.name);
+        console.log('💾 Using cached user from state:', userName);
+        return userName;
+      }
+      
+      // Check localStorage third
+      const cachedUser = localStorage.getItem('currentUser');
+      if (cachedUser) {
+        console.log('📦 Using cached user from localStorage:', cachedUser);
+        return cachedUser;
       }
 
-      // Fetch from API
+      // Fetch from API (last resort)
+      console.log('🌐 Fetching user from API...');
       const response = await fetch('/api/user');
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -153,10 +302,25 @@ class SidebarActions {
       
       const data = await response.json();
       if (data.success && data.user) {
+        const userName = data.user.displayName || data.user.name || data.user.accountId;
+        
+        console.log('✅ Fetched user from API:', userName);
+        
+        // Cache in memory
+        this.cache.currentUser = data.user;
+        
         // Cache in state
         if (!window.state) window.state = {};
-        window.state.currentUser = data.user;
-        return data.user;
+        window.state.currentUser = userName;
+        window.state.currentUserAccountId = data.user.accountId;
+        
+        // Cache in localStorage
+        localStorage.setItem('currentUser', userName);
+        if (data.user.accountId) {
+          localStorage.setItem('currentUserAccountId', data.user.accountId);
+        }
+        
+        return userName;
       }
       
       throw new Error('Invalid user response');
@@ -167,11 +331,16 @@ class SidebarActions {
       // Fallback: try to get from existing tickets
       const issues = window.state?.issues || [];
       const assignedIssue = issues.find(i => i.assignee || i.asignado_a);
-      const fallbackUser = assignedIssue?.assignee || assignedIssue?.asignado_a;
       
-      if (fallbackUser && fallbackUser !== 'Unassigned') {
-        console.log('🔄 Using fallback user from tickets:', fallbackUser);
-        return { displayName: fallbackUser, source: 'fallback' };
+      if (assignedIssue) {
+        const fallbackUser = typeof assignedIssue.assignee === 'string' 
+          ? assignedIssue.assignee 
+          : (assignedIssue.assignee?.displayName || assignedIssue.asignado_a);
+        
+        if (fallbackUser && fallbackUser !== 'Unassigned') {
+          console.log('🔄 Using fallback user from tickets:', fallbackUser);
+          return fallbackUser;
+        }
       }
       
       return null;
@@ -180,69 +349,239 @@ class SidebarActions {
 
   /**
    * Auto-select the user's desk and "assigned to me" queue
+   * Uses multiple strategies: user groups, project keys from tickets, and queue analysis
    */
   async autoSelectUserDeskAndQueue(currentUser) {
     try {
-      // Get available desks
-      const desksResponse = await fetch('/api/desks');
-      if (!desksResponse.ok) {
-        throw new Error(`Failed to fetch desks: ${desksResponse.status}`);
+      console.log('🔍 Auto-selecting desk and queue for:', currentUser);
+      
+      // Get user profile with groups
+      const userResponse = await fetch('/api/user');
+      if (!userResponse.ok) {
+        throw new Error(`Failed to fetch user profile: ${userResponse.status}`);
       }
       
-      const desksData = await desksResponse.json();
-      const desks = desksData || [];
+      const userData = await userResponse.json();
+      const userProfile = userData.user || userData;
+      const userGroups = userProfile.groups || [];
+      const userAccountId = userProfile.accountId;
+      
+      console.log('👤 User profile:', {
+        name: userProfile.displayName,
+        accountId: userAccountId,
+        groups: userGroups.map(g => g.name || g)
+      });
+      
+      // Get available desks
+      let desks = this.getCachedServiceDesks();
+      
+      if (!desks || desks.length === 0) {
+        console.log('⚠️ Fetching desks from API...');
+        const desksResponse = await fetch('/api/desks');
+        if (!desksResponse.ok) {
+          throw new Error(`Failed to fetch desks: ${desksResponse.status}`);
+        }
+        
+        const desksData = await desksResponse.json();
+        desks = desksData.data || desksData.desks || desksData;
+        
+        if (!Array.isArray(desks)) {
+          console.error('❌ Desks response is not an array:', desksData);
+          desks = [];
+        }
+        
+        console.log(`✅ Fetched ${desks.length} desks from API`);
+      } else {
+        console.log(`💾 Using cached ${desks.length} desk(s)`);
+      }
       
       if (desks.length === 0) {
         console.warn('⚠️ No desks available');
-        return;
+        return false;
       }
 
-      // Find user's primary desk (first one they have access to, or first available)
-      let userDesk = desks[0]; // Default to first desk if no specific one found
+      console.log('📋 Available desks:', desks.map(d => ({ 
+        id: d.id, 
+        name: d.name || d.displayName,
+        projectKey: d.projectKey || d.key
+      })));
+
+      // Strategy 1: Match project key from existing tickets
+      let userDesk = null;
+      let assignedQueue = null;
       
-      // Try to find a desk that matches user's domain or is specifically assigned
-      const userEmail = currentUser.emailAddress || '';
-      if (userEmail) {
-        const userDomain = userEmail.split('@')[1];
-        const matchingDesk = desks.find(desk => 
-          desk.name && (
-            desk.name.toLowerCase().includes(userDomain.toLowerCase()) ||
-            desk.name.toLowerCase().includes(currentUser.displayName.toLowerCase())
-          )
-        );
-        if (matchingDesk) {
-          userDesk = matchingDesk;
-          console.log('🎯 Found user-specific desk:', userDesk.name);
+      // Check if there are any loaded tickets to extract project key
+      const existingIssues = window.state?.issues || [];
+      if (existingIssues.length > 0) {
+        // Get project keys from tickets assigned to this user
+        const userTickets = existingIssues.filter(issue => {
+          const assignee = issue.assignee || issue.asignado_a || issue.fields?.assignee;
+          const assigneeId = assignee?.accountId;
+          const assigneeName = assignee?.displayName || assignee?.name || assignee;
+          
+          return (userAccountId && assigneeId === userAccountId) ||
+                 (assigneeName && assigneeName.toLowerCase().includes(currentUser.toLowerCase()));
+        });
+        
+        if (userTickets.length > 0) {
+          // Extract project key from ticket key (e.g., "MSM-123" -> "MSM")
+          const firstTicket = userTickets[0];
+          const ticketKey = firstTicket.key || firstTicket.id || '';
+          const projectKey = ticketKey.split('-')[0];
+          
+          console.log(`🎫 Found user ticket: ${ticketKey}, project key: ${projectKey}`);
+          
+          // Find desk matching this project key
+          userDesk = desks.find(desk => {
+            const deskKey = desk.projectKey || desk.key || '';
+            const deskName = (desk.name || desk.displayName || '').toUpperCase();
+            return deskKey === projectKey || deskName.includes(projectKey);
+          });
+          
+          if (userDesk) {
+            console.log(`✅ Found desk matching project key "${projectKey}": ${userDesk.name || userDesk.displayName}`);
+          }
         }
       }
 
-      // Auto-select the desk in UI
-      await this.selectDesk(userDesk);
-      
-      // Find "assigned to me" or similar queue
-      const queues = userDesk.queues || [];
-      const assignedQueue = queues.find(queue => 
-        queue.name && (
-          queue.name.toLowerCase().includes('assigned to me') ||
-          queue.name.toLowerCase().includes('asignado a mí') ||
-          queue.name.toLowerCase().includes('mis tickets') ||
-          queue.name.toLowerCase().includes('my tickets') ||
-          queue.name.toLowerCase().includes('assigned')
-        )
-      );
-
-      if (assignedQueue) {
-        console.log('🎯 Found assigned queue:', assignedQueue.name);
-        await this.selectQueue(assignedQueue);
-      } else {
-        console.log('🔍 No specific "assigned to me" queue found, using first available');
-        if (queues.length > 0) {
-          await this.selectQueue(queues[0]);
+      // Strategy 2: Match desk name with user groups
+      if (!userDesk) {
+        console.log('🔍 Strategy 2: Matching desk with user groups...');
+        
+        for (const group of userGroups) {
+          const groupName = (group.name || group).toLowerCase();
+          
+          const matchingDesk = desks.find(desk => {
+            const deskName = (desk.name || desk.displayName || '').toLowerCase();
+            // Match if desk name contains group name or vice versa
+            return deskName.includes(groupName) || groupName.includes(deskName);
+          });
+          
+          if (matchingDesk) {
+            userDesk = matchingDesk;
+            console.log(`✅ Found desk matching user group "${group.name || group}": ${userDesk.name || userDesk.displayName}`);
+            break;
+          }
         }
       }
+
+      // Strategy 3: Check each desk's "Assigned to me" queue for user tickets
+      if (!userDesk) {
+        console.log('🔍 Strategy 3: Checking desks for user tickets...');
+        
+        for (const desk of desks) {
+          const queues = desk.queues || [];
+          
+          const foundQueue = queues.find(queue => {
+            const queueName = (queue.name || '').toLowerCase();
+            return queueName.includes('assigned to me') ||
+                   queueName.includes('asignado a mí') ||
+                   queueName.includes('asignado a mi') ||
+                   queueName.includes('mis tickets') ||
+                   queueName.includes('my tickets');
+          });
+
+          if (foundQueue) {
+            // Quick check: fetch a few issues from this queue
+            try {
+              const issuesResponse = await fetch(`/api/queue/${foundQueue.id}/issues?maxResults=10`);
+              if (issuesResponse.ok) {
+                const issuesData = await issuesResponse.json();
+                const issues = issuesData.data || issuesData.issues || issuesData || [];
+                
+                // Check if any tickets are assigned to this user
+                const hasUserTickets = issues.some(issue => {
+                  const assignee = issue.assignee || issue.asignado_a || issue.fields?.assignee;
+                  const assigneeId = assignee?.accountId;
+                  return userAccountId && assigneeId === userAccountId;
+                });
+                
+                if (hasUserTickets) {
+                  userDesk = desk;
+                  assignedQueue = foundQueue;
+                  console.log(`✅ Found desk with user tickets: ${desk.name || desk.displayName}`);
+                  break;
+                }
+              }
+            } catch (error) {
+              console.log(`⚠️ Could not check queue ${foundQueue.name}:`, error.message);
+            }
+          }
+        }
+      }
+
+      // Find "Assigned to me" queue in selected desk
+      if (userDesk && !assignedQueue) {
+        const queues = userDesk.queues || [];
+        assignedQueue = queues.find(queue => {
+          const queueName = (queue.name || '').toLowerCase();
+          return queueName.includes('assigned to me') ||
+                 queueName.includes('asignado a mí') ||
+                 queueName.includes('asignado a mi') ||
+                 queueName.includes('mis tickets') ||
+                 queueName.includes('my tickets');
+        });
+        
+        // Fallback to first queue if no "Assigned to me" found
+        if (!assignedQueue && queues.length > 0) {
+          assignedQueue = queues[0];
+          console.log(`⚠️ No "Assigned to me" queue found, using first queue: ${assignedQueue.name}`);
+        }
+      }
+
+      // Last resort: use first desk
+      if (!userDesk) {
+        userDesk = desks[0];
+        const queues = userDesk.queues || [];
+        assignedQueue = queues[0];
+        console.log(`⚠️ Using first available desk: ${userDesk.name || userDesk.displayName}`);
+      }
+
+      if (!assignedQueue) {
+        console.warn('⚠️ No queues found');
+        return false;
+      }
+
+      console.log(`📂 Final selection - Desk: ${userDesk.name || userDesk.displayName} (${userDesk.id})`);
+      console.log(`📋 Final selection - Queue: ${assignedQueue.name} (${assignedQueue.id})`);
+
+      // Update UI selects
+      const deskSelect = document.getElementById('serviceDeskSelectFilter');
+      const queueSelect = document.getElementById('queueSelectFilter');
+      
+      if (deskSelect) {
+        deskSelect.value = userDesk.id;
+        const changeEvent = new Event('change', { bubbles: true });
+        deskSelect.dispatchEvent(changeEvent);
+        
+        if (window.state) {
+          window.state.currentDesk = userDesk.id;
+        }
+        
+        console.log('✅ Updated desk select to:', userDesk.id);
+      }
+      
+      // Wait for queue dropdown to populate
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      if (queueSelect) {
+        queueSelect.value = assignedQueue.id;
+        const changeEvent = new Event('change', { bubbles: true });
+        queueSelect.dispatchEvent(changeEvent);
+        
+        if (window.state) {
+          window.state.currentQueue = assignedQueue.id;
+        }
+        
+        console.log('✅ Updated queue select to:', assignedQueue.id);
+      }
+      
+      return true;
       
     } catch (error) {
       console.error('❌ Error auto-selecting desk and queue:', error);
+      console.error('Stack trace:', error.stack);
+      return false;
     }
   }
 
@@ -324,12 +663,16 @@ class SidebarActions {
     }
     
     // Reload issues to show all tickets
-    if (window.loadIssues) {
-      await window.loadIssues();
+    if (window.loadIssues && window.state?.currentQueue) {
+      console.log(`🔄 Reloading issues for queue: ${window.state.currentQueue}`);
+      await window.loadIssues(window.state.currentQueue);
+      
+      const totalCount = window.state?.issues?.length || 0;
+      this.showNotification('All Tickets', `Showing all ${totalCount} tickets`, 'success');
+    } else {
+      console.warn('⚠️ No queue selected. Please select a Service Desk and Queue first.');
+      this.showNotification('All Tickets', 'Please select a Service Desk and Queue first', 'warning');
     }
-    
-    const totalCount = window.state?.issues?.length || 0;
-    this.showNotification('All Tickets', `Showing all ${totalCount} tickets`, 'success');
   }
 
   /**
@@ -1257,9 +1600,20 @@ class SidebarActions {
   async refreshData() {
     console.log('🔄 Refreshing data...');
     
+    // Refresh sidebar cache in background
+    await this.refreshCache();
+    
+    // Clear browser cache
+    if (window.CacheManager) {
+      window.CacheManager.clear();
+      console.log('🗑️ Cleared browser cache');
+    }
+    
     // Reload issues
     if (typeof window.loadIssuesForQueue === 'function' && window.state?.currentQueue) {
       await window.loadIssuesForQueue(window.state.currentDesk, window.state.currentQueue);
+    } else if (typeof window.loadIssues === 'function' && window.state?.currentQueue) {
+      await window.loadIssues(window.state.currentQueue);
     }
     
     // Reload service desks if function exists

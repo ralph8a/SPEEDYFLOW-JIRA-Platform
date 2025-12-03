@@ -54,7 +54,7 @@ class JiraConfig:
 class CacheConfig:
     """Caching configuration"""
     enabled: bool = True
-    default_ttl: int = 300  # 5 minutes
+    default_ttl: int = 900  # 15 minutes (was 5 - increased for performance)
     max_ttl: int = 3600    # 1 hour
 
 @dataclass

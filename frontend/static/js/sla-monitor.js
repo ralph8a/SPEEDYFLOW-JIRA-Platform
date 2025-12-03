@@ -19,35 +19,25 @@ class SLAMonitor {
 
   /**
    * Initialize SLA Monitor for an issue
+   * Uses cached slaData from issue.sla_agreements (no API call needed)
    */
-  async init(issueKey) {
+  async init(issueKey, slaData = null) {
     if (!issueKey) return;
     
     this.currentIssue = issueKey;
-    await this.loadIssueSLA(issueKey);
+    
+    // Always use provided SLA data (comes from kanban cache)
+    // SLA data is already loaded in /api/issues endpoint via _batch_inject_sla
+    if (slaData && Object.keys(slaData).length > 0) {
+      this.slaData[issueKey] = slaData;
+      this.slaCache[issueKey] = { data: slaData, timestamp: Date.now() };
+    } else {
+      // No SLA data available (rare case)
+      this.slaData[issueKey] = this.getDefaultSLA();
+    }
+    
     this.setupRefreshInterval();
     return this.slaData[issueKey];
-  }
-
-  /**
-   * Load SLA data for specific issue
-   */
-  async loadIssueSLA(issueKey) {
-    try {
-      const response = await fetch(`/api/issues/${issueKey}/sla`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
-      const data = await response.json();
-      this.slaData[issueKey] = data;
-      this.slaCache[issueKey] = { data, timestamp: Date.now() };
-      
-      console.log(`✅ SLA loaded for ${issueKey}`, data);
-      return data;
-    } catch (error) {
-      console.error(`❌ Error loading SLA for ${issueKey}:`, error);
-      this.slaData[issueKey] = this.getDefaultSLA();
-      return this.slaData[issueKey];
-    }
   }
 
   /**
@@ -123,6 +113,10 @@ class SLAMonitor {
           <div class="detail-row">
             <span class="detail-label">Remaining:</span>
             <span class="detail-value ${breachPercent > 100 ? 'breached' : ''}">${cycle.remaining_time || 'N/A'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Paused:</span>
+            <span class="detail-value">${cycle.paused ? '⏸️ Yes' : '▶️ No'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Start:</span>
@@ -208,17 +202,15 @@ class SLAMonitor {
   }
 
   /**
-   * Setup auto-refresh interval
+   * Setup auto-refresh interval - DISABLED
+   * We use cached SLA data from kanban board instead of polling API
    */
   setupRefreshInterval() {
-    if (this.refreshInterval) clearInterval(this.refreshInterval);
-    
-    this.refreshInterval = setInterval(() => {
-      if (this.currentIssue) {
-        this.loadIssueSLA(this.currentIssue);
-        this.updateSLADisplay();
-      }
-    }, 30000); // Refresh every 30 seconds
+    // No-op: refresh disabled, we use cached data
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
   }
 
   /**

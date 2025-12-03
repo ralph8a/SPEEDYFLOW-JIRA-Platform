@@ -38,8 +38,8 @@ def _load_cache_once() -> None:
             logger.info(f"[SLA] Cache loaded: {_SLA_SUMMARY.get('total_tickets', len(_SLA_CACHE))} tickets")
         except Exception as e:
             logger.warning(f"[SLA] Failed to load cache: {e}")
-    else:
-        logger.info("[SLA] Cache file not found; using defaults")
+    # Mark as loaded even if file doesn't exist to prevent repeated logs
+    _SLA_CACHE_LOADED = True
 
 def _format_minutes(minutes: int) -> str:
     hours = minutes // 60
@@ -115,8 +115,8 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
     raw = _SLA_CACHE.get(issue_key)
     if raw:
         return _cache_sla_to_cycles(issue_key, raw)
-    # Fallback default SLA (priority inference omitted due to limited data)
-    return _default_sla(issue_key)
+    # No default - return None if no SLA data exists
+    return None
 
 @sla_bp.route('/api/issues/<issue_key>/sla', methods=['GET'])
 @handle_api_error

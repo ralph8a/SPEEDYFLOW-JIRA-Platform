@@ -73,6 +73,101 @@ const state = {
   severityMapping: null // Mapping for severity classification
 };
 
+// ============================================================================
+// CACHE UTILITIES - LocalStorage with TTL
+// ============================================================================
+const CacheManager = {
+  TTL: 15 * 60 * 1000, // 15 minutes in milliseconds
+  TRANSITIONS_TTL: 30 * 60 * 1000, // 30 minutes for transitions (rarely change)
+  
+  /**
+   * Set item in cache with timestamp
+   */
+  set(key, value, ttl = null) {
+    try {
+      const item = {
+        value: value,
+        timestamp: Date.now(),
+        ttl: ttl || this.TTL
+      };
+      localStorage.setItem(`cache_${key}`, JSON.stringify(item));
+    } catch (e) {
+      console.warn('⚠️ Cache write failed:', e);
+    }
+  },
+  
+  /**
+   * Get item from cache if not expired
+   */
+  get(key) {
+    try {
+      const item = localStorage.getItem(`cache_${key}`);
+      if (!item) return null;
+      
+      const parsed = JSON.parse(item);
+      const age = Date.now() - parsed.timestamp;
+      
+      if (age > parsed.ttl) {
+        // Expired - remove it
+        localStorage.removeItem(`cache_${key}`);
+        return null;
+      }
+      
+      return parsed.value;
+    } catch (e) {
+      console.warn('⚠️ Cache read failed:', e);
+      return null;
+    }
+  },
+  
+  /**
+   * Clear specific cache key
+   */
+  remove(key) {
+    try {
+      localStorage.removeItem(`cache_${key}`);
+    } catch (e) {
+      console.warn('⚠️ Cache remove failed:', e);
+    }
+  },
+  
+  /**
+   * Clear all cache entries
+   */
+  clear() {
+    try {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('cache_'));
+      keys.forEach(k => localStorage.removeItem(k));
+      console.log(`🗑️ Cleared ${keys.length} cache entries`);
+    } catch (e) {
+      console.warn('⚠️ Cache clear failed:', e);
+    }
+  },
+  
+  /**
+   * Get cache statistics
+   */
+  stats() {
+    try {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('cache_'));
+      const sizes = keys.map(k => {
+        const item = localStorage.getItem(k);
+        return item ? item.length : 0;
+      });
+      const totalSize = sizes.reduce((a, b) => a + b, 0);
+      return {
+        entries: keys.length,
+        totalSizeKB: (totalSize / 1024).toFixed(2)
+      };
+    } catch (e) {
+      return { entries: 0, totalSizeKB: 0 };
+    }
+  }
+};
+
+// Expose globally for debugging
+window.CacheManager = CacheManager;
+
 document.addEventListener('DOMContentLoaded', initApp);
 
 async function initApp() {
@@ -202,7 +297,56 @@ function setupEventListeners() {
   // Save filters button
   const saveFiltersBtn = document.getElementById('saveFiltersBtn');
   if (saveFiltersBtn) {
-    // DISABLED: saveFiltersBtn.addEventListener('click', saveCurrentFilters);
+    saveFiltersBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      saveCurrentFilters();
+    });
+    console.log('✅ Save filters button initialized');
+  }
+  
+  // Clear cache button
+  const clearCacheBtn = document.getElementById('clearCacheBtn');
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', () => {
+      console.log('🗑️ Clearing cache...');
+      CacheManager.clear();
+      
+      // Show notification
+      if (window.loadingDotsManager) {
+        window.loadingDotsManager.show('Cache cleared! Reloading...');
+      }
+      
+      // Reload current queue to fetch fresh data
+      setTimeout(() => {
+        if (state.currentQueue) {
+          loadIssues(state.currentQueue);
+        }
+        if (window.loadingDotsManager) {
+          window.loadingDotsManager.hide();
+        }
+      }, 500);
+    });
+  }
+
+  // Quick action button (cloned from sidebar header)
+  const quickActionBtn = document.getElementById('quickActionBtn');
+  if (quickActionBtn) {
+    console.log('✅ Quick action button found and initializing...');
+    quickActionBtn.addEventListener('click', () => {
+      console.log('⚡ Quick action triggered!');
+      
+      // Show notification
+      if (window.loadingDotsManager) {
+        window.loadingDotsManager.show('Quick action executed! ⚡');
+        setTimeout(() => {
+          window.loadingDotsManager.hide();
+        }, 1500);
+      }
+      
+      // TODO: Add your custom action here
+      // Example: Open a modal, trigger a workflow, etc.
+    });
   }
 }
 
@@ -227,11 +371,24 @@ function showTicketDetails(issueKey) {
 }
 
 async function loadCurrentUser() {
+  // Use cached user from localStorage (set when user logs in)
+  state.currentUser = localStorage.getItem('currentUser') || '';
+  state.currentUserAccountId = localStorage.getItem('currentUserAccountId') || null;
+  
+  if (state.currentUser) {
+    console.log('👤 Using cached user:', state.currentUser);
+    return;
+  }
+  
+  // Only fetch if not cached
   try {
-    console.log('👤 Fetching current user...');
+    console.log('👤 Fetching current user from API...');
     const response = await fetch('/api/user');
-    const json = await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
     
+    const json = await response.json();
     if (json.success && json.user) {
       state.currentUser = json.user.displayName || json.user.name || json.user.accountId || '';
       state.currentUserAccountId = json.user.accountId || null;
@@ -240,15 +397,10 @@ async function loadCurrentUser() {
         localStorage.setItem('currentUserAccountId', state.currentUserAccountId);
       }
       console.log('✅ Current user:', state.currentUser);
-    } else {
-      console.warn('⚠️ Could not fetch current user, using fallback');
-      state.currentUser = localStorage.getItem('currentUser') || 'admin';
-      state.currentUserAccountId = localStorage.getItem('currentUserAccountId') || null;
     }
   } catch (error) {
-    console.error('❌ Error loading current user:', error);
-    state.currentUser = localStorage.getItem('currentUser') || 'admin';
-    state.currentUserAccountId = localStorage.getItem('currentUserAccountId') || null;
+    console.warn('⚠️ Could not fetch user, will use assignee info:', error.message);
+    // Don't set fallback - let it remain empty
   }
 }
 
@@ -396,7 +548,71 @@ async function loadIssues(queueId) {
   }
 
   try {
-    // Show loading dots
+    // Check cache first
+    const cacheKey = `issues_${state.currentDesk}_${queueId}`;
+    const cached = CacheManager.get(cacheKey);
+    
+    if (cached && cached.length > 0) {
+      console.log(`💾 Using cached issues (${cached.length} tickets)`);
+      
+      // Process cached data immediately
+      const allIssues = cached;
+      window.app = window.app || {};
+      window.app.currentIssues = allIssues;
+      
+      // Cache full issue data by key for sidebar use
+      window.app.issuesCache = window.app.issuesCache || new Map();
+      allIssues.forEach(issue => {
+        if (issue.key) {
+          window.app.issuesCache.set(issue.key, issue);
+        }
+      });
+      console.log(`💾 Cached ${window.app.issuesCache.size} issues with full data (from cache)`);
+      
+      // Apply filter mode
+      const shouldFilterByAssignee = state.filterMode === 'myTickets';
+      if (shouldFilterByAssignee) {
+        let currentUser = state.currentUser || localStorage.getItem('currentUser') || '';
+        if (typeof currentUser === 'object' && currentUser !== null) {
+          currentUser = currentUser.displayName || currentUser.name || '';
+        }
+        state.filteredIssues = allIssues.filter(issue => {
+          const assignee = 
+            issue.assignee?.displayName || 
+            issue.assignee?.name ||
+            issue.fields?.assignee?.displayName ||
+            issue.fields?.assignee?.name ||
+            issue.assigned_to ||
+            issue.asignado_a ||
+            '';
+          if (!assignee) return false;
+          return assignee.toLowerCase() === currentUser.toLowerCase() ||
+                 assignee.toLowerCase().includes(currentUser.toLowerCase());
+        });
+        state.issues = state.filteredIssues;
+      } else {
+        state.issues = allIssues;
+        state.filteredIssues = allIssues;
+      }
+      
+      // Render immediately with cached data
+      renderView();
+      
+      if (statusEl) {
+        statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''} (cached)`;
+        statusEl.classList.remove('status-info','status-warn');
+        statusEl.classList.add('status-success');
+      }
+      
+      // Load transitions in background (lazy)
+      loadIssueTransitionsLazy();
+      
+      // Still fetch fresh data in background to update cache
+      fetchIssuesBackground(queueId, cacheKey);
+      return;
+    }
+    
+    // Show loading dots only if not using cache
     if (window.loadingDotsManager) {
       window.loadingDotsManager.show('Loading tickets');
     }
@@ -430,19 +646,39 @@ async function loadIssues(queueId) {
     // Preserve raw issues for kanban fallback
     window.app = window.app || {};
     window.app.currentIssues = allIssues;
+    
+    // Cache full issue data by key for sidebar use
+    window.app.issuesCache = window.app.issuesCache || new Map();
+    allIssues.forEach(issue => {
+      if (issue.key) {
+        window.app.issuesCache.set(issue.key, issue);
+      }
+    });
+    console.log(`💾 Cached ${window.app.issuesCache.size} issues with full data`);
     // Check filter mode
     const shouldFilterByAssignee = state.filterMode === 'myTickets';
     
     console.log(`🔍 Filter mode: ${state.filterMode}, All issues length: ${allIssues.length}`);
     
     // Apply assignee filter only if in "My Tickets" mode
+    let currentUser = state.currentUser || localStorage.getItem('currentUser') || '';
+    if (typeof currentUser === 'object' && currentUser !== null) {
+      currentUser = currentUser.displayName || currentUser.name || '';
+    }
+    
     if (shouldFilterByAssignee) {
-      let currentUser = state.currentUser || localStorage.getItem('currentUser') || '';
-      if (typeof currentUser === 'object' && currentUser !== null) {
-        currentUser = currentUser.displayName || currentUser.name || '';
-      }
-      
       console.log(`🔍 Filtering by assignee: "${currentUser}"`);
+      
+      // Debug: Log sample issue to see structure
+      if (allIssues.length > 0) {
+        console.log('📋 Sample issue structure:', {
+          key: allIssues[0].key,
+          assignee: allIssues[0].assignee,
+          fields_assignee: allIssues[0].fields?.assignee,
+          assigned_to: allIssues[0].assigned_to,
+          asignado_a: allIssues[0].asignado_a
+        });
+      }
       
       state.filteredIssues = allIssues.length ? allIssues.filter(issue => {
         // Try different assignee field locations
@@ -455,6 +691,11 @@ async function loadIssues(queueId) {
           issue.asignado_a ||
           '';
         
+        // Debug log for each issue
+        if (assignee) {
+          console.log(`  Issue ${issue.key}: assignee="${assignee}", user="${currentUser}", match=${assignee.toLowerCase().includes(currentUser.toLowerCase())}`);
+        }
+        
         // Exact match or partial match
         if (!assignee) return false;
         
@@ -463,7 +704,7 @@ async function loadIssues(queueId) {
       }) : [];
       
       state.issues = state.filteredIssues;
-      console.log(`✅ Filtered to ${state.issues.length} tickets assigned to ${currentUser}`);
+      console.log(`✅ Filtered to ${state.issues.length} tickets assigned to ${currentUser} from ${allIssues.length} total`);
     } else {
       // Show all tickets
       state.issues = allIssues;
@@ -471,10 +712,11 @@ async function loadIssues(queueId) {
       console.log(`✅ Showing all ${state.issues.length} tickets`);
     }
     
-    console.log(`✅ Issues loaded: ${state.issues.length}/${allIssues.length} (filtered for: "${currentUser}")`);
+    console.log(`✅ Issues loaded: ${state.issues.length}/${allIssues.length}`);
     
-    // PERFORMANCE: Enrichment desactivado - el backend ya envía todos los datos necesarios
-    // await enrichIssuesWithCustomFields();
+    // Save to cache (reuse cacheKey from line 519)
+    CacheManager.set(cacheKey, allIssues);
+    console.log(`💾 Cached ${allIssues.length} issues`);
     
     // Update breadcrumb
     if (window.headerMenus && window.headerMenus.syncQueueBreadcrumb) {
@@ -487,17 +729,33 @@ async function loadIssues(queueId) {
       filterInfo.textContent = `📊 ${state.issues.length} ticket${state.issues.length !== 1 ? 's' : ''} assigned to you`;
     }
     
-    // Cargar transiciones para cada ticket
-    await loadIssueTransitions();
-    
-    // PERFORMANCE: Enrichment desactivado - backend ya envía datos completos
-    // await enrichIssuesWithCustomFields();
+    // Cargar transiciones de forma lazy (solo cuando se necesiten)
+    loadIssueTransitionsLazy();
     
     renderView();
     if (statusEl) {
       statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''}`;
       statusEl.classList.remove('status-info','status-warn');
       statusEl.classList.add('status-success');
+    }
+    
+    // Auto-save current filters to session (for quick restore)
+    if (state.currentDesk && state.currentQueue) {
+      const filters = {
+        desk: {
+          id: state.currentDesk,
+          name: document.getElementById('serviceDeskSelectFilter')?.options[document.getElementById('serviceDeskSelectFilter')?.selectedIndex]?.text || ''
+        },
+        queue: {
+          id: state.currentQueue,
+          name: document.getElementById('queueSelectFilter')?.options[document.getElementById('queueSelectFilter')?.selectedIndex]?.text || ''
+        },
+        view: state.currentView || 'kanban',
+        filterMode: state.filterMode || 'all',
+        timestamp: new Date().toISOString()
+      };
+      sessionStorage.setItem('currentFilters', JSON.stringify(filters));
+      console.log('💾 Auto-saved current filters to session');
     }
   } catch (error) {
   console.error('❌ Error loading issues:', error);
@@ -515,169 +773,131 @@ async function loadIssues(queueId) {
  * Enriquecer datos de tickets usando SOLO APIs reales (Service Desk + JIRA REST)
  * NO usa datos hardcodeados - solo busquedas alternativas con APIs
  */
+// ============================================================================
+// DEPRECATED: enrichIssuesWithCustomFields - REMOVED FOR PERFORMANCE
+// Backend now sends all necessary data in /api/issues - no enrichment needed
+// ============================================================================
 async function enrichIssuesWithCustomFields() {
-  // NOTA: Esta función está DESACTIVADA para mejorar performance
+  // DEPRECATED: Esta función ha sido ELIMINADA para mejorar performance
   // El backend ya envía todos los datos necesarios en /api/issues
-  console.log(`⚠️ Enrichment llamado (debería estar desactivado) - ${state.issues.length} issues`);
+  console.warn('⚠️ enrichIssuesWithCustomFields() is deprecated - backend sends complete data');
   
-  // Get field definitions once for all issues
-  let fieldDefinitions = null;
-  try {
-    const fieldDefsResponse = await fetch('/api/enrichment/field-definitions');
-    if (fieldDefsResponse.ok) {
-      const fieldDefsData = await fieldDefsResponse.json();
-      fieldDefinitions = fieldDefsData;
-      console.log(`📋 Field definitions cargadas: ${fieldDefsData.total_custom} custom fields disponibles`);
-    }
-  } catch (error) {
-    console.warn('⚠️ Could not load field definitions:', error);
-  }
-  
-  // Enrich each issue using API calls (no hardcoded data)
-  // PERFORMANCE: Este loop es lento (2 requests x N issues)
-  for (const issue of state.issues) {
-    try {
-      
-      // STEP 1: Get enriched data from JIRA REST API (no hardcoded fallbacks)
-      try {
-        const enrichResponse = await fetch(`/api/enrichment/issue/${issue.key}`);
-        if (enrichResponse.ok) {
-          const enrichData = await enrichResponse.json();
-          if (enrichData.success && enrichData.enriched_data) {
-            // COMPLEMENTAR datos existentes (NO sobrescribir)
-            // Solo aplicar desde API si el campo está vacío en el issue original
-            const apiData = enrichData.enriched_data;
-            
-            // Preservar severity original del backend (CRÍTICO)
-            
-            // Solo enriquecer campos que están vacíos o undefined (COMPLEMENTAR, no sobrescribir)
-            if (!issue.assignee && apiData.assignee !== undefined) {
-              issue.assignee = apiData.assignee;
-            }
-            if (!issue.reporter && apiData.reporter !== undefined) {
-              issue.reporter = apiData.reporter;
-            }
-            if (!issue.reporterEmail && apiData.reporterEmail !== undefined) {
-              issue.reporterEmail = apiData.reporterEmail;
-            }
-            if (!issue.reporterPhone && apiData.reporterPhone !== undefined) {
-              issue.reporterPhone = apiData.reporterPhone;
-            }
-            if (!issue.reporterCompany && apiData.reporterCompany !== undefined) {
-              issue.reporterCompany = apiData.reporterCompany;
-            }
-            if (!issue.summary && apiData.summary !== undefined) {
-              issue.summary = apiData.summary;
-            }
-            if (!issue.description && apiData.description !== undefined) {
-              issue.description = apiData.description;
-            }
-            if (!issue.status && apiData.status !== undefined) {
-              issue.status = apiData.status;
-            }
-            if (!issue.type && apiData.type !== undefined) {
-              issue.type = apiData.type;
-            }
-            if (!issue.created && apiData.created !== undefined) {
-              issue.created = apiData.created;
-            }
-            if (!issue.updated && apiData.updated !== undefined) {
-              issue.updated = apiData.updated;
-            }
-            // CRÍTICO: Enriquecer severity desde API si no existe
-            if (!issue.severity && !issue.criticidad && apiData.severity !== undefined) {
-              issue.severity = apiData.severity;
-              issue.criticidad = apiData.severity; // Alias para compatibilidad
-            }
-            
-            console.log(`✅ ${issue.key} - Enriched from JIRA REST API:`, {
-              assignee: issue.assignee || '(null from API)',
-              reporter: issue.reporter || '(null from API)', 
-              status: issue.status || '(null from API)',
-              severity: issue.severity || issue.criticidad || '(no severity)',
-              source: 'jira_rest_api'
-            });
-          }
-        }
-      } catch (error) {
-        console.warn(`⚠️ Could not enrich ${issue.key} from REST API:`, error);
-      }
-      
-      // STEP 2: Get custom fields from Service Desk API (dynamic field mapping)
-      try {
-        const customFieldsResponse = await fetch(`/api/enrichment/custom-fields/${issue.key}`);
-        if (customFieldsResponse.ok) {
-          const customFieldsData = await customFieldsResponse.json();
-          if (customFieldsData.success && customFieldsData.custom_fields) {
-            const customFields = customFieldsData.custom_fields;
-            
-            // Apply custom fields dynamically (no hardcoded field IDs)
-            // Look for phone/company fields by name (not hardcoded IDs)
-            for (const [fieldName, fieldValue] of Object.entries(customFields)) {
-              const lowerFieldName = fieldName.toLowerCase();
-              
-              // Phone field detection (dynamic)
-              if (lowerFieldName.includes('phone') || lowerFieldName.includes('telefono')) {
-                if (!issue.reporterPhone && fieldValue) {
-                  issue.reporterPhone = fieldValue;
-                }
-              }
-              
-              // Company field detection (dynamic)
-              if (lowerFieldName.includes('company') || lowerFieldName.includes('empresa') || lowerFieldName.includes('organization')) {
-                if (!issue.reporterCompany && fieldValue) {
-                  issue.reporterCompany = fieldValue;
-                }
-              }
-              
-              // Email field detection (dynamic)
-              if (lowerFieldName.includes('email') || lowerFieldName.includes('correo')) {
-                if (!issue.reporterEmail && fieldValue) {
-                  issue.reporterEmail = fieldValue;
-                }
-              }
-            }
-            
-            // Store all custom fields for access
-            issue.allFields = customFields;
-          }
-        }
-      } catch (error) {
-        // Silent fail - not critical
-      }
-      
-    } catch (error) {
-      // Silent fail
-    }
-  }
-  
-  console.log(`✅ Enrichment completado (${state.issues.length} issues)`);
+  // REMOVED: All enrichment logic removed - backend sends complete data
+  return;
 }
 
 /**
- * Cargar transiciones disponibles para cada ticket
- * Las transiciones son los cambios de estado posibles
- * OPTIMIZADO: Requests en paralelo en lugar de secuencial
+ * Background fetch to update cache without blocking UI
  */
-async function loadIssueTransitions() {
+async function fetchIssuesBackground(queueId, cacheKey) {
   try {
-    // PERFORMANCE: Hacer todas las peticiones en paralelo
-    const promises = state.issues.map(async (issue) => {
-      try {
-        const response = await fetch(`/api/issues/${issue.key}/transitions`);
-        const json = await response.json();
-        state.issueTransitions[issue.key] = json.transitions || [];
-      } catch (error) {
-        state.issueTransitions[issue.key] = [];
-      }
-    });
+    console.log('🔄 Fetching fresh issues in background...');
+    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}`);
+    const json = await response.json();
     
-    await Promise.all(promises);
-    console.log(`✅ Loaded transitions for ${state.issues.length} issues (parallel)`);
+    let allIssuesWrapper = json.data || json.payload || json.result || json;
+    let allIssues = [];
+    if (Array.isArray(allIssuesWrapper)) {
+      allIssues = allIssuesWrapper;
+    } else if (allIssuesWrapper && Array.isArray(allIssuesWrapper.data)) {
+      allIssues = allIssuesWrapper.data;
+    } else if (Array.isArray(json.issues)) {
+      allIssues = json.issues;
+    } else if (Array.isArray(json.values)) {
+      allIssues = json.values;
+    }
+    
+    if (allIssues.length > 0) {
+      // Update cache silently
+      CacheManager.set(cacheKey, allIssues);
+      console.log(`💾 Cache updated with ${allIssues.length} fresh issues`);
+    }
   } catch (error) {
-    console.error('❌ Error loading transitions:', error);
+    console.warn('⚠️ Background fetch failed:', error);
   }
 }
+
+/**
+ * Lazy load transitions - only when needed (on drag hover or details view)
+ * Uses cache with 30 minute TTL
+ */
+async function loadIssueTransitionsLazy() {
+  // Don't block - load in background
+  setTimeout(async () => {
+    try {
+      console.log('🔄 Loading transitions lazily...');
+      
+      // Load only for visible issues (first 20)
+      const visibleIssues = state.issues.slice(0, 20);
+      
+      const promises = visibleIssues.map(async (issue) => {
+        try {
+          // Check cache first
+          const cacheKey = `transitions_${issue.key}`;
+          const cached = CacheManager.get(cacheKey);
+          
+          if (cached) {
+            state.issueTransitions[issue.key] = cached;
+            return;
+          }
+          
+          // Fetch if not cached
+          const response = await fetch(`/api/issues/${issue.key}/transitions`);
+          const json = await response.json();
+          const transitions = json.transitions || [];
+          
+          state.issueTransitions[issue.key] = transitions;
+          
+          // Cache with longer TTL (transitions rarely change)
+          CacheManager.set(cacheKey, transitions, CacheManager.TRANSITIONS_TTL);
+        } catch (error) {
+          state.issueTransitions[issue.key] = [];
+        }
+      });
+      
+      await Promise.all(promises);
+      console.log(`✅ Loaded transitions for ${visibleIssues.length} visible issues (lazy + cached)`);
+    } catch (error) {
+      console.error('❌ Error loading transitions:', error);
+    }
+  }, 500); // Delay 500ms to not block initial render
+}
+
+/**
+ * Load transitions for specific issue on-demand
+ */
+async function loadTransitionsForIssue(issueKey) {
+  if (state.issueTransitions[issueKey]) {
+    return state.issueTransitions[issueKey];
+  }
+  
+  try {
+    // Check cache
+    const cacheKey = `transitions_${issueKey}`;
+    const cached = CacheManager.get(cacheKey);
+    
+    if (cached) {
+      state.issueTransitions[issueKey] = cached;
+      return cached;
+    }
+    
+    // Fetch
+    const response = await fetch(`/api/issues/${issueKey}/transitions`);
+    const json = await response.json();
+    const transitions = json.transitions || [];
+    
+    state.issueTransitions[issueKey] = transitions;
+    CacheManager.set(cacheKey, transitions, CacheManager.TRANSITIONS_TTL);
+    
+    return transitions;
+  } catch (error) {
+    console.error(`Error loading transitions for ${issueKey}:`, error);
+    return [];
+  }
+}
+
+// Expose globally for drag-drop system
+window.loadTransitionsForIssue = loadTransitionsForIssue;
 
 // Función normalizeSeverity eliminada - usar severity directamente
 
@@ -908,27 +1128,41 @@ async function renderKanban() {
       <div class="kanban-cards">`;
 
     issues.forEach(issue => {
+      // Get full issue data from cache (includes all customfields)
+      const fullIssue = window.app?.issuesCache?.get(issue.key) || issue;
       const transitions = state.issueTransitions[issue.key] || [];
       
-      // ✅ Usar severity directamente sin fallback
-      const severity = issue.severity || issue.criticidad || issue.customfield_10125?.value || '';
-      
-      const criticality = issue.criticality || '';
-      
-      // IMPROVED: Dynamic assignee detection - Remove "Unassigned" label
-      let assignee = issue.assignee || 'Unassigned';
-      if (!assignee || assignee.toLowerCase() === 'unassigned') {
-        assignee = 'No assignee';
+      // Debug: Log first issue to see structure
+      if (issues.indexOf(issue) === 0) {
+        console.log('🔍 First issue structure:', {
+          key: fullIssue.key,
+          severity: fullIssue.severity,
+          customfield_10125: fullIssue.customfield_10125,
+          customfield_10111: fullIssue.customfield_10111,
+          customfield_10141: fullIssue.customfield_10141,
+          customfield_10142: fullIssue.customfield_10142,
+          customfield_10143: fullIssue.customfield_10143,
+          fields_keys: fullIssue.fields ? Object.keys(fullIssue.fields).filter(k => k.startsWith('custom')).slice(0, 5) : []
+        });
       }
       
-      const status = issue.status || 'Unknown';
-      const type = issue.type || issue.issue_type || 'Task';
-      const reporter = issue.reporter || issue.informer || issue.fields?.reporter?.displayName || 'Unknown';
-      const reporterEmail = issue.reporterEmail || issue.fields?.reporter?.emailAddress || '';
-      // Extract reporter phone and company (from enriched fields)
-      const reporterPhone = issue.reporterPhone || '';
-      const reporterCompany = issue.reporterCompany || (issue.labels?.find(l => l.startsWith('company-')) || '');
-      const reporterMobile = reporterPhone || '';
+      // ✅ Extract data from customfields (backend provides all customfields directly)
+      const severity = fullIssue.severity || fullIssue.customfield_10125?.value || fullIssue.customfield_10125 || '';
+      const assignee = fullIssue.fields?.assignee?.displayName || 'No assignee';
+      
+      // Reporter/Informer from customfield_10111
+      const reporterObj = fullIssue.customfield_10111;
+      const reporter = reporterObj?.displayName || reporterObj?.name || reporterObj || '';
+      
+      // Contact info from customfields
+      const reporterEmailObj = fullIssue.customfield_10141;
+      const reporterEmail = reporterEmailObj?.value || reporterEmailObj || '';
+      
+      const reporterPhoneObj = fullIssue.customfield_10142;
+      const reporterPhone = reporterPhoneObj?.value || reporterPhoneObj || '';
+      
+      const reporterCompanyObj = fullIssue.customfield_10143;
+      const reporterCompany = reporterCompanyObj?.value || reporterCompanyObj || '';
       
       // Determinación dinámica de clase basada en transiciones
       // IMPORTANT: Uses CARD_SIZING constants synchronized with CSS
@@ -944,42 +1178,50 @@ async function renderKanban() {
            ${severityStyle.emoji} ${severity}
          </span>` : '';
 
+      // Calculate time since last update
+      const updated = fullIssue.fields?.updated || fullIssue.updated;
+      const updatedTime = updated ? new Date(updated) : null;
+      const now = new Date();
+      let timeAgo = '';
+      if (updatedTime) {
+        const diffMs = now - updatedTime;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) timeAgo = 'just now';
+        else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+        else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+        else if (diffDays < 7) timeAgo = `${diffDays}d ago`;
+        else timeAgo = `${Math.floor(diffDays / 7)}w ago`;
+      }
+
       html += `<div class="${cardClass} kanban-card" 
                     data-issue="${issue.key}" 
                     data-issue-key="${issue.key}" 
                     draggable="true"
                     onclick="openIssueDetails('${issue.key}')">
-        <!-- HEADER: Key + Type + Severity Badge (if exists) -->
+        <!-- HEADER: Key + Severity Badge + Time -->
         <div class="issue-card-header">
           <div class="issue-card-key">${issue.key}</div>
-          <span class="issue-type-badge" title="${type}">${type.charAt(0)}</span>
           ${severityBadgeHtml}
+          ${timeAgo ? `<span class="issue-card-time" title="Last updated: ${updated}">🕒 ${timeAgo}</span>` : ''}
         </div>
         
         <!-- SUMMARY (main content) -->
-        <div class="issue-card-summary">${issue.summary || issue.fields?.summary || 'No summary'}</div>
+        <div class="issue-card-summary">${fullIssue.summary || fullIssue.fields?.summary || 'No summary'}</div>
         
-        <!-- STATUS badge only (severity ya está en header) -->
-        <div class="issue-card-badges">
-          <span class="status-badge status-${status.toLowerCase().replace(/\s+/g, '-')}" title="${status}">${status}</span>
+        <!-- METADATA: Reporter + Severidad -->
+        <div class="issue-card-metadata">
+          ${reporter ? `<span class="meta-reporter" title="Reporter: ${reporter}${reporterEmail ? ' - ' + reporterEmail : ''}${reporterPhone ? ' - ' + reporterPhone : ''}">📢 ${reporter.split(' ')[0]}</span>` : ''}
+          ${severity && severity !== 'Medium' && severity !== 'Baja' ? `<span class="meta-priority priority-${severity.toLowerCase()}" title="Severidad: ${severity}">${severity}</span>` : ''}
         </div>
         
-        <!-- SLA INDICATOR - rendered in right sidebar SLA monitor -->
         
-        <!-- FOOTER: Reporter info + Assignee -->
+        <!-- FOOTER: Assignee + Company (if exists) -->
         <div class="issue-card-footer">
-          <div class="footer-row">
-            <span class="reporter" title="Reporter: ${reporter}">📢 ${reporter}</span>
-          </div>
-          ${reporterCompany || reporterMobile || reporterEmail ? `
-          <div class="footer-row footer-row-extended footer-row-always-visible">
-            ${reporterCompany ? `<span class="reporter-company" title="Company: ${reporterCompany}">🏢 ${reporterCompany.substring(0, 20)}</span>` : ''}
-            ${reporterMobile ? `<span class="reporter-phone" title="Phone: ${reporterMobile}">📱 ${reporterMobile.substring(0, 18)}</span>` : ''}
-            ${reporterEmail ? `<span class="reporter-email" title="Email: ${reporterEmail}">✉️ ${reporterEmail.substring(0, 20)}</span>` : ''}
-          </div>` : ''}
-          <div class="footer-row">
-            <span class="assignee ${assignee === 'No assignee' ? 'assignee-unassigned' : ''}" title="Assigned to: ${assignee}">👤 ${assignee}</span>
-          </div>
+          <span class="assignee ${assignee === 'No assignee' ? 'assignee-unassigned' : ''}" title="Assigned to: ${assignee}">👤 ${assignee.split(' ')[0]}</span>
+          ${reporterCompany ? `<span class="company-badge" title="Company: ${reporterCompany}">🏢 ${reporterCompany.substring(0, 15)}</span>` : ''}
         </div>`;
 
       // Renderizar botones de transición (solo si hay espacio)
@@ -1168,35 +1410,72 @@ function formatMs(ms) {
  * Guardar filtros seleccionados en localStorage
  */
 function saveCurrentFilters() {
+  console.log('💾 Attempting to save filters...');
+  
   const deskSelect = document.getElementById('serviceDeskSelectFilter');
   const queueSelect = document.getElementById('queueSelectFilter');
   
+  // Get current values from selects (more reliable than state)
+  const deskId = deskSelect?.value || state.currentDesk;
+  const queueId = queueSelect?.value || state.currentQueue;
+  
+  console.log('Current filter values:', {
+    deskId,
+    queueId,
+    stateDeskId: state.currentDesk,
+    stateQueueId: state.currentQueue
+  });
+  
+  // Validate that filters are selected
+  if (!deskId || !queueId || deskId === '' || queueId === '') {
+    console.warn('⚠️ Cannot save filters: desk or queue not selected');
+    console.log('Desk select:', deskSelect?.value, 'Queue select:', queueSelect?.value);
+    
+    if (window.loadingDotsManager) {
+      window.loadingDotsManager.show('⚠️ Please select a Service Desk and Queue first');
+      setTimeout(() => window.loadingDotsManager.hide(), 2000);
+    }
+    return;
+  }
+  
   const filters = {
     desk: {
-      id: state.currentDesk,
+      id: deskId,
       name: deskSelect?.options[deskSelect?.selectedIndex]?.text || 'Not selected'
     },
     queue: {
-      id: state.currentQueue,
+      id: queueId,
       name: queueSelect?.options[queueSelect?.selectedIndex]?.text || 'Not selected'
     },
-    view: state.currentView,
+    view: state.currentView || 'kanban',
+    filterMode: state.filterMode || 'all',
     timestamp: new Date().toISOString()
   };
   
+  console.log('💾 Saving filters:', filters);
+  
   localStorage.setItem('savedFilters', JSON.stringify(filters));
+  
+  // Also save to session for persistence during session
+  sessionStorage.setItem('currentFilters', JSON.stringify(filters));
   
   // Visual feedback
   const btn = document.getElementById('saveFiltersBtn');
   if (btn) {
-    btn.classList.add('saved');
-    const originalText = btn.textContent;
-    btn.textContent = '✓ Filtros guardados!';
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
     
     setTimeout(() => {
-      btn.classList.remove('saved');
-      btn.textContent = originalText;
+      btn.innerHTML = originalHTML;
+      btn.style.background = '';
     }, 2000);
+  }
+  
+  // Show success notification
+  if (window.loadingDotsManager) {
+    window.loadingDotsManager.show(`💾 Filters saved: ${filters.desk.name} - ${filters.queue.name}`);
+    setTimeout(() => window.loadingDotsManager.hide(), 2000);
   }
   
   console.log('💾 Filtros guardados:', filters);
@@ -1206,12 +1485,26 @@ function saveCurrentFilters() {
  * Cargar filtros guardados desde localStorage
  */
 function loadSavedFilters() {
-  const saved = localStorage.getItem('savedFilters');
-  if (!saved) return;
+  // Try session first (more recent), then localStorage
+  let saved = sessionStorage.getItem('currentFilters') || localStorage.getItem('savedFilters');
+  if (!saved) {
+    console.log('ℹ️ No saved filters found');
+    return;
+  }
   
   try {
     const filters = JSON.parse(saved);
-    console.log('📂 Cargan filtros guardados:', filters);
+    console.log('📂 Loading saved filters:', filters);
+    
+    // Check if filters are not too old (more than 7 days)
+    if (filters.timestamp) {
+      const savedDate = new Date(filters.timestamp);
+      const daysDiff = (new Date() - savedDate) / (1000 * 60 * 60 * 24);
+      if (daysDiff > 7) {
+        console.log('⚠️ Saved filters are too old, skipping auto-load');
+        return;
+      }
+    }
     
     // Auto-seleccionar desk si está disponible
     if (filters.desk?.id) {

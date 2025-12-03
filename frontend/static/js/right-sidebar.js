@@ -79,13 +79,21 @@ function openIssueDetails(issueKey) {
   // NOW setup mention and attachment systems (after sidebar is visible)
   console.log('🔧 [Right Sidebar] Setting up interaction systems after open...');
   
-  // Wait a moment for DOM to fully render, then setup
-  setTimeout(() => {
-    console.log('⏱️ [Right Sidebar] Waiting 200ms for DOM settlement...');
-    setupMentionSystem();
-    setupAttachmentsSystem();
-    setupCommentShortcuts();
-  }, 200);
+  // Wait for next paint cycle to ensure DOM is fully visible
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      console.log('⏱️ [Right Sidebar] DOM settled, setting up systems...');
+      setupMentionSystem();
+      setupAttachmentsSystem();
+      setupCommentShortcuts();
+      
+      // Now render attachments (DOM is ready and visible)
+      if (sidebarState.currentIssue) {
+        console.log('🎨 [Right Sidebar] Rendering attachments for:', sidebarState.currentIssue.key);
+        renderAttachments(sidebarState.currentIssue);
+      }
+    }, 100);
+  });
 
   // Setup comment button and mentions
   const commentBtn = document.querySelector('.btn-add-comment');
@@ -122,9 +130,13 @@ function openIssueDetails(issueKey) {
     }, 100);
   }
   
-  // Initialize SLA Monitor if available
+  // Initialize SLA Monitor if available (with cached data)
   if (window.slaMonitor && typeof window.slaMonitor.init === 'function') {
-    window.slaMonitor.init(issueKey).then(() => {
+    // Check cache first for SLA data
+    const cachedIssue = window.app?.issuesCache?.get(issueKey);
+    const slaData = cachedIssue?.sla_agreements || null;
+    
+    window.slaMonitor.init(issueKey, slaData).then(() => {
       // Render SLA panel in the container
       const slaContainer = document.getElementById('slaMonitorContainer');
       if (slaContainer && window.slaMonitor.slaData[issueKey]) {
@@ -141,63 +153,35 @@ function openIssueDetails(issueKey) {
 // ===== POPULATE ISSUE DETAILS =====
 function populateIssueDetails(issue) {
   if (!issue) return;
-
-  // Use the existing HTML elements with IDs
-  document.getElementById('detailKey').textContent = issue.key || '—';
-  document.getElementById('detailSummary').textContent = issue.summary || issue.fields?.summary || '—';
   
-  const status = issue.status || issue.fields?.status?.name || 'Unknown';
-  document.getElementById('detailStatus').textContent = status;
+  // Get cached data once (avoid duplicate lookups)
+  const cachedIssue = window.app?.issuesCache?.get(issue.key);
   
-  // ===== EXTRACT SEVERITY FROM ALL POSSIBLE LOCATIONS =====
-  let severity = extractFieldValue(issue, [
-    'severity', 'criticidad', 'Criticidad',
-    'custom_fields.customfield_10125',
-    'custom_fields.Criticidad',
-    'custom_fields.severity',
-    'fields.severity',
-    'fields.criticidad',
-    'fields.customfield_10125',
-    'customfield_10125'
-  ]);
-  
-  // Render severity badge with emoji and styling
-  const severityEl = document.getElementById('detailSeverity');
-  if (severity) {
-    const severityStyle = getSeverityStyle(severity);
-    severityEl.textContent = severityStyle ? `${severityStyle.emoji} ${severity}` : severity;
-    if (severityStyle) {
-      severityEl.className = `severity-badge ${severityStyle.className}`;
-    } else {
-      severityEl.className = 'severity-badge';
+  // Pre-populate with cached data if available
+  if (cachedIssue) {
+    console.log(`💾 Pre-populating with cached data for ${issue.key}`);
+    
+    const tempIssue = { ...issue, ...cachedIssue };
+    sidebarState.currentIssue = tempIssue;
+    
+    // Show cached attachments immediately
+    if (cachedIssue.fields?.attachment || cachedIssue.attachment) {
+      requestAnimationFrame(() => {
+        setTimeout(() => renderAttachments(tempIssue), 100);
+      });
     }
-  } else {
-    severityEl.textContent = '—';
-    severityEl.className = 'severity-badge severity-none';
   }
   
-  const assignee = issue.assignee || issue.fields?.assignee?.displayName || issue.assigned_to || 'Unassigned';
-  document.getElementById('detailAssignee').textContent = assignee;
-  
-  document.getElementById('detailType').textContent = issue.type || issue.fields?.issuetype?.name || '—';
-  
-  // Dates (format YYYY-MM-DD HH:mm)
-  const created = issue.created || issue.fields?.created || '—';
-  document.getElementById('detailCreated').textContent = formatDate(created);
-  
-  const updated = issue.updated || issue.fields?.updated || '—';
-  document.getElementById('detailUpdated').textContent = formatDate(updated);
-  
-  // Description
-  const description = issue.description || issue.fields?.description || '—';
-  document.getElementById('detailDescription').textContent = description;
-  
-  // ===== FETCH COMPLETE DATA FROM SERVICE DESK API =====
+  // Fetch complete field structure from Service Desk API
+  // (Kanban data is flat, Service Desk API has nested issue.fields.* needed for All Fields)
+  console.log(`📡 Fetching complete field structure for ${issue.key}`);
   fetchServiceDeskRequestDetails(issue.key);
   
-  // Load SLA Monitor
+  // Initialize SLA Monitor with cached data
   if (window.slaMonitor) {
-    window.slaMonitor.init(issue.key);
+    const slaData = cachedIssue?.sla_agreements || issue.sla_agreements || null;
+    window.slaMonitor.init(issue.key, slaData);
+    
     const slaPanel = window.slaMonitor.renderSLAPanel(issue.key);
     const slaContainer = document.getElementById('slaMonitorContainer');
     if (slaContainer) {
@@ -206,27 +190,16 @@ function populateIssueDetails(issue) {
       else slaContainer.appendChild(slaPanel);
     }
   }
-
-  // Load Ticket Portal Forms (from ticket page)
-  if (window.ticketPortalForms) {
-    (async () => {
-      try {
-        await window.ticketPortalForms.init(issue.key, 'ticketPortalFormsContainer');
-      } catch (error) {
-        // Ticket portal forms not available
-      }
-    })();
-  }
 }
 
 // ===== FETCH SERVICE DESK REQUEST DETAILS =====
 function fetchServiceDeskRequestDetails(issueKey) {
   console.log('🔍 Fetching Service Desk details for:', issueKey);
   
-  // Show loading state
-  const container = document.getElementById('allFieldsContainer');
-  if (container) {
-    container.innerHTML = '<p style="text-align: center; padding: 20px; color: #999;">⏳ Loading all fields...</p>';
+  // Show loading state in active tab
+  const activeTab = document.querySelector('.fields-tab-content.active');
+  if (activeTab) {
+    activeTab.innerHTML = '<p style="text-align: center; padding: 20px; color: #999;">⏳ Loading all fields...</p>';
   }
   
   // Fetch from Service Desk API endpoint
@@ -237,8 +210,11 @@ function fetchServiceDeskRequestDetails(issueKey) {
       }
       return response.json();
     })
-    .then(data => {
-      console.log('✅ Service Desk data received:', data);
+    .then(response => {
+      console.log('✅ Service Desk data received:', response);
+      
+      // Extract data from wrapper if present
+      const data = response.data || response;
       
       // Merge Service Desk data with existing issue data
       const completeIssue = {
@@ -250,11 +226,12 @@ function fetchServiceDeskRequestDetails(issueKey) {
         }
       };
       
-      // Update current issue in state
-      sidebarState.currentIssue = completeIssue;
+      // Data merged successfully
       
-      // Populate all fields with complete data
+      // Update state and render
+      sidebarState.currentIssue = completeIssue;
       populateAllFields(completeIssue);
+      renderAttachments(completeIssue);
     })
     .catch(error => {
       console.error('❌ Error fetching Service Desk details:', error);
@@ -263,9 +240,9 @@ function fetchServiceDeskRequestDetails(issueKey) {
       if (sidebarState.currentIssue) {
         populateAllFields(sidebarState.currentIssue);
       } else {
-        const container = document.getElementById('allFieldsContainer');
-        if (container) {
-          container.innerHTML = '<p style="text-align: center; padding: 20px; color: #f00;">⚠️ Error loading fields</p>';
+        const activeTab = document.querySelector('.fields-tab-content.active');
+        if (activeTab) {
+          activeTab.innerHTML = '<p style="text-align: center; padding: 20px; color: #f00;">⚠️ Error loading fields</p>';
         }
       }
     });
@@ -537,26 +514,63 @@ function extractFieldValue(obj, paths) {
 
 // ===== POPULATE ALL FIELDS DYNAMICALLY =====
 function populateAllFields(issue) {
-  const container = document.getElementById('allFieldsContainer');
-  if (!container) {
-    console.warn('⚠️ allFieldsContainer not found');
-    return;
-  }
-  
   const fields = extractAllFields(issue);
   
   if (fields.length === 0) {
-    container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No additional fields</p>';
+    document.getElementById('tab-essential').innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No fields</p>';
+    return;
+  }
+  
+  // Categorize fields by importance
+  const essentialFields = [];
+  const detailFields = [];
+  const technicalFields = [];
+  
+  fields.forEach(field => {
+    const priority = getFieldPriority(field.label);
+    if (priority <= 15) {
+      essentialFields.push(field);
+    } else if (priority <= 100) {
+      detailFields.push(field);
+    } else {
+      technicalFields.push(field);
+    }
+  });
+  
+  // Render each tab
+  renderFieldsInTab('tab-essential', essentialFields);
+  renderFieldsInTab('tab-details', detailFields);
+  renderFieldsInTab('tab-technical', technicalFields);
+  
+  // Setup tab switching (ensure it's called)
+  console.log('🎨 Setting up tab switching after render...');
+  setTimeout(() => setupTabSwitching(), 100);
+}
+
+function renderFieldsInTab(tabId, fields) {
+  const container = document.getElementById(tabId);
+  if (!container) return;
+  
+  if (fields.length === 0) {
+    container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No fields in this category</p>';
     return;
   }
   
   let html = '<div class="all-fields-grid">';
   
   fields.forEach(field => {
+    const isLongField = field.key === 'description' || 
+                        field.label.includes('Description') ||
+                        field.key === 'customfield_10149' || 
+                        field.key === 'customfield_10151' || 
+                        (field.type === 'text' && String(field.value).length > 200);
+    
+    const itemClass = isLongField ? 'field-item field-item-full' : 'field-item';
+    
     html += `
-      <div class="field-item">
+      <div class="${itemClass}">
         <div class="field-label">${field.label}</div>
-        <div class="field-value">${formatFieldValue(field.value, field.type)}</div>
+        <div class="field-value">${formatFieldValue(field.value, field.type, field.issueKey)}</div>
       </div>
     `;
   });
@@ -565,30 +579,101 @@ function populateAllFields(issue) {
   container.innerHTML = html;
 }
 
+function setupTabSwitching() {
+  const tabs = document.querySelectorAll('.fields-tab');
+  const contents = document.querySelectorAll('.fields-tab-content');
+  
+  // Remove old listeners by cloning (prevent duplicate listeners)
+  tabs.forEach((tab, index) => {
+    const newTab = tab.cloneNode(true);
+    tab.parentNode.replaceChild(newTab, tab);
+    
+    newTab.addEventListener('click', () => {
+      const targetTab = newTab.dataset.tab;
+      
+      console.log('🔄 Switching to tab:', targetTab);
+      
+      // Remove active class from all tabs and contents
+      document.querySelectorAll('.fields-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.fields-tab-content').forEach(c => c.classList.remove('active'));
+      
+      // Add active to selected
+      newTab.classList.add('active');
+      const targetContent = document.getElementById(`tab-${targetTab}`);
+      if (targetContent) {
+        targetContent.classList.add('active');
+        console.log('✅ Tab activated:', targetTab);
+      } else {
+        console.error('❌ Tab content not found:', `tab-${targetTab}`);
+      }
+    });
+  });
+  
+  console.log('✅ Tab switching initialized for', tabs.length, 'tabs');
+}
+
+function getFieldPriority(label) {
+  const priorityMap = {
+    'Description': 0, '📝 Description': 0,
+    '🚨 Criticidad': 1, '🎫 Tipo de Solicitud': 2, '📂 Área': 3,
+    '💻 Plataforma': 4, '🏢 Empresa': 5, '📦 Producto': 6,
+    '✉️ Email': 10, '📱 Phone': 11, '🌎 País': 12, '📞 País/Código': 13,
+    '⚡ Priority': 20, '✔️ Resolution': 21, '📅 Due Date': 22, '✅ Resolution Date': 23,
+    '📝 Notas/Análisis': 30, '✅ Resolución': 31,
+    '🎯 Request Type': 200, '🌐 Language': 201, '📁 Issue Category': 202,
+  };
+  return priorityMap[label] || 100;
+}
+
 // ===== EXTRACT ALL RELEVANT FIELDS =====
 function extractAllFields(issue) {
   const fields = [];
   const seenKeys = new Set(); // Track already added fields
   
   const excludeFields = new Set([
-    'key', 'summary', 'status', 'assignee', 'type', 'created', 'updated', 
-    'description', 'transitions', 'comments', 'attachment', 'worklog',
+    // Technical/structural fields to hide (keep everything else visible in All Fields)
+    'transitions', 'comments', 'attachment', 'worklog',
     'expand', 'self', 'id', 'changelog', 'operations', 'editmeta', 'names', 'schema',
-    'issuetype', 'statuscategory', 'statusCategory', 'lastViewed', 'watches',
+    'statuscategory', 'statusCategory', 'lastViewed', 'watches',
     'issuelinks', 'subtasks', 'parent', 'aggregatetimespent', 'aggregatetimeoriginalestimate',
     'aggregatetimeestimate', 'aggregateprogress', 'progress', 'workratio', 'avatarUrls',
-    'timetracking', 'security', 'votes', 'watches'
+    'timetracking', 'security', 'votes',
+    
+    // Redundant fields (already shown in kanban card or sidebar header)
+    'key', 'summary', 'status', 'assignee', 'reporter', 'created', 'updated',
+    'issuetype',
+    
+    // Numeric fields that are always 0.0 (unused SLA/tracking fields)
+    'customfield_10027', 'customfield_10028', 'customfield_10029', 'customfield_10030',
+    'customfield_10041', 'customfield_10042', 'customfield_10196', 'customfield_10197',
+    'customfield_10198', 'customfield_10205', 'customfield_10206', 'customfield_10218',
+    'customfield_10221', 'customfield_10224', 'customfield_10227', 'customfield_10230',
+    'customfield_10233', 'customfield_10236', 'customfield_10237', 'customfield_10238',
+    'customfield_10239', 'customfield_10240', 'customfield_10241', 'customfield_10242',
+    'customfield_10249', 'customfield_10279', 'customfield_10280', 'customfield_10289',
+    'customfield_10292', 'customfield_10295', 'customfield_10301', 'customfield_10341',
+    'customfield_10677', 'customfield_10717', 'customfield_10718', 'customfield_10719',
+    'customfield_10720', 'customfield_10733', 'customfield_10734',
+    
+    // Empty/unused system fields
+    'customfield_10002', 'customfield_10019', 'customfield_10124',
+    'customfield_10148', 'customfield_10157', 'customfield_10159'
   ]);
   
   // Check if value is meaningful (not null, empty, or just structural)
   const hasValue = (val) => {
-    if (val === null || val === undefined || val === '') return false;
+    if (val === null || val === undefined) return false;
+    if (val === '' && typeof val === 'string') return false;
     if (Array.isArray(val) && val.length === 0) return false;
     if (typeof val === 'object') {
+      // Description with ADF content
+      if (val.content && Array.isArray(val.content)) return true;
       // SLA objects with ongoingCycle have millis data - KEEP them
-      if (val.ongoingCycle && val.ongoingCycle.elapsedTime) return true;
+      if (val.ongoingCycle && (val.ongoingCycle.elapsedTime || val.ongoingCycle.remainingTime)) return true;
+      // Request Type object - KEEP it
+      if (val._links && val._links.self && val._links.self.includes('requesttype')) return true;
       // Other SLA structure without data - skip
-      if (val._links || val.completedCycles !== undefined || val.slaDisplayFormat) return false;
+      if (val._links || (val.completedCycles !== undefined && val.ongoingCycle === undefined) || val.slaDisplayFormat) return false;
       // Empty objects
       if (Object.keys(val).length === 0) return false;
       // Has meaningful data
@@ -598,7 +683,9 @@ function extractAllFields(issue) {
     return true;
   };
   
+  // Field mappings from CUSTOM_FIELDS_REFERENCE.json
   const fieldMappings = {
+    // Standard JIRA fields
     'priority': '⚡ Priority',
     'reporter': '📢 Reporter',
     'labels': '🏷️ Labels',
@@ -614,62 +701,86 @@ function extractAllFields(issue) {
     'project': '📁 Project',
     'creator': '👤 Creator',
     'resolution': '✔️ Resolution',
-    // Custom fields common in Service Desk
-    'customfield_10125': '🚨 Severity/Criticidad',
-    'customfield_10061': '📋 Workflow History',
+    
+    // Form fields (Request-type form fields)
+    'customfield_10125': '🚨 Criticidad',
+    'customfield_10156': '🎫 Tipo de Solicitud',
+    'customfield_10168': '📂 Área',
+    'customfield_10169': '💻 Plataforma',
+    'customfield_10143': '🏢 Empresa',
+    'customfield_10144': '📦 Producto',
+    'customfield_10149': '📝 Notas/Análisis',
+    'customfield_10151': '✅ Resolución',
+    'customfield_10165': '🌎 País',
+    'customfield_10167': '📞 País/Código',
+    
+    // Contact info fields
+    'customfield_10141': '✉️ Email',
+    'customfield_10142': '📱 Phone',
+    'customfield_10111': '👤 Reporter/Informador',
+    
+    // System fields
+    'customfield_10010': '🎯 Request Type',
+    'customfield_10061': '📋 Status Transition Log',
+    'customfield_10110': '📁 Issue Category',
+    'customfield_10115': '🌐 Language',
+    'customfield_10166': '🌍 Country (Alternative)',
+    'customfield_10024': '🕐 Timestamp',
+    
+    // SLA fields (links to SLA definitions)
+    'customfield_10170': '⏱️ SLA\'s Incidente HUB',
+    'customfield_10176': '🔒 Cierre Ticket',
+    'customfield_10181': '📺 SLA\'s Servicios Streaming',
+    'customfield_10182': '📺 SLA\'s Servicios Streaming (SR)',
+    'customfield_10183': '📊 SLA\'s Solicitud de CDRs Captura Logs',
+    'customfield_10184': '💰 SLA\'s Cotización Orden de Compra',
+    'customfield_10185': '🐛 SLA\'s Errores Pruebas de Integración',
+    'customfield_10186': '🔄 SLA\'s Actualización de SDK',
+    'customfield_10187': '📈 SLA\'s Splunk',
+    'customfield_10190': '🛠️ SLA\'s Soporte Aplicaciones',
+    'customfield_10259': '🚨 SLA War Room',
+    'customfield_11957': '💚 Salud de Servicios',
+    
+    // Other common fields
     'customfield_10020': '🏃 Sprint',
     'customfield_10016': '📊 Story Points',
-    'customfield_10037': '📖 Epic Link',
-    'customfield_10010': '🎯 Request Type',
-    'customfield_10015': '📆 Start Date',
-    'customfield_10030': '🏢 Organization',
-    'customfield_10040': '📱 Phone',
-    'customfield_10050': '✉️ Email',
-    'customfield_10060': '🌐 URL',
-    'customfield_10070': '💼 Business Unit',
-    'customfield_10080': '🎫 Service Request',
-    'customfield_10090': '⚙️ Configuration',
-    'customfield_10100': '🔗 External Link'
+    'customfield_10037': '📖 Epic Link'
   };
   
-  // Extract from issue.fields
-  if (issue.fields) {
-    Object.entries(issue.fields).forEach(([key, value]) => {
-      if (excludeFields.has(key) || !hasValue(value) || seenKeys.has(key)) return;
+  // Helper to extract fields from an object
+  const extractFields = (obj, checkExcluded = false) => {
+    if (!obj) return;
+    Object.entries(obj).forEach(([key, value]) => {
+      if ((checkExcluded && excludeFields.has(key)) || !hasValue(value) || seenKeys.has(key)) return;
       
-      const label = fieldMappings[key] || humanizeFieldName(key);
-      const fieldType = detectFieldType(value);
-      
-      fields.push({ label, value, type: fieldType, key });
+      fields.push({ 
+        label: fieldMappings[key] || humanizeFieldName(key),
+        value, 
+        type: detectFieldType(value), 
+        key 
+      });
       seenKeys.add(key);
     });
+  };
+  
+  // Add description explicitly first (priority 0)
+  if (issue.fields?.description || issue.description) {
+    const desc = issue.fields?.description || issue.description;
+    if (hasValue(desc)) {
+      fields.push({
+        label: '📝 Description',
+        value: desc,
+        type: detectFieldType(desc),
+        key: 'description'
+      });
+      seenKeys.add('description');
+    }
   }
   
-  // Extract from issue.custom_fields
-  if (issue.custom_fields) {
-    Object.entries(issue.custom_fields).forEach(([key, value]) => {
-      if (!hasValue(value) || seenKeys.has(key)) return;
-      
-      const label = fieldMappings[key] || humanizeFieldName(key);
-      const fieldType = detectFieldType(value);
-      
-      fields.push({ label, value, type: fieldType, key });
-      seenKeys.add(key);
-    });
-  }
-  
-  // Extract from Service Desk requestFieldValues
-  if (issue.serviceDesk && issue.serviceDesk.requestFieldValues) {
-    Object.entries(issue.serviceDesk.requestFieldValues).forEach(([key, value]) => {
-      if (!hasValue(value) || seenKeys.has(key)) return;
-      
-      const label = fieldMappings[key] || humanizeFieldName(key);
-      const fieldType = detectFieldType(value);
-      
-      fields.push({ label, value, type: fieldType, key });
-      seenKeys.add(key);
-    });
-  }
+  // Extract from multiple sources
+  extractFields(issue.fields, true); // Check excluded fields
+  extractFields(issue.custom_fields);
+  extractFields(issue.serviceDesk?.requestFieldValues);
   
   // Extract from Service Desk currentStatus
   if (issue.serviceDesk && issue.serviceDesk.currentStatus) {
@@ -703,17 +814,57 @@ function extractAllFields(issue) {
     });
   }
   
-  console.log(`📊 Extracted ${fields.length} fields from issue ${issue.key}`);
-  console.log('Fields:', fields.map(f => f.label).join(', '));
+  // Total: ${fields.length} fields extracted
   
-  // Sort by label (SLAs at bottom)
+  // Define priority order for important fields
+  const priorityOrder = {
+    // Tier 0: Description (most important, full width)
+    'Description': 0,
+    '📝 Description': 0,
+    
+    // Tier 1: Critical business info (top)
+    '🚨 Criticidad': 1,
+    '🎫 Tipo de Solicitud': 2,
+    '📂 Área': 3,
+    '💻 Plataforma': 4,
+    '🏢 Empresa': 5,
+    '📦 Producto': 6,
+    
+    // Tier 2: Contact & location
+    '✉️ Email': 10,
+    '📱 Phone': 11,
+    '🌎 País': 12,
+    '📞 País/Código': 13,
+    
+    // Tier 3: Status & resolution
+    '⚡ Priority': 20,
+    '✔️ Resolution': 21,
+    '📅 Due Date': 22,
+    '✅ Resolution Date': 23,
+    
+    // Tier 4: Notes & analysis (show full width)
+    '📝 Notas/Análisis': 30,
+    '✅ Resolución': 31,
+    
+    // Tier 5: Other fields
+    // (unlisted fields get 100)
+    
+    // Tier 6: System/technical fields (bottom)
+    '🎯 Request Type': 200,
+    '🌐 Language': 201,
+    '📁 Issue Category': 202,
+  };
+  
+  // Sort by priority
   fields.sort((a, b) => {
-    const aIsSla = a.label.startsWith('⏱️');
-    const bIsSla = b.label.startsWith('⏱️');
+    const aPriority = priorityOrder[a.label] || 100;
+    const bPriority = priorityOrder[b.label] || 100;
     
-    if (aIsSla && !bIsSla) return 1;
-    if (!aIsSla && bIsSla) return -1;
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
     
+    // Same priority: alphabetical
     return a.label.localeCompare(b.label);
   });
   
@@ -735,6 +886,10 @@ function detectFieldType(value) {
   if (Array.isArray(value)) return 'array';
   if (value === null || value === undefined) return 'null';
   if (typeof value === 'object') {
+    // Description with ADF content
+    if (value.content && Array.isArray(value.content)) return 'description';
+    // Request Type (customfield_10010)
+    if (value._links && value._links.self && value._links.self.includes('requesttype')) return 'request_type';
     // SLA objects with ongoing cycle and millis data
     if (value.ongoingCycle && value.ongoingCycle.elapsedTime) return 'sla';
     // Other SLA structure objects
@@ -761,10 +916,41 @@ function detectFieldType(value) {
 }
 
 // ===== FORMAT FIELD VALUE =====
-function formatFieldValue(value, type) {
+function formatFieldValue(value, type, issueKey) {
   if (!value && value !== 0 && value !== false) return '—';
   
   switch (type) {
+    case 'description':
+      // Atlassian Document Format (ADF) - extract text content
+      if (value.content && Array.isArray(value.content)) {
+        let text = '';
+        const extractText = (node) => {
+          if (node.type === 'text') {
+            text += node.text;
+          } else if (node.content) {
+            node.content.forEach(extractText);
+          }
+        };
+        value.content.forEach(extractText);
+        const escaped = text.trim()
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        return `<div class="field-text-long">${escaped || '—'}</div>`;
+      }
+      return String(value);
+    
+    case 'request_type':
+      // Request Type - create button to customer portal
+      const requestTypeName = value.name || 'View Request';
+      const portalUrl = value._links?.web || '#';
+      return `<a href="${portalUrl}" target="_blank" class="request-type-button" title="Open in Customer Portal">
+                <span class="icon">🎫</span>
+                <span class="text">${requestTypeName}</span>
+                <span class="external">↗</span>
+              </a>`;
+    
     case 'sla':
       // SLA objects with ongoing cycle - show elapsed and remaining millis
       if (value.ongoingCycle) {
@@ -870,6 +1056,100 @@ function formatCommentTime(dateString) {
   } catch {
     return dateString;
   }
+}
+
+// ===== FORMAT FILE SIZE =====
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// ===== RENDER ATTACHMENTS =====
+function renderAttachments(issue) {
+  const attachmentsSection = document.getElementById('attachmentsSection');
+  const attachmentsContainer = document.getElementById('existingAttachmentsContainer');
+  const attachmentCountLabel = document.getElementById('attachmentCountLabel');
+  
+  if (!attachmentsSection || !attachmentsContainer) return;
+  
+  // Extract attachments from issue.fields.attachment (JIRA API v3 standard location)
+  let attachments = [];
+  
+  if (issue.fields && Array.isArray(issue.fields.attachment)) {
+    attachments = issue.fields.attachment;
+  } else if (Array.isArray(issue.attachment)) {
+    attachments = issue.attachment;
+  } else if (Array.isArray(issue.attachments)) {
+    attachments = issue.attachments;
+  }
+  
+  if (!attachments || attachments.length === 0) {
+    attachmentsSection.style.display = 'none';
+    return;
+  }
+  
+  // Show section and update count
+  attachmentsSection.style.display = 'block';
+  attachmentCountLabel.textContent = `(${attachments.length})`;
+  
+  // Render attachments list
+  let html = '<div class="attachments-grid">';
+  
+  attachments.forEach((attachment, index) => {
+    const filename = attachment.filename || attachment.name || `attachment_${index}`;
+    const size = formatFileSize(attachment.size);
+    const created = formatDate(attachment.created);
+    const author = attachment.author?.displayName || attachment.author || 'Unknown';
+    const url = attachment.content || attachment.url || '#';
+    const thumbnail = attachment.thumbnail || null;
+    const mimeType = attachment.mimeType || 'application/octet-stream';
+    
+    // Determine if it's an image and should show preview
+    const isImage = mimeType.startsWith('image/');
+    
+    // Determine icon based on MIME type (only for non-images)
+    let icon = '📄';
+    if (!isImage) {
+      if (mimeType.startsWith('video/')) icon = '🎥';
+      else if (mimeType.startsWith('audio/')) icon = '🎵';
+      else if (mimeType.includes('pdf')) icon = '📕';
+      else if (mimeType.includes('word') || mimeType.includes('document')) icon = '📝';
+      else if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) icon = '📊';
+      else if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) icon = '📊';
+      else if (mimeType.includes('zip') || mimeType.includes('compressed')) icon = '📦';
+    }
+    
+    html += `
+      <div class="attachment-card">
+        <div class="attachment-icon">
+          ${isImage && thumbnail ? 
+            `<img src="${thumbnail}" alt="${filename}" class="attachment-thumbnail" onclick="window.open('${url}', '_blank')" style="cursor: pointer;">` : 
+            icon
+          }
+        </div>
+        <div class="attachment-details">
+          <a href="${url}" target="_blank" class="attachment-filename" title="${filename}">
+            ${filename}
+          </a>
+          <div class="attachment-meta">
+            <span class="attachment-size">${size}</span>
+            <span class="attachment-separator">•</span>
+            <span class="attachment-author">${author}</span>
+          </div>
+          <div class="attachment-date">${created}</div>
+        </div>
+        <a href="${url}" download="${filename}" class="attachment-download" title="Download">
+          ⬇️
+        </a>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  attachmentsContainer.innerHTML = html;
 }
 
 
@@ -1211,5 +1491,15 @@ if (document.readyState === 'loading') {
   setTimeout(() => {
     initRightSidebar();
     console.log('✅ [Right Sidebar] Immediate init completed');
+    
+    // Initialize tab switching after sidebar is ready
+    console.log('📋 Initializing tabs immediately...');
+    setTimeout(() => setupTabSwitching(), 100);
   }, 100);
 }
+
+// Initialize tab switching early (for static HTML tabs)
+setTimeout(() => {
+  console.log('📋 Early tab initialization...');
+  setupTabSwitching();
+}, 500);

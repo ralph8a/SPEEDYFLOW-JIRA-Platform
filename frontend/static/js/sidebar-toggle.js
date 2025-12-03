@@ -21,6 +21,7 @@ function initSidebarToggle() {
 // ===== TOGGLE SIDEBAR =====
 function toggleSidebar() {
   const sidebarHeader = document.querySelector('.sidebar-header-component');
+  const sidebarAction = document.getElementById('sidebarActionComponent');
   const sidebarContent = document.querySelector('.sidebar-content-component');
   
   if (!sidebarHeader || !sidebarContent) return;
@@ -31,10 +32,12 @@ function toggleSidebar() {
   if (sidebarToggleState.isExpanded) {
     // Expand
     sidebarHeader.classList.remove('collapsed');
+    if (sidebarAction) sidebarAction.classList.remove('collapsed');
     sidebarContent.classList.remove('collapsed');
   } else {
     // Collapse (show icons only)
     sidebarHeader.classList.add('collapsed');
+    if (sidebarAction) sidebarAction.classList.add('collapsed');
     sidebarContent.classList.add('collapsed');
   }
   

@@ -29,14 +29,126 @@
   <!-- DRAG & DROP TRANSITIONS STYLING -->
   <link rel="stylesheet" href="/static/css/components/transition-bar-vertical.css?v={{ timestamp }}">
   
+  <!-- INLINE STYLES FOR SIDEBAR ACTION BUTTON -->
+  <style>
+    /* PERFECT ALIGNMENT: All sidebar components align with header/filter/board */
+    
+    /* Sidebar Header: Align with header-enhanced top */
+    .sidebar-header-component {
+      top: 16px !important; /* Same as header margin */
+      left: 16px !important;
+      margin: 0 !important;
+    }
+    
+    /* Action Button: Position between header and filter */
+    #sidebarActionComponent {
+      top: 112px !important; /* After header total height (16 + 12 + 56 + 12 + 16) */
+      left: 16px !important;
+      width: 280px !important;
+      min-height: 56px !important;
+      height: 56px !important;
+      padding: 12px 14px !important; /* Same as sidebar-header-component */
+      margin: 0 !important;
+      box-sizing: border-box !important;
+    }
+    
+    /* Quick Action Button: Match sidebar-toggle-btn exactly */
+    #quickActionBtn {
+      background: linear-gradient(135deg, rgb(59, 130, 246), rgb(37, 99, 235)) !important;
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      min-height: 40px !important;
+      border-radius: 10px !important;
+      font-size: 22px !important; /* Slightly larger icon */
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: none !important;
+    }
+    
+    #quickActionBtn .toggle-icon {
+      font-size: 22px !important; /* Match button font-size */
+      line-height: 1 !important;
+      display: block !important;
+    }
+    
+    #quickActionBtn:hover {
+      background: linear-gradient(135deg, rgb(37, 99, 235), rgb(29, 78, 216)) !important;
+      transform: scale(1.05) !important;
+    }
+    
+    /* Sidebar Content: Align with kanban board start */
+    .sidebar-content-component {
+      top: 206px !important; /* After header (112px) + filter (94px) = 206px */
+      left: 16px !important;
+      height: calc(100vh - 222px) !important; /* 206px + 16px bottom margin */
+      margin: 0 !important;
+    }
+  </style>
+  
+  <!-- DEBUG SCRIPT: Force button visibility -->
+  <script>
+    console.log('🔍 DEBUG: Initializing sidebar action button...');
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        const sidebarContent = document.querySelector('.sidebar-content-component');
+        const actionComponent = document.querySelector('.sidebar-action-component');
+        const actionBtn = document.getElementById('quickActionBtn');
+        
+        console.log('📍 Sidebar content:', sidebarContent);
+        console.log('📍 Action component:', actionComponent);
+        console.log('🔘 Action button:', actionBtn);
+        
+        if (sidebarContent && actionComponent) {
+          // Sync collapsed state with sidebar
+          if (sidebarContent.classList.contains('collapsed')) {
+            actionComponent.classList.add('collapsed');
+            console.log('🔄 Sidebar is collapsed, syncing action button');
+          } else {
+            actionComponent.classList.remove('collapsed');
+            console.log('✅ Sidebar is expanded, action button ready');
+          }
+        }
+        
+        // Listen for sidebar toggle events
+        window.addEventListener('sidebarToggled', function() {
+          console.log('🔔 Sidebar toggled event received');
+          if (sidebarContent && actionComponent) {
+            if (sidebarContent.classList.contains('collapsed')) {
+              actionComponent.classList.add('collapsed');
+            } else {
+              actionComponent.classList.remove('collapsed');
+            }
+          }
+        });
+        
+        console.log('✅ Sidebar action button initialized');
+      }, 100);
+    });
+  </script>
+  
 </head>
 <body class="theme-light">
+  <script>
+    console.log('🚀 BODY LOADED - Checking for sidebar-action-component...');
+    console.log('📍 Elements in DOM:', document.querySelectorAll('aside').length, 'asides found');
+  </script>
+  
   <div class="app-container" role="application" aria-label="SpeedyFlow Ticket Workspace">
     <!-- SIDEBAR (UNIFIED REBUILD) -->
     <!-- SIDEBAR HEADER (Toggle Button) -->
     <aside class="sidebar-header-component" role="banner" aria-label="Sidebar Toggle">
       <button id="sidebarToggleBtn" class="sidebar-toggle-btn" aria-label="Toggle Sidebar">
         <span class="toggle-icon">☰</span>
+      </button>
+    </aside>
+
+    <!-- SIDEBAR ACTION BUTTON (Clone of header style) -->
+    <aside class="sidebar-header-component" id="sidebarActionComponent" role="complementary" aria-label="Quick Actions" style="top: 112px !important;">
+      <button id="quickActionBtn" class="sidebar-toggle-btn" aria-label="Quick Action" title="Quick Action">
+        <span class="toggle-icon">⚡</span>
       </button>
     </aside>
 
@@ -60,6 +172,7 @@
             <a href="#" class="sidebar-menu-item"><span class="icon">📊</span><span class="label">Reports</span></a>
             <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications"><span class="icon">🔔</span><span class="label">Notifications</span></button>
             <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh"><span class="icon">🔄</span><span class="label">Refresh</span></button>
+            <button type="button" class="sidebar-menu-item" id="clearCacheBtn" aria-label="Clear Cache" title="Clear local cache to force refresh"><span class="icon">🗑️</span><span class="label">Clear Cache</span></button>
           </nav>
         </section>
         <div class="sidebar-divider" aria-hidden="true"></div>
@@ -228,91 +341,51 @@
           </div>
 
           <div class="column-content">
-            <!-- ISSUE KEY -->
-            <div class="detail-group">
-              <div class="detail-label">Key</div>
-              <div class="detail-value" id="detailKey">—</div>
+            <!-- SLA MONITOR (First, most important) -->
+            <div id="slaMonitorContainer" style="margin-bottom: 12px;">
+              <!-- SLA Monitor renders here dynamically -->
             </div>
 
-            <!-- SUMMARY -->
-            <div class="detail-group">
-              <div class="detail-label">Summary</div>
-              <div class="detail-value detail-summary" id="detailSummary">—</div>
-            </div>
-
-            <!-- STATUS -->
-            <div class="detail-group">
-              <div class="detail-label">Status</div>
-              <div class="detail-value">
-                <span class="status-badge" id="detailStatus">Unknown</span>
-              </div>
-            </div>
-
-            <!-- SEVERITY -->
-            <div class="detail-group">
-              <div class="detail-label">Severity</div>
-              <div class="detail-value">
-                <span class="severity-badge" id="detailSeverity">Normal</span>
-              </div>
-            </div>
-
-            <!-- ASSIGNEE -->
-            <div class="detail-group">
-              <div class="detail-label">Assigned To</div>
-              <div class="detail-value" id="detailAssignee">Unassigned</div>
-            </div>
-
-            <!-- REPORTER (Who created the ticket) -->
-            <div class="detail-group">
-              <div class="detail-label">Reporter</div>
-              <div class="reporter-card" id="detailReporter">
-                <div class="reporter-placeholder">—</div>
-              </div>
-            </div>
-
-            <!-- TYPE -->
-            <div class="detail-group">
-              <div class="detail-label">Type</div>
-              <div class="detail-value" id="detailType">—</div>
-            </div>
-
-            <!-- CREATED -->
-            <div class="detail-group">
-              <div class="detail-label">Created</div>
-              <div class="detail-value detail-date" id="detailCreated">—</div>
-            </div>
-
-            <!-- UPDATED -->
-            <div class="detail-group">
-              <div class="detail-label">Updated</div>
-              <div class="detail-value detail-date" id="detailUpdated">—</div>
-            </div>
-
-            <!-- DESCRIPTION -->
-            <div class="detail-group">
-              <div class="detail-label">Description</div>
-              <div class="detail-value detail-description" id="detailDescription">—</div>
-            </div>
-
-            <!-- ALL FIELDS SECTION (DYNAMIC) -->
+            <!-- ALL FIELDS (Organized in tabs by importance) -->
             <div class="detail-group detail-group-all-fields">
               <div class="detail-label">
-                <span>📋 All Fields</span>
-                <span class="detail-label-hint">(All ticket data)</span>
+                <span>📋 Ticket Information</span>
               </div>
-              <div id="allFieldsContainer" class="all-fields-container">
+              
+              <!-- TABS NAVIGATION -->
+              <div class="fields-tabs">
+                <button class="fields-tab active" data-tab="essential">
+                  ⭐ Essential
+                </button>
+                <button class="fields-tab" data-tab="details">
+                  📋 Details
+                </button>
+                <button class="fields-tab" data-tab="technical">
+                  ⚙️ Technical
+                </button>
+              </div>
+              
+              <!-- TAB CONTENT -->
+              <div class="fields-tab-content active" id="tab-essential">
+                <!-- Essential fields (populated dynamically) -->
+              </div>
+              <div class="fields-tab-content" id="tab-details">
+                <!-- Detail fields (populated dynamically) -->
+              </div>
+              <div class="fields-tab-content" id="tab-technical">
+                <!-- Technical fields (populated dynamically) -->
+              </div>
+            </div>
+
+            <!-- ATTACHMENTS SECTION -->
+            <div class="detail-group detail-group-attachments" id="attachmentsSection" style="display: none;">
+              <div class="detail-label">
+                <span>📎 Attachments</span>
+                <span class="detail-label-hint" id="attachmentCountLabel">(0)</span>
+              </div>
+              <div id="existingAttachmentsContainer" class="attachments-display-container">
                 <!-- Populated dynamically by right-sidebar.js -->
               </div>
-            </div>
-
-            <!-- SLA MONITOR CONTAINER -->
-            <div id="slaMonitorContainer" class="sidebar-feature-container">
-              <!-- SLA Monitor se renderiza aquí dinámicamente -->
-            </div>
-
-            <!-- TICKET PORTAL FORMS CONTAINER -->
-            <div id="ticketPortalFormsContainer" class="sidebar-feature-container">
-              <!-- Ticket Portal Forms se renderiza aquí dinámicamente -->
             </div>
           </div>
         </div>

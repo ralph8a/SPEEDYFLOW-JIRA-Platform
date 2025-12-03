@@ -69,8 +69,8 @@ def api_get_issues_by_queue(queue_id):
 
 
 def _inject_sla_stub(issue: dict) -> dict:
-    """Attach SLA data to an issue record using real SLA blueprint helper.
-    Falls back gracefully if SLA blueprint not available.
+    """Attach SLA data to an issue record extracting real-time data from customfields.
+    Falls back gracefully if SLA data not available.
     """
     if not isinstance(issue, dict):
         return issue
@@ -79,11 +79,71 @@ def _inject_sla_stub(issue: dict) -> dict:
     issue_key = issue.get('key') or issue.get('issue_key')
     if not issue_key:
         return issue
+    
+    # Extract real-time SLA data from customfields (customfield_10170, customfield_10176, etc.)
+    fields = issue.get('fields', {})
+    sla_cycles = []
+    
+    # SLA custom fields that contain ongoingCycle data
+    sla_field_ids = [
+        'customfield_10170',  # SLA's Incidente HUB
+        'customfield_10176',  # Cierre Ticket
+        'customfield_10181',  # SLA's Servicios Streaming
+        'customfield_10182',  # SLA's Servicios Streaming (SR)
+        'customfield_10183',  # SLA's Solicitud de CDRs
+        'customfield_10184',  # SLA's Cotización Orden de Compra
+        'customfield_10185',  # SLA's Errores Pruebas de Integración
+        'customfield_10186',  # SLA's Actualización de SDK
+        'customfield_10187',  # SLA's Splunk
+        'customfield_10190',  # SLA's Soporte Aplicaciones
+        'customfield_10259',  # SLA War Room
+        'customfield_11957',  # Salud de Servicios
+    ]
+    
+    for field_id in sla_field_ids:
+        sla_field = fields.get(field_id)
+        if not sla_field or not isinstance(sla_field, dict):
+            continue
+        
+        ongoing = sla_field.get('ongoingCycle')
+        if not ongoing:
+            continue
+        
+        # Extract millis data
+        elapsed = ongoing.get('elapsedTime', {})
+        remaining = ongoing.get('remainingTime', {})
+        goal = ongoing.get('goalDuration', {})
+        
+        cycle = {
+            'sla_name': sla_field.get('name', 'Unknown SLA'),
+            'goal_duration': goal.get('friendly', 'N/A'),
+            'goal_minutes': goal.get('millis', 0) // 60000 if goal.get('millis') else 0,
+            'elapsed_time': elapsed.get('friendly', '00:00:00'),
+            'elapsed_time_millis': elapsed.get('millis', 0),
+            'remaining_time': remaining.get('friendly', 'N/A'),
+            'remaining_time_millis': remaining.get('millis', 0),
+            'breached': ongoing.get('breached', False),
+            'paused': ongoing.get('paused', False),
+            'started_on': ongoing.get('startTime', {}).get('epochMillis'),
+            'status': 'breached' if ongoing.get('breached') else 'ongoing'
+        }
+        sla_cycles.append(cycle)
+    
+    # If we found real-time SLA data, use it
+    if sla_cycles:
+        issue['sla_agreements'] = {
+            'cycles': sla_cycles,
+            'total_cycles': len(sla_cycles),
+            'has_breach': any(c.get('breached') for c in sla_cycles),
+            'source': 'real-time',
+            'is_default': False,
+        }
+        return issue
+    
+    # Fallback to cache-based SLA if no real-time data
     try:
-        # Import within function to avoid circular imports during app init
         from api.blueprints.sla import _get_issue_sla  # type: ignore
         sla = _get_issue_sla(issue_key)
-        # Align field naming expected by tests
         issue['sla_agreements'] = {
             'sla_name': sla.get('sla_name'),
             'goal_duration': sla.get('goal_duration'),
@@ -95,7 +155,6 @@ def _inject_sla_stub(issue: dict) -> dict:
             'is_default': sla.get('is_default'),
         }
     except Exception:
-        # Silent fallback: keep issue unchanged if SLA retrieval fails
         pass
     return issue
 
