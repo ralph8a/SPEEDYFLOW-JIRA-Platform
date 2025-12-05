@@ -56,8 +56,10 @@
 @import url('components/filter-bar-standalone.css'); /* Clean standalone filter bar */
 @import url('components/kanban.css');        /* Kanban board styling */
 @import url('components/cards-responsive.css');      /* Responsive card styling */
+@import url('components/issue-details-btn.css');     /* Issue details button - Edge-style */
 @import url('components/right-sidebar.css');         /* Right sidebar with ticket details & comments */
 @import url('components/comments.css');      /* Comments & mentions system (includes v2) */
+@import url('components/comment-attachments.css'); /* Comment attachment styling */
 @import url('components/notifications.css'); /* Notification display */
 @import url('components/sidebar-actions.css');  /* Sidebar actions, toasts & notifications panel */
 @import url('components/ai-suggestions.css');  /* AI field suggestions modal */
@@ -68,7 +70,7 @@
    PHASE 4: LAYOUT (Page structure - sidebars, header)
    ============================================================ */
 /* sidebar-components.css consolidated into glassmorphism.css and layout.css */
-@import url('components/header.css');              /* Old header - kept for compatibility */
+@import url('components/header.css');
 
 /* ============================================================
    PHASE 5: UTILITIES (Interactive features & enhancements)

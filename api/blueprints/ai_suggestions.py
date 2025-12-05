@@ -325,7 +325,7 @@ def _analyze_and_suggest(
                     'field_name': 'severity',
                     'field_label': 'Criticidad',
                     'current_value': severity_value,
-                    'suggested_value': suggested_severity,
+                    'suggested_value': {"value": suggested_severity},
                     'confidence': confidence,
                     'reason': reason
                 })
@@ -344,7 +344,7 @@ def _analyze_and_suggest(
                     'field_name': 'severity',
                     'field_label': 'Criticidad',
                     'current_value': severity_value,
-                    'suggested_value': suggested_severity,
+                    'suggested_value': {"value": suggested_severity},
                     'confidence': confidence,
                     'reason': f'{reason} (actual: {severity_value} parece incorrecto)'
                 })
@@ -362,7 +362,7 @@ def _analyze_and_suggest(
                 'field_name': 'priority',
                 'field_label': 'Prioridad',
                 'current_value': None,
-                'suggested_value': suggested_priority,
+                'suggested_value': {"name": suggested_priority},
                 'confidence': confidence,
                 'reason': reason
             })
@@ -389,7 +389,22 @@ def _analyze_and_suggest(
             reason = ''
             
             # Intentar ML primero (semantic similarity)
-            ml_result = cache.get_ml_suggestion(text, 'tipo_solicitud')
+            ml_result = None
+            try:
+                from utils.ml_suggester import get_ml_suggester
+                ml_suggester = get_ml_suggester()
+                ml_suggestion = ml_suggester.suggest_field(text, 'tipo_solicitud')
+                if ml_suggestion:
+                    value, confidence_score, reason_text, similar_tickets = ml_suggestion
+                    ml_result = {
+                        'value': value,
+                        'confidence': confidence_score,
+                        'reason': reason_text,
+                        'similar_count': len(similar_tickets)
+                    }
+            except Exception as e:
+                logger.warning(f"ML suggestion failed: {e}")
+            
             if ml_result:
                 tipo_sugerido = ml_result.get('value')
                 confidence = ml_result.get('confidence', 0.0)
@@ -413,7 +428,7 @@ def _analyze_and_suggest(
                     'field_name': 'tipo_solicitud',
                     'field_label': 'Tipo de Solicitud',
                     'current_value': tipo_value,
-                    'suggested_value': tipo_sugerido,
+                    'suggested_value': {"value": tipo_sugerido},
                     'confidence': confidence,
                     'reason': reason
                 })
@@ -425,7 +440,7 @@ def _analyze_and_suggest(
                     'field_name': 'tipo_solicitud',
                     'field_label': 'Tipo de Solicitud',
                     'current_value': tipo_value,
-                    'suggested_value': tipo_sugerido,
+                    'suggested_value': {"value": tipo_sugerido},
                     'confidence': confidence,
                     'reason': f'{reason}. Actual "{tipo_value}" podría ser incorrecto'
                 })
@@ -457,7 +472,7 @@ def _analyze_and_suggest(
                     'field_name': 'area',
                     'field_label': 'Área',
                     'current_value': area_value,
-                    'suggested_value': area_sugerida,
+                    'suggested_value': {"value": area_sugerida},
                     'confidence': confidence,
                     'reason': f'El contenido sugiere el área de {area_sugerida}'
                 })
@@ -498,7 +513,7 @@ def _analyze_and_suggest(
                     'field_name': 'plataforma',
                     'field_label': 'Plataforma',
                     'current_value': plat_value,
-                    'suggested_value': plat_sugerida,
+                    'suggested_value': {"value": plat_sugerida},
                     'confidence': confidence,
                     'reason': reason
                 })

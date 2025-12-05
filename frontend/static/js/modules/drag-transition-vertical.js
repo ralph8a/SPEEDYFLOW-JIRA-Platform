@@ -32,21 +32,24 @@ class DragTransitionVertical {
    * Setup global drag event listeners
    */
   setupDragListeners() {
+    // Use capture phase to ensure drag events are handled first
     document.addEventListener('dragstart', (e) => {
       const card = e.target.closest('.kanban-card');
       if (card) {
+        console.log('🚀 [DRAG] dragstart captured on card:', card.dataset.issueKey);
         e.stopPropagation();
         this.onDragStart(e, card);
       }
-    });
+    }, { capture: true });
     
     document.addEventListener('dragend', (e) => {
       // Only clean up if no transition is executing
       // (transition cleanup happens in drop handler)
       if (!this.isExecutingTransition) {
+        console.log('🔚 [DRAG] dragend captured');
         this.onDragEnd();
       }
-    });
+    }, { capture: true });
     
     // Prevent default dragover on document to allow custom drop zones
     document.addEventListener('dragover', (e) => {

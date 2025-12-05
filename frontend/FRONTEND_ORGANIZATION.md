@@ -3,7 +3,7 @@
 **Date:** November 19, 2025  
 **Status:** ✅ Complete
 
-This document describes the new organized structure for CSS and JavaScript files in the SalesJIRA application.
+This document describes the new organized structure for CSS and JavaScript files in the SPEEDYFLOW application.
 
 ---
 

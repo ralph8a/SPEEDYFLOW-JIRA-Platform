@@ -3,6 +3,8 @@
  * Manejo de detalles de tickets, comentarios y actividad
  */
 
+console.log('📥 [Load] right-sidebar.js loading...');
+
 const sidebarState = {
   isOpen: false,
   currentIssue: null,
@@ -51,9 +53,13 @@ function switchPanel(panelId) {
 
 // ===== OPEN SIDEBAR WITH ISSUE =====
 function openIssueDetails(issueKey) {
+  console.log('🔍 [Right Sidebar] Opening issue details for:', issueKey);
+  console.log('🔍 [Right Sidebar] Current state.issues length:', state.issues?.length || 0);
+  
   const issue = state.issues.find(i => i.key === issueKey);
   if (!issue) {
-    console.error('Issue not found:', issueKey);
+    console.error('❌ [Right Sidebar] Issue not found:', issueKey);
+    console.log('📋 [Right Sidebar] Available issues:', state.issues?.map(i => i.key) || []);
     return;
   }
 
@@ -130,22 +136,23 @@ function openIssueDetails(issueKey) {
     }, 100);
   }
   
-  // Initialize SLA Monitor if available (with cached data)
+  // Initialize SLA Monitor if available
   if (window.slaMonitor && typeof window.slaMonitor.init === 'function') {
-    // Check cache first for SLA data
-    const cachedIssue = window.app?.issuesCache?.get(issueKey);
-    const slaData = cachedIssue?.sla_agreements || null;
-    
-    window.slaMonitor.init(issueKey, slaData).then(() => {
-      // Render SLA panel in the container
+    window.slaMonitor.init(issueKey).then(() => {
+      // Render SLA panel only if real data exists
       const slaContainer = document.getElementById('slaMonitorContainer');
-      if (slaContainer && window.slaMonitor.slaData[issueKey]) {
-        const slaPanel = window.slaMonitor.renderSLAPanel(issueKey);
-        slaContainer.innerHTML = '';
-        slaContainer.appendChild(slaPanel);
+      if (slaContainer) {
+        if (window.slaMonitor.slaData[issueKey]) {
+          const slaPanel = window.slaMonitor.renderSLAPanel(issueKey);
+          slaContainer.innerHTML = '';
+          slaContainer.appendChild(slaPanel);
+        } else {
+          // Hide SLA container if no real data
+          slaContainer.style.display = 'none';
+        }
       }
     }).catch(err => {
-      // SLA Monitor initialization failed
+      console.error('SLA Monitor initialization failed:', err);
     });
   }
 }
@@ -177,18 +184,25 @@ function populateIssueDetails(issue) {
   console.log(`📡 Fetching complete field structure for ${issue.key}`);
   fetchServiceDeskRequestDetails(issue.key);
   
-  // Initialize SLA Monitor with cached data
+  // Initialize SLA Monitor
   if (window.slaMonitor) {
-    const slaData = cachedIssue?.sla_agreements || issue.sla_agreements || null;
-    window.slaMonitor.init(issue.key, slaData);
-    
-    const slaPanel = window.slaMonitor.renderSLAPanel(issue.key);
-    const slaContainer = document.getElementById('slaMonitorContainer');
-    if (slaContainer) {
-      const existingSLA = slaContainer.querySelector('.sla-panel');
-      if (existingSLA) existingSLA.replaceWith(slaPanel);
-      else slaContainer.appendChild(slaPanel);
-    }
+    window.slaMonitor.init(issue.key).then(() => {
+      const slaContainer = document.getElementById('slaMonitorContainer');
+      if (slaContainer) {
+        if (window.slaMonitor.slaData[issue.key]) {
+          const slaPanel = window.slaMonitor.renderSLAPanel(issue.key);
+          const existingSLA = slaContainer.querySelector('.sla-panel');
+          if (existingSLA) existingSLA.remove();
+          slaContainer.appendChild(slaPanel);
+          slaContainer.style.display = 'block';
+        } else {
+          // Hide SLA container if no real data
+          slaContainer.style.display = 'none';
+        }
+      }
+    }).catch(err => {
+      console.error('SLA Monitor initialization failed:', err);
+    });
   }
 }
 
@@ -314,15 +328,8 @@ function loadIssueComments(issueKey) {
         // Get text content (V1 uses 'body', V2 might use 'text' or 'body_html')
         let text = comment.body_html || comment.body || comment.text || '';
         
-        // Check if it's plain text (needs escaping) or already HTML
-        const isHtml = text.includes('<') && (text.includes('</') || text.includes('/>'));
-        if (!isHtml) {
-          // Escape plain text but preserve newlines
-          text = text.replace(/&/g, '&amp;')
-                     .replace(/</g, '&lt;')
-                     .replace(/>/g, '&gt;')
-                     .replace(/\n/g, '<br>');
-        }
+        // Process and clean up the comment text
+        text = processCommentText(text);
         
         const initials = author.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         const commentId = comment.id || index;
@@ -360,6 +367,103 @@ function loadIssueComments(issueKey) {
     .catch(error => {
       commentsList.innerHTML = '<p class="error">Failed to load comments</p>';
     });
+}
+
+// ===== GET ISSUE ATTACHMENTS =====
+function getIssueAttachments(issue) {
+  if (!issue) return [];
+  
+  let attachments = [];
+  
+  if (issue.fields && Array.isArray(issue.fields.attachment)) {
+    attachments = issue.fields.attachment;
+  } else if (Array.isArray(issue.attachment)) {
+    attachments = issue.attachment;
+  } else if (Array.isArray(issue.attachments)) {
+    attachments = issue.attachments;
+  }
+  
+  return attachments || [];
+}
+
+// ===== FORMAT FILE SIZE =====
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// ===== GET FILE ICON =====
+function getFileIcon(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const iconMap = {
+    'pdf': '📄', 'doc': '📝', 'docx': '📝', 'xls': '📊', 'xlsx': '📊',
+    'txt': '📃', 'zip': '🗜️', 'rar': '🗜️', '7z': '🗜️',
+    'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'webp': '🖼️'
+  };
+  return iconMap[ext] || '📎';
+}
+
+// ===== PROCESS COMMENT TEXT =====
+function processCommentText(text) {
+  if (!text) return '';
+  
+  // Check if it's plain text (needs escaping) or already HTML
+  const isHtml = text.includes('<') && (text.includes('</') || text.includes('/>'));
+  if (!isHtml) {
+    // Escape plain text but preserve newlines
+    text = text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/\n/g, '<br>');
+  }
+  
+  // Remove attachment references from comment text since they are shown in dedicated section
+  // Remove JIRA-style attachment references like !image-123.png!, !document.pdf!, etc.
+  text = text.replace(/!([^!]*\.(png|jpg|jpeg|gif|webp|pdf|doc|docx|xls|xlsx|txt|zip|rar|7z|svg))[^!]*!/gi, 
+    (match) => {
+      // Simply remove the reference - attachments are shown separately
+      return '';
+    });
+  
+  // Process markdown-style image links ![alt](url) - keep these as they are legitimate markdown  
+  text = text.replace(/!\[([^\]]+)\]\(([^)]+)\)/g, 
+    (match, altText, url) => {
+      const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+      if (isImage) {
+        return `<img src="${url}" alt="${altText}" style="max-width: 100%; cursor: pointer;" onclick="window.open('${url}', '_blank')" />`;
+      } else {
+        return `<a href="${url}" target="_blank">${altText}</a>`;
+      }
+    });
+  
+  // Clean up duplicate user initials/names that appear on separate lines
+  // Remove standalone initials (2-3 uppercase letters on their own line)
+  text = text.replace(/^[A-Z]{2,3}(\s*<br\s*\/?>|\s*$)/gm, '');
+  
+  // Remove standalone full names that might be duplicated
+  text = text.replace(/^[A-Z][a-z]+ [A-Z][a-z]+(\s*<br\s*\/?>|\s*$)/gm, '');
+  
+  // Remove lines that are just email addresses or usernames
+  text = text.replace(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\s*<br\s*\/?>|\s*$)/gm, '');
+  
+  // Clean up "SC" or similar service initials that might appear
+  text = text.replace(/^(SC|SG|Admin|User)(\s*<br\s*\/?>|\s*$)/gm, '');
+  
+  // Clean up multiple consecutive <br> tags
+  text = text.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
+  
+  // Remove leading/trailing <br> tags
+  text = text.replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, '');
+  
+  // Remove empty lines at start/end
+  text = text.trim();
+  
+  return text;
 }
 
 // ===== SETUP COMMENT EVENT LISTENERS =====
@@ -559,18 +663,34 @@ function renderFieldsInTab(tabId, fields) {
   let html = '<div class="all-fields-grid">';
   
   fields.forEach(field => {
-    const isLongField = field.key === 'description' || 
-                        field.label.includes('Description') ||
-                        field.key === 'customfield_10149' || 
-                        field.key === 'customfield_10151' || 
-                        (field.type === 'text' && String(field.value).length > 200);
+    // Detectar si es campo de descripción (siempre expandido)
+    const isDescriptionField = field.key === 'description' || 
+                               field.label.toLowerCase().includes('description') ||
+                               field.label.toLowerCase().includes('descripcion');
     
-    const itemClass = isLongField ? 'field-item field-item-full' : 'field-item';
+    // Detectar si es campo con texto largo (expandible con click)
+    const isLongTextField = !isDescriptionField && 
+                           (field.key === 'customfield_10149' || 
+                            field.key === 'customfield_10151' || 
+                            field.label.toLowerCase().includes('summary') ||
+                            field.label.toLowerCase().includes('notes') ||
+                            field.label.toLowerCase().includes('comments') ||
+                            field.label.toLowerCase().includes('details') ||
+                            (field.type === 'text' && String(field.value).length > 150));
+    
+    let itemClass = 'field-item';
+    let valueClass = 'field-value';
+    
+    if (isDescriptionField) {
+      itemClass += ' field-item-full';
+    } else if (isLongTextField) {
+      valueClass += ' field-value-long';
+    }
     
     html += `
-      <div class="${itemClass}">
+      <div class="${itemClass}" data-field="${field.key}">
         <div class="field-label">${field.label}</div>
-        <div class="field-value">${formatFieldValue(field.value, field.type, field.issueKey)}</div>
+        <div class="${valueClass}" onclick="${isLongTextField ? 'toggleFieldExpansion(this)' : ''}">${formatFieldValue(field.value, field.type, field.issueKey)}</div>
       </div>
     `;
   });
@@ -1058,15 +1178,6 @@ function formatCommentTime(dateString) {
   }
 }
 
-// ===== FORMAT FILE SIZE =====
-function formatFileSize(bytes) {
-  if (!bytes || bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
 // ===== RENDER ATTACHMENTS =====
 function renderAttachments(issue) {
   const attachmentsSection = document.getElementById('attachmentsSection');
@@ -1155,15 +1266,51 @@ function renderAttachments(issue) {
 
 // ===== INTEGRATION WITH KANBAN CARDS =====
 function setupIssueCardClickHandlers() {
-  // Re-attach handlers after Kanban re-render
-  document.querySelectorAll('.issue-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const issueKey = card.dataset.issue;
-      openIssueDetails(issueKey);
+  console.log('🔧 [Setup] ===== EXECUTING setupIssueCardClickHandlers =====');
+  
+  // Setup details buttons with proper drag and drop compatibility
+  const detailsButtons = document.querySelectorAll('.issue-details-btn');
+  console.log('📋 [Setup] Found', detailsButtons.length, 'details buttons');
+  
+  detailsButtons.forEach((btn, index) => {
+    const issueKey = btn.getAttribute('data-issue-key');
+    console.log(`🔧 [Setup] Configuring button ${index + 1}:`, issueKey);
+    
+    // Force styling
+    btn.style.cursor = 'pointer';
+    btn.style.pointerEvents = 'auto';
+    btn.style.zIndex = '9999';
+    btn.style.position = 'relative';
+    
+    // Remove any existing listeners
+    btn.onclick = null;
+    
+    // Use click with delay to avoid conflict with drag events
+    btn.addEventListener('click', function(e) {
+      console.log('🎯 [CLICK] Details button clicked for:', issueKey);
+      
+      // Check if we're in the middle of a drag operation
+      if (window.dragTransitionVertical && window.dragTransitionVertical.isDragging) {
+        console.log('⚠️ [CLICK] Drag in progress, ignoring button click');
+        return;
+      }
+      
+      // Stop propagation to prevent card events
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // Small delay to ensure it's a deliberate click, not part of drag
+      setTimeout(() => {
+        if (typeof openIssueDetails === 'function') {
+          console.log('✅ [CLICK] Calling openIssueDetails for:', issueKey);
+          openIssueDetails(issueKey);
+        } else {
+          console.error('❌ [CLICK] openIssueDetails function not found');
+        }
+      }, 50);
     });
-
-    // Prevent drag when clicking on card
-    card.style.cursor = 'pointer';
+    
+    console.log('✅ [Setup] Button configured with mousedown handler for:', issueKey);
   });
 }
 
@@ -1455,10 +1602,16 @@ window.rightSidebar = {
 };
 
 // Export functions globally for direct access
+console.log('🌍 [Global] Exporting right-sidebar functions to window...');
 window.openIssueDetails = openIssueDetails;
 window.closeSidebar = closeSidebar;
 window.initRightSidebar = initRightSidebar;
 window.setupMentionSystem = setupMentionSystem;
+window.setupIssueCardClickHandlers = setupIssueCardClickHandlers;
+console.log('✅ [Global] Functions exported:', {
+  openIssueDetails: typeof window.openIssueDetails,
+  setupIssueCardClickHandlers: typeof window.setupIssueCardClickHandlers
+});
 window.setupAttachmentsSystem = setupAttachmentsSystem;
 window.setupCommentShortcuts = setupCommentShortcuts;
 
@@ -1480,6 +1633,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.MentionSystem && !window.mentionSystem) {
       window.mentionSystem = new MentionSystem();
     }
+    
+    // Simple global backup (no stopPropagation)
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.issue-details-btn');
+      if (btn && !btn.onclick) { // Only if no onclick set
+        const issueKey = btn.getAttribute('data-issue-key');
+        
+        if (issueKey) {
+          console.log('🎯 [Global Backup] Click on details button:', issueKey);
+          
+          if (typeof openIssueDetails === 'function') {
+            openIssueDetails(issueKey);
+          } else {
+            console.error('❌ [Global Backup] openIssueDetails function not found');
+          }
+        }
+      }
+    });
+    
   }, 100);
 });
 
@@ -1488,6 +1660,33 @@ if (document.readyState === 'loading') {
   console.log('📄 [Right Sidebar] DOM still loading, will init on DOMContentLoaded');
 } else {
   console.log('📄 [Right Sidebar] DOM already loaded, initializing immediately...');
+}
+
+// ===== TOGGLE FIELD EXPANSION =====
+/**
+ * Toggle expansion state of long text fields
+ */
+function toggleFieldExpansion(element) {
+  if (!element || !element.classList.contains('field-value-long')) {
+    return;
+  }
+  
+  const isExpanded = element.classList.contains('expanded');
+  
+  if (isExpanded) {
+    element.classList.remove('expanded');
+    console.log('🔽 Field contracted');
+  } else {
+    element.classList.add('expanded');
+    console.log('🔼 Field expanded');
+  }
+}
+
+// Make function globally available
+window.toggleFieldExpansion = toggleFieldExpansion;
+
+// Also call immediately if DOM is already loaded (continued from above)
+if (document.readyState !== 'loading') {
   setTimeout(() => {
     initRightSidebar();
     console.log('✅ [Right Sidebar] Immediate init completed');

@@ -46,7 +46,7 @@ Two complete HTML templates have been created to work with the modular CSS and J
 
 #### Sidebar
 ```html
-- 🚀 SalesJIRA Logo/Title
+- 🚀 SPEEDYFLOW Logo/Title
 - Service Desk Selector
 - Queue Selector
 - Filters Panel

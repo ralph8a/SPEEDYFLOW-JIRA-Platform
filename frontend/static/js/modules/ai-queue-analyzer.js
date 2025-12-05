@@ -266,6 +266,13 @@ class AIQueueAnalyzer {
     if (Array.isArray(value)) {
       return value.join(', ');
     }
+    if (typeof value === 'object' && value !== null) {
+      // Handle JIRA field objects like {"value": "Crítico"} or {"name": "High"}
+      if (value.value) return value.value;
+      if (value.name) return value.name;
+      if (value.displayName) return value.displayName;
+      return JSON.stringify(value);
+    }
     return value;
   }
 
@@ -283,18 +290,35 @@ class AIQueueAnalyzer {
       const field = cb.dataset.field;
       const value = JSON.parse(cb.dataset.value);
       
+      console.log(`🔧 Preparing update for ${issueKey}.${field}:`, value);
+      
       if (!updates[issueKey]) {
         updates[issueKey] = { fields: {} };
       }
       updates[issueKey].fields[field] = value;
     });
 
+    console.log('📤 Applying updates:', updates);
+    
+    // Show progress
+    const footer = document.getElementById('aiQueueFooter');
+    const originalFooter = footer.innerHTML;
+    footer.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="spinner"></div>
+        <span>Aplicando cambios...</span>
+      </div>
+    `;
+
     // Aplicar updates
     let success = 0;
     let errors = 0;
+    const errorDetails = [];
 
     for (const [issueKey, data] of Object.entries(updates)) {
       try {
+        console.log(`🔄 Updating ${issueKey} with:`, data);
+        
         const response = await fetch(`/api/issues/${issueKey}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -302,20 +326,34 @@ class AIQueueAnalyzer {
         });
 
         if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ Updated ${issueKey}:`, result);
           success++;
         } else {
+          const errorText = await response.text();
+          console.error(`❌ Failed to update ${issueKey}:`, response.status, errorText);
           errors++;
+          errorDetails.push(`${issueKey}: ${response.status} ${errorText.substring(0, 100)}`);
         }
       } catch (error) {
+        console.error(`❌ Error updating ${issueKey}:`, error);
         errors++;
+        errorDetails.push(`${issueKey}: ${error.message}`);
       }
     }
 
-    alert(`✅ ${success} tickets actualizados\n${errors > 0 ? `❌ ${errors} errores` : ''}`);
+    // Show results
+    let message = `✅ ${success} tickets actualizados correctamente`;
+    if (errors > 0) {
+      message += `\n\n❌ ${errors} errores:\n${errorDetails.join('\n')}`;
+    }
+    
+    alert(message);
     this.closeModal();
     
     // Refresh issues
     if (window.loadIssues && window.state && window.state.currentQueue) {
+      console.log('🔄 Refreshing issues...');
       await window.loadIssues(window.state.currentQueue);
     }
   }

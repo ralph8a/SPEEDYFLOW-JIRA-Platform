@@ -79,144 +79,36 @@ def api_get_issues_by_queue(queue_id):
 
 
 def _inject_sla_stub(issue: dict) -> dict:
-    """Attach SLA data to an issue record extracting real-time data from customfields.
-    Falls back gracefully if SLA data not available.
-    """
-    if not isinstance(issue, dict):
+    """Attach SLA data to issue using simplified SLA service"""
+    if not isinstance(issue, dict) or 'sla_agreements' in issue:
         return issue
-    if 'sla_agreements' in issue:
-        return issue
+    
     issue_key = issue.get('key') or issue.get('issue_key')
     if not issue_key:
         return issue
     
-    # Extract real-time SLA data from customfields (customfield_10170, customfield_10176, etc.)
-    fields = issue.get('fields', {})
-    sla_cycles = []
-    
-    # SLA custom fields that contain ongoingCycle data
-    sla_field_ids = [
-        'customfield_10170',  # SLA's Incidente HUB
-        'customfield_10176',  # Cierre Ticket
-        'customfield_10181',  # SLA's Servicios Streaming
-        'customfield_10182',  # SLA's Servicios Streaming (SR)
-        'customfield_10183',  # SLA's Solicitud de CDRs
-        'customfield_10184',  # SLA's Cotización Orden de Compra
-        'customfield_10185',  # SLA's Errores Pruebas de Integración
-        'customfield_10186',  # SLA's Actualización de SDK
-        'customfield_10187',  # SLA's Splunk
-        'customfield_10190',  # SLA's Soporte Aplicaciones
-        'customfield_10259',  # SLA War Room
-        'customfield_11957',  # Salud de Servicios
-    ]
-    
-    for field_id in sla_field_ids:
-        sla_field = fields.get(field_id)
-        if not sla_field or not isinstance(sla_field, dict):
-            continue
-        
-        ongoing = sla_field.get('ongoingCycle')
-        if not ongoing:
-            continue
-        
-        # Extract millis data
-        elapsed = ongoing.get('elapsedTime', {})
-        remaining = ongoing.get('remainingTime', {})
-        goal = ongoing.get('goalDuration', {})
-        
-        cycle = {
-            'sla_name': sla_field.get('name', 'Unknown SLA'),
-            'goal_duration': goal.get('friendly', 'N/A'),
-            'goal_minutes': goal.get('millis', 0) // 60000 if goal.get('millis') else 0,
-            'elapsed_time': elapsed.get('friendly', '00:00:00'),
-            'elapsed_time_millis': elapsed.get('millis', 0),
-            'remaining_time': remaining.get('friendly', 'N/A'),
-            'remaining_time_millis': remaining.get('millis', 0),
-            'breached': ongoing.get('breached', False),
-            'paused': ongoing.get('paused', False),
-            'started_on': ongoing.get('startTime', {}).get('epochMillis'),
-            'status': 'breached' if ongoing.get('breached') else 'ongoing'
-        }
-        sla_cycles.append(cycle)
-    
-    # If we found real-time SLA data, use it
-    if sla_cycles:
-        issue['sla_agreements'] = {
-            'cycles': sla_cycles,
-            'total_cycles': len(sla_cycles),
-            'has_breach': any(c.get('breached') for c in sla_cycles),
-            'source': 'real-time',
-            'is_default': False,
-        }
-        return issue
-    
-    # Fallback to cache-based SLA if no real-time data
     try:
-        from api.blueprints.sla import _get_issue_sla  # type: ignore
-        sla = _get_issue_sla(issue_key)
-        issue['sla_agreements'] = {
-            'sla_name': sla.get('sla_name'),
-            'goal_duration': sla.get('goal_duration'),
-            'goal_minutes': sla.get('goal_minutes'),
-            'cycles': sla.get('cycles', []),
-            'total_cycles': sla.get('total_cycles'),
-            'has_breach': sla.get('has_breach'),
-            'source': sla.get('source'),
-            'is_default': sla.get('is_default'),
-        }
+        from api.blueprints.sla import _get_issue_sla
+        sla_data = _get_issue_sla(issue_key)
+        if sla_data:
+            issue['sla_agreements'] = sla_data
     except Exception:
+        # Graceful fallback - issue remains without SLA data
         pass
+    
     return issue
 
 
 def _batch_inject_sla(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Vectorized SLA enrichment: resolves all SLA entries with one cache access.
-    Falls back to per-record injection only if batch fails.
-    """
+    """Batch SLA enrichment using simplified SLA service"""
     if not records:
         return records
+    
     try:
-        from api.blueprints.sla import _load_cache_once, _SLA_CACHE, _get_issue_sla  # type: ignore
-        _load_cache_once()  # ensure cache is populated
-        enriched: List[Dict[str, Any]] = []
-        for rec in records:
-            if 'sla_agreements' in rec:
-                enriched.append(rec)
-                continue
-            key = rec.get('key') or rec.get('issue_key')
-            if not key:
-                enriched.append(rec)
-                continue
-            if key in _SLA_CACHE:
-                sla = _get_issue_sla(key)
-                rec['sla_agreements'] = {
-                    'sla_name': sla.get('sla_name'),
-                    'goal_duration': sla.get('goal_duration'),
-                    'goal_minutes': sla.get('goal_minutes'),
-                    'cycles': sla.get('cycles', []),
-                    'total_cycles': sla.get('total_cycles'),
-                    'has_breach': sla.get('has_breach'),
-                    'source': sla.get('source'),
-                    'is_default': sla.get('is_default'),
-                }
-            else:
-                # Fallback default for unknown key
-                sla = _get_issue_sla(key)
-                rec['sla_agreements'] = {
-                    'sla_name': sla.get('sla_name'),
-                    'goal_duration': sla.get('goal_duration'),
-                    'goal_minutes': sla.get('goal_minutes'),
-                    'cycles': sla.get('cycles', []),
-                    'total_cycles': sla.get('total_cycles'),
-                    'has_breach': sla.get('has_breach'),
-                    'source': sla.get('source'),
-                    'is_default': sla.get('is_default'),
-                }
-            enriched.append(rec)
-        return enriched
+        return [_inject_sla_stub(record) for record in records]
     except Exception as e:
-        logger.warning(f"Batch SLA enrichment failed, falling back to per-record: {e}")
-        return [_inject_sla_stub(r) for r in records]
+        logger.warning(f"Batch SLA enrichment failed: {e}")
+        return records
 
 
 @issues_bp.route('/api/issues/<issue_key>/activity', methods=['GET'])
@@ -370,6 +262,8 @@ def api_update_issue(issue_key):
     try:
         from core.api import get_api_client
         from utils.common import _make_request
+        from utils.db import create_notification
+        import json
         
         data = request.get_json() or {}
         fields = data.get('fields', {})
@@ -378,14 +272,59 @@ def api_update_issue(issue_key):
             return {'error': 'No fields provided to update'}, 400
         
         client = get_api_client()
-        url = f"{client.site}/rest/api/2/issue/{issue_key}"
         
-        _make_request("PUT", url, client.headers, json={"fields": fields})
+        # Get current issue state before update
+        issue_url = f"{client.site}/rest/api/2/issue/{issue_key}"
+        old_issue = _make_request("GET", issue_url, client.headers)
+        
+        old_assignee = old_issue.get('fields', {}).get('assignee', {})
+        old_assignee_id = old_assignee.get('accountId') if old_assignee else None
+        
+        # Update issue
+        _make_request("PUT", issue_url, client.headers, json={"fields": fields})
         
         logger.info(
             f"✅ Updated issue {issue_key} fields: "
             f"{list(fields.keys())}"
         )
+        
+        # Check if assignee changed
+        if 'assignee' in fields:
+            new_assignee = fields.get('assignee', {})
+            new_assignee_id = new_assignee.get('accountId') if new_assignee else None
+            
+            # Create notification if assignee changed and there's a new assignee
+            if new_assignee_id and new_assignee_id != old_assignee_id:
+                from api.blueprints.notifications import broadcast_notification
+                
+                issue_summary = old_issue.get('fields', {}).get('summary', '')
+                
+                # Get the user who made the change (from auth)
+                from utils.config import config
+                assigner_email = config.jira.email
+                
+                metadata_json = json.dumps({
+                    'issue_summary': issue_summary,
+                    'assigner': assigner_email,
+                    'previous_assignee': old_assignee.get('displayName') if old_assignee else 'Unassigned'
+                })
+                
+                message = f"assigned {issue_key} to you"
+                
+                rec = create_notification(
+                    ntype='assignment',
+                    message=message,
+                    severity='info',
+                    issue_key=issue_key,
+                    user=assigner_email,
+                    action='assigned',
+                    metadata=metadata_json
+                )
+                
+                # Broadcast real-time
+                broadcast_notification(rec)
+                
+                logger.info(f"📬 Created assignment notification for {new_assignee_id}")
         
         return {
             'success': True,

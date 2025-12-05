@@ -96,6 +96,11 @@
   background: rgba(34, 197, 94, 0.05);
 }
 
+.sla-cycle-paused {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
 /* ============================================================
    CYCLE HEADER
    ============================================================ */
@@ -147,6 +152,11 @@
 .cycle-status.healthy {
   background: rgba(34, 197, 94, 0.2);
   color: #86efac;
+}
+
+.cycle-status.paused {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
 }
 
 /* ============================================================
@@ -232,7 +242,7 @@
 }
 
 /* ============================================================
-   BREACH WARNING
+   STATUS WARNINGS & NOTICES
    ============================================================ */
 
 .breach-warning {
@@ -244,6 +254,70 @@
   font-size: 10px;
   font-weight: 600;
   animation: none;
+}
+
+.pause-notice {
+  padding: 6px 8px;
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  border-radius: 3px;
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 600;
+  animation: none;
+}
+
+/* ============================================================
+   SLA TICKET KEY GRADIENTS
+   ============================================================ */
+
+.ticket-key-sla-healthy {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.08) 100%) !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  animation: sla-pulse-healthy 3s ease-in-out infinite;
+}
+
+.ticket-key-sla-paused {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.08) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  animation: sla-pulse-paused 2s ease-in-out infinite;
+}
+
+.ticket-key-sla-breached {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.08) 100%) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  animation: sla-pulse-breached 1.5s ease-in-out infinite;
+}
+
+.ticket-key-sla-warning {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.25) 0%, rgba(251, 146, 60, 0.08) 100%) !important;
+  border: 1px solid rgba(251, 146, 60, 0.3) !important;
+  box-shadow: 0 2px 6px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  animation: sla-pulse-warning 2.5s ease-in-out infinite;
+}
+
+/* SLA Pulse Animations */
+@keyframes sla-pulse-healthy {
+  0%, 100% { box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+}
+
+@keyframes sla-pulse-paused {
+  0%, 100% { box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+}
+
+@keyframes sla-pulse-breached {
+  0%, 100% { box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+}
+
+@keyframes sla-pulse-warning {
+  0%, 100% { box-shadow: 0 2px 6px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+  50% { box-shadow: 0 2px 8px rgba(251, 146, 60, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
 }
 
 /* ============================================================

@@ -1,39 +1,50 @@
 /**
  * SPEEDYFLOW - SLA Monitor System
- * Real-time SLA tracking for individual issues and queue-wide monitoring
+ * Real-time SLA tracking with live data from JIRA API
  */
-
 class SLAMonitor {
   constructor() {
     this.slaData = {};
     this.currentIssue = null;
     this.refreshInterval = null;
-    this.slaCache = {};
-    this.thresholds = {
-      critical: { breachPercent: 10, color: '#ef4444', label: 'Critical' },
-      warning: { breachPercent: 25, color: '#f97316', label: 'Warning' },
-      caution: { breachPercent: 50, color: '#fb923c', label: 'Caution' },
-      healthy: { breachPercent: 100, color: '#22c55e', label: 'Healthy' }
-    };
   }
 
   /**
    * Initialize SLA Monitor for an issue
-   * Uses cached slaData from issue.sla_agreements (no API call needed)
    */
-  async init(issueKey, slaData = null) {
+  async init(issueKey) {
     if (!issueKey) return;
     
     this.currentIssue = issueKey;
     
-    // Always use provided SLA data (comes from kanban cache)
-    // SLA data is already loaded in /api/issues endpoint via _batch_inject_sla
-    if (slaData && Object.keys(slaData).length > 0) {
-      this.slaData[issueKey] = slaData;
-      this.slaCache[issueKey] = { data: slaData, timestamp: Date.now() };
-    } else {
-      // No SLA data available (rare case)
-      this.slaData[issueKey] = this.getDefaultSLA();
+    try {
+      console.log(`🔄 Loading SLA data for ${issueKey}...`);
+      const response = await fetch(`/api/issues/${issueKey}/sla`);
+      
+      if (response.ok) {
+        const apiResponse = await response.json();
+        console.log(`📥 Raw SLA response for ${issueKey}:`, apiResponse);
+        
+        // Extract data from wrapped response
+        const slaData = apiResponse.success ? apiResponse.data : apiResponse;
+        
+        if (slaData && !slaData.is_default) {
+          this.slaData[issueKey] = slaData;
+          console.log(`✅ Real SLA data stored for ${issueKey}:`, this.slaData[issueKey]);
+        } else {
+          console.log(`❌ No real SLA data for ${issueKey}, not showing SLA Monitor`);
+          this.slaData[issueKey] = null;
+        }
+      } else if (response.status === 404) {
+        console.log(`ℹ️ No SLA data available for ${issueKey} (404)`);
+        this.slaData[issueKey] = null;
+      } else {
+        console.log(`❌ SLA API error: ${response.status}`);
+        this.slaData[issueKey] = null;
+      }
+    } catch (error) {
+      console.error(`❌ Error loading SLA for ${issueKey}:`, error);
+      this.slaData[issueKey] = null;
     }
     
     this.setupRefreshInterval();
@@ -41,15 +52,28 @@ class SLAMonitor {
   }
 
   /**
-   * Render SLA display for right sidebar
+   * Render SLA display panel
    */
   renderSLAPanel(issueKey) {
-    const slaData = this.slaData[issueKey] || this.getDefaultSLA();
+    const slaData = this.slaData[issueKey];
+    
+    // If no real SLA data, don't render anything
+    if (!slaData) {
+      console.log(`❌ No SLA data for ${issueKey}, not rendering panel`);
+      const container = document.createElement('div');
+      container.className = 'sla-panel-empty';
+      container.innerHTML = '<!-- No SLA data available -->';
+      return container;
+    }
+    
+    console.log(`🎨 Rendering SLA panel for ${issueKey}:`, slaData);
+    
     const container = document.createElement('div');
     container.className = 'sla-panel';
     container.id = `sla-panel-${issueKey}`;
 
-    const cycles = slaData.cycles || [slaData];
+    const cycle = slaData.cycles?.[0] || slaData;
+    console.log(`🎯 Using cycle data:`, cycle);
     
     container.innerHTML = `
       <div class="sla-header">
@@ -58,47 +82,51 @@ class SLAMonitor {
       </div>
 
       <div class="sla-content">
-        ${cycles.map((cycle, idx) => this.renderSLACycle(cycle, idx + 1)).join('')}
+        ${this.renderSLACycle(cycle)}
       </div>
 
       <div class="sla-footer">
-        <span class="sla-last-updated">Updated: just now</span>
-        <span class="sla-legend">
-          <span class="legend-item"><span class="dot green"></span> On Track</span>
-          <span class="legend-item"><span class="dot yellow"></span> Warning</span>
-          <span class="legend-item"><span class="dot red"></span> Breached</span>
-        </span>
+        <span class="sla-last-updated">Updated: ${new Date().toLocaleTimeString()}</span>
       </div>
     `;
-
-    // Refresh button disabled - visual only
     // refreshBtn.addEventListener('click', ...
 
     return container;
   }
 
   /**
-   * Render individual SLA cycle
+   * Render SLA cycle
    */
-  renderSLACycle(cycle, cycleNumber) {
-    const status = this.calculateCycleStatus(cycle);
-    const breachPercent = this.calculateBreachPercent(cycle);
-    const statusClass = status.level; // 'critical', 'warning', 'caution', 'healthy'
+  renderSLACycle(cycle) {
+    console.log(`🔍 Rendering cycle:`, cycle);
+    console.log(`🔍 Goal duration: ${cycle.goal_duration}`);
+    console.log(`🔍 Elapsed time: ${cycle.elapsed_time}`);
+    console.log(`🔍 Remaining time: ${cycle.remaining_time}`);
+    
+    // Determine status - check paused first, then breached
+    let statusIcon, statusClass, statusLabel;
+    
+    if (cycle.paused) {
+      statusIcon = '⏸️';
+      statusClass = 'paused';
+      statusLabel = 'Paused';
+    } else if (cycle.breached) {
+      statusIcon = '🔴';
+      statusClass = 'breached';
+      statusLabel = 'Breached';
+    } else {
+      statusIcon = '🟢';
+      statusClass = 'healthy';
+      statusLabel = 'On Track';
+    }
     
     return `
       <div class="sla-cycle sla-cycle-${statusClass}">
         <div class="cycle-header">
-          <span class="cycle-name">${cycle.sla_name || `SLA Cycle ${cycleNumber}`}</span>
-          <span class="cycle-status ${statusClass}" title="${status.label}">
-            ${status.icon} ${status.label}
+          <span class="cycle-name">${cycle.sla_name || 'Service Level Agreement'}</span>
+          <span class="cycle-status ${statusClass}">
+            ${statusIcon} ${statusLabel}
           </span>
-        </div>
-
-        <div class="cycle-progress">
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${Math.min(breachPercent, 100)}%"></div>
-          </div>
-          <span class="progress-percent">${breachPercent.toFixed(0)}%</span>
         </div>
 
         <div class="cycle-details">
@@ -108,210 +136,75 @@ class SLAMonitor {
           </div>
           <div class="detail-row">
             <span class="detail-label">Elapsed:</span>
-            <span class="detail-value">${cycle.elapsed_time || '00:00:00'}</span>
+            <span class="detail-value">${cycle.elapsed_time || 'N/A'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Remaining:</span>
-            <span class="detail-value ${breachPercent > 100 ? 'breached' : ''}">${cycle.remaining_time || 'N/A'}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Paused:</span>
-            <span class="detail-value">${cycle.paused ? '⏸️ Yes' : '▶️ No'}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Start:</span>
-            <span class="detail-value">${this.formatDate(cycle.started_on || Date.now())}</span>
+            <span class="detail-value ${cycle.breached ? 'breached' : ''}">
+              ${cycle.remaining_time || 'N/A'}
+            </span>
           </div>
         </div>
 
-        ${cycle.breached ? `
+        ${cycle.paused ? `
+          <div class="pause-notice">
+            ⏸️ SLA is currently paused
+          </div>
+        ` : cycle.breached ? `
           <div class="breach-warning">
-            ⚠️ SLA Breached on ${this.formatDate(cycle.breached_at || Date.now())}
+            ⚠️ SLA has been breached
           </div>
         ` : ''}
       </div>
     `;
   }
 
-  /**
-   * Calculate SLA cycle status
-   */
-  calculateCycleStatus(cycle) {
-    const breachPercent = this.calculateBreachPercent(cycle);
-    
-    if (cycle.breached || breachPercent > 100) {
-      return { level: 'critical', label: 'Breached', icon: '🔴' };
-    } else if (breachPercent > 75) {
-      return { level: 'warning', label: 'Warning', icon: '🟠' };
-    } else if (breachPercent > 50) {
-      return { level: 'caution', label: 'Caution', icon: '🟡' };
-    } else {
-      return { level: 'healthy', label: 'On Track', icon: '🟢' };
-    }
-  }
+
 
   /**
-   * Calculate what percent of SLA time has been used
-   */
-  calculateBreachPercent(cycle) {
-    if (!cycle.goal_minutes) return 0;
-    
-    let elapsedMinutes = 0;
-    
-    // Try to parse elapsed_time format: "HH:MM:SS"
-    if (cycle.elapsed_time) {
-      const parts = cycle.elapsed_time.split(':').map(p => parseInt(p) || 0);
-      elapsedMinutes = (parts[0] || 0) * 60 + (parts[1] || 0) + (parts[2] || 0) / 60;
-    }
-    
-    // If elapsed_time not available, calculate from timestamp
-    if (elapsedMinutes === 0 && cycle.started_on) {
-      const startTime = new Date(cycle.started_on).getTime();
-      elapsedMinutes = (Date.now() - startTime) / (1000 * 60);
-    }
-
-    return (elapsedMinutes / cycle.goal_minutes) * 100;
-  }
-
-  /**
-   * Get default SLA when not available
-   */
-  getDefaultSLA() {
-    return {
-      sla_name: 'Standard SLA',
-      goal_duration: '8 hours',
-      goal_minutes: 480,
-      elapsed_time: '00:00:00',
-      remaining_time: '8 hours',
-      breached: false,
-      status: 'ongoing',
-      started_on: Date.now(),
-      cycles: [],
-      is_default: true
-    };
-  }
-
-  /**
-   * Format date to readable format
-   */
-  formatDate(timestamp) {
-    const date = new Date(timestamp);
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${date.toLocaleDateString()} ${hours}:${minutes}`;
-  }
-
-  /**
-   * Setup auto-refresh interval - DISABLED
-   * We use cached SLA data from kanban board instead of polling API
+   * Setup auto-refresh interval
    */
   setupRefreshInterval() {
-    // No-op: refresh disabled, we use cached data
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
-      this.refreshInterval = null;
     }
-  }
-
-  /**
-   * Update SLA display in DOM
-   */
-  updateSLADisplay() {
-    if (!this.currentIssue) return;
     
-    const panel = document.getElementById(`sla-panel-${this.currentIssue}`);
-    if (panel) {
-      const newPanel = this.renderSLAPanel(this.currentIssue);
-      panel.replaceWith(newPanel);
-    }
+    // Refresh every 30 seconds
+    this.refreshInterval = setInterval(() => {
+      if (this.currentIssue) {
+        this.refreshSLAData(this.currentIssue);
+      }
+    }, 30000);
   }
 
   /**
-   * Get queue-wide SLA summary
+   * Refresh SLA data from API
    */
-  async getQueueSLASummary(queueId) {
+  async refreshSLAData(issueKey) {
     try {
-      const response = await fetch(`/api/sla?queue_id=${queueId}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const response = await fetch(`/api/issues/${issueKey}/sla`);
       
-      const data = await response.json();
-      return data;
+      if (response.ok) {
+        const apiResponse = await response.json();
+        const slaData = apiResponse.success ? apiResponse.data : apiResponse;
+        
+        if (slaData) {
+          this.slaData[issueKey] = slaData;
+          
+          // Update UI if panel exists
+          const panel = document.querySelector(`#sla-panel-${issueKey}`);
+          if (panel) {
+            const newPanel = this.renderSLAPanel(issueKey);
+            panel.replaceWith(newPanel);
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error loading queue SLA summary:', error);
-      return { slas: [], summary: {} };
+      console.error(`Failed to refresh SLA for ${issueKey}:`, error);
     }
   }
 
-  /**
-   * Render queue-wide SLA dashboard
-   */
-  renderQueueDashboard(slaData) {
-    const container = document.createElement('div');
-    container.className = 'sla-queue-dashboard';
 
-    const onTrack = slaData.summary?.healthy || 0;
-    const warning = slaData.summary?.warning || 0;
-    const breached = slaData.summary?.breached || 0;
-    const total = onTrack + warning + breached;
-
-    container.innerHTML = `
-      <div class="queue-dashboard-header">
-        <h3>Queue SLA Summary</h3>
-      </div>
-
-      <div class="queue-stats">
-        <div class="stat green">
-          <span class="stat-value">${onTrack}</span>
-          <span class="stat-label">On Track</span>
-        </div>
-        <div class="stat yellow">
-          <span class="stat-value">${warning}</span>
-          <span class="stat-label">Warning</span>
-        </div>
-        <div class="stat red">
-          <span class="stat-value">${breached}</span>
-          <span class="stat-label">Breached</span>
-        </div>
-      </div>
-
-      <div class="queue-compliance">
-        <div class="compliance-metric">
-          <span class="metric-label">Compliance Rate:</span>
-          <span class="metric-value">${((onTrack / (total || 1)) * 100).toFixed(1)}%</span>
-        </div>
-        <div class="compliance-bar">
-          <div class="bar-segment green" style="width: ${(onTrack / (total || 1)) * 100}%"></div>
-          <div class="bar-segment yellow" style="width: ${(warning / (total || 1)) * 100}%"></div>
-          <div class="bar-segment red" style="width: ${(breached / (total || 1)) * 100}%"></div>
-        </div>
-      </div>
-
-      <div class="queue-details">
-        <table class="sla-table">
-          <thead>
-            <tr>
-              <th>Issue</th>
-              <th>SLA</th>
-              <th>Status</th>
-              <th>Remaining</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(slaData.slas || []).slice(0, 5).map(sla => `
-              <tr class="sla-row">
-                <td class="issue-key">${sla.issue_key}</td>
-                <td class="sla-name">${sla.sla_name}</td>
-                <td class="sla-status status-${sla.status}">${sla.status}</td>
-                <td class="time-remaining">${sla.remaining_time || 'N/A'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    return container;
-  }
 
   /**
    * Cleanup and stop monitoring
@@ -326,8 +219,5 @@ class SLAMonitor {
   }
 }
 
-// Create global instance
+// Global instance
 window.slaMonitor = new SLAMonitor();
-
-// Export for use
-window.SLAMonitor = SLAMonitor;

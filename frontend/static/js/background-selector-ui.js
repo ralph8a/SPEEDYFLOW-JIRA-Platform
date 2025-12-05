@@ -19,7 +19,7 @@ class BackgroundSelectorUI {
     
     // Ensure DOM is ready
     if (document.readyState === 'loading') {
-      // DISABLED: document.addEventListener('DOMContentLoaded', () => this.initUI());
+      document.addEventListener('DOMContentLoaded', () => this.initUI());
     } else {
       this.initUI();
     }
@@ -242,22 +242,22 @@ class BackgroundSelectorUI {
     // No pagination needed - show all 5 unique backgrounds
     console.log('✅ Displaying all 5 unique backgrounds');
     
-    // Close modal when clicking overlay - be specific to this modal's overlay
+    // Close modal when clicking overlay
     const overlay = this.modal.querySelector('.bg-modal-overlay[data-overlay="bg-selector"]');
     if (overlay) {
-      // DISABLED: overlay.addEventListener('click', (e) => {
-      //   if (e.target === overlay) {
-      //     this.closeModal();
-      //   }
-      // });
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          this.closeModal();
+        }
+      });
     }
     
-    // Close on ESC key - only if this modal is open
-    // DISABLED: document.addEventListener('keydown', (e) => {
-    //   if (e.key === 'Escape' && this.isOpen && this.modal.classList.contains('bg-modal-open')) {
-    //     this.closeModal();
-    //   }
-    // });
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen && this.modal.classList.contains('bg-modal-open')) {
+        this.closeModal();
+      }
+    });
     
     // Listen for background changes
     document.addEventListener('backgroundChanged', (e) => {

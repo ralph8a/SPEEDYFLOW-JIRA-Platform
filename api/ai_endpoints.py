@@ -1,5 +1,5 @@
 # api/ai_endpoints.py
-# Simple AI endpoints for SalesJIRA
+# Simple AI endpoints for SPEEDYFLOW
 # Integrates SimpleAIEngine for ticket analysis
 
 from flask import request, jsonify

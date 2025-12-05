@@ -22,6 +22,206 @@
   z-index: 10;
 }
 
+/* Tab badge in modal tabs */
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================
+   TRIAGE TICKETS LIST
+   ============================================ */
+
+.triage-tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.triage-ticket-card {
+  background: rgba(51, 65, 85, 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.triage-ticket-card:hover {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+}
+
+.triage-ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.triage-ticket-key {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.triage-ticket-summary {
+  color: #e0e7ff;
+  font-size: 13px;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.triage-ticket-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.triage-ticket-assignee {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.triage-action-btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.triage-action-btn:hover {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  transform: scale(1.05);
+}
+
+/* ============================================
+   FILTERS GRID
+   ============================================ */
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filter-preset-card {
+  background: rgba(51, 65, 85, 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.filter-preset-card:hover {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+}
+
+.filter-preset-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.filter-preset-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+
+.filter-preset-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+/* ============================================
+   ML SUGGESTIONS LIST
+   ============================================ */
+
+.ml-suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.ml-suggestion-card {
+  background: rgba(51, 65, 85, 0.3);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.ml-suggestion-card:hover {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(251, 191, 36, 0.5);
+  transform: translateY(-2px);
+}
+
+.ml-missing-count {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ml-missing-fields {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.bg-modal-primary-btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bg-modal-primary-btn:hover {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
 /* ============================================
    QUICK TRIAGE MODAL STYLES
    ============================================ */
@@ -45,6 +245,7 @@
 }
 
 .quick-triage-overlay {
+  /* Common modal overlay styles - see .modal-overlay-base in common.css */
   position: absolute;
   top: 0;
   left: 0;
@@ -52,6 +253,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .quick-triage-content {
@@ -61,7 +263,7 @@
   max-height: 80vh;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); /* TODO: Use .shadow-modal-heavy class */
   display: flex;
   flex-direction: column;
   transform: translateY(20px);
@@ -131,7 +333,7 @@
 
 .triage-issue-card:hover {
   border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  box-shadow: var(--shadow); /* Use CSS variable instead of hardcoded value */
   transform: translateY(-2px);
 }
 
@@ -179,7 +381,7 @@
 }
 
 .severity-medium {
-  background: rgba(59, 130, 246, 0.15);
+  background: var(--glass-blue-medium); /* Use CSS variable instead of hardcoded rgba */
   color: #3b82f6;
 }
 
@@ -222,7 +424,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--glass-blue-light); /* Use CSS variable instead of hardcoded rgba */
   color: #3b82f6;
   border-radius: 6px;
   font-size: 12px;
@@ -333,6 +535,7 @@
 }
 
 .smart-filters-overlay {
+  /* Common modal overlay styles - see .modal-overlay-base in common.css */
   position: absolute;
   top: 0;
   left: 0;
@@ -340,6 +543,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .smart-filters-content {
@@ -349,7 +553,7 @@
   max-height: 80vh;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); /* TODO: Use .shadow-modal-heavy class */
   display: flex;
   flex-direction: column;
   transform: translateY(20px);

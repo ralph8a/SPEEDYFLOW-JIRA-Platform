@@ -1,8 +1,8 @@
-# SalesJIRA AI Coding Agent Instructions
+# SPEEDYFLOW AI Coding Agent Instructions
 
 ## 🏗️ Architecture Overview
 
-**SalesJIRA** is a Streamlit-based JIRA Service Desk ticket board with glassmorphism UI and aggressive three-layer caching for performance.
+**SPEEDYFLOW** is a JIRA Service Desk integration platform with glassmorphism UI and advanced performance optimization.
 
 ### Component Structure
 ```
@@ -102,7 +102,7 @@ streamlit run ui/ticket_board.py
 1. **Modify code** → Streamlit auto-detects changes
 2. **Sidebar appears "Rerun"** button → Click it
 3. **Check session state**: Use `st.write(st.session_state)` to debug
-4. **Check logs**: App logs to `logs/salesjira.log`
+4. **Check logs**: App logs to `logs/speedyflow.log`
 
 ### Cache Debugging
 ```python

@@ -252,20 +252,35 @@ def notify_mentioned_users(
         return
     
     comment_id = comment.get('id', '')
-    comment_preview = comment.get('body', '')[:100]  # First 100 chars
+    comment_preview = comment.get('body', '')[:150]  # First 150 chars for preview
     
     for username in mentions:
         try:
-            message = (
-                f"@{comment_author} mentioned you in {issue_key}: "
-                f"\"{comment_preview}...\""
-            )
+            import json
+            from api.blueprints.notifications import broadcast_notification
             
-            create_notification(
+            # Build detailed notification message
+            message = f"mentioned you in a comment on {issue_key}"
+            
+            # Store full context as metadata
+            metadata_json = {
+                'author': comment_author,
+                'comment_preview': comment_preview,
+                'full_body': comment.get('body', '')[:500]  # Store more text
+            }
+            
+            rec = create_notification(
                 ntype='mention',
                 message=message,
-                severity='info'
+                severity='info',
+                issue_key=issue_key,
+                user=comment_author,
+                action='mentioned',
+                metadata=json.dumps(metadata_json)
             )
+            
+            # Broadcast real-time
+            broadcast_notification(rec)
             
             logger.info(
                 f"📬 Notification sent to @{username} for mention in {issue_key}"

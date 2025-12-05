@@ -336,8 +336,6 @@ body {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
   border: 1px solid rgba(59, 130, 246, 0.15);
   color: var(--color-text);
-  /* Blur controlled by transparency-manager.css */
-  /* backdrop-filter: blur(10px); */
 }
 
 .filter-input:focus,
@@ -345,8 +343,6 @@ body {
   outline: none;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%);
   border-color: rgba(59, 130, 246, 0.3);
-  /* Blur controlled by transparency-manager.css */
-  /* backdrop-filter: blur(15px); */
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 

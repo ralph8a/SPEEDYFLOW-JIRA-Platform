@@ -1,0 +1,95 @@
+/* =====================================================
+   ISSUE DETAILS BUTTON - Edge-style sidebar toggle
+   ===================================================== */
+
+.issue-details-btn {
+  /* Basic styling */
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
+  margin-left: auto !important;
+  
+  /* Appearance */
+  background: #3b82f6 !important;
+  border: 2px solid #2563eb !important;
+  border-radius: 8px !important;
+  color: white !important;
+  cursor: pointer !important;
+  
+  /* Layout */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  
+  /* Ensure clickability */
+  pointer-events: auto !important;
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+.issue-details-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: scale(1.05);
+  color: #2563eb;
+}
+
+.issue-details-btn:active {
+  transform: scale(0.95);
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Dark theme support */
+body.theme-dark .issue-details-btn {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+body.theme-dark .issue-details-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #c7d2fe;
+}
+
+/* Integration with issue-card-header */
+.issue-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+/* Make sure button doesn't interfere with drag */
+.issue-details-btn {
+  z-index: 10;
+  position: relative;
+}
+
+/* Prevent button from being draggable */
+.issue-details-btn {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+}
+
+/* SVG icon styling */
+.issue-details-btn svg {
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.issue-details-btn:hover svg {
+  transform: translateX(1px);
+}
+
+/* Force button to be on top of everything */
+.issue-details-btn, .issue-details-btn * {
+  pointer-events: auto !important;
+}
+
+.issue-card:hover .issue-details-btn {
+  background: rgba(59, 130, 246, 0.7) !important;
+  border-color: rgba(59, 130, 246, 0.9) !important;
+}

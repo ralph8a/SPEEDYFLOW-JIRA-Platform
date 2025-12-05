@@ -1,16 +1,15 @@
 /**
- * Quick Action Button Controller
- * Manages the quick action button menu with Quick Triage and Smart Filters
+ * Quick Action Button Controller  
+ * Manages the quick action modal with tabs for Smart Functions
  */
 
 (function() {
   'use strict';
 
   let menuOpen = false;
+  let currentEmojiIndex = 0;
+  const emojis = ['⚡', '🎯', '🤖'];
 
-  /**
-   * Initialize quick action button
-   */
   function initQuickActionButton() {
     const btn = document.getElementById('quickActionBtn');
     if (!btn) {
@@ -20,33 +19,40 @@
 
     console.log('✅ Quick action button found, initializing...');
 
-    // Click handler
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
       toggleQuickActionMenu();
     });
 
-    // Close menu when clicking outside
-    document.addEventListener('click', function(e) {
-      if (menuOpen && !e.target.closest('.quick-action-menu')) {
-        closeQuickActionMenu();
-      }
-    });
-
-    // Listen for metrics updates
     document.addEventListener('metricsUpdated', function() {
       updateButtonBadge();
     });
 
-    // Initial badge update
+    // Initial update
     setTimeout(updateButtonBadge, 3000);
-
+    
+    // Rotate emoji every 5 minutes
+    setInterval(rotateEmoji, 5 * 60 * 1000);
+    
     console.log('✅ Quick action button initialized');
   }
 
-  /**
-   * Toggle quick action menu
-   */
+  function rotateEmoji() {
+    currentEmojiIndex = (currentEmojiIndex + 1) % emojis.length;
+    updateButtonIcon();
+    console.log(`🔄 Emoji rotated to: ${emojis[currentEmojiIndex]}`);
+  }
+
+  function updateButtonIcon() {
+    const btn = document.getElementById('quickActionBtn');
+    if (!btn) return;
+
+    const icon = btn.querySelector('.toggle-icon');
+    if (icon) {
+      icon.textContent = emojis[currentEmojiIndex];
+    }
+  }
+
   function toggleQuickActionMenu() {
     if (menuOpen) {
       closeQuickActionMenu();
@@ -55,9 +61,6 @@
     }
   }
 
-  /**
-   * Update button badge with total count
-   */
   function updateButtonBadge() {
     const metrics = window.smartMetrics || { triageCount: 0, needsResponseCount: 0, mlSuggestionsCount: 0 };
     const totalCount = metrics.triageCount + metrics.needsResponseCount + metrics.mlSuggestionsCount;
@@ -65,11 +68,13 @@
     const btn = document.getElementById('quickActionBtn');
     if (!btn) return;
 
-    // Remove existing badge
+    // Update icon
+    updateButtonIcon();
+
+    // Update badge
     const existingBadge = btn.querySelector('.quick-action-btn-badge');
     if (existingBadge) existingBadge.remove();
 
-    // Add badge if count > 0
     if (totalCount > 0) {
       const badge = document.createElement('span');
       badge.className = 'quick-action-btn-badge';
@@ -78,223 +83,531 @@
     }
   }
 
-  /**
-   * Open quick action menu
-   */
+  // Helper function to get modal element
+  function getSmartModal() {
+    return document.getElementById('smartFunctionsModal');
+  }
+
   function openQuickActionMenu() {
-    // Check if menu already exists
-    if (document.getElementById('quickActionMenu')) {
+    console.log('🎯 Opening Quick Actions modal...');
+    
+    if (getSmartModal()) {
+      console.log('⚠️ Modal already exists, skipping');
       return;
     }
 
-    const btn = document.getElementById('quickActionBtn');
-    const btnRect = btn.getBoundingClientRect();
-
-    const menu = document.createElement('div');
-    menu.id = 'quickActionMenu';
-    menu.className = 'quick-action-menu';
-    menu.style.cssText = `
-      position: fixed;
-      top: ${btnRect.bottom + 8}px;
-      left: ${btnRect.left}px;
-      z-index: 9998;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-      padding: 8px;
-      min-width: 240px;
-      animation: slideIn 0.2s ease;
-    `;
-
-    // Get metrics from background analytics
-    const metrics = window.smartMetrics || { triageCount: 0, needsResponseCount: 0, mlSuggestionsCount: 0 };
+    const modal = document.createElement('div');
+    modal.id = 'smartFunctionsModal';
+    modal.className = 'bg-selector-modal bg-modal-open';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);';
     
-    const triageBadge = metrics.triageCount > 0 ? `<span class="menu-item-badge">${metrics.triageCount}</span>` : '';
-    const needsResponseBadge = metrics.needsResponseCount > 0 ? `<span class="menu-item-badge">${metrics.needsResponseCount}</span>` : '';
-    const mlBadge = metrics.mlSuggestionsCount > 0 ? `<span class="menu-item-badge">${metrics.mlSuggestionsCount}</span>` : '';
-
-    menu.innerHTML = `
-      <div class="quick-action-menu-header">
-        <span class="menu-header-icon">🧠</span>
-        <span class="menu-header-text">Smart Functions</span>
-      </div>
-      <div class="quick-action-menu-item" onclick="window.quickTriage.open(); document.getElementById('quickActionMenu').remove();">
-        <div class="menu-item-icon">⚡</div>
-        <div class="menu-item-content">
-          <div class="menu-item-title">Quick Triage ${triageBadge}</div>
-          <div class="menu-item-description">View urgent & unassigned tickets</div>
+    modal.innerHTML = `
+      <div class="bg-modal-overlay"></div>
+      <div class="bg-modal-content">
+        <div class="bg-modal-header">
+          <h2 class="bg-modal-title">🧠 Smart Functions</h2>
+          <button class="bg-modal-close" onclick="(() => { const modal = document.getElementById('smartFunctionsModal'); if(modal) modal.remove(); console.log('✕ Modal closed'); })();">✕</button>
         </div>
-      </div>
-      <div class="quick-action-menu-item" onclick="window.smartFilters.openMenu(); document.getElementById('quickActionMenu').remove();">
-        <div class="menu-item-icon">🎯</div>
-        <div class="menu-item-content">
-          <div class="menu-item-title">Smart Filters ${needsResponseBadge}</div>
-          <div class="menu-item-description">Quick access to filter presets</div>
+        
+        <div class="bg-modal-tabs">
+          <button class="bg-modal-tab active" data-tab="triage">⚡ Quick Triage</button>
+          <button class="bg-modal-tab" data-tab="filters">🎯 Smart Filters</button>
+          <button class="bg-modal-tab" data-tab="ml">🤖 ML Analysis</button>
         </div>
-      </div>
-      <div class="quick-action-menu-item" onclick="if (window.AIQueueAnalyzer) { window.AIQueueAnalyzer.analyzeQueue(); document.getElementById('quickActionMenu').remove(); } else { alert('AI Queue Analyzer not available'); }">
-        <div class="menu-item-icon">🤖</div>
-        <div class="menu-item-content">
-          <div class="menu-item-title">Analyze with ML ${mlBadge}</div>
-          <div class="menu-item-description">AI-powered queue insights</div>
+        
+        <div class="bg-modal-body">
+          <div class="bg-modal-tab-content active" data-tab-content="triage">
+            <div id="triageTabContent"></div>
+          </div>
+          
+          <div class="bg-modal-tab-content" data-tab-content="filters">
+            <div id="filtersTabContent"></div>
+          </div>
+          
+          <div class="bg-modal-tab-content" data-tab-content="ml">
+            <div id="mlTabContent"></div>
+          </div>
         </div>
       </div>
     `;
 
-    // Add CSS if not exists
-    if (!document.getElementById('quickActionMenuStyles')) {
-      const style = document.createElement('style');
-      style.id = 'quickActionMenuStyles';
-      style.textContent = `
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .quick-action-menu-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px 6px;
-          border-bottom: 1px solid #e5e7eb;
-          margin-bottom: 4px;
-        }
-
-        .menu-header-icon {
-          font-size: 16px;
-        }
-
-        .menu-header-text {
-          font-size: 12px;
-          font-weight: 600;
-          color: #6b7280;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .quick-action-menu-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .quick-action-menu-item:hover {
-          background: #f3f4f6;
-        }
-
-        .menu-item-icon {
-          font-size: 24px;
-          flex-shrink: 0;
-        }
-
-        .menu-item-content {
-          flex: 1;
-        }
-
-        .menu-item-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #111827;
-          margin-bottom: 2px;
-        }
-
-        .menu-item-description {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .menu-item-badge {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 20px;
-          height: 20px;
-          padding: 0 6px;
-          background: linear-gradient(135deg, #ef4444, #dc2626);
-          color: white;
-          border-radius: 10px;
-          font-size: 11px;
-          font-weight: 700;
-          margin-left: 6px;
-          box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-          animation: badgePulse 2s ease-in-out infinite;
-        }
-
-        @keyframes badgePulse {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-        }
-
-        /* Dark theme support */
-        .dark-theme .quick-action-menu {
-          background: #1f2937 !important;
-          border: 1px solid #374151 !important;
-        }
-
-        .dark-theme .quick-action-menu-header {
-          border-color: #374151 !important;
-        }
-
-        .dark-theme .menu-header-text {
-          color: #9ca3af !important;
-        }
-
-        .dark-theme .quick-action-menu-item:hover {
-          background: #111827 !important;
-        }
-
-        .dark-theme .menu-item-title {
-          color: #f9fafb !important;
-        }
-
-        .dark-theme .menu-item-description {
-          color: #9ca3af !important;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    document.body.appendChild(menu);
+    document.body.appendChild(modal);
+    
+    const tabs = modal.querySelectorAll('.bg-modal-tab');
+    const tabContents = modal.querySelectorAll('.bg-modal-tab-content');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        const tabName = this.getAttribute('data-tab');
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        
+        this.classList.add('active');
+        modal.querySelector(`[data-tab-content="${tabName}"]`).classList.add('active');
+        
+        loadTabContent(tabName);
+      });
+    });
+    
+    modal.querySelector('.bg-modal-overlay').addEventListener('click', function() {
+      console.log('📍 Overlay clicked, closing modal');
+      modal.remove();
+      menuOpen = false;
+    });
+    
+    console.log('📊 Loading triage content...');
+    loadTabContent('triage');
+    
     menuOpen = true;
-
-    console.log('📋 Quick action menu opened');
+    console.log('✅ Smart Functions modal opened successfully');
+  }
+  
+  function loadTabContent(tabName) {
+    const modal = getSmartModal();
+    if (!modal) return;
+    
+    switch(tabName) {
+      case 'triage':
+        loadTriageContent();
+        break;
+      case 'filters':
+        loadFiltersContent();
+        break;
+      case 'ml':
+        loadMLContent();
+        break;
+    }
+  }
+  
+  function loadTriageContent() {
+    const container = document.getElementById('triageTabContent');
+    if (!container) return;
+    
+    const allIssues = Array.from(window.app.issuesCache.values());
+    const triageIssues = window.quickTriage ? window.quickTriage.filterTriageIssues(allIssues) : [];
+    
+    if (triageIssues.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+          <div style="font-size: 48px; margin-bottom: 16px;"></div>
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">All Clear!</div>
+          <div style="font-size: 13px;">No urgent tickets requiring immediate attention</div>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = `
+      <div style="margin-bottom: 16px; padding: 12px; background: rgba(59,130,246,0.1); border-radius: 8px; border-left: 3px solid #3b82f6;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span style="font-size: 18px;">⚡</span>
+          <span style="color: #cbd5e1; font-weight: 600;">Quick Triage Analysis</span>
+        </div>
+        <div style="color: #94a3b8; font-size: 13px;">
+          Found ${triageIssues.length} ticket${triageIssues.length !== 1 ? 's' : ''} requiring immediate attention
+        </div>
+      </div>
+      
+      <div class="triage-tickets-list">
+        ${triageIssues.map(issue => {
+          const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned';
+          const severity = issue.customfield_10125?.value || issue.severity || 'Medium';
+          const severityClass = severity.toLowerCase().replace(/\s+/g, '-');
+          const isHighPriority = severity === 'Critico' || severity === 'Alto' || severity === 'Mayor';
+          const updatedDays = Math.floor((new Date() - new Date(issue.updated || issue.created)) / (1000 * 60 * 60 * 24));
+          
+          return `
+            <div class="triage-ticket-card" data-key="${issue.key}" style="cursor: pointer; border-left: 3px solid ${isHighPriority ? '#ef4444' : isUnassigned ? '#f59e0b' : '#6b7280'};">
+              <div class="triage-ticket-header">
+                <span class="triage-ticket-key">${issue.key}</span>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <span class="severity-badge severity-${severityClass}">${severity}</span>
+                  ${updatedDays > 7 ? `<span style="background: rgba(239,68,68,0.2); color: #fca5a5; padding: 2px 6px; border-radius: 4px; font-size: 11px;">📅 ${updatedDays}d</span>` : ''}
+                </div>
+              </div>
+              <div class="triage-ticket-summary" style="margin: 8px 0;">${issue.summary || 'No summary'}</div>
+              <div class="triage-ticket-footer">
+                <span class="triage-ticket-assignee">${isUnassigned ? '👤 <span style="color: #f59e0b;">Unassigned</span>' : '👤 ' + issue.assignee}</span>
+                <div style="display: flex; gap: 4px; margin-top: 8px;">
+                  ${isUnassigned ? '<button class="triage-action-btn" data-action="assign" style="background: #059669;">✋ Assign to me</button>' : ''}
+                  <button class="triage-action-btn" data-action="snooze" style="background: #6366f1;">💤 Snooze 1h</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      ${triageIssues.length > 0 ? `
+        <div style="margin-top: 16px; padding: 12px; background: rgba(34,197,94,0.1); border-radius: 8px; text-align: center;">
+          <button class="bg-modal-primary-btn" onclick="window.quickTriage?.open(); document.getElementById('smartFunctionsModal')?.remove();" style="width: 100%;">
+            ⚡ Open Full Quick Triage
+          </button>
+        </div>
+      ` : ''}
+    `;
+    
+    // Add click handlers after rendering
+    const ticketCards = container.querySelectorAll('.triage-ticket-card');
+    ticketCards.forEach(card => {
+      const issueKey = card.getAttribute('data-key');
+      
+      card.addEventListener('click', function(e) {
+        // Don't open if clicking on action button
+        if (e.target.classList.contains('triage-action-btn')) {
+          return;
+        }
+        
+        console.log('🎯 Opening ticket:', issueKey);
+        
+        // Close the modal
+        const modal = getSmartModal();
+        if (modal) {
+          modal.remove();
+        }
+        
+        // Open the right sidebar with ticket details
+        if (window.app && window.app.loadIssueDetails) {
+          window.app.loadIssueDetails(issueKey);
+        } else {
+          console.error('❌ app.loadIssueDetails not available');
+        }
+      });
+      
+      // Handle action buttons (assign and snooze)
+      const actionBtns = card.querySelectorAll('.triage-action-btn');
+      actionBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const action = this.getAttribute('data-action');
+          const originalText = this.innerHTML;
+          const originalBg = this.style.background;
+          
+          if (action === 'assign') {
+            console.log('👤 Assigning ticket to me:', issueKey);
+            
+            if (window.quickTriage && window.quickTriage.assignToMe) {
+              this.innerHTML = '⏳ Assigning...';
+              this.style.background = '#6b7280';
+              
+              window.quickTriage.assignToMe(issueKey);
+              
+              // Show success feedback
+              setTimeout(() => {
+                this.innerHTML = '✅ Assigned';
+                this.style.background = '#059669';
+                
+                // Reload content after short delay
+                setTimeout(() => {
+                  loadTriageContent();
+                }, 1000);
+              }, 300);
+            } else {
+              console.error('❌ quickTriage.assignToMe not available');
+              this.innerHTML = '❌ Error';
+              this.style.background = '#dc2626';
+              setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.background = originalBg;
+              }, 2000);
+            }
+          } else if (action === 'snooze') {
+            console.log('💤 Snoozing ticket 1 hour:', issueKey);
+            
+            if (window.quickTriage && window.quickTriage.snoozeTicket) {
+              this.innerHTML = '⏳ Snoozing...';
+              this.style.background = '#6b7280';
+              
+              window.quickTriage.snoozeTicket(issueKey, 60); // 1 hour
+              
+              // Show success feedback
+              setTimeout(() => {
+                this.innerHTML = '💤 Snoozed';
+                this.style.background = '#059669';
+                
+                // Reload content after short delay
+                setTimeout(() => {
+                  loadTriageContent();
+                }, 1000);
+              }, 300);
+            } else {
+              console.error('❌ quickTriage.snoozeTicket not available');
+              this.innerHTML = '❌ Error';
+              this.style.background = '#dc2626';
+              setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.background = originalBg;
+              }, 2000);
+            }
+          }
+        });
+      });
+    });
+  }
+  
+  function loadFiltersContent() {
+    const container = document.getElementById('filtersTabContent');
+    if (!container) return;
+    
+    const allIssues = Array.from(window.app?.issuesCache?.values() || []);
+    
+    // Calculate counts for each filter
+    const calculateFilterCounts = () => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const currentUser = window.state?.currentUser || '';
+      
+      return {
+        'updated-today': allIssues.filter(issue => {
+          const updated = new Date(issue.last_real_change || issue.updated || issue.created);
+          return updated >= today;
+        }).length,
+        'high-priority-unassigned': allIssues.filter(issue => {
+          const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned';
+          const isHighPriority = issue.severity === 'Critico' || issue.severity === 'Alto' || issue.severity === 'Mayor';
+          return isUnassigned && isHighPriority;
+        }).length,
+        'stale': allIssues.filter(issue => {
+          const updated = new Date(issue.updated || issue.created);
+          const diffDays = (now - updated) / (1000 * 60 * 60 * 24);
+          return diffDays > 7;
+        }).length,
+        'my-assigned': allIssues.filter(issue => {
+          return issue.assignee && issue.assignee.toLowerCase().includes(currentUser.toLowerCase());
+        }).length,
+        'all-critical': allIssues.filter(issue => issue.severity === 'Critico').length,
+        'created-today': allIssues.filter(issue => {
+          const created = new Date(issue.created);
+          return created >= today;
+        }).length,
+        'needs-response': allIssues.filter(issue => {
+          const updated = new Date(issue.last_real_change || issue.updated || issue.created);
+          const hoursSinceUpdate = (now - updated) / (1000 * 60 * 60);
+          const isAssignedToMe = issue.assignee && issue.assignee.toLowerCase().includes(currentUser.toLowerCase());
+          return hoursSinceUpdate <= 24 && isAssignedToMe;
+        }).length
+      };
+    };
+    
+    const counts = calculateFilterCounts();
+    
+    const filters = [
+      { id: 'updated-today', icon: '📅', name: 'Updated Today', description: 'Modified in last 24 hours', count: counts['updated-today'] },
+      { id: 'high-priority-unassigned', icon: '🔴', name: 'High Priority Unassigned', description: 'Critical & high without assignee', count: counts['high-priority-unassigned'] },
+      { id: 'stale', icon: '⏰', name: 'Stale Tickets', description: 'No updates for 7+ days', count: counts['stale'] },
+      { id: 'my-assigned', icon: '👤', name: 'My Assigned', description: 'Tickets assigned to me', count: counts['my-assigned'] },
+      { id: 'all-critical', icon: '🚨', name: 'All Critical', description: 'All critical severity tickets', count: counts['all-critical'] },
+      { id: 'created-today', icon: '🆕', name: 'Created Today', description: 'New from last 24 hours', count: counts['created-today'] }
+    ];
+    
+    container.innerHTML = `
+      <div style="margin-bottom: 16px; padding: 12px; background: rgba(34,197,94,0.1); border-radius: 8px; border-left: 3px solid #22c55e;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span style="font-size: 18px;">🎯</span>
+          <span style="color: #cbd5e1; font-weight: 600;">Smart Filters</span>
+        </div>
+        <div style="color: #94a3b8; font-size: 13px;">
+          Quick access to common filter presets with live counts
+        </div>
+      </div>
+      
+      <div class="filters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+        ${filters.map(filter => {
+          const hasResults = filter.count > 0;
+          return `
+            <div class="filter-preset-card" 
+                 style="padding: 12px; background: ${hasResults ? 'rgba(59,130,246,0.1)' : 'rgba(75,85,99,0.2)'}; 
+                        border: 1px solid ${hasResults ? '#3b82f6' : '#4b5563'}; border-radius: 8px; cursor: pointer; 
+                        transition: all 0.2s ease;"
+                 onclick="applySmartFilter('${filter.id}');">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">${filter.icon}</span>
+                  <span style="color: #cbd5e1; font-weight: 600; font-size: 14px;">${filter.name}</span>
+                </div>
+                <span style="background: ${hasResults ? '#3b82f6' : '#6b7280'}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                  ${filter.count}
+                </span>
+              </div>
+              <div style="color: #94a3b8; font-size: 12px; line-height: 1.4;">
+                ${filter.description}
+              </div>
+              ${hasResults ? `<div style="margin-top: 8px; color: #22c55e; font-size: 11px; font-weight: 600;">✅ Ready to apply</div>` : `<div style="margin-top: 8px; color: #6b7280; font-size: 11px;">No matches found</div>`}
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      ${window.smartFilters?.activeFilter ? `
+        <div style="margin-top: 16px; padding: 12px; background: rgba(99,102,241,0.1); border-radius: 8px; border-left: 3px solid #6366f1;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #cbd5e1; font-size: 13px;">🎯 Active Filter: ${window.smartFilters.activeFilter}</span>
+            <button class="triage-action-btn" onclick="clearSmartFilter();" style="background: #dc2626;">Clear Filter</button>
+          </div>
+        </div>
+      ` : ''}
+    `;
+    
+    // Add the functions needed for the onclick handlers
+    window.applySmartFilter = function(filterId) {
+      console.log('🎯 Applying smart filter:', filterId);
+      
+      if (window.smartFilters && window.smartFilters.applyFilter) {
+        window.smartFilters.applyFilter(filterId);
+        
+        // Close modal
+        const modal = document.getElementById('smartFunctionsModal');
+        if (modal) {
+          modal.remove();
+        }
+        
+        console.log('✅ Smart filter applied:', filterId);
+      } else {
+        console.error('❌ smartFilters not available');
+        alert('Smart Filters not available');
+      }
+    };
+    
+    window.clearSmartFilter = function() {
+      console.log('🎯 Clearing smart filter');
+      
+      if (window.smartFilters && window.smartFilters.clearFilter) {
+        window.smartFilters.clearFilter();
+        
+        // Close modal
+        const modal = document.getElementById('smartFunctionsModal');
+        if (modal) {
+          modal.remove();
+        }
+        
+        console.log('✅ Filter cleared');
+      } else {
+        console.error('❌ smartFilters not available');
+      }
+    };
+  }
+  
+  function loadMLContent() {
+    const container = document.getElementById('mlTabContent');
+    if (!container) return;
+    
+    const allIssues = Array.from(window.app.issuesCache.values());
+    let missingFields = [];
+    
+    allIssues.forEach(issue => {
+      const missing = [];
+      if (!issue.customfield_10125 && !issue.severity) missing.push('Severity');
+      if (!issue.description || issue.description.trim().length < 10) missing.push('Description');
+      if (!issue.labels || issue.labels.length === 0) missing.push('Labels');
+      if (!issue.components || issue.components.length === 0) missing.push('Components');
+      
+      if (missing.length > 0) {
+        missingFields.push({ issue, missing });
+      }
+    });
+    
+    container.innerHTML = `
+      <div style="margin-bottom: 16px; padding: 12px; background: rgba(168,85,247,0.1); border-radius: 8px; border-left: 3px solid #a855f7;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span style="font-size: 18px;">🤖</span>
+          <span style="color: #cbd5e1; font-weight: 600;">ML Field Analysis</span>
+        </div>
+        <div style="color: #94a3b8; font-size: 13px;">
+          Found ${missingFields.length} ticket${missingFields.length !== 1 ? 's' : ''} with incomplete fields for AI enhancement
+        </div>
+        <div style="margin-top: 8px; display: flex; gap: 12px; font-size: 12px;">
+          <div style="color: #10b981;">📊 ${allIssues.length} total tickets</div>
+          <div style="color: #f59e0b;">📝 ${missingFields.length} need improvement</div>
+          <div style="color: #6366f1;">✅ ${allIssues.length - missingFields.length} complete</div>
+        </div>
+      </div>
+      
+      ${missingFields.length > 0 ? `
+        <div class="ml-suggestions-list">
+          ${missingFields.slice(0, 10).map(({issue, missing}) => `
+            <div class="ml-suggestion-card" data-key="${issue.key}" style="cursor: pointer;">
+              <div class="triage-ticket-header">
+                <span class="triage-ticket-key">${issue.key}</span>
+                <span class="ml-missing-count">${missing.length} missing</span>
+              </div>
+              <div class="triage-ticket-summary">${issue.summary || 'No summary'}</div>
+              <div class="ml-missing-fields">
+                Missing: ${missing.join(', ')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="bg-modal-primary-btn" id="runMLAnalysisBtn" style="width: 100%; margin-top: 16px;">
+          🤖 Run Full ML Analysis
+        </button>
+      ` : `
+        <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+          <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">Great Job!</div>
+          <div style="font-size: 13px;">All tickets have complete field data</div>
+        </div>
+      `}
+    `;
+    
+    // Add click handlers for ML suggestion cards
+    if (missingFields.length > 0) {
+      const mlCards = container.querySelectorAll('.ml-suggestion-card');
+      mlCards.forEach(card => {
+        const issueKey = card.getAttribute('data-key');
+        
+        card.addEventListener('click', function() {
+          console.log('🤖 Opening ticket with missing fields:', issueKey);
+          
+          // Close the modal
+          const modal = getSmartModal();
+          if (modal) {
+            modal.remove();
+          }
+          
+          // Open the right sidebar with ticket details
+          if (window.app && window.app.loadIssueDetails) {
+            window.app.loadIssueDetails(issueKey);
+          }
+        });
+      });
+      
+      // Handle ML Analysis button
+      const mlAnalysisBtn = container.querySelector('#runMLAnalysisBtn');
+      if (mlAnalysisBtn) {
+        mlAnalysisBtn.addEventListener('click', function() {
+          console.log('🤖 Running full ML analysis...');
+          
+          if (window.aiQueueAnalyzer) {
+            window.aiQueueAnalyzer.analyze();
+            
+            // Close modal
+            const modal = getSmartModal();
+            if (modal) {
+              modal.remove();
+            }
+          } else {
+            alert('AI Analyzer not available');
+          }
+        });
+      }
+    }
   }
 
-  /**
-   * Close quick action menu
-   */
   function closeQuickActionMenu() {
-    const menu = document.getElementById('quickActionMenu');
-    if (menu) {
-      menu.style.animation = 'slideOut 0.2s ease';
-      setTimeout(() => menu.remove(), 200);
+    const modal = getSmartModal();
+    if (modal) {
+      modal.remove();
     }
     menuOpen = false;
-    
-    // Refresh badge after closing menu (metrics might have changed)
     updateButtonBadge();
   }
 
-  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initQuickActionButton);
   } else {
     initQuickActionButton();
   }
 
-  console.log('✅ Quick action button controller loaded');
+  console.log(' Quick action button controller loaded');
 })();

@@ -233,13 +233,19 @@ function setupEventListeners() {
       
       // Update breadcrumb with desk name
       const desk = state.desks.find(d => d.id === state.currentDesk);
+      console.log(`🔍 Found desk object:`, desk);
+      console.log(`🔍 Desk queues:`, desk?.queues);
+      
       if (desk && window.headerMenus && window.headerMenus.updateBreadcrumb) {
         window.headerMenus.updateBreadcrumb(desk.name || desk.displayName, 'Select Queue');
       }
       
       // Fetch desks to find queues
       if (desk && desk.queues) {
+        console.log(`✅ Loading ${desk.queues.length} queues for desk ${desk.name}`);
         await loadQueues(desk.queues);
+      } else {
+        console.warn(`⚠️ No queues found for desk ${state.currentDesk}`);
       }
       
       // Clear issues when desk changes
@@ -288,11 +294,7 @@ function setupEventListeners() {
     });
   }
 
-  // New ticket button
-  const newTicketBtn = document.getElementById('newTicketBtn');
-  if (newTicketBtn) {
-    // DISABLED: newTicketBtn.addEventListener('click', () => alert('Create New Ticket - Coming soon'));
-  }
+  // New ticket button functionality handled by floating-controls.js
 
   // Save filters button
   const saveFiltersBtn = document.getElementById('saveFiltersBtn');
@@ -329,25 +331,8 @@ function setupEventListeners() {
     });
   }
 
-  // Quick action button (cloned from sidebar header)
-  const quickActionBtn = document.getElementById('quickActionBtn');
-  if (quickActionBtn) {
-    console.log('✅ Quick action button found and initializing...');
-    quickActionBtn.addEventListener('click', () => {
-      console.log('⚡ Quick action triggered!');
-      
-      // Show notification
-      if (window.loadingDotsManager) {
-        window.loadingDotsManager.show('Quick action executed! ⚡');
-        setTimeout(() => {
-          window.loadingDotsManager.hide();
-        }, 1500);
-      }
-      
-      // TODO: Add your custom action here
-      // Example: Open a modal, trigger a workflow, etc.
-    });
-  }
+  // Quick action button is now handled by quick-action-button.js
+  // (Removed duplicate listener that was causing conflicts)
 }
 
 /**
@@ -433,10 +418,12 @@ async function loadServiceDesks() {
           const qname = qNameCandidates.find(n => typeof n === 'string' && n.trim()) || `Queue ${qid}`;
           return { id: qid, name: qname };
         }) : [];
+        console.log(`📂 Desk: ${name} (ID: ${id}) - ${queues.length} queues:`, queues);
         return { id, name, displayName: name, queues, placeholder: d.placeholder || false };
       }).filter(d => d.id);
     }
     console.log('✅ Desks loaded:', state.desks.length);
+    console.log('📋 All desks with queues:', state.desks);
     
   const filterSelect = document.getElementById('serviceDeskSelectFilter');    if (!state.desks.length) {
       const statusEl = document.getElementById('filterStatus');
@@ -492,11 +479,14 @@ async function loadServiceDesks() {
 }
 
 async function loadQueues(queues) {
+  console.log(`🔄 loadQueues called with ${queues?.length || 0} queues:`, queues);
+  
   const filterSelect = document.getElementById('queueSelectFilter');
   const statusEl = document.getElementById('filterStatus');
   
   // If queues empty, disable selectors & show status (no sample queues)
   if (!queues || !Array.isArray(queues) || queues.length === 0) {
+    console.warn('⚠️ No queues to load');
     if (filterSelect) filterSelect.innerHTML = '<option value="">No queues</option>';
     if (filterSelect) filterSelect.disabled = true;
     
@@ -514,12 +504,15 @@ async function loadQueues(queues) {
     filterSelect.innerHTML = '<option value="">Select Queue...</option>';
     
     if (queues && Array.isArray(queues)) {
+      console.log('📋 Loading queue options:');
       queues.forEach(queue => {
+        console.log(`  - Queue: ${queue.name} (ID: ${queue.id})`);
         const option = document.createElement('option');
         option.value = queue.id;
         option.textContent = queue.name;
         filterSelect.appendChild(option);
       });
+      console.log(`✅ ${queues.length} queues loaded into selector`);
       
       // NOTE: Auto-selection DISABLED
       // User must manually select queue - prevents auto-loading confusion
@@ -662,49 +655,73 @@ async function loadIssues(queueId) {
     
     // Apply assignee filter only if in "My Tickets" mode
     let currentUser = state.currentUser || localStorage.getItem('currentUser') || '';
+    let currentUserAccountId = state.currentUserAccountId || localStorage.getItem('currentUserAccountId') || '';
+    
     if (typeof currentUser === 'object' && currentUser !== null) {
       currentUser = currentUser.displayName || currentUser.name || '';
     }
     
     if (shouldFilterByAssignee) {
-      console.log(`🔍 Filtering by assignee: "${currentUser}"`);
+      console.log(`🔍 Filtering by assignee: "${currentUser}" (accountId: ${currentUserAccountId})`);
       
-      // Debug: Log sample issue to see structure
+      // Debug: Log sample issues to see structure
       if (allIssues.length > 0) {
-        console.log('📋 Sample issue structure:', {
-          key: allIssues[0].key,
-          assignee: allIssues[0].assignee,
-          fields_assignee: allIssues[0].fields?.assignee,
-          assigned_to: allIssues[0].assigned_to,
-          asignado_a: allIssues[0].asignado_a
+        console.log('📋 Sample issue structures (first 3):');
+        allIssues.slice(0, 3).forEach(issue => {
+          console.log(`  ${issue.key}:`, {
+            assignee: issue.assignee,
+            fields_assignee: issue.fields?.assignee,
+            assigned_to: issue.assigned_to,
+            asignado_a: issue.asignado_a,
+            assigneeAccountId: issue.assignee?.accountId || issue.fields?.assignee?.accountId
+          });
         });
       }
       
       state.filteredIssues = allIssues.length ? allIssues.filter(issue => {
-        // Try different assignee field locations
-        const assignee = 
-          issue.assignee?.displayName || 
-          issue.assignee?.name ||
-          issue.fields?.assignee?.displayName ||
-          issue.fields?.assignee?.name ||
+        // Try different assignee field locations and formats
+        const assigneeObj = issue.assignee || issue.fields?.assignee;
+        const assigneeAccountId = assigneeObj?.accountId || '';
+        const assigneeName = 
+          assigneeObj?.displayName || 
+          assigneeObj?.name ||
           issue.assigned_to ||
           issue.asignado_a ||
           '';
         
-        // Debug log for each issue
-        if (assignee) {
-          console.log(`  Issue ${issue.key}: assignee="${assignee}", user="${currentUser}", match=${assignee.toLowerCase().includes(currentUser.toLowerCase())}`);
+        // First priority: Match by accountId (most reliable)
+        if (currentUserAccountId && assigneeAccountId) {
+          const matchById = assigneeAccountId === currentUserAccountId;
+          if (matchById) {
+            console.log(`  ✅ ${issue.key}: Matched by accountId`);
+            return true;
+          }
         }
         
-        // Exact match or partial match
-        if (!assignee) return false;
+        // Second priority: Match by display name
+        if (assigneeName && currentUser) {
+          const assigneeLower = assigneeName.toLowerCase().trim();
+          const userLower = currentUser.toLowerCase().trim();
+          
+          // Exact match
+          if (assigneeLower === userLower) {
+            console.log(`  ✅ ${issue.key}: Matched by exact name "${assigneeName}"`);
+            return true;
+          }
+          
+          // Partial match (contains)
+          if (assigneeLower.includes(userLower) || userLower.includes(assigneeLower)) {
+            console.log(`  ✅ ${issue.key}: Matched by partial name "${assigneeName}"`);
+            return true;
+          }
+        }
         
-        return assignee.toLowerCase() === currentUser.toLowerCase() ||
-               assignee.toLowerCase().includes(currentUser.toLowerCase());
+        // No match
+        return false;
       }) : [];
       
       state.issues = state.filteredIssues;
-      console.log(`✅ Filtered to ${state.issues.length} tickets assigned to ${currentUser} from ${allIssues.length} total`);
+      console.log(`✅ Filtered to ${state.issues.length} tickets assigned to "${currentUser}" from ${allIssues.length} total`);
     } else {
       // Show all tickets
       state.issues = allIssues;
@@ -1041,6 +1058,43 @@ function renderView() {
   }
 }
 
+/**
+ * Get SLA status class for ticket key styling
+ */
+async function getSLAStatusClass(issueKey) {
+  try {
+    const response = await fetch(`/api/issues/${issueKey}/sla`);
+    if (!response.ok) return '';
+    
+    const data = await response.json();
+    if (!data.success || !data.data || !data.data.cycles || data.data.cycles.length === 0) {
+      return '';
+    }
+    
+    const cycle = data.data.cycles[0];
+    
+    // Determine SLA status class based on state
+    if (cycle.paused) {
+      return 'ticket-key-sla-paused';
+    } else if (cycle.breached) {
+      return 'ticket-key-sla-breached';
+    } else if (cycle.remaining_time && cycle.remaining_time !== 'N/A') {
+      // Parse remaining time to determine if it's getting close
+      const remainingText = cycle.remaining_time.toLowerCase();
+      if (remainingText.includes('m') && !remainingText.includes('h')) {
+        // Less than 1 hour remaining - warning
+        return 'ticket-key-sla-warning';
+      }
+      return 'ticket-key-sla-healthy';
+    }
+    
+    return 'ticket-key-sla-healthy';
+  } catch (error) {
+    console.warn(`Failed to get SLA status for ${issueKey}:`, error);
+    return '';
+  }
+}
+
 async function renderKanban() {
   const kanbanView = document.getElementById('kanbanView');
   
@@ -1224,13 +1278,17 @@ async function renderKanban() {
       html += `<div class="${cardClass} kanban-card" 
                     data-issue="${issue.key}" 
                     data-issue-key="${issue.key}" 
-                    draggable="true"
-                    onclick="openIssueDetails('${issue.key}')">
+                    draggable="true">
         <!-- HEADER: Key + Severity + Time -->
         <div class="issue-card-header">
-          <div class="issue-card-key">${issue.key}</div>
+          <div class="issue-card-key" id="key-${issue.key}">${issue.key}</div>
           ${severityBadgeHtml}
           ${timeAgo ? `<span class="issue-card-time">🕒 ${timeAgo}</span>` : ''}
+          <button class="issue-details-btn" data-issue-key="${issue.key}" title="View Details">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
         </div>
         
         <!-- SUMMARY (main content) -->
@@ -1276,6 +1334,80 @@ async function renderKanban() {
   }
   
   applyCardLayout();
+  
+  // Apply SLA styling to ticket keys
+  applySLAStyling();
+  
+  // Setup issue card click handlers (for details buttons)
+  console.log('🎯 [App] About to setup click handlers...');
+  
+  setTimeout(() => {
+    console.log('🎯 [App] Timeout fired, checking functions...');
+    console.log('🎯 [App] setupIssueCardClickHandlers exists?', typeof setupIssueCardClickHandlers);
+    console.log('🎯 [App] window.setupIssueCardClickHandlers exists?', typeof window.setupIssueCardClickHandlers);
+    
+    if (typeof setupIssueCardClickHandlers === 'function') {
+      console.log('✅ [App] Calling setupIssueCardClickHandlers...');
+      setupIssueCardClickHandlers();
+    } else if (window.setupIssueCardClickHandlers) {
+      console.log('✅ [App] Calling window.setupIssueCardClickHandlers...');
+      window.setupIssueCardClickHandlers();
+    } else {
+      console.error('❌ [App] No setupIssueCardClickHandlers function found!');
+    }
+    
+    // Debug: Test button existence
+    const buttons = document.querySelectorAll('.issue-details-btn');
+    console.log('🔍 [Debug] Found', buttons.length, 'details buttons after setup');
+    buttons.forEach((btn, i) => {
+      console.log(`🔍 [Debug] Button ${i + 1}:`, btn.getAttribute('data-issue-key'), 'visible:', btn.offsetParent !== null);
+      
+      // Force setup this button manually if needed
+      if (!btn.onclick) {
+        console.log('🔧 [Force] Setting up button manually:', btn.getAttribute('data-issue-key'));
+        const issueKey = btn.getAttribute('data-issue-key');
+        btn.onclick = function() {
+          console.log('🎯 [Manual] Manual onclick for:', issueKey);
+          if (window.openIssueDetails) {
+            window.openIssueDetails(issueKey);
+          }
+        };
+        btn.style.background = 'rgba(255, 0, 0, 0.5)'; // Red to identify manual setup
+      }
+    });
+  }, 100);
+}
+
+/**
+ * Apply SLA styling to all visible ticket keys
+ */
+async function applySLAStyling() {
+  const ticketKeys = document.querySelectorAll('.issue-card-key[id^="key-"]');
+  console.log(`🎨 Applying SLA styling to ${ticketKeys.length} tickets`);
+  
+  // Process tickets in batches to avoid overwhelming the server
+  const batchSize = 5;
+  for (let i = 0; i < ticketKeys.length; i += batchSize) {
+    const batch = Array.from(ticketKeys).slice(i, i + batchSize);
+    
+    await Promise.all(batch.map(async (keyElement) => {
+      const issueKey = keyElement.textContent;
+      try {
+        const slaClass = await getSLAStatusClass(issueKey);
+        if (slaClass) {
+          keyElement.classList.add(slaClass);
+          console.log(`✅ Applied ${slaClass} to ${issueKey}`);
+        }
+      } catch (error) {
+        console.warn(`Failed to apply SLA styling to ${issueKey}:`, error);
+      }
+    }));
+    
+    // Small delay between batches to prevent rate limiting
+    if (i + batchSize < ticketKeys.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
 }
 
 function applyCardLayout() {
@@ -1286,29 +1418,7 @@ function applyCardLayout() {
     const height = CARD_SIZING.getHeight(transitions);
     card.style.minHeight = height + 'px';
     
-    // Add click listener to open sidebar
-    // DISABLED: card.addEventListener('click', (e) => {
-    //   // Avoid triggering when clicking transition buttons
-    //   if (e.target.closest('.btn-transition')) {
-    //     return;
-    //   }
-    //   
-    //   const issueKey = card.dataset.issue;
-    //   if (issueKey && typeof openIssueDetails === 'function') {
-    //     openIssueDetails(issueKey);
-    //   }
-    // });
-    
-    // Add hover effect
-    // DISABLED: card.addEventListener('mouseenter', () => {
-    //   card.style.transform = 'translateY(-4px)';
-    //   card.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)';
-    // });
-    
-    // DISABLED: card.addEventListener('mouseleave', () => {
-    //   card.style.transform = 'translateY(0)';
-    //   card.style.boxShadow = '';
-    // });
+    // Card interactions handled by right-sidebar.js
   });
 }
 

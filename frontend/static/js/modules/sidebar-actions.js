@@ -167,8 +167,6 @@ class SidebarActions {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       console.log('🎫 Create New Ticket clicked');
-      
-      // TODO: Implementar modal de creación de ticket
       this.showNotification('Create Ticket', 'Feature coming soon!', 'info');
     });
   }

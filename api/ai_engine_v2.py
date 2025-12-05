@@ -1,5 +1,5 @@
 # api/ai_engine_v2.py
-# Simple & Robust AI Engine for SalesJIRA
+# Simple & Robust AI Engine for SPEEDYFLOW
 # No external AI dependencies - pure Python logic
 # Ready for OpenAI/Claude/Gemini integration
 

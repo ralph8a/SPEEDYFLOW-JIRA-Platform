@@ -41,6 +41,7 @@ from api.blueprints.kanban import kanban_bp  # noqa: E402
 from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
 from api.blueprints.sync import sync_bp  # noqa: E402
 from api.blueprints.sla import sla_bp  # noqa: E402
+from api.blueprints.copilot import copilot_bp  # noqa: E402
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -98,6 +99,7 @@ app.register_blueprint(webhooks_bp)
 app.register_blueprint(kanban_bp)
 app.register_blueprint(ai_suggestions_bp)
 app.register_blueprint(sla_bp)
+app.register_blueprint(copilot_bp)
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {

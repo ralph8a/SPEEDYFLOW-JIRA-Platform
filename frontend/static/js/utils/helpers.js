@@ -1,7 +1,7 @@
 /**
  * Utility Functions - Core JavaScript Utilities
  * Pure utility functions without side effects
- * SalesJIRA Application
+ * SPEEDYFLOW JIRA Platform
  */
 
 // ============================================================
