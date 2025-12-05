@@ -285,6 +285,9 @@ class SidebarInlineEditor {
       // Mostrar notificación de éxito
       this.showSuccessNotification(field);
 
+      // Actualizar el modal de ML si está abierto
+      this.refreshMLAnalysisModal();
+
     } catch (error) {
       console.error(`❌ Error applying suggestion for ${field}:`, error);
       alert(`Failed to update ${field}. Please try again.`);
@@ -329,6 +332,9 @@ class SidebarInlineEditor {
     if (window.openIssueDetails) {
       window.openIssueDetails(this.currentIssue);
     }
+
+    // Actualizar el modal de ML si está abierto
+    this.refreshMLAnalysisModal();
   }
 
   /**
@@ -447,6 +453,24 @@ class SidebarInlineEditor {
     // Usar el sistema de notificaciones si está disponible
     if (window.showNotification) {
       window.showNotification(`✅ ${field} updated successfully`, 'success');
+    }
+  }
+
+  /**
+   * Actualiza el modal de ML analysis después de aplicar cambios
+   */
+  refreshMLAnalysisModal() {
+    console.log('🔄 Refreshing ML analysis modal...');
+    
+    // Si el modal de Smart Functions está abierto, recalcular
+    if (window.smartFunctionsModal && window.smartFunctionsModal.isOpen) {
+      console.log('📊 Recalculating ML analysis stats');
+      
+      // Disparar evento personalizado para actualizar
+      const event = new CustomEvent('mlAnalysisUpdate', {
+        detail: { issueKey: this.currentIssue }
+      });
+      document.dispatchEvent(event);
     }
   }
 }
