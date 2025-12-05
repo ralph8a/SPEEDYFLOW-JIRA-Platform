@@ -191,10 +191,27 @@ body {
   opacity: 1 !important;
 }
 
+@media (max-width: 1024px) {
+  .main-content,
+  .main-wrapper {
+    padding: 0 12px 12px 12px !important;
+  }
+}
+
 @media (max-width: 768px) {
   .main-content,
   .main-wrapper {
-    min-height: auto;
+    min-height: auto !important;
+    margin-left: 0 !important;
+    padding: 0 8px 8px 8px !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content,
+  .main-wrapper {
+    padding: 0 6px 6px 6px !important;
   }
 }
 
