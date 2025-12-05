@@ -1072,8 +1072,20 @@ async function getSLAStatusClass(issueKey) {
     }
     
     const cycle = data.data.cycles[0];
+    const isSecondary = data.data.is_secondary || false;
     
-    // Determine SLA status class based on state
+    // If using secondary SLA (Cierre Ticket), use amber/orange badge
+    if (isSecondary) {
+      if (cycle.paused) {
+        return 'ticket-key-sla-secondary-paused';
+      } else if (cycle.breached) {
+        return 'ticket-key-sla-secondary-breached';
+      } else {
+        return 'ticket-key-sla-secondary';
+      }
+    }
+    
+    // Determine SLA status class based on state (primary SLA)
     if (cycle.paused) {
       return 'ticket-key-sla-paused';
     } else if (cycle.breached) {

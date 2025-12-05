@@ -105,9 +105,9 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
         fields = response.get('fields', {})
         
         # SLA custom fields that contain ongoingCycle data
-        sla_field_ids = [
+        # Priorize non "Cierre Ticket" SLAs first
+        primary_sla_field_ids = [
             'customfield_10170',  # SLA's Incidente HUB
-            'customfield_10176',  # Cierre Ticket
             'customfield_10181',  # SLA's Servicios Streaming
             'customfield_10182',  # SLA's Servicios Streaming (SR)
             'customfield_10183',  # SLA's Solicitud de CDRs
@@ -120,7 +120,12 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
             'customfield_11957',  # Salud de Servicios
         ]
         
-        for field_id in sla_field_ids:
+        # Secondary SLA (fallback with warning)
+        secondary_sla_field_id = 'customfield_10176'  # Cierre Ticket
+        
+        # Try primary SLAs first
+        found_primary = False
+        for field_id in primary_sla_field_ids:
             sla_field = fields.get(field_id)
             if not sla_field or not isinstance(sla_field, dict):
                 continue
@@ -149,7 +154,8 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
             else:
                 status = 'ongoing'
             
-            logger.info(f"✅ Found live SLA data for {issue_key}: {sla_name} (paused: {paused})")
+            logger.info(f"✅ Found primary SLA data for {issue_key}: {sla_name} (paused: {paused})")
+            found_primary = True
             
             return {
                 'issue_key': issue_key,
@@ -168,8 +174,56 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
                 'has_breach': breached,
                 'is_paused': paused,
                 'is_default': False,
+                'is_secondary': False,
                 'source': 'jira_live'
             }
+        
+        # If no primary SLA found, check secondary "Cierre Ticket" SLA
+        if not found_primary:
+            sla_field = fields.get(secondary_sla_field_id)
+            if sla_field and isinstance(sla_field, dict):
+                ongoing = sla_field.get('ongoingCycle')
+                if ongoing:
+                    elapsed = ongoing.get('elapsedTime', {})
+                    remaining = ongoing.get('remainingTime', {})
+                    goal = ongoing.get('goalDuration', {})
+                    
+                    sla_name = sla_field.get('name', 'Cierre Ticket')
+                    goal_duration = goal.get('friendly', 'N/A')
+                    elapsed_time = elapsed.get('friendly', '0 m')
+                    remaining_time = remaining.get('friendly', 'N/A')
+                    breached = ongoing.get('breached', False)
+                    paused = ongoing.get('paused', False)
+                    
+                    if paused:
+                        status = 'paused'
+                    elif breached:
+                        status = 'breached'
+                    else:
+                        status = 'ongoing'
+                    
+                    logger.warning(f"⚠️ Using secondary SLA (Cierre Ticket) for {issue_key} - no primary SLA available")
+                    
+                    return {
+                        'issue_key': issue_key,
+                        'retrieved_at': datetime.now(UTC).isoformat(),
+                        'sla_name': sla_name,
+                        'goal_duration': goal_duration,
+                        'cycles': [{
+                            'cycle_number': 1,
+                            'elapsed_time': elapsed_time,
+                            'remaining_time': remaining_time,
+                            'breached': breached,
+                            'paused': paused,
+                            'status': status
+                        }],
+                        'total_cycles': 1,
+                        'has_breach': breached,
+                        'is_paused': paused,
+                        'is_default': False,
+                        'is_secondary': True,  # Flag for warning display
+                        'source': 'jira_live_secondary'
+                    }
 
         # No SLA data found
         logger.info(f"No SLA data found for {issue_key}")

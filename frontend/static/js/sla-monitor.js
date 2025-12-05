@@ -73,6 +73,8 @@ class SLAMonitor {
     container.id = `sla-panel-${issueKey}`;
 
     const cycle = slaData.cycles?.[0] || slaData;
+    // Pass is_secondary flag from parent data to cycle
+    cycle.is_secondary = slaData.is_secondary || false;
     console.log(`🎯 Using cycle data:`, cycle);
     
     container.innerHTML = `
@@ -120,6 +122,9 @@ class SLAMonitor {
       statusLabel = 'On Track';
     }
     
+    // Check if this is a secondary SLA (Cierre Ticket)
+    const isSecondary = cycle.is_secondary || false;
+    
     return `
       <div class="sla-cycle sla-cycle-${statusClass}">
         <div class="cycle-header">
@@ -146,6 +151,12 @@ class SLAMonitor {
           </div>
         </div>
 
+        ${isSecondary ? `
+          <div class="secondary-sla-warning">
+            ⚠️ Using "Cierre Ticket" SLA (No primary SLA available)
+          </div>
+        ` : ''}
+        
         ${cycle.paused ? `
           <div class="pause-notice">
             ⏸️ SLA is currently paused
