@@ -777,3 +777,42 @@
 .dark-theme .triage-btn-secondary:hover {
   background: #4b5563;
 }
+
+/* ============================================
+   LIGHT THEME - ML ANALYSIS
+   ============================================ */
+
+body:not(.theme-dark) .ml-suggestion-card,
+body.theme-light .ml-suggestion-card {
+  background: rgba(243, 244, 246, 0.8);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+body:not(.theme-dark) .ml-suggestion-card:hover,
+body.theme-light .ml-suggestion-card:hover {
+  background: rgba(243, 244, 246, 1);
+  border-color: rgba(251, 191, 36, 0.6);
+}
+
+body:not(.theme-dark) .ml-missing-count,
+body.theme-light .ml-missing-count {
+  background: rgba(251, 191, 36, 0.25);
+  color: #d97706;
+}
+
+body:not(.theme-dark) .ml-missing-fields,
+body.theme-light .ml-missing-fields {
+  color: #64748b;
+}
+
+body:not(.theme-dark) .bg-modal-primary-btn,
+body.theme-light .bg-modal-primary-btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+}
+
+body:not(.theme-dark) .bg-modal-primary-btn:hover,
+body.theme-light .bg-modal-primary-btn:hover {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}

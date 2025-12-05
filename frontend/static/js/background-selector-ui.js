@@ -36,13 +36,20 @@ class BackgroundSelectorUI {
     this.setupEventListeners();
     
     // Load saved effects settings if they exist
-    setTimeout(() => {
-      const saved = this.loadSavedEffects();
-      if (saved) {
-        console.log('📂 Loaded and applied saved effects');
-        this.applyEffectsGlobally();
+    // Wait for transparency manager to initialize first
+    const waitForTransparencyManager = () => {
+      if (window.transparencyManager) {
+        const saved = this.loadSavedEffects();
+        if (saved) {
+          console.log('📂 Loaded and applied saved effects');
+          this.applyEffectsGlobally();
+        }
+      } else {
+        console.log('⏳ Waiting for transparency manager...');
+        setTimeout(waitForTransparencyManager, 100);
       }
-    }, 500);
+    };
+    setTimeout(waitForTransparencyManager, 100);
     
     // Listen for backgrounds being generated - DISABLED
     // Event listeners disabled - visual only mode
@@ -239,8 +246,8 @@ class BackgroundSelectorUI {
    * Setup event listeners
    */
   setupEventListeners() {
-    // No pagination needed - show all 5 unique backgrounds
-    console.log('✅ Displaying all 5 unique backgrounds');
+    // No pagination needed - show all unique backgrounds
+    console.log('✅ Displaying all unique backgrounds');
     
     // Close modal when clicking overlay
     const overlay = this.modal.querySelector('.bg-modal-overlay[data-overlay="bg-selector"]');
@@ -408,12 +415,12 @@ class BackgroundSelectorUI {
       return;
     }
     
-    // Filter to get only 5 unique backgrounds (no duplicates)
+    // Filter to get unique backgrounds (no duplicates)
     const uniqueBackgrounds = [];
     const seenIds = new Set();
     
     for (const bg of backgrounds) {
-      if (!seenIds.has(bg.id) && uniqueBackgrounds.length < 5) {
+      if (!seenIds.has(bg.id)) {
         seenIds.add(bg.id);
         uniqueBackgrounds.push(bg);
       }
@@ -429,7 +436,7 @@ class BackgroundSelectorUI {
     
     const pageItems = uniqueBackgrounds;
     
-    // Add variant items (no pagination, show all 5)
+    // Add variant items (no pagination, show all)
     pageItems.forEach((bg, idx) => {
       const item = document.createElement('div');
       item.className = 'bg-variant-item';
@@ -541,7 +548,7 @@ class BackgroundSelectorUI {
     this.updateActiveState(randomId);
   }
   
-  // Pagination removed - showing all 5 unique backgrounds at once
+  // Pagination removed - showing all unique backgrounds at once
 
   /**
    * Setup tab navigation

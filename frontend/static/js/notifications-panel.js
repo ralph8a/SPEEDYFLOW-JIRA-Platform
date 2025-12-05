@@ -1,135 +1,156 @@
 /**
- * Notifications Panel
- * Real-time notification system with detailed messages
+ * SPEEDYFLOW - Notifications System
+ * Real-time notifications with Server-Sent Events (SSE)
+ * Clean implementation from scratch
  */
 
 class NotificationsPanel {
   constructor() {
     this.notifications = [];
     this.unreadCount = 0;
-    this.pollInterval = null;
+    this.eventSource = null;
     this.isOpen = false;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
   }
 
+  /**
+   * Initialize notification system
+   */
   async init() {
-    console.log('🔔 Initializing notifications panel...');
+    console.log('🔔 Initializing Notifications System...');
     
-    // Load initial notifications
+    // Setup click handler
+    this.setupButtonHandler();
+    
+    // Load existing notifications
     await this.loadNotifications();
     
-    // Setup notification button
-    const notifBtn = document.getElementById('notificationsBtn');
-    if (notifBtn) {
-      notifBtn.addEventListener('click', () => this.togglePanel());
-    }
-    
-    // Connect to SSE for real-time notifications
+    // Connect to SSE stream
     this.connectSSE();
     
-    console.log('✅ Notifications panel initialized');
-  }
-  
-  connectSSE() {
-    console.log('📡 Connecting to real-time notifications stream...');
+    // Update badge
+    this.updateBadge();
     
-    this.eventSource = new EventSource('/api/notifications/stream');
-    
-    this.eventSource.onopen = () => {
-      console.log('✅ Connected to real-time notifications');
-    };
-    
-    this.eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'connected') {
-          console.log('📡 SSE connection established');
-          return;
-        }
-        
-        // New notification received
-        console.log('📬 Real-time notification received:', data);
-        
-        // Add to notifications array if not already present
-        const exists = this.notifications.find(n => n.id === data.id);
-        if (!exists) {
-          this.notifications.unshift(data);
-          this.unreadCount++;
-          this.updateBadge();
-          
-          // Show toast for new notification
-          this.showNotificationToast(data);
-        }
-        
-        // Update panel if open
-        if (this.isOpen) {
-          this.renderNotifications();
-        }
-        
-      } catch (e) {
-        console.error('Error parsing SSE notification:', e);
-      }
-    };
-    
-    this.eventSource.onerror = (error) => {
-      console.error('❌ SSE connection error:', error);
-      
-      // Reconnect after 5 seconds
-      setTimeout(() => {
-        if (this.eventSource.readyState === EventSource.CLOSED) {
-          console.log('🔄 Reconnecting to SSE...');
-          this.connectSSE();
-        }
-      }, 5000);
-    };
-  }
-  
-  showNotificationToast(notification) {
-    // Parse metadata if available
-    let metadata = {};
-    if (notification.metadata) {
-      try {
-        metadata = JSON.parse(notification.metadata);
-      } catch(e) {
-        metadata = { author: notification.metadata };
-      }
-    }
-    
-    const authorName = metadata.author || notification.user || 'Someone';
-    const actionText = this.getActionText(notification.action) || 'notified you';
-    
-    let message = `${authorName} ${actionText}`;
-    if (notification.issue_key) {
-      message += ` in ${notification.issue_key}`;
-    }
-    
-    // Show toast notification
-    if (window.showNotification) {
-      window.showNotification(message, 'info');
-    }
+    console.log('✅ Notifications System ready');
   }
 
+  /**
+   * Setup button click handler
+   */
+  setupButtonHandler() {
+    const btn = document.getElementById('notificationsBtn');
+    if (!btn) {
+      console.warn('⚠️ Notifications button not found');
+      return;
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.togglePanel();
+    });
+
+    console.log('✅ Button handler attached');
+  }
+
+  /**
+   * Load notifications from API
+   */
   async loadNotifications() {
     try {
+      console.log('🔄 Fetching notifications from /api/notifications...');
       const response = await fetch('/api/notifications');
-      const data = await response.json();
+      console.log('📡 Response status:', response.status);
       
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const result = await response.json();
+      console.log('📦 Response data:', result);
+      
+      // Handle wrapped response format: {success, data: {notifications: []}}
+      const data = result.data || result;
       this.notifications = data.notifications || [];
       this.unreadCount = this.notifications.filter(n => !n.read).length;
       
       this.updateBadge();
       
-      // If panel is open, update content
-      if (this.isOpen) {
-        this.renderNotifications();
-      }
-      
       console.log(`📬 Loaded ${this.notifications.length} notifications (${this.unreadCount} unread)`);
+      console.log('📋 Notifications array:', this.notifications);
     } catch (error) {
       console.error('❌ Failed to load notifications:', error);
+      this.notifications = [];
+      this.unreadCount = 0;
     }
   }
 
+  /**
+   * Connect to SSE stream for real-time updates
+   */
+  connectSSE() {
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+
+    console.log('📡 Connecting to SSE stream...');
+    
+    try {
+      this.eventSource = new EventSource('/api/notifications/stream');
+      
+      this.eventSource.onopen = () => {
+        console.log('✅ SSE connection established');
+        this.reconnectAttempts = 0;
+      };
+      
+      this.eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'ping' || data.type === 'connected') {
+            return; // Ignore keep-alive messages
+          }
+          
+          console.log('📬 New notification received:', data);
+          
+          // Add to list if not duplicate
+          if (!this.notifications.find(n => n.id === data.id)) {
+            this.notifications.unshift(data);
+            this.unreadCount++;
+            this.updateBadge();
+            
+            // Update panel if open
+            if (this.isOpen) {
+              this.renderNotifications();
+            }
+          }
+        } catch (e) {
+          console.error('❌ Error parsing SSE message:', e);
+        }
+      };
+      
+      this.eventSource.onerror = (error) => {
+        console.error('❌ SSE connection error:', error);
+        this.eventSource.close();
+        
+        // Attempt reconnection with exponential backoff
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.reconnectAttempts++;
+          const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+          console.log(`🔄 Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+          
+          setTimeout(() => this.connectSSE(), delay);
+        } else {
+          console.error('❌ Max reconnection attempts reached');
+        }
+      };
+    } catch (error) {
+      console.error('❌ Failed to create SSE connection:', error);
+    }
+  }
+
+  /**
+   * Update notification badge
+   */
   updateBadge() {
     const badge = document.querySelector('.notification-badge');
     if (badge) {
@@ -138,6 +159,9 @@ class NotificationsPanel {
     }
   }
 
+  /**
+   * Toggle notification panel
+   */
   togglePanel() {
     if (this.isOpen) {
       this.closePanel();
@@ -146,30 +170,30 @@ class NotificationsPanel {
     }
   }
 
-  openPanel() {
-    // Check if modal already exists
+  /**
+   * Open notification panel
+   */
+  async openPanel() {
     if (document.getElementById('notificationsModal')) {
-      return;
+      return; // Already open
     }
 
     const modal = document.createElement('div');
     modal.id = 'notificationsModal';
-    modal.className = 'bg-modal';
+    // Note: Styles are defined in cards-modals.css specifically for #notificationsModal
+    
     modal.innerHTML = `
       <div class="bg-modal-overlay"></div>
-      <div class="bg-modal-container">
+      <div class="bg-modal-content" style="max-width: 600px;">
         <div class="bg-modal-header">
-          <h2 class="bg-modal-title">🔔 Notifications</h2>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="notif-mark-all-read-btn" onclick="window.notificationsPanel.markAllAsRead();">
-              Mark all as read
-            </button>
-            <button class="bg-modal-close" onclick="window.notificationsPanel.closePanel();">✕</button>
-          </div>
+          <h3 class="bg-modal-title">🔔 Notifications</h3>
+          <button class="bg-modal-close" onclick="window.notificationsPanel.closePanel()">×</button>
         </div>
         
-        <div class="bg-modal-body">
-          <div id="notificationsContent"></div>
+        <div id="notificationsContent" style="max-height: 70vh; overflow-y: auto; margin-top: 16px;">
+          <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+            <div style="font-size: 16px;">Loading...</div>
+          </div>
         </div>
       </div>
     `;
@@ -181,178 +205,181 @@ class NotificationsPanel {
       this.closePanel();
     });
     
+    // Close on Escape key
+    const escapeHandler = (e) => {
+      if (e.key === 'Escape') {
+        this.closePanel();
+        document.removeEventListener('keydown', escapeHandler);
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    
     this.isOpen = true;
+    
+    // Load notifications before rendering
+    await this.loadNotifications();
     this.renderNotifications();
-    console.log('✅ Notifications panel opened');
+    
+    console.log('✅ Notification panel opened');
   }
 
+  /**
+   * Close notification panel
+   */
   closePanel() {
     const modal = document.getElementById('notificationsModal');
     if (modal) {
-      modal.remove();
+      // Simple fade out with opacity
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.2s ease';
+      setTimeout(() => modal.remove(), 200);
     }
     this.isOpen = false;
+    console.log('✅ Notification panel closed');
   }
 
+  /**
+   * Render notifications in panel
+   */
   renderNotifications() {
+    console.log('🎨 Rendering notifications...', this.notifications);
     const container = document.getElementById('notificationsContent');
-    if (!container) return;
+    if (!container) {
+      console.error('❌ Container #notificationsContent not found');
+      return;
+    }
 
+    // Empty state
     if (this.notifications.length === 0) {
+      console.log('ℹ️ No notifications to display (empty state)');
       container.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
           <div style="font-size: 64px; margin-bottom: 16px;">🔕</div>
-          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">No notifications</div>
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">
+            No notifications
+          </div>
           <div style="font-size: 13px;">You're all caught up!</div>
         </div>
       `;
       return;
     }
+    
+    console.log(`✅ Rendering ${this.notifications.length} notifications`);
 
-    // Group notifications by date
+    // Group by date
+    const grouped = this.groupByDate(this.notifications);
+    
+    let html = '';
+    
+    if (grouped.today.length > 0) {
+      html += '<div class="notif-date-header">Today</div>';
+      html += grouped.today.map(n => this.renderNotificationCard(n)).join('');
+    }
+
+    if (grouped.yesterday.length > 0) {
+      html += '<div class="notif-date-header">Yesterday</div>';
+      html += grouped.yesterday.map(n => this.renderNotificationCard(n)).join('');
+    }
+
+    if (grouped.older.length > 0) {
+      html += '<div class="notif-date-header">Older</div>';
+      html += grouped.older.map(n => this.renderNotificationCard(n)).join('');
+    }
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * Group notifications by date
+   */
+  groupByDate(notifications) {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-
-    const grouped = {
-      today: [],
-      yesterday: [],
-      older: []
-    };
-
-    this.notifications.forEach(notif => {
-      const notifDate = new Date(notif.created_at);
-      if (this.isSameDay(notifDate, today)) {
+    
+    const grouped = { today: [], yesterday: [], older: [] };
+    
+    notifications.forEach(notif => {
+      const date = new Date(notif.created_at || notif.timestamp);
+      date.setHours(0, 0, 0, 0);
+      
+      if (date.getTime() === today.getTime()) {
         grouped.today.push(notif);
-      } else if (this.isSameDay(notifDate, yesterday)) {
+      } else if (date.getTime() === yesterday.getTime()) {
         grouped.yesterday.push(notif);
       } else {
         grouped.older.push(notif);
       }
     });
-
-    let html = '<div class="notifications-list">';
-
-    if (grouped.today.length > 0) {
-      html += '<div class="notifications-group-header">Today</div>';
-      html += grouped.today.map(n => this.renderNotificationCard(n)).join('');
-    }
-
-    if (grouped.yesterday.length > 0) {
-      html += '<div class="notifications-group-header">Yesterday</div>';
-      html += grouped.yesterday.map(n => this.renderNotificationCard(n)).join('');
-    }
-
-    if (grouped.older.length > 0) {
-      html += '<div class="notifications-group-header">Older</div>';
-      html += grouped.older.map(n => this.renderNotificationCard(n)).join('');
-    }
-
-    html += '</div>';
-
-    container.innerHTML = html;
+    
+    return grouped;
   }
 
+  /**
+   * Render single notification card
+   */
   renderNotificationCard(notif) {
-    const icon = this.getNotificationIcon(notif.type);
-    const time = this.formatTime(notif.created_at);
-    const readClass = notif.read ? 'read' : 'unread';
+    const icon = this.getIcon(notif.type || notif.action);
+    const time = this.formatTime(notif.created_at || notif.timestamp);
+    const isUnread = !notif.read;
     
-    // Parse metadata if it's JSON
-    let metadata = {};
-    if (notif.metadata) {
-      try {
-        metadata = JSON.parse(notif.metadata);
-      } catch(e) {
-        // If not JSON, use as string
-        metadata = { author: notif.metadata };
-      }
-    }
-    
-    // Build detailed message with user and action
-    let mainMessage = '';
-    let detailMessage = '';
-    
-    if (notif.action && notif.user) {
-      const actionText = this.getActionText(notif.action);
-      const authorName = metadata.author || notif.user;
-      
-      mainMessage = `<strong>${authorName}</strong> ${actionText}`;
-      
-      if (notif.issue_key) {
-        mainMessage += ` <span class="notif-issue-key">${notif.issue_key}</span>`;
-      }
-      
-      // Add issue summary if available
-      if (metadata.issue_summary) {
-        mainMessage += `<div class="notif-issue-summary">${metadata.issue_summary}</div>`;
-      }
-      
-      // Add comment preview if available
-      if (metadata.comment_preview || metadata.full_body) {
-        const preview = metadata.full_body || metadata.comment_preview;
-        detailMessage = `<div class="notif-comment-preview">"${this.escapeHtml(preview)}"</div>`;
-      }
-    } else {
-      // Fallback to original message
-      mainMessage = notif.message;
-    }
-
-    return `
-      <div class="notification-card ${readClass}" data-id="${notif.id}" onclick="window.notificationsPanel.handleNotificationClick(${notif.id}, '${notif.issue_key || ''}')">
-        <div class="notification-icon">${icon}</div>
-        <div class="notification-content">
-          <div class="notification-message">${mainMessage}</div>
-          ${detailMessage ? detailMessage : ''}
-          <div class="notification-time">${time}</div>
-        </div>
-        <div class="notification-actions">
-          ${!notif.read ? `
-            <button class="notification-action-btn" onclick="event.stopPropagation(); window.notificationsPanel.markAsRead(${notif.id});" title="Mark as read">
-              ✓
-            </button>
-          ` : ''}
-          <button class="notification-action-btn delete" onclick="event.stopPropagation(); window.notificationsPanel.deleteNotification(${notif.id});" title="Delete">
-            🗑️
-          </button>
+    const card = `
+      <div class="notif-card ${isUnread ? 'unread' : ''}" onclick="window.notificationsPanel.markAsRead('${notif.id}')">
+        <div style="display: flex; gap: 12px; align-items: start;">
+          <div style="font-size: 24px; flex-shrink: 0;">${icon}</div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14px; color: ${isUnread ? '#e0e7ff' : '#94a3b8'}; margin-bottom: 4px;">
+              ${notif.message || this.buildMessage(notif)}
+            </div>
+            <div style="font-size: 12px; color: #64748b;">${time}</div>
+          </div>
+          ${isUnread ? '<div style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; flex-shrink: 0; margin-top: 6px;"></div>' : ''}
         </div>
       </div>
     `;
-  }
-  
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    
+    return card;
   }
 
-  getNotificationIcon(type) {
+  /**
+   * Build notification message
+   */
+  buildMessage(notif) {
+    const user = notif.user || 'Someone';
+    const action = notif.action || 'updated';
+    const key = notif.issue_key || '';
+    
+    let msg = `<strong>${user}</strong> ${action}`;
+    if (key) msg += ` <span style="color: #3b82f6;">${key}</span>`;
+    
+    return msg;
+  }
+
+  /**
+   * Get icon for notification type
+   */
+  getIcon(type) {
     const icons = {
       mention: '💬',
       comment: '💬',
       assignment: '👤',
-      status_change: '🔄',
-      priority_change: '⚡',
-      new_ticket: '✨',
-      test: '🧪',
-      generic: '🔔'
+      assigned: '👤',
+      status: '🔄',
+      update: '🔄',
+      priority: '⚡',
+      new: '✨',
+      created: '✨',
+      resolved: '✅',
+      closed: '✅'
     };
-    return icons[type] || icons.generic;
+    return icons[type] || '🔔';
   }
 
-  getActionText(action) {
-    const actions = {
-      commented: 'commented',
-      mentioned: 'mentioned you',
-      assigned: 'assigned you',
-      updated: 'updated',
-      created: 'created',
-      resolved: 'resolved',
-      reopened: 'reopened'
-    };
-    return actions[action] || action;
-  }
-
+  /**
+   * Format timestamp to relative time
+   */
   formatTime(timestamp) {
     const date = new Date(timestamp);
     const now = new Date();
@@ -369,23 +396,9 @@ class NotificationsPanel {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  isSameDay(date1, date2) {
-    return date1.getFullYear() === date2.getFullYear() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getDate() === date2.getDate();
-  }
-
-  async handleNotificationClick(notifId, issueKey) {
-    // Mark as read
-    await this.markAsRead(notifId);
-    
-    // If there's an issue key, load it
-    if (issueKey && window.app && window.app.loadIssueDetails) {
-      this.closePanel();
-      window.app.loadIssueDetails(issueKey);
-    }
-  }
-
+  /**
+   * Mark notification as read
+   */
   async markAsRead(notifId) {
     try {
       const response = await fetch(`/api/notifications/${notifId}/read`, {
@@ -393,13 +406,13 @@ class NotificationsPanel {
       });
       
       if (response.ok) {
-        // Update local state
-        const notif = this.notifications.find(n => n.id === notifId);
-        if (notif) {
+        const notif = this.notifications.find(n => n.id == notifId);
+        if (notif && !notif.read) {
           notif.read = true;
           this.unreadCount = Math.max(0, this.unreadCount - 1);
           this.updateBadge();
           this.renderNotifications();
+          console.log(`✅ Marked notification ${notifId} as read`);
         }
       }
     } catch (error) {
@@ -407,45 +420,13 @@ class NotificationsPanel {
     }
   }
 
-  async markAllAsRead() {
-    const unreadIds = this.notifications.filter(n => !n.read).map(n => n.id);
-    
-    for (const id of unreadIds) {
-      await this.markAsRead(id);
-    }
-    
-    console.log(`✅ Marked ${unreadIds.length} notifications as read`);
-  }
-
-  async deleteNotification(notifId) {
-    try {
-      const response = await fetch(`/api/notifications/${notifId}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        // Remove from local state
-        const index = this.notifications.findIndex(n => n.id === notifId);
-        if (index !== -1) {
-          const wasUnread = !this.notifications[index].read;
-          this.notifications.splice(index, 1);
-          
-          if (wasUnread) {
-            this.unreadCount = Math.max(0, this.unreadCount - 1);
-            this.updateBadge();
-          }
-          
-          this.renderNotifications();
-        }
-      }
-    } catch (error) {
-      console.error('❌ Failed to delete notification:', error);
-    }
-  }
-
+  /**
+   * Cleanup on destroy
+   */
   destroy() {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
+    if (this.eventSource) {
+      this.eventSource.close();
+      console.log('🔌 SSE connection closed');
     }
     this.closePanel();
   }

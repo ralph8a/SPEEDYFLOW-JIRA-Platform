@@ -5,7 +5,7 @@
  * 
  * This replaces ad-hoc theme handling in:
  * - theme-blocker.js
- * - floating-controls.js
+ * - header-menu-controller.js
  * - theme-detector.js
  * - app.js
  */

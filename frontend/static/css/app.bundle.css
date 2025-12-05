@@ -89,7 +89,10 @@
 /* ============================================================
    PHASE 7: GLASSMORPHIC OVERRIDES (Must load LAST)
    ============================================================ */
-@import url('themes-consolidated/transparency-manager.css');   /* Glassmorphism effects - FINAL WORD */
+/* DISABLED: Conflicts with glassmorphism-opacity-controller.js
+   All transparency/blur effects are now managed by JavaScript for dynamic control
+   @import url('themes-consolidated/transparency-manager.css');
+*/
 
 /* ============================================================
    END OF CSS BUNDLE

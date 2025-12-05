@@ -16,7 +16,7 @@ class DragTransitionVertical {
     this.availableTransitions = [];
     this.isDragging = false;
     this.isExecutingTransition = false;
-    this.dragStartTimeout = null;
+    this.dragStartTime = null;
     
     console.log('🎯 DragTransitionVertical: Constructor initialized');
   }
@@ -32,26 +32,34 @@ class DragTransitionVertical {
    * Setup global drag event listeners
    */
   setupDragListeners() {
-    // Use capture phase to ensure drag events are handled first
+    // Dragstart: Initialize drag operation
     document.addEventListener('dragstart', (e) => {
       const card = e.target.closest('.kanban-card');
       if (card) {
-        console.log('🚀 [DRAG] dragstart captured on card:', card.dataset.issueKey);
-        e.stopPropagation();
+        console.log('🚀 Drag started on card:', card.dataset.issueKey);
         this.onDragStart(e, card);
       }
-    }, { capture: true });
+    });
     
+    
+    // Dragend: Cleanup unless executing transition or drag just started
     document.addEventListener('dragend', (e) => {
-      // Only clean up if no transition is executing
-      // (transition cleanup happens in drop handler)
-      if (!this.isExecutingTransition) {
-        console.log('🔚 [DRAG] dragend captured');
-        this.onDragEnd();
+      const card = e.target.closest('.kanban-card');
+      if (card && this.isDragging && !this.isExecutingTransition) {
+        const dragDuration = Date.now() - this.dragStartTime;
+        
+        // Only cleanup if drag lasted more than 200ms (real drag, not accidental)
+        if (dragDuration > 200) {
+          console.log('🏁 Drag ended after', dragDuration, 'ms - cleaning up');
+          this.onDragEnd();
+        } else {
+          console.log('⏱️ Drag too short (', dragDuration, 'ms) - ignoring dragend');
+        }
       }
-    }, { capture: true });
+    });
     
-    // Prevent default dragover on document to allow custom drop zones
+    
+    // Dragover: Allow drop
     document.addEventListener('dragover', (e) => {
       if (this.isDragging) {
         e.preventDefault();
@@ -116,7 +124,7 @@ class DragTransitionVertical {
       });
     }
     
-    console.log('✅ Transition bar created (hidden by default)');
+    console.log('✅ Transition bar created');
   }
   
   /**
@@ -143,31 +151,23 @@ class DragTransitionVertical {
     
     console.log('🚀 Drag started:', issueKey);
     
+    // Set state
     this.isDragging = true;
+    this.dragStartTime = Date.now();
     this.currentTicket = { card, issueKey };
     
-    // Add visual feedback to card
+    // Add visual feedback
     card.classList.add('dragging');
     card.style.opacity = '0.5';
     
-    // Activate board (move columns apart)
-    const kanbanBoard = document.querySelector('.kanban-board');
-    if (kanbanBoard) {
-      kanbanBoard.classList.add('drag-active');
-      console.log('✅ Board activated - columns should separate');
-      const columns = kanbanBoard.querySelectorAll('.kanban-column');
-      console.log(`📊 Found ${columns.length} columns to separate`);
-    } else {
-      console.warn('⚠️ Kanban board not found!');
-    }
+    // Activate board (columns separate)
+    this.activateBoard();
     
-    // Show transition bar immediately with loading state
+    // Show transition bar with loading
     this.showTransitionBar(true);
     
-    // Fetch transitions in background
+    // Load and render transitions
     await this.loadTransitions(issueKey);
-    
-    // Render transitions
     this.renderTransitions();
   }
   
@@ -230,12 +230,14 @@ class DragTransitionVertical {
         transitions = data;
       }
       
-      // Map to standardized format
+      // Map to standardized format including fields
       this.availableTransitions = transitions.map(t => ({
         id: t.id,
         name: t.name,
         targetStatus: t.to?.name || t.targetStatus || 'Unknown',
-        icon: this.getIconForTransition(t.name)
+        icon: this.getIconForTransition(t.name),
+        fields: t.fields || {},
+        hasFields: t.fields && Object.keys(t.fields).length > 0
       }));
       
       console.log('✅ Loaded transitions:', this.availableTransitions.length);
@@ -317,52 +319,231 @@ class DragTransitionVertical {
    */
   attachZoneListeners() {
     const zones = document.querySelectorAll('.transition-zone-vertical');
+    console.log(`🎯 Attaching listeners to ${zones.length} transition zones`);
     
     zones.forEach(zone => {
-      // Dragover: highlight zone
-      zone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        zone.classList.add('drag-over');
-      });
+      zone.setAttribute('data-droppable', 'true');
+      zone.addEventListener('dragenter', (e) => this.onZoneDragEnter(e, zone));
+      zone.addEventListener('dragover', (e) => this.onZoneDragOver(e));
+      zone.addEventListener('dragleave', (e) => this.onZoneDragLeave(e, zone));
+      zone.addEventListener('drop', (e) => this.onZoneDrop(e, zone));
+    });
+  }
+  
+  /**
+   * Handle dragenter on transition zone
+   */
+  onZoneDragEnter(e, zone) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🎯 Dragenter on zone:', zone.dataset.targetStatus);
+    zone.classList.add('drag-over');
+  }
+  
+  /**
+   * Handle dragover on transition zone
+   */
+  onZoneDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'move';
+    }
+  }
+  
+  /**
+   * Handle dragleave on transition zone
+   */
+  onZoneDragLeave(e, zone) {
+    e.stopPropagation();
+    if (e.target === zone) {
+      zone.classList.remove('drag-over');
+    }
+  }
+  
+  /**
+   * Handle drop on transition zone
+   */
+  async onZoneDrop(e, zone) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const transitionId = zone.dataset.transitionId;
+    const targetStatus = zone.dataset.targetStatus;
+    
+    console.log('🎯 DROP EVENT FIRED:', { transitionId, targetStatus });
+    
+    this.removeDragOverClasses();
+    
+    // Find transition to check if it has required fields
+    const transition = this.availableTransitions.find(t => t.id === transitionId);
+    
+    if (transition?.hasFields) {
+      console.log('📋 Transition requires fields - showing modal');
+      await this.showFieldsModal(transition);
+    } else {
+      // Execute transition directly
+      try {
+        await this.executeTransition(transitionId, targetStatus);
+      } finally {
+        this.onDragEnd();
+      }
+    }
+  }
+  
+  /**
+   * Show modal to collect required fields for transition
+   */
+  async showFieldsModal(transition) {
+    return new Promise((resolve) => {
+      // Create modal
+      const modal = document.createElement('div');
+      modal.className = 'transition-fields-modal';
+      modal.innerHTML = `
+        <div class="transition-fields-overlay"></div>
+        <div class="transition-fields-content">
+          <div class="transition-fields-header">
+            <h3>${transition.icon} ${this.escapeHtml(transition.name)}</h3>
+            <p>Complete los campos requeridos para esta transición</p>
+          </div>
+          <form class="transition-fields-form" id="transitionFieldsForm">
+            ${this.renderTransitionFields(transition.fields)}
+          </form>
+          <div class="transition-fields-actions">
+            <button type="button" class="btn-cancel" id="cancelFieldsBtn">Cancelar</button>
+            <button type="button" class="btn-submit" id="submitFieldsBtn">Ejecutar Transición</button>
+          </div>
+        </div>
+      `;
       
-      // Dragleave: remove highlight
-      zone.addEventListener('dragleave', (e) => {
-        e.stopPropagation();
-        zone.classList.remove('drag-over');
-      });
+      document.body.appendChild(modal);
       
-      // Drop: execute transition
-      zone.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const transitionId = zone.dataset.transitionId;
-        const targetStatus = zone.dataset.targetStatus;
-        
-        console.log('🎯 Dropped on transition:', { transitionId, targetStatus });
-        
-        // Remove all drag-over classes
-        document.querySelectorAll('.transition-zone-vertical.drag-over').forEach(z => {
-          z.classList.remove('drag-over');
-        });
-        
-        // Execute transition (don't await to prevent blocking)
-        this.executeTransition(transitionId, targetStatus).then(() => {
-          // Clean up after transition completes
+      // Add animation
+      setTimeout(() => modal.classList.add('show'), 10);
+      
+      // Cancel handler
+      const cancelBtn = modal.querySelector('#cancelFieldsBtn');
+      const overlay = modal.querySelector('.transition-fields-overlay');
+      const cancelHandler = () => {
+        modal.classList.remove('show');
+        setTimeout(() => {
+          modal.remove();
           this.onDragEnd();
-        }).catch(() => {
-          // Clean up even on error
+        }, 300);
+        resolve(null);
+      };
+      
+      cancelBtn.addEventListener('click', cancelHandler);
+      overlay.addEventListener('click', cancelHandler);
+      
+      // Submit handler
+      const submitBtn = modal.querySelector('#submitFieldsBtn');
+      submitBtn.addEventListener('click', async () => {
+        const formData = this.collectFormData(modal);
+        
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+        
+        try {
+          await this.executeTransition(transition.id, transition.targetStatus, formData);
+        } finally {
           this.onDragEnd();
-        });
+        }
+        
+        resolve(formData);
       });
     });
   }
   
   /**
+   * Render form fields based on transition field requirements
+   */
+  renderTransitionFields(fields) {
+    const fieldKeys = Object.keys(fields);
+    
+    return fieldKeys.map(fieldKey => {
+      const field = fields[fieldKey];
+      const isRequired = field.required;
+      const fieldName = field.name || fieldKey;
+      const fieldType = field.schema?.type || 'string';
+      
+      return `
+        <div class="transition-field">
+          <label for="field_${fieldKey}">
+            ${this.escapeHtml(fieldName)}
+            ${isRequired ? '<span class="required">*</span>' : ''}
+          </label>
+          ${this.renderFieldInput(fieldKey, field, fieldType)}
+        </div>
+      `;
+    }).join('');
+  }
+  
+  /**
+   * Render appropriate input for field type
+   */
+  renderFieldInput(fieldKey, field, fieldType) {
+    const placeholder = field.required ? 'Campo requerido' : 'Opcional';
+    
+    // Text area for longer fields
+    if (fieldKey.toLowerCase().includes('comment') || 
+        fieldKey.toLowerCase().includes('descripcion') ||
+        fieldKey.toLowerCase().includes('description')) {
+      return `
+        <textarea 
+          id="field_${fieldKey}" 
+          name="${fieldKey}"
+          placeholder="${placeholder}"
+          rows="4"
+          ${field.required ? 'required' : ''}></textarea>
+      `;
+    }
+    
+    // Select for allowed values
+    if (field.allowedValues && field.allowedValues.length > 0) {
+      return `
+        <select id="field_${fieldKey}" name="${fieldKey}" ${field.required ? 'required' : ''}>
+          <option value="">Seleccione una opción</option>
+          ${field.allowedValues.map(val => `
+            <option value="${val.id || val.value}">${this.escapeHtml(val.name || val.value)}</option>
+          `).join('')}
+        </select>
+      `;
+    }
+    
+    // Default: text input
+    return `
+      <input 
+        type="text" 
+        id="field_${fieldKey}" 
+        name="${fieldKey}"
+        placeholder="${placeholder}"
+        ${field.required ? 'required' : ''}
+      />
+    `;
+  }
+  
+  /**
+   * Collect form data from modal
+   */
+  collectFormData(modal) {
+    const form = modal.querySelector('#transitionFieldsForm');
+    const formData = new FormData(form);
+    const fields = {};
+    
+    for (const [key, value] of formData.entries()) {
+      if (value) {
+        fields[key] = value;
+      }
+    }
+    
+    return fields;
+  }
+  
+  /**
    * Execute transition via API
    */
-  async executeTransition(transitionId, targetStatus) {
+  async executeTransition(transitionId, targetStatus, fields = null) {
     this.isExecutingTransition = true;
     
     // Store issue key before any async operations
@@ -382,9 +563,15 @@ class DragTransitionVertical {
     
     try {
       // Show loading state on bar
-      const header = this.transitionBar?.querySelector('.transition-bar-header .icon');
-      if (header) {
-        header.textContent = '⏳';
+      this.updateTransitionBarIcon('⏳');
+      
+      const body = {
+        transition: { id: transitionId }
+      };
+      
+      // Add fields if provided
+      if (fields && Object.keys(fields).length > 0) {
+        body.fields = fields;
       }
       
       const response = await fetch(`/api/issues/${issueKey}/transitions`, {
@@ -392,9 +579,7 @@ class DragTransitionVertical {
         headers: { 
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          transition: { id: transitionId }
-        })
+        body: JSON.stringify(body)
       });
       
       if (!response.ok) {
@@ -425,26 +610,32 @@ class DragTransitionVertical {
   }
   
   /**
-   * Animate card flying to target column
+   * Find target column by status name
    */
-  async animateCardTransition(targetStatus) {
-    if (!this.currentTicket || !this.currentTicket.card) return;
-    
-    // Find target column by status
+  findColumnByStatus(targetStatus) {
     const columns = document.querySelectorAll('.kanban-column');
-    let targetColumn = null;
-    
     const targetStatusLower = targetStatus.toLowerCase();
     
-    columns.forEach(col => {
+    for (const col of columns) {
       const colTitle = col.querySelector('.column-title, .kanban-column-title, h2, h3');
       if (colTitle) {
         const titleText = colTitle.textContent.toLowerCase();
         if (titleText.includes(targetStatusLower) || targetStatusLower.includes(titleText)) {
-          targetColumn = col;
+          return col;
         }
       }
-    });
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Animate card flying to target column
+   */
+  async animateCardTransition(targetStatus) {
+    if (!this.currentTicket?.card) return;
+    
+    const targetColumn = this.findColumnByStatus(targetStatus);
     
     if (!targetColumn) {
       console.warn('⚠️ Target column not found for status:', targetStatus);
@@ -513,49 +704,97 @@ class DragTransitionVertical {
   }
   
   /**
-   * Handle drag end event
+   * Handle drag end event - cleanup all drag states
    */
   onDragEnd() {
     console.log('🏁 Drag ended');
     
-    // Delay resetting isDragging to prevent click event from firing
-    setTimeout(() => {
-      this.isDragging = false;
-    }, 100);
-    
-    // Remove dragging class from card
-    if (this.currentTicket && this.currentTicket.card) {
+    this.cleanupCardState();
+    this.hideTransitionBar();
+    this.deactivateBoard();
+    this.removeDragOverClasses();
+    this.resetTransitionBarIcon();
+    this.clearCurrentTicket();
+  }
+  
+  /**
+   * Activate board for drag operation
+   */
+  activateBoard() {
+    const kanbanBoard = document.querySelector('.kanban-board');
+    if (kanbanBoard) {
+      kanbanBoard.classList.add('drag-active');
+      const columns = kanbanBoard.querySelectorAll('.kanban-column');
+      console.log(`✅ Board activated - ${columns.length} columns separated`);
+    } else {
+      console.warn('⚠️ Kanban board not found!');
+    }
+  }
+  
+  /**
+   * Cleanup card visual state
+   */
+  cleanupCardState() {
+    if (this.currentTicket?.card) {
       this.currentTicket.card.classList.remove('dragging');
       this.currentTicket.card.style.opacity = '';
     }
+    this.isDragging = false;
+    this.dragStartTime = null;
+  }
+  
+  /**
+   * Hide transition bar with animation
+   */
+  hideTransitionBar() {
+    if (!this.transitionBar) return;
     
-    // Hide transition bar completely
-    if (this.transitionBar) {
-      this.transitionBar.classList.remove('show');
-      // Wait for animation to complete before setting display:none
-      setTimeout(() => {
-        this.transitionBar.style.display = 'none';
-      }, 300);
-    }
-    
-    // Deactivate board (columns return to normal)
+    this.transitionBar.classList.remove('show');
+    setTimeout(() => {
+      this.transitionBar.style.display = 'none';
+    }, 300);
+  }
+  
+  /**
+   * Deactivate board drag state
+   */
+  deactivateBoard() {
     const kanbanBoard = document.querySelector('.kanban-board');
     if (kanbanBoard) {
       kanbanBoard.classList.remove('drag-active');
     }
-    
-    // Remove drag-over from all zones
+  }
+  
+  /**
+   * Remove drag-over classes from all zones
+   */
+  removeDragOverClasses() {
     document.querySelectorAll('.transition-zone-vertical.drag-over').forEach(zone => {
       zone.classList.remove('drag-over');
     });
-    
-    // Reset header icon
+  }
+  
+  /**
+   * Update transition bar header icon
+   */
+  updateTransitionBarIcon(icon) {
     const header = this.transitionBar?.querySelector('.transition-bar-header .icon');
     if (header) {
-      header.textContent = '🎯';
+      header.textContent = icon;
     }
-    
-    // Clear current ticket after delay
+  }
+  
+  /**
+   * Reset transition bar header icon to default
+   */
+  resetTransitionBarIcon() {
+    this.updateTransitionBarIcon('🎯');
+  }
+  
+  /**
+   * Clear current ticket data
+   */
+  clearCurrentTicket() {
     setTimeout(() => {
       this.currentTicket = null;
       this.availableTransitions = [];

@@ -1,6 +1,6 @@
 /**
- * LAYOUT REORGANIZATION - JavaScript Handler
- * Manages the new layout with filters in content + actions in sidebar
+ * SPEEDYFLOW - Filter Bar Manager
+ * Manages filter bar controls: service desk and queue selectors
  */
 
 class FilterManager {

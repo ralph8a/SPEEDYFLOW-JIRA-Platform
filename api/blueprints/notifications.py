@@ -14,7 +14,7 @@ import json
 import queue
 import threading
 from utils.decorators import handle_api_error, json_response, log_request as log_decorator, require_credentials, rate_limited
-from utils.db import create_notification, list_notifications as db_list, mark_notification_read, delete_notification
+from utils.db import create_notification, mark_notification_read, delete_notification
 
 logger = logging.getLogger(__name__)
 notifications_bp = Blueprint('notifications', __name__)
@@ -84,7 +84,14 @@ def notifications_stream():
 @log_decorator(logging.INFO)
 @require_credentials
 def list_notifications():
-    items = db_list()
+    """List notifications filtered by user_id (from query param or auth)."""
+    from utils.db import list_notifications_for_user
+    
+    # Get user_id from query params (future: extract from auth token)
+    user_id = request.args.get('user_id')
+    
+    # Fetch notifications for this user + global notifications
+    items = list_notifications_for_user(user_id)
     return {'notifications': items, 'count': len(items)}
 
 
@@ -146,3 +153,152 @@ def create_test_notification():
     broadcast_notification(rec)
     
     return {'created': True, 'id': rec['id'], 'message': rec['message']}
+
+
+# Sync recent JIRA activity as notifications
+@notifications_bp.route('/api/notifications/sync', methods=['POST'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def sync_jira_notifications():
+    """
+    Sync recent JIRA activity to create notifications
+    Uses API v3 enhanced search with specific JQL for relevant issues
+    """
+    from utils.config import config
+    from utils.common import _make_request, _get_credentials, _get_auth_header
+    
+    site, email, api_token = _get_credentials(config)
+    headers = _get_auth_header(email, api_token)
+    
+    created = []
+    
+    try:
+        # Get issues assigned to current user or where they're mentioned (last 3 days)
+        # API v3 uses accountId instead of email for currentUser()
+        jql = ("(assignee = currentUser() OR watcher = currentUser()) "
+               "AND updated >= -3d ORDER BY updated DESC")
+        
+        # Use API v3 enhanced search endpoint
+        url = f"{site}/rest/api/3/search/jql"
+        payload = {
+            'jql': jql,
+            'maxResults': 15,
+            'fields': ['key', 'summary', 'status', 'assignee', 'updated', 'comment']
+        }
+        
+        logger.info(f"🔍 Syncing JIRA activity with JQL: {jql}")
+        data = _make_request('POST', url, headers, json=payload)
+        
+        if data is None:
+            logger.warning("⚠️ JIRA API returned None")
+            return {'synced': 0, 'created': 0, 'notifications': []}, 200
+            
+        issues = data.get('issues', [])
+        logger.info(f"📬 Processing {len(issues)} recent issues")
+        
+        for issue in issues[:12]:  # Limit to 12 most recent
+            if not issue or not isinstance(issue, dict):
+                continue
+                
+            key = issue.get('key')
+            if not key:
+                continue
+                
+            fields = issue.get('fields', {})
+            summary = fields.get('summary', 'No summary')
+            
+            # Extract status info
+            status_obj = fields.get('status')
+            status = status_obj.get('name', 'Unknown') if status_obj else 'Unknown'
+            
+            # Extract assignee info
+            assignee = fields.get('assignee')
+            assignee_name = 'Unassigned'
+            if assignee and isinstance(assignee, dict):
+                assignee_name = assignee.get('displayName', 'Unassigned')
+            
+            # Create notification for issue update
+            message = f"📋 {key}: {summary} [{status}]"
+            rec = create_notification(
+                ntype='issue_updated',
+                message=message,
+                severity='info',
+                issue_key=key,
+                user=assignee_name,
+                action='updated',
+                metadata=json.dumps({
+                    'summary': summary,
+                    'status': status,
+                    'assignee': assignee_name,
+                    'updated': fields.get('updated', '')[:10]  # Date only
+                })
+            )
+            broadcast_notification(rec)
+            created.append(rec)
+            
+            # Check for recent comments
+            comment_obj = fields.get('comment', {})
+            if isinstance(comment_obj, dict):
+                comments = comment_obj.get('comments', [])
+                if comments and isinstance(comments, list):
+                    # Get last 2 comments
+                    for comment in comments[-2:]:
+                        if not isinstance(comment, dict):
+                            continue
+                        author_obj = comment.get('author', {})
+                        author = 'Someone'
+                        if isinstance(author_obj, dict):
+                            author = author_obj.get('displayName', 'Someone')
+                        
+                        body = comment.get('body', '')
+                        # Handle ADF (Atlassian Document Format) or plain text
+                        comment_text = ''
+                        if isinstance(body, dict):
+                            # ADF format - extract text from content
+                            content = body.get('content', [])
+                            if content and isinstance(content, list):
+                                for block in content:
+                                    if isinstance(block, dict):
+                                        block_content = block.get('content', [])
+                                        for text_node in block_content:
+                                            if isinstance(text_node, dict):
+                                                comment_text += text_node.get('text', '')
+                        elif isinstance(body, str):
+                            comment_text = body
+                        
+                        # Truncate for preview
+                        preview_text = comment_text[:150] if comment_text else 'No content'
+                        
+                        rec = create_notification(
+                            ntype='comment',
+                            message=f"💬 {author} commented on {key}",
+                            severity='info',
+                            issue_key=key,
+                            user=author,
+                            action='commented',
+                            metadata=json.dumps({
+                                'summary': summary,
+                                'comment_preview': preview_text,
+                                'author': author
+                            })
+                        )
+                        broadcast_notification(rec)
+                        created.append(rec)
+        
+        logger.info(f"✅ Created {len(created)} notifications from JIRA")
+        
+        return {
+            'success': True,
+            'synced': len(issues),
+            'created': len(created),
+            'notifications': created
+        }
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        logger.error(f"❌ Failed to sync JIRA notifications: {e}")
+        logger.error(f"Traceback: {error_details}")
+        return {'error': str(e), 'traceback': error_details, 'created': len(created)}, 500

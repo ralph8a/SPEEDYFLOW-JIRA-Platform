@@ -6,28 +6,28 @@
 
 class TransparencyManager {
   constructor() {
-    // Default opacity values based on glassmorphism.css
+    // Default opacity values - HIGHER for better visibility
     this.defaults = {
       light: {
-        primary: 0.7,      // .light .glassmorphic-primary: rgba(255, 255, 255, 0.7)
-        secondary: 0.65,   // Adjusted for light theme
-        tertiary: 0.6,     // Adjusted for light theme
+        primary: 0.92,     // Header, sidebars - MORE OPAQUE for visibility
+        secondary: 0.94,   // KANBAN COLUMNS - VERY OPAQUE for readability
+        tertiary: 0.88,    // MVP footer - MORE OPAQUE
         overlay: 0.0,      // Light overlay opacity - COMPLETELY TRANSPARENT
         blur: {
-          primary: 20,     // Primary blur px
-          secondary: 15,   // Secondary blur px
-          tertiary: 10     // Tertiary blur px
+          primary: 10,     // Header, sidebars - LESS blur for clarity
+          secondary: 8,    // Kanban columns - LESS blur for readability
+          tertiary: 6      // MVP footer - LESS blur
         }
       },
       dark: {
-        primary: 0.7,      // Matched to light theme primary (0.7) for consistency
-        secondary: 0.65,   // Matched to light theme secondary (0.65) - KANBAN COLUMNS
-        tertiary: 0.6,     // Matched to light theme tertiary (0.6) for consistency
+        primary: 0.92,     // Dark theme - same high opacity
+        secondary: 0.94,   // KANBAN COLUMNS - very opaque
+        tertiary: 0.88,    // MVP footer - more opaque
         overlay: 0.0,      // Dark overlay opacity - COMPLETELY TRANSPARENT
         blur: {
-          primary: 20,     // Primary blur px
-          secondary: 15,   // Secondary blur px
-          tertiary: 10     // Tertiary blur px
+          primary: 10,     // Less blur for clarity
+          secondary: 8,    // Less blur for readability
+          tertiary: 6      // Less blur
         }
       }
     };
@@ -45,6 +45,9 @@ class TransparencyManager {
     
     // Load saved transparency or use defaults
     this.loadTransparency();
+    
+    // Validate loaded settings - reset if corrupted
+    this.validateSettings();
     
     // Apply current transparency
     this.applyTransparency();
@@ -69,13 +72,38 @@ class TransparencyManager {
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
     // Re-apply transparency when DOM elements are added
-    const domObserver = new MutationObserver(() => {
+    const domObserver = new MutationObserver((mutations) => {
+      let shouldReapply = false;
+      
       // Check if new background overlay was added
       const overlays = document.querySelectorAll('.ai-background-overlay');
       if (overlays.length > 0) {
         // Reapply overlay opacity to any new elements
         overlays.forEach(overlay => {
           overlay.style.opacity = this.settings[this.currentTheme]?.overlay || this.defaults[this.currentTheme].overlay;
+        });
+      }
+      
+      // Check if kanban columns were added
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          for (const node of mutation.addedNodes) {
+            if (node.nodeType === 1) { // Element node
+              if (node.classList?.contains('kanban-column') || node.querySelector?.('.kanban-column')) {
+                shouldReapply = true;
+                break;
+              }
+            }
+          }
+        }
+        if (shouldReapply) break;
+      }
+      
+      // If kanban columns were added, reapply transparency
+      if (shouldReapply) {
+        console.log('🔄 Kanban columns detected in DOM, applying transparency...');
+        requestAnimationFrame(() => {
+          this.applyToKanbanColumns();
         });
       }
     });
@@ -111,6 +139,16 @@ class TransparencyManager {
         const parsed = JSON.parse(saved);
         console.log(`📦 Loaded transparency settings:`, parsed);
         this.settings = { ...this.defaults, ...parsed };
+        
+        // PROTECTION: Ensure Kanban columns (secondary) never go below 0.75 opacity
+        if (this.settings.light && this.settings.light.secondary < 0.75) {
+          console.warn(`⚠️ Light secondary opacity too low (${this.settings.light.secondary}), resetting to 0.75`);
+          this.settings.light.secondary = 0.75;
+        }
+        if (this.settings.dark && this.settings.dark.secondary < 0.75) {
+          console.warn(`⚠️ Dark secondary opacity too low (${this.settings.dark.secondary}), resetting to 0.75`);
+          this.settings.dark.secondary = 0.75;
+        }
       } else {
         this.settings = JSON.parse(JSON.stringify(this.defaults));
         console.log(`📦 Using default transparency settings`);
@@ -118,6 +156,47 @@ class TransparencyManager {
     } catch (error) {
       console.warn('⚠️ Error loading transparency settings, using defaults:', error);
       this.settings = JSON.parse(JSON.stringify(this.defaults));
+    }
+  }
+
+  /**
+   * Validate settings - check for corrupted or invalid values
+   */
+  validateSettings() {
+    let needsReset = false;
+    
+    ['light', 'dark'].forEach(theme => {
+      if (!this.settings[theme]) {
+        console.warn(`⚠️ Missing ${theme} theme settings, resetting...`);
+        needsReset = true;
+        return;
+      }
+      
+      // Check if all opacity values are valid numbers between 0 and 1
+      ['primary', 'secondary', 'tertiary', 'overlay'].forEach(layer => {
+        const value = this.settings[theme][layer];
+        if (typeof value !== 'number' || value < 0 || value > 1 || isNaN(value)) {
+          console.warn(`⚠️ Invalid ${theme}.${layer} value: ${value}, resetting...`);
+          needsReset = true;
+        }
+      });
+      
+      // Check blur values
+      if (this.settings[theme].blur) {
+        ['primary', 'secondary', 'tertiary'].forEach(layer => {
+          const value = this.settings[theme].blur[layer];
+          if (typeof value !== 'number' || value < 0 || value > 50 || isNaN(value)) {
+            console.warn(`⚠️ Invalid ${theme}.blur.${layer} value: ${value}, resetting...`);
+            needsReset = true;
+          }
+        });
+      }
+    });
+    
+    if (needsReset) {
+      console.warn('🔄 Resetting transparency settings to defaults due to corruption');
+      this.settings = JSON.parse(JSON.stringify(this.defaults));
+      this.saveTransparency();
     }
   }
 
@@ -184,13 +263,20 @@ class TransparencyManager {
       '.filter-bar-enhanced': 'tertiary',
       '.modal': 'secondary',
       '.navbar': 'tertiary',
-      '.kanban-column': 'secondary'
+      '.kanban-column': 'secondary',
+      '.ai-copilot-footer': 'tertiary'  // Flowing MVP footer
     };
 
     Object.entries(mainContainers).forEach(([selector, level]) => {
       const elements = document.querySelectorAll(selector);
       elements.forEach(element => {
-        const opacity = themeSettings[level];
+        let opacity = themeSettings[level];
+        
+        // PROTECTION: Kanban columns must have minimum 0.75 opacity to remain readable
+        if (element.classList.contains('kanban-column')) {
+          opacity = Math.max(0.75, opacity);
+        }
+        
         const blur = themeSettings.blur?.[level] || 15;
         
         // Set background color based on current theme and element type
@@ -203,12 +289,16 @@ class TransparencyManager {
             bgColor = `rgba(37, 37, 37, ${opacity})`;
           } else if (element.classList.contains('kanban-column')) {
             bgColor = `rgba(32, 32, 42, ${opacity})`;
+          } else if (element.classList.contains('ai-copilot-footer')) {
+            bgColor = `rgba(30, 30, 38, ${opacity})`;
           } else {
             bgColor = `rgba(42, 42, 42, ${opacity})`;
           }
         } else {
           if (element.classList.contains('kanban-column')) {
             bgColor = `rgba(248, 250, 252, ${opacity})`;
+          } else if (element.classList.contains('ai-copilot-footer')) {
+            bgColor = `rgba(255, 255, 255, ${opacity})`;
           } else {
             bgColor = `rgba(255, 255, 255, ${opacity})`;
           }
@@ -236,6 +326,9 @@ class TransparencyManager {
           element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
           element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.kanban-column') {
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+        } else if (selector === '.ai-copilot-footer') {
           element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
           element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         }
@@ -496,11 +589,15 @@ class TransparencyManager {
   }
 }
 
-// Initialize globally
-window.transparencyManager = new TransparencyManager();
+// Initialize globally - IMMEDIATE execution
+try {
+  window.transparencyManager = new TransparencyManager();
+  console.log('✅ Transparency Manager initialized successfully');
+  console.log('📊 Opacity methods: setTransparency(), getTransparency(), increaseOpacity(), decreaseOpacity()');
+  console.log('📊 Blur methods: setBlur(), getBlur(), increaseBlur(), decreaseBlur()');
+  console.log('📊 Example: transparencyManager.setBlur("light", "primary", 25)');
+  console.log('📊 Example: transparencyManager.increaseBlur("primary")');
+} catch (error) {
+  console.error('❌ Failed to initialize Transparency Manager:', error);
+}
 
-console.log('✅ Transparency Manager loaded with Blur Controls');
-console.log('📊 Opacity methods: setTransparency(), getTransparency(), increaseOpacity(), decreaseOpacity()');
-console.log('📊 Blur methods: setBlur(), getBlur(), increaseBlur(), decreaseBlur()');
-console.log('📊 Example: transparencyManager.setBlur("light", "primary", 25)');
-console.log('📊 Example: transparencyManager.increaseBlur("primary")');

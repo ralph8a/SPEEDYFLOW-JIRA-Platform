@@ -23,8 +23,11 @@
   
   /* Ensure clickability */
   pointer-events: auto !important;
-  z-index: 999999 !important;
+  z-index: 5 !important;
   position: relative !important;
+  
+  /* Transition for smooth hide/show */
+  transition: opacity 0.15s ease, transform 0.2s ease !important;
 }
 
 .issue-details-btn:hover {
@@ -60,20 +63,6 @@ body.theme-dark .issue-details-btn:hover {
   justify-content: space-between;
 }
 
-/* Make sure button doesn't interfere with drag */
-.issue-details-btn {
-  z-index: 10;
-  position: relative;
-}
-
-/* Prevent button from being draggable */
-.issue-details-btn {
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-}
-
 /* SVG icon styling */
 .issue-details-btn svg {
   pointer-events: none;
@@ -84,12 +73,18 @@ body.theme-dark .issue-details-btn:hover {
   transform: translateX(1px);
 }
 
-/* Force button to be on top of everything */
-.issue-details-btn, .issue-details-btn * {
-  pointer-events: auto !important;
+/* Prevent button from being draggable */
+.issue-details-btn {
+  -webkit-user-drag: none;
 }
 
+/* Show on hover */
 .issue-card:hover .issue-details-btn {
   background: rgba(59, 130, 246, 0.7) !important;
   border-color: rgba(59, 130, 246, 0.9) !important;
+}
+
+/* Hide during drag */
+.issue-card.dragging .issue-details-btn {
+  display: none !important;
 }

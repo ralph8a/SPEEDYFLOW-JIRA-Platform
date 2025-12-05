@@ -1481,39 +1481,9 @@ class SidebarActions {
    * Botón: Notifications
    */
   initNotificationsButton() {
-    const btn = document.getElementById('notificationsBtn');
-    if (!btn) return;
-
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      console.log('🔔 Notifications clicked');
-      
-      // Toggle notifications panel
-      this.toggleNotificationsPanel();
-    });
-  }
-
-  /**
-   * Toggle Notifications Panel
-   */
-  toggleNotificationsPanel() {
-    // Check if notifications panel exists
-    let panel = document.getElementById('notificationsPanel');
-    
-    if (!panel) {
-      // Create notifications panel
-      panel = this.createNotificationsPanel();
-      document.body.appendChild(panel);
-    }
-    
-    // Toggle visibility
-    if (panel.classList.contains('active')) {
-      panel.classList.remove('active');
-      setTimeout(() => panel.style.display = 'none', 300);
-    } else {
-      panel.style.display = 'block';
-      setTimeout(() => panel.classList.add('active'), 10);
-    }
+    // NOTE: Button handler is now managed by notifications-panel.js
+    // This prevents duplicate event listeners
+    console.log('✅ Notifications button initialization skipped (handled by notifications-panel.js)');
   }
 
   /**
