@@ -73,19 +73,365 @@ function setupThemeToggleButton() {
 
 // ===== USER MENU =====
 function setupUserMenu() {
-  const userMenuBtn = document.getElementById('userMenuBtn');
+  // Setup header account buttons
+  const headerUserMenuBtn = document.getElementById('headerUserMenuBtn');
+  const headerSettingsBtn = document.getElementById('headerSettingsBtn');
+  const headerHelpBtn = document.getElementById('headerHelpBtn');
   
-  if (userMenuBtn) {
-    userMenuBtn.addEventListener('click', (e) => {
+  if (headerUserMenuBtn) {
+    headerUserMenuBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       showProfileModal();
     });
-    console.log('✓ User profile button enabled');
+    console.log('✓ Header profile button enabled');
+  }
+
+  if (headerSettingsBtn) {
+    headerSettingsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showSettingsModal();
+    });
+    console.log('✓ Header settings button enabled');
+  }
+
+  if (headerHelpBtn) {
+    headerHelpBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showHelpModal();
+    });
+    console.log('✓ Header help button enabled');
   }
   
   // Update user info for display only
   updateUserInfo();
+}
+
+function showSettingsModal() {
+  let panel = document.getElementById('settingsPanel');
+  
+  if (!panel) {
+    panel = createSettingsPanel();
+    document.body.appendChild(panel);
+  }
+  
+  panel.style.display = 'flex';
+  setTimeout(() => panel.classList.add('active'), 10);
+  
+  // Load current settings
+  loadSettings();
+}
+
+function createSettingsPanel() {
+  const panel = document.createElement('div');
+  panel.id = 'settingsPanel';
+  panel.className = 'modal-overlay';
+  panel.innerHTML = `
+    <div class="modal-container settings-modal">
+      <div class="modal-header">
+        <h2>⚙️ Settings</h2>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-tabs">
+          <button class="settings-tab active" data-tab="general">General</button>
+          <button class="settings-tab" data-tab="appearance">Appearance</button>
+          <button class="settings-tab" data-tab="notifications">Notifications</button>
+          <button class="settings-tab" data-tab="advanced">Advanced</button>
+        </div>
+        
+        <div class="settings-content">
+          <!-- General Settings -->
+          <div class="settings-panel active" data-panel="general">
+            <h3>General Settings</h3>
+            <div class="setting-item">
+              <label for="autoRefresh">Auto-refresh tickets</label>
+              <input type="checkbox" id="autoRefresh" checked>
+            </div>
+            <div class="setting-item">
+              <label for="refreshInterval">Refresh interval (seconds)</label>
+              <input type="number" id="refreshInterval" value="60" min="10" max="300">
+            </div>
+            <div class="setting-item">
+              <label for="defaultView">Default view</label>
+              <select id="defaultView">
+                <option value="kanban">Kanban Board</option>
+                <option value="list">List View</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Appearance Settings -->
+          <div class="settings-panel" data-panel="appearance">
+            <h3>Appearance</h3>
+            <div class="setting-item">
+              <label for="themeSelect">Theme</label>
+              <select id="themeSelect">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="auto">Auto (System)</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <label for="compactMode">Compact mode</label>
+              <input type="checkbox" id="compactMode">
+            </div>
+            <div class="setting-item">
+              <label for="showAvatars">Show user avatars</label>
+              <input type="checkbox" id="showAvatars" checked>
+            </div>
+            <div class="setting-item">
+              <label for="animationSpeed">Animation speed</label>
+              <select id="animationSpeed">
+                <option value="fast">Fast</option>
+                <option value="normal">Normal</option>
+                <option value="slow">Slow</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Notifications Settings -->
+          <div class="settings-panel" data-panel="notifications">
+            <h3>Notification Preferences</h3>
+            <div class="setting-item">
+              <label for="enableNotifications">Enable notifications</label>
+              <input type="checkbox" id="enableNotifications" checked>
+            </div>
+            <div class="setting-item">
+              <label for="soundEnabled">Enable sound</label>
+              <input type="checkbox" id="soundEnabled">
+            </div>
+            <div class="setting-item">
+              <label for="notifyAssigned">Notify when assigned</label>
+              <input type="checkbox" id="notifyAssigned" checked>
+            </div>
+            <div class="setting-item">
+              <label for="notifyComments">Notify on comments</label>
+              <input type="checkbox" id="notifyComments" checked>
+            </div>
+            <div class="setting-item">
+              <label for="notifyMentions">Notify on mentions</label>
+              <input type="checkbox" id="notifyMentions" checked>
+            </div>
+          </div>
+          
+          <!-- Advanced Settings -->
+          <div class="settings-panel" data-panel="advanced">
+            <h3>Advanced Settings</h3>
+            <div class="setting-item">
+              <label for="cacheEnabled">Enable caching</label>
+              <input type="checkbox" id="cacheEnabled" checked>
+            </div>
+            <div class="setting-item">
+              <label for="debugMode">Debug mode</label>
+              <input type="checkbox" id="debugMode">
+            </div>
+            <div class="setting-item">
+              <label>Clear cache</label>
+              <button class="btn-secondary" onclick="localStorage.clear(); location.reload()">Clear All Data</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">Cancel</button>
+        <button class="btn-primary" onclick="saveSettingsFromModal()">Save Changes</button>
+      </div>
+    </div>
+  `;
+  
+  // Tab switching
+  panel.querySelectorAll('.settings-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      
+      // Update tabs
+      panel.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Update panels
+      panel.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+      panel.querySelector(`[data-panel="${tabName}"]`).classList.add('active');
+    });
+  });
+  
+  return panel;
+}
+
+function loadSettings() {
+  const settings = JSON.parse(localStorage.getItem('userSettings') || '{}');
+  
+  // General
+  if (settings.autoRefresh !== undefined) {
+    const el = document.getElementById('autoRefresh');
+    if (el) el.checked = settings.autoRefresh;
+  }
+  if (settings.refreshInterval) {
+    const el = document.getElementById('refreshInterval');
+    if (el) el.value = settings.refreshInterval;
+  }
+  if (settings.defaultView) {
+    const el = document.getElementById('defaultView');
+    if (el) el.value = settings.defaultView;
+  }
+  
+  // Appearance
+  if (settings.theme) {
+    const el = document.getElementById('themeSelect');
+    if (el) el.value = settings.theme;
+  }
+  if (settings.compactMode !== undefined) {
+    const el = document.getElementById('compactMode');
+    if (el) el.checked = settings.compactMode;
+  }
+  if (settings.showAvatars !== undefined) {
+    const el = document.getElementById('showAvatars');
+    if (el) el.checked = settings.showAvatars;
+  }
+  if (settings.animationSpeed) {
+    const el = document.getElementById('animationSpeed');
+    if (el) el.value = settings.animationSpeed;
+  }
+  
+  // Notifications
+  if (settings.enableNotifications !== undefined) {
+    const el = document.getElementById('enableNotifications');
+    if (el) el.checked = settings.enableNotifications;
+  }
+  if (settings.soundEnabled !== undefined) {
+    const el = document.getElementById('soundEnabled');
+    if (el) el.checked = settings.soundEnabled;
+  }
+  if (settings.notifyAssigned !== undefined) {
+    const el = document.getElementById('notifyAssigned');
+    if (el) el.checked = settings.notifyAssigned;
+  }
+  if (settings.notifyComments !== undefined) {
+    const el = document.getElementById('notifyComments');
+    if (el) el.checked = settings.notifyComments;
+  }
+  if (settings.notifyMentions !== undefined) {
+    const el = document.getElementById('notifyMentions');
+    if (el) el.checked = settings.notifyMentions;
+  }
+  
+  // Advanced
+  if (settings.cacheEnabled !== undefined) {
+    const el = document.getElementById('cacheEnabled');
+    if (el) el.checked = settings.cacheEnabled;
+  }
+  if (settings.debugMode !== undefined) {
+    const el = document.getElementById('debugMode');
+    if (el) el.checked = settings.debugMode;
+  }
+}
+
+function saveSettingsFromModal() {
+  const settings = {
+    autoRefresh: document.getElementById('autoRefresh')?.checked,
+    refreshInterval: document.getElementById('refreshInterval')?.value,
+    defaultView: document.getElementById('defaultView')?.value,
+    theme: document.getElementById('themeSelect')?.value,
+    compactMode: document.getElementById('compactMode')?.checked,
+    showAvatars: document.getElementById('showAvatars')?.checked,
+    animationSpeed: document.getElementById('animationSpeed')?.value,
+    enableNotifications: document.getElementById('enableNotifications')?.checked,
+    soundEnabled: document.getElementById('soundEnabled')?.checked,
+    notifyAssigned: document.getElementById('notifyAssigned')?.checked,
+    notifyComments: document.getElementById('notifyComments')?.checked,
+    notifyMentions: document.getElementById('notifyMentions')?.checked,
+    cacheEnabled: document.getElementById('cacheEnabled')?.checked,
+    debugMode: document.getElementById('debugMode')?.checked
+  };
+  
+  localStorage.setItem('userSettings', JSON.stringify(settings));
+  
+  // Close modal
+  const panel = document.getElementById('settingsPanel');
+  if (panel) {
+    panel.classList.remove('active');
+    setTimeout(() => panel.style.display = 'none', 300);
+  }
+  
+  // Apply theme if changed
+  if (settings.theme) {
+    document.body.className = settings.theme === 'dark' ? 'theme-dark' : '';
+  }
+  
+  console.log('Settings saved:', settings);
+}
+
+function showHelpModal() {
+  let modal = document.getElementById('helpModal');
+  
+  if (!modal) {
+    modal = createHelpModal();
+    document.body.appendChild(modal);
+  }
+  
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('active'), 10);
+}
+
+function createHelpModal() {
+  const modal = document.createElement('div');
+  modal.id = 'helpModal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-container help-modal">
+      <div class="modal-header">
+        <h2>❔ Help Center</h2>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section">
+          <h3>🚀 Quick Start</h3>
+          <ul>
+            <li>Select a <strong>Service Desk</strong> from the sidebar dropdown</li>
+            <li>Choose a <strong>Queue</strong> to view tickets</li>
+            <li>Use the <strong>Kanban Board</strong> to organize tickets by status</li>
+            <li>Click on any ticket to view details and add comments</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h3>⌨️ Keyboard Shortcuts</h3>
+          <ul>
+            <li><kbd>Ctrl</kbd> + <kbd>K</kbd> - Quick search</li>
+            <li><kbd>Esc</kbd> - Close modals/panels</li>
+            <li><kbd>R</kbd> - Refresh tickets</li>
+            <li><kbd>N</kbd> - New ticket</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h3>🎨 Features</h3>
+          <ul>
+            <li><strong>Quick Triage:</strong> Identifies tickets requiring immediate attention (3+ days old)</li>
+            <li><strong>Flowing MVP:</strong> AI assistant for queue insights and suggestions</li>
+            <li><strong>Glassmorphism:</strong> Modern transparent UI with backdrop blur effects</li>
+            <li><strong>Real-time Updates:</strong> Auto-refresh to stay synced with JIRA</li>
+          </ul>
+        </div>
+        
+        <div class="help-section">
+          <h3>📚 Resources</h3>
+          <ul>
+            <li><a href="https://github.com/speedyflow/docs" target="_blank">Documentation</a></li>
+            <li><a href="https://github.com/speedyflow/docs/issues" target="_blank">Report an Issue</a></li>
+            <li><a href="mailto:support@speedyflow.com">Contact Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">Got it!</button>
+      </div>
+    </div>
+  `;
+  
+  return modal;
 }
 
 function updateUserInfo() {
@@ -270,7 +616,6 @@ function updateNotificationBadge(count) {
 }
 
 function showNotificationsPanel() {
-  // TODO: Implementar panel de notificaciones
   console.log('Notifications panel - Coming soon');
   alert('Notifications panel - Coming soon 🔔');
 }
@@ -340,15 +685,7 @@ function filterIssuesRealtime(query) {
 // ===== CLOSE DROPDOWNS ON CLICK OUTSIDE =====
 function closeDropDownMenusOnClickOutside() {
   document.addEventListener('click', (e) => {
-    const userDropdown = document.getElementById('userDropdown');
-    const userMenuBtn = document.getElementById('userMenuBtn');
-
-    // Close user menu (if implemented)
-    if (userDropdown && userMenuBtn && 
-        !userDropdown.contains(e.target) && 
-        !userMenuBtn.contains(e.target)) {
-      userDropdown.style.display = 'none';
-    }
+    // Reserved for future dropdown menus if needed
   });
 }
 

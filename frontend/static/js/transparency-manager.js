@@ -214,23 +214,30 @@ class TransparencyManager {
           }
         }
         
-        element.style.backgroundColor = bgColor;
+        element.style.setProperty('background-color', bgColor, 'important');
         
-        // Apply appropriate backdrop filter based on selector
+        // Apply appropriate backdrop filter based on selector - All with 180% saturation
         if (selector === '.sidebar') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(180%)`;
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.main-header-pro') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(150%)`;
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.right-sidebar') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(180%)`;
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.filter-bar-enhanced') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(120%)`;
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.modal') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(150%)`;
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.navbar') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(120%)`;
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.kanban-column') {
-          element.style.backdropFilter = `blur(${blur}px) saturate(140%)`;
+          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         }
       });
     });
@@ -387,9 +394,9 @@ class TransparencyManager {
         bgColor = `rgba(248, 250, 252, ${opacity})`;
       }
       
-      column.style.backgroundColor = bgColor;
-      column.style.backdropFilter = `blur(${blur}px) saturate(140%)`;
-      column.style.webkitBackdropFilter = `blur(${blur}px) saturate(140%)`;
+      column.style.setProperty('background-color', bgColor, 'important');
+      column.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
+      column.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
     });
 
     console.log(`✅ Applied transparency to ${columns.length} kanban columns`);

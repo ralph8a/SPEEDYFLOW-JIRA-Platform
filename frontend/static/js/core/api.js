@@ -1,7 +1,7 @@
 /**
  * API Module - HTTP Communication Layer
  * Handles all API requests to the backend
- * SalesJIRA Application
+ * SPEEDYFLOW JIRA Platform
  */
 
 import { logger } from '../utils/helpers.js';

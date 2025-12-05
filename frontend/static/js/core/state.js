@@ -1,7 +1,7 @@
 /**
  * State Management Module
  * Centralized application state with reactive updates
- * SalesJIRA Application
+ * SPEEDYFLOW JIRA Platform
  */
 
 import { logger } from '../utils/helpers.js';

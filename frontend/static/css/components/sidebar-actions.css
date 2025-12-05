@@ -187,6 +187,141 @@ body.theme-dark .notification-content small {
   color: var(--text-tertiary-dark, #666);
 }
 
+/* Notification message elements */
+.notification-message {
+  font-size: 14px;
+  color: var(--text-primary, #1a1a1a);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+body.theme-dark .notification-message {
+  color: var(--text-primary-dark, #ffffff);
+}
+
+.notif-issue-key {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--accent-bg, rgba(59, 130, 246, 0.1));
+  color: var(--accent-color, #3b82f6);
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+body.theme-dark .notif-issue-key {
+  background: var(--accent-bg-dark, rgba(59, 130, 246, 0.15));
+}
+
+.notif-issue-summary {
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+body.theme-dark .notif-issue-summary {
+  color: var(--text-secondary-dark, #999);
+}
+
+.notif-comment-preview {
+  padding: 8px 12px;
+  background: var(--glass-bg, rgba(0, 0, 0, 0.03));
+  border-left: 3px solid var(--accent-color, #3b82f6);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+  margin-top: 8px;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+body.theme-dark .notif-comment-preview {
+  background: var(--glass-bg-dark, rgba(255, 255, 255, 0.05));
+  color: var(--text-secondary-dark, #999);
+}
+
+.notification-time {
+  font-size: 12px;
+  color: var(--text-tertiary, #999);
+  margin-top: 4px;
+}
+
+body.theme-dark .notification-time {
+  color: var(--text-tertiary-dark, #666);
+}
+
+/* Notification actions */
+.notification-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.notification-action-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0.6;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-action-btn:hover {
+  opacity: 1;
+  background: var(--hover-bg, rgba(0, 0, 0, 0.05));
+}
+
+body.theme-dark .notification-action-btn:hover {
+  background: var(--hover-bg-dark, rgba(255, 255, 255, 0.1));
+}
+
+.notification-action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Notification card layout */
+.notification-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  border-radius: 4px;
+  margin: 4px 8px;
+}
+
+.notification-card:hover {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.03));
+}
+
+.notification-card.unread {
+  background: var(--accent-bg, rgba(59, 130, 246, 0.05));
+  border-left-color: var(--accent-color, #3b82f6);
+}
+
+.notification-card.read {
+  opacity: 0.7;
+}
+
+body.theme-dark .notification-card:hover {
+  background: var(--hover-bg-dark, rgba(255, 255, 255, 0.05));
+}
+
+body.theme-dark .notification-card.unread {
+  background: var(--accent-bg-dark, rgba(59, 130, 246, 0.1));
+}
+
 /* Notifications Footer */
 .notifications-footer {
   display: flex;
@@ -319,13 +454,15 @@ body.theme-dark .toast-content p {
    ======================================== */
 
 .modal-overlay {
+  /* Common modal overlay styles - see .modal-overlay-base in common.css */
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6); /* Slightly darker for consistency */
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -343,7 +480,7 @@ body.theme-dark .toast-content p {
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.3));
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); /* TODO: Use .shadow-modal-heavy class */
   max-width: 90vw;
   max-height: 90vh;
   overflow: hidden;

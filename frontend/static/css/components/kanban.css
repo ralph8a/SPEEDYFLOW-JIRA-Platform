@@ -120,7 +120,7 @@
   box-shadow: var(--shadow-md);
 }
 
-.kanban-column.col-blue .issue-card {
+.kanban-column.col-blue .issue-card:hover {
   border-left-color: #3b82f6;
 }
 
@@ -138,7 +138,7 @@
   box-shadow: 0 8px 20px rgba(217, 70, 239, 0.15);
 }
 
-.kanban-column.col-purple .issue-card {
+.kanban-column.col-purple .issue-card:hover {
   border-left-color: #d946ef;
 }
 
@@ -156,7 +156,7 @@
   box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
 }
 
-.kanban-column.col-cyan .issue-card {
+.kanban-column.col-cyan .issue-card:hover {
   border-left-color: #06b6d4;
 }
 
@@ -174,7 +174,7 @@
   box-shadow: 0 8px 20px rgba(34, 197, 94, 0.15);
 }
 
-.kanban-column.col-green .issue-card {
+.kanban-column.col-green .issue-card:hover {
   border-left-color: #22c55e;
 }
 
@@ -192,7 +192,7 @@
   box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
 }
 
-.kanban-column.col-red .issue-card {
+.kanban-column.col-red .issue-card:hover {
   border-left-color: #ef4444;
 }
 
@@ -210,7 +210,7 @@
   box-shadow: 0 8px 20px rgba(234, 179, 8, 0.15);
 }
 
-.kanban-column.col-yellow .issue-card {
+.kanban-column.col-yellow .issue-card:hover {
   border-left-color: #eab308;
 }
 
@@ -228,7 +228,7 @@
   box-shadow: 0 8px 20px rgba(244, 114, 182, 0.15);
 }
 
-.kanban-column.col-pink .issue-card {
+.kanban-column.col-pink .issue-card:hover {
   border-left-color: #f472b6;
 }
 
@@ -246,7 +246,7 @@
   box-shadow: var(--shadow-md);
 }
 
-.kanban-column.col-indigo .issue-card {
+.kanban-column.col-indigo .issue-card:hover {
   border-left-color: #6366f1;
 }
 
@@ -264,7 +264,7 @@
   box-shadow: 0 8px 20px rgba(20, 184, 166, 0.15);
 }
 
-.kanban-column.col-teal .issue-card {
+.kanban-column.col-teal .issue-card:hover {
   border-left-color: #14b8a6;
 }
 
@@ -282,7 +282,7 @@
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.15);
 }
 
-.kanban-column.col-orange .issue-card {
+.kanban-column.col-orange .issue-card:hover {
   border-left-color: #f97316;
 }
 
@@ -361,8 +361,7 @@
 
 /* ==================== ISSUE CARDS ==================== */
 .issue-card {
-  background: transparent !important;
-  /* Blur controlled by transparency-manager.css */
+  /* Background is controlled by theme files for proper opacity */
   /* backdrop-filter: blur(15px); */
   /* -webkit-backdrop-filter: blur(15px); */
   padding: var(--spacing-md);
@@ -371,8 +370,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   
-  /* Left border accent */
-  border-left: 3px solid #3b82f6;
+  /* Left border matches other borders by default - color changes on hover */
+  border-left: 3px solid rgba(59, 130, 246, 0.1);
   
   animation: slideInCard 0.3s ease-out;
 }
@@ -387,6 +386,54 @@
 }
 
 /* Card styling is now handled by color-based column classes above */
+
+/* FORCE consistent border-left in kanban context with higher specificity */
+.kanban-column .issue-card,
+.kanban-board .issue-card,
+.kanban-cards .issue-card {
+  border-left: 3px solid rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Ensure column color hover rules have maximum specificity */
+.kanban-board .kanban-column.col-blue .issue-card:hover {
+  border-left-color: #3b82f6 !important;
+}
+
+.kanban-board .kanban-column.col-purple .issue-card:hover {
+  border-left-color: #d946ef !important;
+}
+
+.kanban-board .kanban-column.col-cyan .issue-card:hover {
+  border-left-color: #06b6d4 !important;
+}
+
+.kanban-board .kanban-column.col-green .issue-card:hover {
+  border-left-color: #22c55e !important;
+}
+
+.kanban-board .kanban-column.col-red .issue-card:hover {
+  border-left-color: #ef4444 !important;
+}
+
+.kanban-board .kanban-column.col-yellow .issue-card:hover {
+  border-left-color: #eab308 !important;
+}
+
+.kanban-board .kanban-column.col-pink .issue-card:hover {
+  border-left-color: #f472b6 !important;
+}
+
+.kanban-board .kanban-column.col-indigo .issue-card:hover {
+  border-left-color: #6366f1 !important;
+}
+
+.kanban-board .kanban-column.col-teal .issue-card:hover {
+  border-left-color: #14b8a6 !important;
+}
+
+.kanban-board .kanban-column.col-orange .issue-card:hover {
+  border-left-color: #f97316 !important;
+}
 
 /* ==================== ANIMATIONS ==================== */
 @keyframes slideInCard {

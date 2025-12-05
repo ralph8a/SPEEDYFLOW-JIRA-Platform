@@ -47,7 +47,6 @@ class SmartFilters {
         icon: '💬',
         description: 'Tickets with recent comments (in progress)',
         filter: (issue) => {
-          // TODO: Implement when comment count is available
           return false;
         },
         disabled: true

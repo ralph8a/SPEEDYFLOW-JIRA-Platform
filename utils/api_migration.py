@@ -51,14 +51,20 @@ def get_current_user(client: JiraAPI) -> Dict[str, Any]:
         if not resp:
             logger.warning(f"Current user response empty. URL={url}")
             return {"displayName": None, "accountId": None, "emailAddress": None, "source": "empty"}
-        return {
+        
+        user_data = {
             "displayName": resp.get("displayName") or resp.get("name"),
             "accountId": resp.get("accountId"),
             "emailAddress": resp.get("emailAddress"),
+            "name": resp.get("name"),
             "timeZone": resp.get("timeZone"),
             "locale": resp.get("locale"),
+            "active": resp.get("active", True),
             "source": "jira"
         }
+        
+        logger.info(f"✅ Current user fetched: {user_data['displayName']} (accountId: {user_data['accountId']})")
+        return user_data
     except Exception as e:
         logger.error(f"Error fetching current user: {e}")
         return {"displayName": None, "accountId": None, "emailAddress": None, "source": "error"}

@@ -753,8 +753,8 @@ body.theme-dark .fields-tab.active {
   display: grid;
   grid-template-columns: 1fr 1fr; /* 2 columnas fijas */
   gap: 8px; /* Gap reducido para más compacto */
-  max-height: 70vh; /* Usa viewport height para mejor responsividad */
-  overflow-y: auto;
+  max-height: none; /* Sin límite de altura para mostrar todo el contenido */
+  overflow-y: visible; /* Permitir que el contenido se extienda */
   padding: 6px;
   background: rgba(0, 0, 0, 0.02);
   border-radius: 8px;
@@ -772,6 +772,8 @@ body.theme-dark .all-fields-grid {
   border-radius: 6px;
   padding: 8px 10px; /* Más compacto */
   transition: all 0.2s ease;
+  min-height: auto; /* Permitir altura automática */
+  height: auto; /* Altura automática basada en contenido */
 }
 
 /* Request Type Button */
@@ -864,6 +866,9 @@ body.theme-dark .field-label {
   color: rgba(0, 0, 0, 0.9);
   word-break: break-word;
   line-height: 1.4;
+  max-height: none; /* Sin límite de altura */
+  overflow: visible; /* Mostrar todo el contenido */
+  white-space: pre-wrap; /* Preservar saltos de línea */
 }
 
 body.theme-dark .field-value {
@@ -875,8 +880,9 @@ body.theme-dark .field-value {
 }
 
 .field-text-long {
-  max-height: none; /* Sin límite para mostrar todo el contenido */
-  overflow-y: visible;
+  max-height: none !important; /* Sin límite para mostrar todo el contenido */
+  overflow-y: visible !important;
+  overflow-x: visible !important;
   font-size: 12px;
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.7);
@@ -884,6 +890,99 @@ body.theme-dark .field-value {
   background: rgba(0, 0, 0, 0.03);
   border-radius: 4px;
   white-space: pre-wrap;
+  height: auto !important;
+}
+
+/* Estilos específicos para campos de descripción - SIEMPRE EXPANDIDOS */
+.field-item[data-field*="description"] .field-value,
+.field-item[data-field*="Description"] .field-value,
+.field-item[data-field*="descripcion"] .field-value,
+.field-item[data-field*="Descripcion"] .field-value {
+  max-height: none !important;
+  overflow: visible !important;
+  white-space: pre-wrap !important;
+  height: auto !important;
+  word-wrap: break-word;
+}
+
+/* Campos con texto largo - Vista compacta con click para expandir */
+.field-value-long {
+  max-height: 60px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.field-value-long:hover {
+  background: rgba(59, 130, 246, 0.05);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+body.theme-dark .field-value-long:hover {
+  background: rgba(100, 181, 246, 0.08);
+  box-shadow: 0 2px 8px rgba(100, 181, 246, 0.15);
+}
+
+.field-value-long.expanded {
+  max-height: none;
+  overflow: visible;
+}
+
+.field-value-long::after {
+  content: '📄 Click para ver más';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 0.95) 100%);
+  padding: 2px 8px;
+  font-size: 9px;
+  color: rgba(59, 130, 246, 0.8);
+  font-weight: 600;
+  pointer-events: none;
+  border-radius: 0 0 4px 4px;
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+body.theme-dark .field-value-long::after {
+  background: linear-gradient(to right, transparent 0%, rgba(40, 40, 50, 0.8) 30%, rgba(40, 40, 50, 0.95) 100%);
+  color: rgba(100, 181, 246, 0.8);
+}
+
+.field-value-long.expanded::after {
+  content: '🔼 Click para contraer';
+  position: static;
+  background: rgba(59, 130, 246, 0.1);
+  display: block;
+  text-align: center;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  animation: none;
+}
+
+body.theme-dark .field-value-long.expanded::after {
+  background: rgba(100, 181, 246, 0.1);
+  border-color: rgba(100, 181, 246, 0.2);
+}
+
+/* Animación sutil para el indicador */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Efecto adicional para campos expandibles */
+.field-item:has(.field-value-long) {
+  transition: all 0.2s ease;
+}
+
+.field-item:has(.field-value-long:hover) {
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 body.theme-dark .field-text-long {

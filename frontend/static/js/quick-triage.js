@@ -78,9 +78,12 @@ class QuickTriage {
       // Filter criteria
       const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned' || issue.assignee === 'No assignee';
       const isHighPriority = issue.severity === 'Critico' || issue.severity === 'Alto' || issue.severity === 'Mayor';
-      const isOld = this.isOlderThan(issue.updated || issue.created, 7); // 7+ days old
       
-      return isUnassigned || isHighPriority || isOld;
+      // Use last_real_change like app.js cards, fallback to updated or created
+      const lastChange = issue.last_real_change || issue.updated || issue.created;
+      const isStale = this.isOlderThan(lastChange, 3); // 3+ days without changes
+      
+      return isUnassigned || isHighPriority || isStale;
     });
   }
 
@@ -165,7 +168,9 @@ class QuickTriage {
     return sortedIssues.map(issue => {
       const severityClass = this.getSeverityClass(issue.severity);
       const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned' || issue.assignee === 'No assignee';
-      const ageTag = this.getAgeTag(issue.updated || issue.created);
+      // Use last_real_change like app.js cards
+      const lastChange = issue.last_real_change || issue.updated || issue.created;
+      const ageTag = this.getAgeTag(lastChange);
 
       return `
         <div class="triage-issue-card" data-issue-key="${issue.key}">
@@ -223,6 +228,7 @@ class QuickTriage {
     if (diffDays > 30) return '🔴 30+ days';
     if (diffDays > 14) return '🟠 14+ days';
     if (diffDays > 7) return '🟡 7+ days';
+    if (diffDays >= 3) return '⚠️ 3+ days';
     return null;
   }
 

@@ -18,8 +18,19 @@ CREATE TABLE IF NOT EXISTS notifications (
     message TEXT NOT NULL,
     severity TEXT DEFAULT 'info',
     created_at TEXT NOT NULL,
-    read INTEGER DEFAULT 0
+    read INTEGER DEFAULT 0,
+    issue_key TEXT,
+    user TEXT,
+    action TEXT,
+    metadata TEXT
 );
+"""
+
+SCHEMA_MIGRATION_V2 = """
+ALTER TABLE notifications ADD COLUMN issue_key TEXT;
+ALTER TABLE notifications ADD COLUMN user TEXT;
+ALTER TABLE notifications ADD COLUMN action TEXT;
+ALTER TABLE notifications ADD COLUMN metadata TEXT;
 """
 
 def get_db() -> sqlite3.Connection:
@@ -36,6 +47,25 @@ def init_db() -> None:
     with _DB_LOCK:
         conn.execute(SCHEMA_NOTIFICATIONS)
         conn.commit()
+        
+        # Try to migrate existing tables (add new columns if they don't exist)
+        try:
+            cursor = conn.execute("PRAGMA table_info(notifications)")
+            columns = [row[1] for row in cursor.fetchall()]
+            
+            if 'issue_key' not in columns:
+                conn.execute("ALTER TABLE notifications ADD COLUMN issue_key TEXT")
+            if 'user' not in columns:
+                conn.execute("ALTER TABLE notifications ADD COLUMN user TEXT")
+            if 'action' not in columns:
+                conn.execute("ALTER TABLE notifications ADD COLUMN action TEXT")
+            if 'metadata' not in columns:
+                conn.execute("ALTER TABLE notifications ADD COLUMN metadata TEXT")
+            
+            conn.commit()
+        except Exception as e:
+            # Columns might already exist, that's OK
+            pass
 
 
 def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
@@ -46,17 +76,31 @@ def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
         'severity': row['severity'],
         'created_at': row['created_at'],
         'read': bool(row['read']),
+        'issue_key': row.get('issue_key'),
+        'user': row.get('user'),
+        'action': row.get('action'),
+        'metadata': row.get('metadata'),
     }
 
 
-def create_notification(ntype: str, message: str, severity: str = 'info') -> Dict[str, Any]:
+def create_notification(
+    ntype: str, 
+    message: str, 
+    severity: str = 'info',
+    issue_key: str = None,
+    user: str = None,
+    action: str = None,
+    metadata: str = None
+) -> Dict[str, Any]:
     # Use timezone-aware UTC timestamp (avoids utcnow deprecation warnings)
     ts = datetime.datetime.now(datetime.timezone.utc).isoformat()
     conn = get_db()
     with _DB_LOCK:
         cur = conn.execute(
-            "INSERT INTO notifications(type, message, severity, created_at) VALUES(?,?,?,?)",
-            (ntype, message, severity, ts)
+            """INSERT INTO notifications(
+                type, message, severity, created_at, issue_key, user, action, metadata
+            ) VALUES(?,?,?,?,?,?,?,?)""",
+            (ntype, message, severity, ts, issue_key, user, action, metadata)
         )
         conn.commit()
         nid = cur.lastrowid

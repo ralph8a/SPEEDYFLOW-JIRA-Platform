@@ -1,5 +1,5 @@
 # api/ollama_endpoints.py
-# Ollama AI Endpoints for SalesJIRA
+# Ollama AI Endpoints for SPEEDYFLOW
 # FREE LOCAL AI - No API costs, no internet required
 
 from flask import request, jsonify
