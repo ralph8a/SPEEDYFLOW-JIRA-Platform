@@ -89,7 +89,8 @@ function openIssueDetails(issueKey) {
   requestAnimationFrame(() => {
     setTimeout(() => {
       console.log('⏱️ [Right Sidebar] DOM settled, setting up systems...');
-      setupMentionSystem();
+      // Mention system is now automatic via mentions-system.js (type @ in textarea)
+      // setupMentionSystem(); // Disabled: button removed, auto-mention works better
       setupAttachmentsSystem();
       setupCommentShortcuts();
       

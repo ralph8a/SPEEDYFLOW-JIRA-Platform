@@ -216,14 +216,14 @@ async function initApp() {
   // Cargar filtros guardados si existen
   loadSavedFilters();
   
-  // NOTE: Auto-selection is now handled by floating-controls.js
+  // NOTE: Auto-selection is now handled by header-menu-controller.js
   // which uses the new filter selectors (serviceDeskSelectFilter, queueSelectFilter)
   
   console.log('✅ SpeedyFlow ready');
 }
 
 function setupEventListeners() {
-  // NEW FILTER SELECTORS (from floating-controls.js)
+  // NEW FILTER SELECTORS (from header-menu-controller.js)
   const serviceDeskFilterSelect = document.getElementById('serviceDeskSelectFilter');
   if (serviceDeskFilterSelect) {
     serviceDeskFilterSelect.addEventListener('change', async (e) => {
@@ -255,7 +255,7 @@ function setupEventListeners() {
     });
   }
 
-  // NEW QUEUE FILTER SELECTOR (from floating-controls.js)
+  // NEW QUEUE FILTER SELECTOR (from header-menu-controller.js)
   const queueFilterSelect = document.getElementById('queueSelectFilter');
   if (queueFilterSelect) {
     queueFilterSelect.addEventListener('change', async (e) => {
@@ -294,7 +294,7 @@ function setupEventListeners() {
     });
   }
 
-  // New ticket button functionality handled by floating-controls.js
+  // New ticket button functionality handled by header-menu-controller.js
 
   // Save filters button
   const saveFiltersBtn = document.getElementById('saveFiltersBtn');
@@ -521,7 +521,7 @@ async function loadQueues(queues) {
   
   if (queues && Array.isArray(queues)) {
     console.log('✅ Queues loaded:', queues.length);
-    // Dispatch event for floating-controls.js to listen
+    // Dispatch event for header-menu-controller.js to listen
     window.dispatchEvent(new CustomEvent('queues-loaded', { detail: queues }));
   }
   if (statusEl) {
@@ -1328,10 +1328,27 @@ async function renderKanban() {
 
   kanbanView.innerHTML = html;
   
-  // Apply transparency effects to kanban columns
-  if (window.transparencyManager) {
-    window.transparencyManager.applyToKanbanColumns();
-  }
+  // Apply transparency effects to kanban columns after DOM settles
+  // Try immediately with requestAnimationFrame
+  requestAnimationFrame(() => {
+    if (window.transparencyManager) {
+      console.log('🎨 Applying transparency to Kanban columns (immediate)...');
+      window.transparencyManager.applyToKanbanColumns();
+      window.transparencyManager.applyTransparency();
+    } else {
+      console.warn('⚠️ Transparency manager not ready yet, retrying...');
+      // Retry after 200ms if not ready
+      setTimeout(() => {
+        if (window.transparencyManager) {
+          console.log('🎨 Applying transparency to Kanban columns (retry)...');
+          window.transparencyManager.applyToKanbanColumns();
+          window.transparencyManager.applyTransparency();
+        } else {
+          console.error('❌ Transparency manager failed to load!');
+        }
+      }, 200);
+    }
+  });
   
   applyCardLayout();
   

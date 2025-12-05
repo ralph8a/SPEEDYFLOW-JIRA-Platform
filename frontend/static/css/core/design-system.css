@@ -64,7 +64,7 @@ body.theme-dark {
 /* Card / surface - base styles for all card-like elements */
 .ds-surface,
 .main-header-pro {
-  background: var(--color-surface);
+  /* Background controlled by glassmorphism-opacity-controller.js */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-sm);

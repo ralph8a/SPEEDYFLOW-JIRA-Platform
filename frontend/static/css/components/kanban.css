@@ -58,11 +58,8 @@
 /* ==================== KANBAN COLUMNS ==================== */
 /* Base column styling - transparent for AI background visibility */
 .kanban-column {
-  /* TRANSPARENT - let AI backgrounds show through */
-  background: transparent;
-  /* Blur disabled to show AI backgrounds clearly */
-  /* backdrop-filter: blur(20px); */
-  /* -webkit-backdrop-filter: blur(20px); */
+  /* Background and blur controlled by glassmorphism-opacity-controller.js */
+  /* DO NOT set background or backdrop-filter here - managed by JavaScript */
   
   /* Structure & layout */
   display: flex;

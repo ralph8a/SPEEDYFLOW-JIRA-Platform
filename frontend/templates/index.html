@@ -28,6 +28,7 @@
   
   <!-- DRAG & DROP TRANSITIONS STYLING -->
   <link rel="stylesheet" href="/static/css/components/transition-bar-vertical.css?v={{ timestamp }}">
+  <link rel="stylesheet" href="/static/css/components/transition-fields-modal.css?v={{ timestamp }}">
   
   <!-- QUICK ACTIONS STYLING (Quick Triage & Smart Filters) -->
   <link rel="stylesheet" href="/static/css/components/quick-actions.css?v={{ timestamp }}">
@@ -176,7 +177,11 @@
           <nav class="sidebar-menu" aria-label="Utilities">
             <a href="#" class="sidebar-menu-item"><span class="icon">🔍</span><span class="label">Search</span></a>
             <a href="#" class="sidebar-menu-item"><span class="icon">📊</span><span class="label">Reports</span></a>
-            <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications"><span class="icon">🔔</span><span class="label">Notifications</span></button>
+            <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications">
+              <span class="icon">🔔</span>
+              <span class="label">Notifications</span>
+              <span class="notification-badge" style="display: none;">0</span>
+            </button>
             <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh"><span class="icon">🔄</span><span class="label">Refresh</span></button>
             <button type="button" class="sidebar-menu-item" id="clearCacheBtn" aria-label="Clear Cache" title="Clear local cache to force refresh"><span class="icon">🗑️</span><span class="label">Clear Cache</span></button>
           </nav>
@@ -397,16 +402,15 @@
 
           <!-- COMMENT INPUT AREA -->
           <div class="comment-input-container">
-            <!-- MENTIONS & ATTACHMENTS TOOLBAR -->
+            <!-- ATTACHMENTS TOOLBAR -->
             <div class="comment-toolbar">
-              <button class="comment-toolbar-btn" id="mentionBtn" title="@Mention someone">
-                <span class="toolbar-icon">@</span>
-                <span class="toolbar-text">Mention</span>
-              </button>
               <button class="comment-toolbar-btn" id="attachBtn" title="Attach file">
                 <span class="toolbar-icon">📎</span>
                 <span class="toolbar-text">Attach</span>
               </button>
+              <div class="comment-hint">
+                <span style="opacity: 0.6; font-size: 11px;">💡 Type @ to mention someone</span>
+              </div>
               <div class="visibility-toggle">
                 <input type="checkbox" id="commentInternal" />
                 <label for="commentInternal" class="visibility-label">🔓 Public</label>
@@ -551,13 +555,14 @@
   <script src="/static/js/sidebar-toggle.js?v={{ timestamp }}"></script>
   <script src="/static/js/sidebar-tooltip-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-actions.js?v={{ timestamp }}"></script>
-  <script src="/static/js/floating-controls.js?v={{ timestamp }}"></script>
+  <script src="/static/js/header-menu-controller.js?v={{ timestamp }}"></script>
   <script src="/static/js/right-sidebar.js?v={{ timestamp }}"></script>
   <script src="/static/js/mentions-system.js?v={{ timestamp }}"></script>
+  <script src="/static/js/notifications-panel.js?v={{ timestamp }}"></script>
   <script src="/static/js/sla-monitor.js?v={{ timestamp }}"></script>
   
   <!-- ===== GLASSMORPHISM & TRANSPARENCY ===== -->
-  <script src="/static/js/transparency-manager.js?v={{ timestamp }}"></script>
+  <script src="/static/js/glassmorphism-opacity-controller.js?v={{ timestamp }}"></script>
   
   <!-- ===== BACKGROUND & AI EFFECTS ===== -->
   <script src="/static/js/background-manager.js?v={{ timestamp }}"></script>
@@ -566,8 +571,8 @@
   <!-- ===== UI ENHANCEMENTS ===== -->
   <script src="/static/js/app.js?v={{ timestamp }}"></script>
   <script src="/static/js/auto-severity-config.js?v={{ timestamp }}"></script>
-  <script src="/static/js/layout-manager.js?v={{ timestamp }}"></script>
-  <script src="/static/js/state-indicators.js?v={{ timestamp }}"></script>
+  <script src="/static/js/filter-bar-manager.js?v={{ timestamp }}"></script>
+  <script src="/static/js/loading-state-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/loading-dots.js?v={{ timestamp }}"></script>
 
   <!-- ===== AI & ML MODULES ===== -->
@@ -581,7 +586,7 @@
   <!-- ===== QUICK ACTIONS (Quick Triage & Smart Filters) ===== -->
   <script src="/static/js/quick-triage.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-filters.js?v={{ timestamp }}"></script>
-  <script src="/static/js/quick-action-button.js?v={{ timestamp }}"></script>
+  <script src="/static/js/smart-functions-modal.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-analytics.js?v={{ timestamp }}"></script>
 
   <!-- ===== AI COPILOT ASSISTANT ===== -->

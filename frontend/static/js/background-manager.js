@@ -166,10 +166,11 @@ const backgroundManager = {
     container.appendChild(overlay);
     document.body.insertBefore(container, document.body.firstChild);
 
-    // Re-apply transparency settings after creating overlay
-    if (window.transparencyManager) {
-      window.transparencyManager.forceReapply();
-    }
+    // REMOVED: Background manager should NOT modify UI component transparency
+    // Transparency is managed independently by glassmorphism-opacity-controller.js
+    // if (window.transparencyManager) {
+    //   window.transparencyManager.forceReapply();
+    // }
   },
   
   /**
@@ -308,17 +309,46 @@ const backgroundManager = {
   },
 
   applyPlaceholderVariants(theme) {
-    // Minimal 2 variant fallback (different gradient direction)
+    // Solid colors + gradient variants
+    const solidColors = theme === 'dark' 
+      ? [
+          { color: '#000000', name: 'Pure Black' },
+          { color: '#0a1929', name: 'Deep Blue' }
+        ]
+      : [
+          { color: '#ffffff', name: 'Pure White' },
+          { color: '#f8f9fa', name: 'Light Gray' }
+        ];
+    
+    // Create solid color SVGs
+    const solidSvgs = solidColors.map((solid, idx) => {
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><rect width='1600' height='900' fill='${solid.color}'/></svg>`;
+      const b64 = btoa(svg);
+      return {
+        id: `${theme}-solid-${idx}`,
+        data_uri: `data:image/svg+xml;base64,${b64}`,
+        theme,
+        description: `${solid.name} (Solid)`,
+        timestamp: new Date().toISOString()
+      };
+    });
+    
+    // Gradient variants
     const svgA = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='${theme==='dark'?'#0f172a':'#ffffff'}'/><stop offset='100%' stop-color='${theme==='dark'?'#1e3a8a':'#dbeafe'}'/></linearGradient><rect width='1600' height='900' fill='url(#g)'/></svg>`;
     const svgB = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><linearGradient id='h' x1='1' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='${theme==='dark'?'#312e81':'#bfdbfe'}'/><stop offset='100%' stop-color='${theme==='dark'?'#1e3a8a':'#93c5fd'}'/></linearGradient><rect width='1600' height='900' fill='url(#h)'/></svg>`;
     const b64A = btoa(svgA); const b64B = btoa(svgB);
-    this.backgrounds = [
-      { id: `${theme}-ph-0`, data_uri: `data:image/svg+xml;base64,${b64A}`, theme, description: 'Placeholder gradient A', timestamp: new Date().toISOString() },
-      { id: `${theme}-ph-1`, data_uri: `data:image/svg+xml;base64,${b64B}`, theme, description: 'Placeholder gradient B', timestamp: new Date().toISOString() }
+    
+    const gradients = [
+      { id: `${theme}-gradient-0`, data_uri: `data:image/svg+xml;base64,${b64A}`, theme, description: 'Gradient A', timestamp: new Date().toISOString() },
+      { id: `${theme}-gradient-1`, data_uri: `data:image/svg+xml;base64,${b64B}`, theme, description: 'Gradient B', timestamp: new Date().toISOString() }
     ];
+    
+    // Combine: solid colors first, then gradients
+    this.backgrounds = [...solidSvgs, ...gradients];
+    
     // Save placeholders to cache too
     this.saveBackgroundsToCache(theme);
-    console.log(`🎨 Applied placeholder backgrounds for ${theme}`);
+    console.log(`🎨 Applied ${this.backgrounds.length} backgrounds (${solidSvgs.length} solid + ${gradients.length} gradients) for ${theme}`);
     document.dispatchEvent(new CustomEvent('backgroundsGenerated', { detail: { theme, count: this.backgrounds.length, placeholder: true } }));
   },
   

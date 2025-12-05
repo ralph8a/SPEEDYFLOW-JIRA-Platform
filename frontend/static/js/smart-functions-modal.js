@@ -494,33 +494,126 @@
     
     const allIssues = Array.from(window.app.issuesCache.values());
     let missingFields = [];
+    const fieldStats = {}; // Track which fields are missing most
     
     allIssues.forEach(issue => {
       const missing = [];
-      if (!issue.customfield_10125 && !issue.severity) missing.push('Severity');
-      if (!issue.description || issue.description.trim().length < 10) missing.push('Description');
-      if (!issue.labels || issue.labels.length === 0) missing.push('Labels');
-      if (!issue.components || issue.components.length === 0) missing.push('Components');
+      
+      // 🔴 Critical Fields
+      if (!issue.customfield_10125 && !issue.severity) {
+        missing.push('🔴 Severity');
+        fieldStats['Severity'] = (fieldStats['Severity'] || 0) + 1;
+      }
+      if (!issue.priority || !issue.priority.name) {
+        missing.push('🔴 Priority');
+        fieldStats['Priority'] = (fieldStats['Priority'] || 0) + 1;
+      }
+      if (!issue.description || issue.description.trim().length < 20) {
+        missing.push('🔴 Description');
+        fieldStats['Description'] = (fieldStats['Description'] || 0) + 1;
+      }
+      
+      // 👤 Assignment Fields
+      if (!issue.assignee || !issue.assignee.displayName) {
+        missing.push('👤 Assignee');
+        fieldStats['Assignee'] = (fieldStats['Assignee'] || 0) + 1;
+      }
+      if (!issue.reporter || !issue.reporter.displayName) {
+        missing.push('👤 Reporter');
+        fieldStats['Reporter'] = (fieldStats['Reporter'] || 0) + 1;
+      }
+      
+      // 🏷️ Classification
+      if (!issue.labels || issue.labels.length === 0) {
+        missing.push('🏷️ Labels');
+        fieldStats['Labels'] = (fieldStats['Labels'] || 0) + 1;
+      }
+      if (!issue.components || issue.components.length === 0) {
+        missing.push('🏷️ Components');
+        fieldStats['Components'] = (fieldStats['Components'] || 0) + 1;
+      }
+      
+      // ⏱️ Time Tracking
+      if (!issue.duedate) {
+        missing.push('⏱️ Due Date');
+        fieldStats['Due Date'] = (fieldStats['Due Date'] || 0) + 1;
+      }
+      if (!issue.timeoriginalestimate && !issue.originalEstimate) {
+        missing.push('⏱️ Estimate');
+        fieldStats['Estimate'] = (fieldStats['Estimate'] || 0) + 1;
+      }
+      
+      // 📦 Versions
+      if (!issue.fixVersions || issue.fixVersions.length === 0) {
+        missing.push('📦 Fix Version');
+        fieldStats['Fix Version'] = (fieldStats['Fix Version'] || 0) + 1;
+      }
+      if (!issue.versions || issue.versions.length === 0) {
+        missing.push('📦 Affected Ver.');
+        fieldStats['Affected Version'] = (fieldStats['Affected Version'] || 0) + 1;
+      }
+      
+      // 🌍 Context
+      if (!issue.environment || issue.environment.trim().length < 5) {
+        missing.push('🌍 Environment');
+        fieldStats['Environment'] = (fieldStats['Environment'] || 0) + 1;
+      }
       
       if (missing.length > 0) {
         missingFields.push({ issue, missing });
       }
     });
     
+    // Calculate top missing fields
+    const topMissingFields = Object.entries(fieldStats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    
+    const completionRate = ((allIssues.length - missingFields.length) / allIssues.length * 100).toFixed(1);
+    
     container.innerHTML = `
-      <div style="margin-bottom: 16px; padding: 12px; background: rgba(168,85,247,0.1); border-radius: 8px; border-left: 3px solid #a855f7;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-          <span style="font-size: 18px;">🤖</span>
-          <span style="color: #cbd5e1; font-weight: 600;">ML Field Analysis</span>
+      <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(139,92,246,0.1)); border-radius: 12px; border-left: 4px solid #a855f7;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🤖</span>
+            <span style="color: #cbd5e1; font-weight: 700; font-size: 15px;">ML Field Analysis</span>
+          </div>
+          <div style="background: ${completionRate >= 80 ? 'rgba(16,185,129,0.2)' : completionRate >= 50 ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)'}; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; color: ${completionRate >= 80 ? '#10b981' : completionRate >= 50 ? '#f59e0b' : '#ef4444'};">
+            ${completionRate}% Complete
+          </div>
         </div>
-        <div style="color: #94a3b8; font-size: 13px;">
+        
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 12px;">
           Found ${missingFields.length} ticket${missingFields.length !== 1 ? 's' : ''} with incomplete fields for AI enhancement
         </div>
-        <div style="margin-top: 8px; display: flex; gap: 12px; font-size: 12px;">
-          <div style="color: #10b981;">📊 ${allIssues.length} total tickets</div>
-          <div style="color: #f59e0b;">📝 ${missingFields.length} need improvement</div>
-          <div style="color: #6366f1;">✅ ${allIssues.length - missingFields.length} complete</div>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+          <div style="background: rgba(16,185,129,0.1); padding: 8px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 18px; font-weight: 700; color: #10b981;">${allIssues.length}</div>
+            <div style="font-size: 11px; color: #64748b;">Total Tickets</div>
+          </div>
+          <div style="background: rgba(245,158,11,0.1); padding: 8px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 18px; font-weight: 700; color: #f59e0b;">${missingFields.length}</div>
+            <div style="font-size: 11px; color: #64748b;">Need Improvement</div>
+          </div>
+          <div style="background: rgba(99,102,241,0.1); padding: 8px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 18px; font-weight: 700; color: #6366f1;">${allIssues.length - missingFields.length}</div>
+            <div style="font-size: 11px; color: #64748b;">Complete</div>
+          </div>
         </div>
+        
+        ${topMissingFields.length > 0 ? `
+          <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px;">
+            <div style="font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">🎯 Top Missing Fields:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${topMissingFields.map(([field, count]) => `
+                <span style="background: rgba(168,85,247,0.2); color: #e9d5ff; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;">
+                  ${field}: ${count}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
       
       ${missingFields.length > 0 ? `

@@ -728,6 +728,52 @@ def _extract_service_desk_custom_fields(fields: Dict[str, Any]) -> Dict[str, Any
     return custom_fields
 
 
+# Watchers cache with 8-hour TTL
+_watchers_cache = {}
+_watchers_cache_ttl = 28800  # 8 hours in seconds
+
+def fetch_watchers_batch(issue_keys: List[str], use_cache: bool = True) -> Dict[str, List[Dict]]:
+    """
+    Fetch watchers for multiple issues in batch with caching.
+    Cache TTL: 8 hours (watchers don't change frequently)
+    
+    Args:
+        issue_keys: List of issue keys to fetch watchers for
+        use_cache: Whether to use cached results (default: True)
+        
+    Returns:
+        Dict mapping issue_key -> list of watchers
+        Watcher format: [{accountId, displayName, emailAddress}, ...]
+    """
+    client = get_api_client()
+    watchers_map = {}
+    current_time = time.time()
+    
+    for issue_key in issue_keys:
+        # Check cache first
+        if use_cache and issue_key in _watchers_cache:
+            cached_data, cached_time = _watchers_cache[issue_key]
+            if current_time - cached_time < _watchers_cache_ttl:
+                watchers_map[issue_key] = cached_data
+                logger.debug(f"💾 {issue_key}: {len(cached_data)} watchers (cached)")
+                continue
+        
+        # Fetch from API
+        try:
+            watchers = client.get_issue_watchers(issue_key)
+            watchers_map[issue_key] = watchers
+            
+            # Store in cache
+            _watchers_cache[issue_key] = (watchers, current_time)
+            
+            logger.debug(f"👁️ {issue_key}: {len(watchers)} watchers (fresh)")
+        except Exception as e:
+            logger.warning(f"Failed to fetch watchers for {issue_key}: {e}")
+            watchers_map[issue_key] = []
+    
+    return watchers_map
+
+
 def load_queue_issues(
     service_desk_id: str,
     queue_id: str,
@@ -852,6 +898,14 @@ def load_queue_issues(
                     if assignee_obj and isinstance(assignee_obj, dict):
                         assignee_name = assignee_obj.get("displayName") or assignee_obj.get("name")
                     
+                    # Extract watchers info
+                    watchers_obj = fields.get("watches", {})
+                    watcher_count = 0
+                    is_watching = False
+                    if isinstance(watchers_obj, dict):
+                        watcher_count = watchers_obj.get("watchCount", 0)
+                        is_watching = watchers_obj.get("isWatching", False)
+                    
                     enriched_data[key] = {
                         "assignee": assignee_name,
                         "creator": fields.get("creator"),
@@ -863,7 +917,10 @@ def load_queue_issues(
                         "customfield_10143": fields.get("customfield_10143"),
                         "labels": fields.get("labels", []),
                         "components": fields.get("components", []),
-                        "last_real_change": last_change
+                        "last_real_change": last_change,
+                        "watcher_count": watcher_count,
+                        "is_watching": is_watching,
+                        "comment_count": len(comments)
                     }
                 logger.info(f"✓ Batch enriched {len(enriched_data)} issues from JIRA API")
                 
@@ -995,6 +1052,14 @@ def load_queue_issues(
             f"✓ Loaded {len(df)} issues from queue {queue_id} (desk {service_desk_id}) in {time.time() - t0:.2f}s; "
             f"requests={request_count}, approx_bytes={bytes_accumulated}"
         )
+        
+        # Auto-create notifications for recent changes (async, non-blocking)
+        try:
+            from api.blueprints.notifications_helper import process_issues_batch_for_notifications
+            process_issues_batch_for_notifications(issues, enriched_data)
+        except Exception as notif_err:
+            logger.debug(f"Notification creation skipped: {notif_err}")
+        
         return df, None
         
     except Exception as e:

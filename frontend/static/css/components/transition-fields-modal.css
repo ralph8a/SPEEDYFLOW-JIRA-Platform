@@ -1,0 +1,241 @@
+/**
+ * TRANSITION FIELDS MODAL
+ * Modal para capturar campos requeridos en transiciones
+ */
+
+.transition-fields-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.transition-fields-modal.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.transition-fields-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.transition-fields-content {
+  position: relative;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(40px) saturate(200%);
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  box-shadow: 
+    0 30px 80px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9) translateY(-20px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.transition-fields-modal.show .transition-fields-content {
+  transform: scale(1) translateY(0);
+}
+
+/* Header */
+.transition-fields-header {
+  padding: 24px;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+}
+
+.transition-fields-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transition-fields-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Form */
+.transition-fields-form {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.transition-field {
+  margin-bottom: 20px;
+}
+
+.transition-field:last-child {
+  margin-bottom: 0;
+}
+
+.transition-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.transition-field label .required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.transition-field input[type="text"],
+.transition-field textarea,
+.transition-field select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #1e293b;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.transition-field input[type="text"]:focus,
+.transition-field textarea:focus,
+.transition-field select:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.transition-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.transition-field input::placeholder,
+.transition-field textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Actions */
+.transition-fields-actions {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.transition-fields-actions button {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.transition-fields-actions .btn-cancel {
+  background: rgba(148, 163, 184, 0.15);
+  color: #64748b;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.transition-fields-actions .btn-cancel:hover {
+  background: rgba(148, 163, 184, 0.25);
+  transform: translateY(-1px);
+}
+
+.transition-fields-actions .btn-submit {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.transition-fields-actions .btn-submit:hover {
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+}
+
+.transition-fields-actions .btn-submit:active {
+  transform: translateY(0);
+}
+
+/* Dark theme */
+body.theme-dark .transition-fields-content {
+  background: rgba(30, 41, 59, 0.98);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+body.theme-dark .transition-fields-header {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 85, 247, 0.15));
+}
+
+body.theme-dark .transition-fields-header h3 {
+  color: #f1f5f9;
+}
+
+body.theme-dark .transition-fields-header p {
+  color: #94a3b8;
+}
+
+body.theme-dark .transition-field label {
+  color: #e2e8f0;
+}
+
+body.theme-dark .transition-field input,
+body.theme-dark .transition-field textarea,
+body.theme-dark .transition-field select {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #f1f5f9;
+}
+
+body.theme-dark .transition-field input:focus,
+body.theme-dark .transition-field textarea:focus,
+body.theme-dark .transition-field select:focus {
+  border-color: #8b5cf6;
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+body.theme-dark .transition-fields-actions {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+body.theme-dark .transition-fields-actions .btn-cancel {
+  background: rgba(71, 85, 105, 0.3);
+  color: #cbd5e1;
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+body.theme-dark .transition-fields-actions .btn-cancel:hover {
+  background: rgba(71, 85, 105, 0.4);
+}

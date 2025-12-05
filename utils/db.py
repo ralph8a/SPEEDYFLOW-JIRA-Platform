@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS notifications (
     issue_key TEXT,
     user TEXT,
     action TEXT,
-    metadata TEXT
+    metadata TEXT,
+    user_id TEXT
 );
 """
 
@@ -61,6 +62,8 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE notifications ADD COLUMN action TEXT")
             if 'metadata' not in columns:
                 conn.execute("ALTER TABLE notifications ADD COLUMN metadata TEXT")
+            if 'user_id' not in columns:
+                conn.execute("ALTER TABLE notifications ADD COLUMN user_id TEXT")
             
             conn.commit()
         except Exception as e:
@@ -69,6 +72,13 @@ def init_db() -> None:
 
 
 def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
+    """Convert sqlite3.Row to dict. sqlite3.Row doesn't have .get(), use try/except."""
+    def safe_get(row: sqlite3.Row, key: str):
+        try:
+            return row[key]
+        except (KeyError, IndexError):
+            return None
+    
     return {
         'id': row['id'],
         'type': row['type'],
@@ -76,10 +86,11 @@ def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
         'severity': row['severity'],
         'created_at': row['created_at'],
         'read': bool(row['read']),
-        'issue_key': row.get('issue_key'),
-        'user': row.get('user'),
-        'action': row.get('action'),
-        'metadata': row.get('metadata'),
+        'issue_key': safe_get(row, 'issue_key'),
+        'user': safe_get(row, 'user'),
+        'action': safe_get(row, 'action'),
+        'metadata': safe_get(row, 'metadata'),
+        'user_id': safe_get(row, 'user_id'),
     }
 
 
@@ -90,17 +101,19 @@ def create_notification(
     issue_key: str = None,
     user: str = None,
     action: str = None,
-    metadata: str = None
+    metadata: str = None,
+    user_id: str = None
 ) -> Dict[str, Any]:
+    """Create notification. user_id=None means global (all users)."""
     # Use timezone-aware UTC timestamp (avoids utcnow deprecation warnings)
     ts = datetime.datetime.now(datetime.timezone.utc).isoformat()
     conn = get_db()
     with _DB_LOCK:
         cur = conn.execute(
             """INSERT INTO notifications(
-                type, message, severity, created_at, issue_key, user, action, metadata
-            ) VALUES(?,?,?,?,?,?,?,?)""",
-            (ntype, message, severity, ts, issue_key, user, action, metadata)
+                type, message, severity, created_at, issue_key, user, action, metadata, user_id
+            ) VALUES(?,?,?,?,?,?,?,?,?)""",
+            (ntype, message, severity, ts, issue_key, user, action, metadata, user_id)
         )
         conn.commit()
         nid = cur.lastrowid
@@ -109,9 +122,30 @@ def create_notification(
 
 
 def list_notifications() -> List[Dict[str, Any]]:
+    """List all notifications (admin view)."""
     conn = get_db()
     with _DB_LOCK:
         rows = conn.execute("SELECT * FROM notifications ORDER BY id DESC").fetchall()
+    return [_row_to_dict(r) for r in rows]
+
+
+def list_notifications_for_user(user_id: str = None) -> List[Dict[str, Any]]:
+    """List notifications for specific user + global notifications (user_id IS NULL)."""
+    conn = get_db()
+    with _DB_LOCK:
+        if user_id:
+            # User-specific + global notifications
+            rows = conn.execute(
+                """SELECT * FROM notifications 
+                   WHERE user_id = ? OR user_id IS NULL 
+                   ORDER BY id DESC""",
+                (user_id,)
+            ).fetchall()
+        else:
+            # Only global notifications
+            rows = conn.execute(
+                "SELECT * FROM notifications WHERE user_id IS NULL ORDER BY id DESC"
+            ).fetchall()
     return [_row_to_dict(r) for r in rows]
 
 

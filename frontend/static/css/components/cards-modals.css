@@ -353,14 +353,19 @@ body.theme-dark .issue-summary {
   pointer-events: auto;
 }
 
+.bg-selector-modal.bg-modal-open .bg-modal-overlay {
+  pointer-events: auto;
+}
+
 .bg-modal-overlay { 
   position: absolute; 
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: transparent;
-  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
 }
 
 .bg-modal-content {
@@ -378,6 +383,7 @@ body.theme-dark .issue-summary {
   animation: none;
   overflow: hidden;
   z-index: 10;
+  pointer-events: auto;
 }
 
 .bg-modal-header { display:flex; align-items:center; justify-content:space-between; }
@@ -1757,4 +1763,114 @@ body.theme-light .bg-variant-item.active { outline-color: rgba(99,102,241,.8); }
   color: var(--text-secondary);
   opacity: 0.7;
 }
+
+/* ==================== NOTIFICATIONS MODAL ==================== */
+#notificationsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000 !important;
+  pointer-events: auto;
+}
+
+#notificationsModal .bg-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: auto;
+  z-index: 1;
+}
+
+#notificationsModal .bg-modal-content {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+/* ==================== NOTIFICATION CARDS ==================== */
+
+/* Notification content container */
+#notificationsContent {
+  padding: 8px 16px;
+  overflow-y: auto;
+  max-height: calc(90vh - 180px);
+  min-height: 300px;
+}
+
+/* Notification cards */
+.notif-card {
+  padding: 14px 16px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+}
+
+.notif-card:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.notif-card.unread {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  border-left: 3px solid rgba(59, 130, 246, 0.7);
+}
+
+.notif-card.unread:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* Notification date headers */
+.notif-date-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin: 20px 0 10px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding-left: 8px;
+  border-left: 3px solid rgba(99, 102, 241, 0.3);
+}
+
+/* Light theme notifications */
+body.theme-light .notif-card {
+  background: rgba(248, 250, 252, 0.9);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+body.theme-light .notif-card:hover {
+  background: rgba(241, 245, 249, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-light .notif-card.unread {
+  background: rgba(219, 234, 254, 0.95);
+  border-color: rgba(59, 130, 246, 0.4);
+  border-left: 3px solid rgba(59, 130, 246, 0.7);
+}
+
+body.theme-light .notif-date-header {
+  color: #64748b;
+  border-left-color: rgba(99, 102, 241, 0.4);
+}
+
 

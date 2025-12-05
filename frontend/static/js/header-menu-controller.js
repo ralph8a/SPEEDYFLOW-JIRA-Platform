@@ -1,6 +1,6 @@
 /**
- * SPEEDYFLOW - Enhanced Header Interactions
- * Menús desplegables, theme bubble y user menu
+ * SPEEDYFLOW - Header Menu Controller
+ * Manages header bar interactions: dropdown menus, theme toggle, user menu, notifications
  * 
  * IMPORTANT: Uses ThemeManager (centralized theme control) to avoid conflicts
  */
@@ -174,7 +174,15 @@ function createSettingsPanel() {
                 <option value="auto">Auto (System)</option>
               </select>
             </div>
-            <div class="setting-item">
+            
+            <!-- Font Family Customization -->
+            <div class="font-customization-section" style="margin-top: 24px;">
+              <h4>Font Family</h4>
+              <p class="section-description" style="font-size: 13px; opacity: 0.7; margin-bottom: 12px;">Choose a font combination that matches your workflow and aesthetic preferences.</p>
+              <div id="fontPresetSelector"></div>
+            </div>
+            
+            <div class="setting-item" style="margin-top: 20px;">
               <label for="compactMode">Compact mode</label>
               <input type="checkbox" id="compactMode">
             </div>
@@ -326,6 +334,135 @@ function loadSettings() {
     const el = document.getElementById('debugMode');
     if (el) el.checked = settings.debugMode;
   }
+  
+  // Initialize Font Selector
+  initializeFontSelector();
+  
+  // Apply saved font preset
+  const savedPreset = localStorage.getItem('fontPreset') || 'business';
+  applyFontPreset(savedPreset);
+}
+
+// ===== FONT FAMILY SYSTEM =====
+
+function initializeFontSelector() {
+  const container = document.getElementById('fontPresetSelector');
+  if (!container) {
+    console.warn('⚠️ Font preset selector container not found');
+    return;
+  }
+
+  // Generate font preset selector HTML
+  container.innerHTML = generateFontPresetHTML();
+  
+  // Setup event handlers
+  setupFontPresetHandlers();
+  
+  console.log('✅ Font selector initialized');
+}
+
+function generateFontPresetHTML() {
+  return `
+    <div class="font-preset-selector">
+      <div class="font-preset-option" data-preset="business">
+        <div class="preset-header">
+          <h4>Business Classic</h4>
+          <span class="preset-badge default">Default</span>
+        </div>
+        <div class="preset-fonts">
+          <span class="font-ui">Segoe UI</span> + <span class="font-content">Georgia</span>
+        </div>
+        <p class="preset-description">Familiar and professional - Perfect for corporate environments</p>
+      </div>
+      
+      <div class="font-preset-option" data-preset="modern">
+        <div class="preset-header">
+          <h4>Modern Professional</h4>
+          <span class="preset-badge tech">Tech</span>
+        </div>
+        <div class="preset-fonts">
+          <span class="font-ui">Inter</span> + <span class="font-content">Source Serif Pro</span>
+        </div>
+        <p class="preset-description">Clean and technological - Optimized for digital interfaces</p>
+      </div>
+      
+      <div class="font-preset-option" data-preset="corporate">
+        <div class="preset-header">
+          <h4>Corporate Executive</h4>
+          <span class="preset-badge premium">Premium</span>
+        </div>
+        <div class="preset-fonts">
+          <span class="font-ui">IBM Plex Sans</span> + <span class="font-content">Playfair Display</span>
+        </div>
+        <p class="preset-description">Elegant and executive - Sophisticated corporate design</p>
+      </div>
+      
+      <div class="font-preset-option" data-preset="creative">
+        <div class="preset-header">
+          <h4>Creative Studio</h4>
+          <span class="preset-badge creative">Creative</span>
+        </div>
+        <div class="preset-fonts">
+          <span class="font-ui">Poppins</span> + <span class="font-content">Crimson Text</span>
+        </div>
+        <p class="preset-description">Approachable and creative - Perfect for innovative teams</p>
+      </div>
+    </div>
+  `;
+}
+
+function setupFontPresetHandlers() {
+  const options = document.querySelectorAll('.font-preset-option');
+  
+  options.forEach(option => {
+    option.addEventListener('click', (e) => {
+      const presetId = option.getAttribute('data-preset');
+      applyFontPreset(presetId);
+      
+      // Update active state
+      options.forEach(opt => opt.classList.remove('active'));
+      option.classList.add('active');
+    });
+  });
+  
+  // Load current preset
+  const currentPreset = localStorage.getItem('fontPreset') || 'business';
+  const currentOption = document.querySelector(`[data-preset="${currentPreset}"]`);
+  if (currentOption) {
+    currentOption.classList.add('active');
+  }
+}
+
+function applyFontPreset(presetId) {
+  // Remove existing preset classes
+  const presets = ['business', 'modern', 'corporate', 'creative'];
+  presets.forEach(preset => {
+    document.body.classList.remove(`font-preset-${preset}`);
+    document.documentElement.classList.remove(`font-preset-${preset}`);
+  });
+  
+  // Apply new preset
+  document.body.classList.add(`font-preset-${presetId}`);
+  document.documentElement.classList.add(`font-preset-${presetId}`);
+  
+  // Save to localStorage
+  localStorage.setItem('fontPreset', presetId);
+  
+  // Log adaptation details
+  logFontAdaptation(presetId);
+  
+  console.log(`✅ Font preset applied: ${presetId}`);
+}
+
+function logFontAdaptation(presetId) {
+  const adaptations = {
+    'business': 'Segoe UI + Georgia → Aptos + Century (0.95x line-height, +0.005em spacing)',
+    'modern': 'Inter + Source Serif Pro → Aptos + Century (1.02x line-height, -0.002em spacing)',
+    'corporate': 'IBM Plex + Playfair → Aptos + Century (1.05x line-height, +0.008em spacing)',
+    'creative': 'Poppins + Crimson Text → Aptos + Century (1.08x line-height, +0.003em spacing)'
+  };
+
+  console.log(`🎨 Font Adaptation: ${adaptations[presetId]}`);
 }
 
 function saveSettingsFromModal() {
@@ -582,10 +719,6 @@ function showProfileModal() {
 
   modal.style.display = 'flex';
   setTimeout(() => modal.classList.add('active'), 10);
-}
-
-function showSettingsModal() {
-  alert('Settings panel - Coming soon ⚙️');
 }
 
 function showPasswordChangeModal() {

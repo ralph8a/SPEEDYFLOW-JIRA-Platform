@@ -22,14 +22,17 @@ transitions_bp = Blueprint('transitions', __name__)
 @log_decorator(logging.INFO)
 @require_credentials
 def api_get_available_transitions(issue_key):
-    """Get available transitions for an issue."""
+    """Get available transitions for an issue with field requirements."""
     site, email, api_token = _get_credentials(config)
     headers = _get_auth_header(email, api_token)
-    data = _make_request('GET', f"{site}/rest/api/2/issue/{issue_key}/transitions", headers)
+    
+    # Request with expand=transitions.fields to get field requirements
+    params = {'expand': 'transitions.fields'}
+    data = _make_request('GET', f"{site}/rest/api/2/issue/{issue_key}/transitions", headers, params=params)
     if not data or 'transitions' not in data:
         raise RuntimeError('Could not fetch available transitions')
     
-    # Return full transition objects for better client-side handling
+    # Return full transition objects including fields
     out = [
         {
             'id': t.get('id'),
@@ -38,7 +41,8 @@ def api_get_available_transitions(issue_key):
                 'id': t.get('to', {}).get('id'),
                 'name': t.get('to', {}).get('name')
             },
-            'targetStatus': t.get('to', {}).get('name')  # Alias for convenience
+            'targetStatus': t.get('to', {}).get('name'),  # Alias for convenience
+            'fields': t.get('fields', {})  # Include field requirements
         } for t in data.get('transitions', [])
     ]
     return {'transitions': out, 'count': len(out)}
