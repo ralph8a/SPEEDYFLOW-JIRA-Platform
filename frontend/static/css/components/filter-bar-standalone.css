@@ -439,53 +439,77 @@
 /* Mobile Large */
 @media (max-width: 768px) {
   .filter-bar-enhanced {
-    margin: 8px;
-    padding: 12px;
-    flex-direction: row;
-    flex-wrap: wrap;
+    margin: 8px !important;
+    padding: 10px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
   }
   
   .filter-primary {
-    flex: 1 1 100%;
-    gap: 12px;
+    flex: 1 1 100% !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
   }
   
   .filter-group {
-    min-width: 0;
-    flex: 1 1 calc(50% - 6px);
+    min-width: 0 !important;
+    flex: 1 1 calc(50% - 5px) !important;
   }
   
   .filter-controls {
-    flex: 1 1 auto;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex: 1 1 100% !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    margin-top: 4px !important;
   }
   
   .view-btn,
   .theme-btn {
-    flex: 0 1 auto;
-    padding: 8px 12px;
+    flex: 0 1 auto !important;
+    padding: 7px 11px !important;
+    font-size: 12px !important;
+  }
+  
+  .filter-divider {
+    display: none !important;
   }
 }
 
 /* Mobile Small */
 @media (max-width: 480px) {
   .filter-bar-enhanced {
-    padding: 10px;
+    padding: 8px !important;
+    gap: 6px !important;
+    margin: 6px !important;
   }
   
   .filter-label {
-    font-size: 10px;
+    font-size: 10px !important;
+  }
+  
+  .filter-text {
+    display: none !important;
   }
   
   .filter-select {
-    font-size: 12px;
-    padding: 6px 32px 6px 10px;
+    font-size: 11px !important;
+    padding: 5px 28px 5px 8px !important;
   }
   
   .view-btn,
   .theme-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    min-width: 40px !important;
+  }
+  
+  .view-btn .view-text {
+    display: none !important;
+  }
+  
+  .filter-group {
+    flex: 1 1 100% !important;
   }
 }

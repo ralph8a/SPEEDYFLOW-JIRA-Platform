@@ -473,23 +473,27 @@ body.theme-dark,
   align-items: center !important;
   gap: 10px !important;
   flex-wrap: nowrap !important;
+  flex-shrink: 1 !important;
 }
 
 .header-left-section {
-  flex: 0 0 auto !important;
+  flex: 0 1 auto !important;
   min-width: 0 !important;
+  overflow: hidden !important;
 }
 
 .header-center-section {
-  flex: 1 1 auto !important;
+  flex: 0 1 auto !important;
   justify-content: center !important;
   min-width: 0 !important;
+  overflow: hidden !important;
 }
 
 .header-right-section {
-  flex: 0 0 auto !important;
+  flex: 0 1 auto !important;
   justify-content: flex-end !important;
   min-width: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Header Toggle Buttons */
