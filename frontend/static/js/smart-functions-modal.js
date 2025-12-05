@@ -702,5 +702,67 @@
     initQuickActionButton();
   }
 
-  console.log(' Quick action button controller loaded');
+  // Listen for ML analysis updates (when fields are modified)
+  document.addEventListener('mlAnalysisUpdate', async function(e) {
+    console.log('🔄 ML analysis update triggered:', e.detail);
+    
+    // Si el modal está abierto en la pestaña ML, recalcular
+    const modal = getSmartModal();
+    if (modal && menuOpen) {
+      const container = modal.querySelector('#modalContent');
+      const activeTab = modal.querySelector('.bg-modal-tab.active');
+      
+      if (activeTab && activeTab.dataset.tab === 'ml') {
+        console.log('📊 Recalculating ML analysis tab...');
+        
+        // Mostrar loading
+        container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Updating analysis...</p></div>';
+        
+        // Forzar recarga de issues desde el API
+        try {
+          if (window.state && window.state.currentDesk && window.state.currentQueue) {
+            console.log('🔄 Reloading issues from API...');
+            
+            const response = await fetch(`/api/servicedesk/${window.state.currentDesk}/queue/${window.state.currentQueue}/issues`);
+            if (response.ok) {
+              const data = await response.json();
+              const issues = data.data || data.issues || data;
+              
+              // Actualizar window.state.issues
+              if (window.state) {
+                window.state.issues = issues;
+                console.log(`✅ Reloaded ${issues.length} issues`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error reloading issues:', error);
+        }
+        
+        // Recalcular después de recargar
+        setTimeout(() => {
+          renderMLAnalysisTab(container);
+        }, 300);
+      }
+    }
+  });
+
+  // Exponer objeto global para verificar estado
+  window.smartFunctionsModal = {
+    get isOpen() { return menuOpen; },
+    refresh: function() {
+      if (menuOpen) {
+        const modal = getSmartModal();
+        if (modal) {
+          const container = modal.querySelector('#modalContent');
+          const activeTab = modal.querySelector('.bg-modal-tab.active');
+          if (activeTab) {
+            renderMLAnalysisTab(container);
+          }
+        }
+      }
+    }
+  };
+
+  console.log('✅ Quick action button controller loaded');
 })();
