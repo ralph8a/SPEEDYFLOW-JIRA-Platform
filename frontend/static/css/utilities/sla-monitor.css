@@ -302,6 +302,41 @@
   animation: none;
 }
 
+.secondary-sla-warning {
+  padding: 8px 10px;
+  background: rgba(245, 158, 11, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+  border-radius: 6px;
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: pulse-secondary 2s ease-in-out infinite;
+}
+
+@keyframes pulse-secondary {
+  0%, 100% {
+    opacity: 0.9;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.4);
+  }
+}
+
+body.theme-dark .secondary-sla-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+}
+
 /* ============================================================
    SLA TICKET KEY GRADIENTS
    ============================================================ */
@@ -338,6 +373,31 @@
   animation: sla-pulse-warning 2.5s ease-in-out infinite;
 }
 
+/* Secondary SLA Badges (Cierre Ticket) - Amber/Orange Theme */
+.ticket-key-sla-secondary {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.12) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  animation: sla-pulse-secondary-badge 2s ease-in-out infinite;
+}
+
+.ticket-key-sla-secondary-paused {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.3) 0%, rgba(217, 119, 6, 0.12) 100%) !important;
+  border: 1px solid rgba(217, 119, 6, 0.4) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  animation: sla-pulse-secondary-paused 2s ease-in-out infinite;
+}
+
+.ticket-key-sla-secondary-breached {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(234, 88, 12, 0.12) 100%) !important;
+  border: 1px solid rgba(234, 88, 12, 0.4) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  animation: sla-pulse-secondary-breached 1.5s ease-in-out infinite;
+}
+
 /* SLA Pulse Animations */
 @keyframes sla-pulse-healthy {
   0%, 100% { box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
@@ -357,6 +417,27 @@
 @keyframes sla-pulse-warning {
   0%, 100% { box-shadow: 0 2px 6px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
   50% { box-shadow: 0 2px 8px rgba(251, 146, 60, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+}
+
+@keyframes sla-pulse-secondary-badge {
+  0%, 100% { 
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes sla-pulse-secondary-paused {
+  0%, 100% { box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+  50% { box-shadow: 0 2px 12px rgba(217, 119, 6, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+}
+
+@keyframes sla-pulse-secondary-breached {
+  0%, 100% { box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+  50% { box-shadow: 0 2px 14px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
 }
 
 /* ============================================================
