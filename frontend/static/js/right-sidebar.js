@@ -345,7 +345,7 @@ function loadIssueComments(issueKey) {
         const visibilityBadge = isInternal ? '<span class="comment-visibility-badge internal">🔒 Internal</span>' : '';
 
         html += `
-          <div class="comment ${isInternal ? 'internal' : ''}" data-comment-id="${commentId}">
+          <div class="comment ${isInternal ? 'internal' : ''}" data-comment-id="${commentId}" data-author="${author}">
             <div class="comment-avatar">${initials}</div>
             <div class="comment-content">
               <div class="comment-header">
@@ -355,7 +355,7 @@ function loadIssueComments(issueKey) {
               </div>
               <div class="comment-text">${text}</div>
               <div class="comment-actions">
-                <button class="comment-action-btn" title="Reply">↩️ Reply</button>
+                <button class="comment-action-btn" title="Reply to ${author}">↩️ Reply</button>
                 <button class="comment-action-btn" title="Like">👍 Like</button>
               </div>
             </div>
@@ -484,8 +484,22 @@ function setupCommentEventListeners(issueKey) {
       if (action.includes('Reply')) {
         const textarea = document.getElementById('commentText');
         if (textarea) {
+          // Get the author name from the comment dataset
+          const authorName = comment.dataset.author || '';
+          
+          // Auto-mention the author in the textarea
+          if (authorName) {
+            const mention = `@${authorName} `;
+            // If textarea is empty or doesn't already have this mention, add it
+            if (!textarea.value.includes(mention)) {
+              textarea.value = mention + textarea.value;
+            }
+          }
+          
           textarea.focus();
-          textarea.placeholder = `Reply to comment #${commentId}...`;
+          // Move cursor to end of text
+          textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+          textarea.placeholder = `Reply to ${authorName}...`;
         }
       }
     });
