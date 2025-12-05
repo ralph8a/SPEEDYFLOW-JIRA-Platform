@@ -62,6 +62,7 @@
 @import url('components/comment-attachments.css'); /* Comment attachment styling */
 @import url('components/notifications.css'); /* Notification display */
 @import url('components/sidebar-actions.css');  /* Sidebar actions, toasts & notifications panel */
+@import url('components/sidebar-inline-editor.css'); /* AI-powered inline editor for fields */
 @import url('components/ai-suggestions.css');  /* AI field suggestions modal */
 @import url('components/ai-queue-analyzer.css');  /* AI queue analyzer global button & modal */
 @import url('components/font-preset-selector.css');  /* Font family customization selector */
