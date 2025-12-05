@@ -697,7 +697,7 @@ function renderFieldsInTab(tabId, fields) {
     html += `
       <div class="${itemClass}" data-field="${field.key}">
         <div class="field-label">${field.label}</div>
-        <div class="${valueClass}" onclick="${isLongTextField ? 'toggleFieldExpansion(this)' : ''}">${formatFieldValue(field.value, field.type, field.issueKey)}</div>
+        <div class="${valueClass}">${formatFieldValue(field.value, field.type, field.issueKey)}</div>
       </div>
     `;
   });
@@ -1130,14 +1130,11 @@ function formatFieldValue(value, type, issueKey) {
       return value.toLocaleString();
     
     case 'text':
+      // Mostrar TODO el texto sin truncar
       const escaped = String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
-      // Solo truncar si realmente excede 200 caracteres
-      if (escaped.length > 200) {
-        return escaped.substring(0, 200) + '...';
-      }
       return escaped;
     
     case 'object':
@@ -1673,28 +1670,8 @@ if (document.readyState === 'loading') {
   console.log('📄 [Right Sidebar] DOM already loaded, initializing immediately...');
 }
 
-// ===== TOGGLE FIELD EXPANSION =====
-/**
- * Toggle expansion state of long text fields
- */
-function toggleFieldExpansion(element) {
-  if (!element || !element.classList.contains('field-value-long')) {
-    return;
-  }
-  
-  const isExpanded = element.classList.contains('expanded');
-  
-  if (isExpanded) {
-    element.classList.remove('expanded');
-    console.log('🔽 Field contracted');
-  } else {
-    element.classList.add('expanded');
-    console.log('🔼 Field expanded');
-  }
-}
-
-// Make function globally available
-window.toggleFieldExpansion = toggleFieldExpansion;
+// ===== FIELD EXPANSION REMOVED =====
+// Text fields now display complete content by default without truncation
 
 // Also call immediately if DOM is already loaded (continued from above)
 if (document.readyState !== 'loading') {

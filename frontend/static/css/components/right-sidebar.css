@@ -903,85 +903,20 @@ body.theme-dark .field-value {
   word-wrap: break-word;
 }
 
-/* Campos con texto largo - Vista compacta con click para expandir */
+/* Campos con texto largo - Mostrar TODO el contenido por defecto */
 .field-value-long {
-  max-height: 60px;
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
   position: relative;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 4px;
   padding: 2px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
-.field-value-long:hover {
-  background: rgba(59, 130, 246, 0.05);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-  transform: translateY(-1px);
-}
-
-body.theme-dark .field-value-long:hover {
-  background: rgba(100, 181, 246, 0.08);
-  box-shadow: 0 2px 8px rgba(100, 181, 246, 0.15);
-}
-
-.field-value-long.expanded {
-  max-height: none;
-  overflow: visible;
-}
-
-.field-value-long::after {
-  content: '📄 Click para ver más';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.8) 30%, rgba(255, 255, 255, 0.95) 100%);
-  padding: 2px 8px;
-  font-size: 9px;
-  color: rgba(59, 130, 246, 0.8);
-  font-weight: 600;
-  pointer-events: none;
-  border-radius: 0 0 4px 4px;
-  animation: pulse-subtle 2s ease-in-out infinite;
-}
-
-body.theme-dark .field-value-long::after {
-  background: linear-gradient(to right, transparent 0%, rgba(40, 40, 50, 0.8) 30%, rgba(40, 40, 50, 0.95) 100%);
-  color: rgba(100, 181, 246, 0.8);
-}
-
-.field-value-long.expanded::after {
-  content: '🔼 Click para contraer';
-  position: static;
-  background: rgba(59, 130, 246, 0.1);
-  display: block;
-  text-align: center;
-  margin-top: 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  animation: none;
-}
-
-body.theme-dark .field-value-long.expanded::after {
-  background: rgba(100, 181, 246, 0.1);
-  border-color: rgba(100, 181, 246, 0.2);
-}
-
-/* Animación sutil para el indicador */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-
-/* Efecto adicional para campos expandibles */
-.field-item:has(.field-value-long) {
-  transition: all 0.2s ease;
-}
-
-.field-item:has(.field-value-long:hover) {
-  border-color: rgba(59, 130, 246, 0.3);
-}
+/* Removido animaciones y efectos - Texto siempre completamente visible */
 
 body.theme-dark .field-text-long {
   color: rgba(255, 255, 255, 0.7);
