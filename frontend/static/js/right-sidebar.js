@@ -99,6 +99,11 @@ function openIssueDetails(issueKey) {
         console.log('🎨 [Right Sidebar] Rendering attachments for:', sidebarState.currentIssue.key);
         renderAttachments(sidebarState.currentIssue);
       }
+
+      // Initialize inline editor with AI suggestions
+      if (window.sidebarEditor) {
+        window.sidebarEditor.initForIssue(issueKey);
+      }
     }, 100);
   });
 
@@ -664,27 +669,28 @@ function renderFieldsInTab(tabId, fields) {
   let html = '<div class="all-fields-grid">';
   
   fields.forEach(field => {
-    // Detectar si es campo de descripción (siempre expandido)
-    const isDescriptionField = field.key === 'description' || 
-                               field.label.toLowerCase().includes('description') ||
-                               field.label.toLowerCase().includes('descripcion');
-    
     // Detectar si es campo con texto largo (expandible con click)
-    const isLongTextField = !isDescriptionField && 
-                           (field.key === 'customfield_10149' || 
-                            field.key === 'customfield_10151' || 
-                            field.label.toLowerCase().includes('summary') ||
-                            field.label.toLowerCase().includes('notes') ||
-                            field.label.toLowerCase().includes('comments') ||
-                            field.label.toLowerCase().includes('details') ||
-                            (field.type === 'text' && String(field.value).length > 150));
+    // Incluye description, notas, análisis, y cualquier texto > 200 caracteres
+    const isLongTextField = field.key === 'description' || 
+                           field.key === 'customfield_10149' || 
+                           field.key === 'customfield_10151' || 
+                           field.label.toLowerCase().includes('description') ||
+                           field.label.toLowerCase().includes('descripcion') ||
+                           field.label.toLowerCase().includes('summary') ||
+                           field.label.toLowerCase().includes('notes') ||
+                           field.label.toLowerCase().includes('notas') ||
+                           field.label.toLowerCase().includes('comments') ||
+                           field.label.toLowerCase().includes('details') ||
+                           field.label.toLowerCase().includes('análisis') ||
+                           field.label.toLowerCase().includes('resolución') ||
+                           (field.type === 'text' && String(field.value).length > 200);
     
     let itemClass = 'field-item';
     let valueClass = 'field-value';
     
-    if (isDescriptionField) {
+    // Todos los campos largos usan el mismo sistema (full-width + expandible)
+    if (isLongTextField) {
       itemClass += ' field-item-full';
-    } else if (isLongTextField) {
       valueClass += ' field-value-long';
     }
     
@@ -1030,7 +1036,7 @@ function detectFieldType(value) {
   if (typeof value === 'string') {
     if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/)) return 'date';
     if (value.match(/^\d{4}-\d{2}-\d{2}/)) return 'date';
-    if (value.length > 150) return 'text';
+    if (value.length > 200) return 'text';
     return 'string';
   }
   return 'unknown';
@@ -1128,7 +1134,11 @@ function formatFieldValue(value, type, issueKey) {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
-      return `<div class="field-text-long">${escaped.substring(0, 250)}${escaped.length > 250 ? '...' : ''}</div>`;
+      // Solo truncar si realmente excede 200 caracteres
+      if (escaped.length > 200) {
+        return escaped.substring(0, 200) + '...';
+      }
+      return escaped;
     
     case 'object':
       if (value.name) return value.name;
