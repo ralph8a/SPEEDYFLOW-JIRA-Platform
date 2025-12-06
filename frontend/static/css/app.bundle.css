@@ -69,6 +69,7 @@
 @import url('components/font-preset-selector.css');  /* Font family customization selector */
 @import url('../views/board/transition-bar-vertical.css');  /* Vertical transition bar for kanban drag & drop */
 @import url('../views/list/transition-bar-horizontal.css');  /* Horizontal transition bar for list view */
+@import url('components/ml-priority-badges.css');  /* ML-powered priority badges */
 
 /* ============================================================
    PHASE 4: LAYOUT (Page structure - sidebars, header)
