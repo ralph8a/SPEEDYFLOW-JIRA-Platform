@@ -117,9 +117,10 @@ class MLDashboard {
         try {
             this.showLoading();
 
-            // Get current queue if available
+            // Get current queue and desk if available
             this.currentQueueId = this.getCurrentQueueId();
-            console.log('🎯 ML Dashboard - Loading data for queue:', this.currentQueueId || 'ALL');
+            this.currentDeskId = this.getCurrentDeskId();
+            console.log('🎯 ML Dashboard - Loading data for desk:', this.currentDeskId || 'ALL', ', queue:', this.currentQueueId || 'ALL');
 
             // Load all sections
             await Promise.all([
@@ -141,7 +142,11 @@ class MLDashboard {
      */
     async loadOverview() {
         try {
-            const url = `/api/ml/dashboard/overview${this.currentQueueId ? `?queue_id=${this.currentQueueId}` : ''}`;
+            let url = '/api/ml/dashboard/overview';
+            const params = new URLSearchParams();
+            if (this.currentQueueId) params.append('queue_id', this.currentQueueId);
+            if (this.currentDeskId) params.append('desk_id', this.currentDeskId);
+            if (params.toString()) url += `?${params.toString()}`;
             console.log('📊 Fetching overview from:', url);
             const response = await fetch(url);
             const result = await response.json();
@@ -347,7 +352,10 @@ class MLDashboard {
     async loadBreachForecast() {
         try {
             const hours = 24; // Next 24 hours
-            const url = `/api/ml/dashboard/breach-forecast?hours=${hours}${this.currentQueueId ? `&queue_id=${this.currentQueueId}` : ''}`;
+            const params = new URLSearchParams({ hours });
+            if (this.currentQueueId) params.append('queue_id', this.currentQueueId);
+            if (this.currentDeskId) params.append('desk_id', this.currentDeskId);
+            const url = `/api/ml/dashboard/breach-forecast?${params.toString()}`;
             const response = await fetch(url);
             const result = await response.json();
 
@@ -423,7 +431,10 @@ class MLDashboard {
     async loadPerformanceTrends() {
         try {
             const days = 7;
-            const url = `/api/ml/dashboard/performance-trends?days=${days}${this.currentQueueId ? `&queue_id=${this.currentQueueId}` : ''}`;
+            const params = new URLSearchParams({ days });
+            if (this.currentQueueId) params.append('queue_id', this.currentQueueId);
+            if (this.currentDeskId) params.append('desk_id', this.currentDeskId);
+            const url = `/api/ml/dashboard/performance-trends?${params.toString()}`;
             const response = await fetch(url);
             const result = await response.json();
 
@@ -614,7 +625,11 @@ class MLDashboard {
      */
     async loadTeamWorkload() {
         try {
-            const url = `/api/ml/dashboard/team-workload${this.currentQueueId ? `?queue_id=${this.currentQueueId}` : ''}`;
+            let url = '/api/ml/dashboard/team-workload';
+            const params = new URLSearchParams();
+            if (this.currentQueueId) params.append('queue_id', this.currentQueueId);
+            if (this.currentDeskId) params.append('desk_id', this.currentDeskId);
+            if (params.toString()) url += `?${params.toString()}`;
             const response = await fetch(url);
             const result = await response.json();
 
@@ -727,6 +742,24 @@ class MLDashboard {
         // Last resort: check window.state if available
         if (window.state && window.state.currentQueue) {
             return window.state.currentQueue;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get current desk ID from UI
+     */
+    getCurrentDeskId() {
+        // Try to get from desk selector (filter bar)
+        const deskSelect = document.getElementById('deskSelectFilter');
+        if (deskSelect && deskSelect.value) {
+            return deskSelect.value;
+        }
+        
+        // Fallback: check window.state if available
+        if (window.state && window.state.currentDesk) {
+            return window.state.currentDesk;
         }
         
         return null;
