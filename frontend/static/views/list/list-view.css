@@ -218,7 +218,8 @@
 }
 
 .col-sla {
-  width: 140px;
+  width: 200px;
+  min-width: 180px;
 }
 
 .col-assignee {
@@ -356,9 +357,11 @@
 /* SLA Indicators */
 .sla-indicator-list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
   gap: 4px;
+  padding: 4px 0;
 }
 
 .sla-indicator-list span {
@@ -371,6 +374,120 @@
   white-space: nowrap;
 }
 
+/* SLA Badge Container */
+.sla-badge-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.sla-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.sla-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sla-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.sla-name {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sla-time {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+/* Badge color variants */
+.sla-badge-healthy {
+  color: #065f46;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #6ee7b7;
+}
+
+.sla-badge-healthy.sla-time {
+  background: rgba(209, 250, 229, 0.5);
+  color: #047857;
+}
+
+.sla-badge-warning {
+  color: #92400e;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fcd34d;
+  animation: pulse-warning 2s infinite;
+}
+
+.sla-badge-warning.sla-time {
+  background: rgba(254, 243, 199, 0.5);
+  color: #b45309;
+}
+
+@keyframes pulse-warning {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+  }
+}
+
+.sla-badge-paused {
+  color: #1e40af;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #93c5fd;
+}
+
+.sla-badge-paused.sla-time {
+  background: rgba(219, 234, 254, 0.5);
+  color: #1e3a8a;
+}
+
+.sla-badge-breached {
+  color: #991b1b;
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+  border-color: #f87171;
+  animation: blink-breached 2s infinite;
+}
+
+.sla-badge-breached.sla-time {
+  background: rgba(254, 202, 202, 0.5);
+  color: #7f1d1d;
+}
+
+@keyframes blink-breached {
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% { 
+    opacity: 0.8;
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+}
+
+/* Legacy styles for backwards compatibility */
 .sla-loading {
   color: #94a3b8;
   background: rgba(148, 163, 184, 0.1);
@@ -400,12 +517,6 @@
 .sla-breached {
   color: #991b1b;
   background: #fecaca;
-  animation: blink 2s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
 }
 
 .sla-none {
@@ -595,6 +706,52 @@ body.theme-dark .col-created {
   color: #94a3b8;
 }
 
+/* Dark theme SLA badges */
+body.theme-dark .sla-badge-healthy {
+  color: #34d399;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%);
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+body.theme-dark .sla-badge-healthy.sla-time {
+  background: rgba(52, 211, 153, 0.15);
+  color: #6ee7b7;
+}
+
+body.theme-dark .sla-badge-warning {
+  color: #fbbf24;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.25) 100%);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+body.theme-dark .sla-badge-warning.sla-time {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fcd34d;
+}
+
+body.theme-dark .sla-badge-paused {
+  color: #60a5fa;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
+  border-color: rgba(96, 165, 250, 0.4);
+}
+
+body.theme-dark .sla-badge-paused.sla-time {
+  background: rgba(96, 165, 250, 0.15);
+  color: #93c5fd;
+}
+
+body.theme-dark .sla-badge-breached {
+  color: #f87171;
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.25) 0%, rgba(239, 68, 68, 0.25) 100%);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+body.theme-dark .sla-badge-breached.sla-time {
+  background: rgba(248, 113, 113, 0.15);
+  color: #fca5a5;
+}
+
+/* Legacy dark theme styles */
 body.theme-dark .sla-healthy {
   color: #34d399;
   background: rgba(52, 211, 153, 0.2);
