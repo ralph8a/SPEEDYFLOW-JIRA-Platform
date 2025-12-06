@@ -233,6 +233,16 @@ async function initApp() {
 }
 
 function setupEventListeners() {
+  // ML Dashboard Button
+  const mlDashboardBtn = document.getElementById('mlDashboardBtn');
+  if (mlDashboardBtn) {
+    mlDashboardBtn.addEventListener('click', () => {
+      if (window.mlDashboard) {
+        window.mlDashboard.show();
+      }
+    });
+  }
+
   // NEW FILTER SELECTORS (from header-menu-controller.js)
   const serviceDeskFilterSelect = document.getElementById('serviceDeskSelectFilter');
   if (serviceDeskFilterSelect) {

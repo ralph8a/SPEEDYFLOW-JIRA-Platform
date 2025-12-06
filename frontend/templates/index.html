@@ -234,6 +234,9 @@
           </div>
           <div class="header-divider-vertical"></div>
           <div class="header-account-actions">
+            <button class="header-icon-btn" id="mlDashboardBtn" title="ML Predictive Dashboard" aria-label="ML Dashboard" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2)); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8;">
+              <span class="icon">🎯</span>
+            </button>
             <button class="header-icon-btn" id="headerHelpBtn" title="Help Center" aria-label="Help Center">
               <span class="icon">❔</span>
             </button>
@@ -543,6 +546,115 @@
     </div>
   </div>
 
+  <!-- ===== ML PREDICTIVE DASHBOARD MODAL ===== -->
+  <div id="ml-dashboard-modal" class="ml-dashboard-modal">
+    <div class="ml-dashboard-container">
+      <!-- Header -->
+      <div class="ml-dashboard-header">
+        <div class="ml-dashboard-title">
+          <h2>🎯 ML Predictive Dashboard</h2>
+          <div class="ml-dashboard-subtitle">Real-time insights powered by Machine Learning</div>
+        </div>
+        <div class="ml-dashboard-controls">
+          <button class="ml-dashboard-refresh" title="Refresh data">
+            🔄 Refresh
+          </button>
+          <div class="ml-dashboard-auto-refresh-toggle">
+            <input type="checkbox" id="ml-dashboard-auto-refresh" checked />
+            <label for="ml-dashboard-auto-refresh">Auto-refresh</label>
+          </div>
+          <button class="ml-dashboard-close">✕ Close</button>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="ml-dashboard-tabs">
+        <button class="ml-dashboard-tab active" data-tab="overview">📊 Overview</button>
+        <button class="ml-dashboard-tab" data-tab="forecast">⚠️ Breach Forecast</button>
+        <button class="ml-dashboard-tab" data-tab="trends">📈 Performance</button>
+        <button class="ml-dashboard-tab" data-tab="team">👥 Team Workload</button>
+      </div>
+
+      <!-- Content -->
+      <div class="ml-dashboard-content">
+        <!-- Overview Tab -->
+        <div class="ml-dashboard-tab-content active" data-tab="overview">
+          <div class="metrics-grid">
+            <div class="metric-card" data-metric="total-tickets">
+              <span class="metric-value">-</span>
+              <span class="metric-label">Total Tickets</span>
+            </div>
+            <div class="metric-card" data-metric="critical-tickets">
+              <span class="metric-value">-</span>
+              <span class="metric-label">Critical</span>
+            </div>
+            <div class="metric-card" data-metric="sla-compliance">
+              <span class="metric-value">-</span>
+              <span class="metric-label">SLA Compliance</span>
+            </div>
+            <div class="metric-card" data-metric="at-risk-tickets">
+              <span class="metric-value">-</span>
+              <span class="metric-label">At Risk</span>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-container">
+              <canvas id="sla-breakdown-chart"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="priority-distribution-chart"></canvas>
+            </div>
+          </div>
+
+          <h3 style="color: #f3f4f6; margin: 30px 0 15px;">⚠️ High-Risk Tickets</h3>
+          <div id="breach-predictions-list"></div>
+        </div>
+
+        <!-- Breach Forecast Tab -->
+        <div class="ml-dashboard-tab-content" data-tab="forecast">
+          <div id="breach-forecast-content">
+            <div class="ml-dashboard-loader">
+              <div class="loader-spinner"></div>
+              <div class="loader-text">Loading forecast...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Trends Tab -->
+        <div class="ml-dashboard-tab-content" data-tab="trends">
+          <div class="charts-grid">
+            <div class="chart-container">
+              <canvas id="ticket-volume-chart"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="sla-compliance-chart"></canvas>
+            </div>
+            <div class="chart-container">
+              <canvas id="resolution-time-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Workload Tab -->
+        <div class="ml-dashboard-tab-content" data-tab="team">
+          <div id="team-workload-content">
+            <div class="ml-dashboard-loader">
+              <div class="loader-spinner"></div>
+              <div class="loader-text">Loading team data...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loader Overlay -->
+      <div class="ml-dashboard-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading dashboard...</div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Detectar usuario actual desde JIRA
     fetch('/api/user')
@@ -595,6 +707,10 @@
   <script src="/static/js/modules/ai-field-suggestions.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
   <script src="/static/js/ml-priority-badges.js?v={{ timestamp }}"></script>
+  
+  <!-- Chart.js for ML Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/static/js/ml-dashboard.js?v={{ timestamp }}"></script>
 
   <!-- ===== DRAG & DROP TRANSITIONS ===== -->
   <script src="/static/views/board/drag-transition-vertical.js?v={{ timestamp }}"></script>
