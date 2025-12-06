@@ -803,21 +803,22 @@ class MLDashboard {
     }
 
     /**
-     * Get current queue ID from logged user's session
-     * Priority: window.state (user's session) > UI selectors
+     * Get current queue ID - variable, can be any custom queue
+     * Priority: UI selectors (user's current selection) > window.state fallback
      */
     getCurrentQueueId() {
-        // Priority 1: User's logged session state
-        if (window.state && window.state.currentQueue) {
-            console.log('🎯 Using logged user queue:', window.state.currentQueue);
-            return window.state.currentQueue;
-        }
-        
-        // Fallback: UI selectors (filter bar)
+        // Priority 1: UI selectors (user's current queue selection)
         const queueSelect = document.getElementById('queueSelectFilter');
         if (queueSelect && queueSelect.value) {
-            console.log('🎯 Using filter queue:', queueSelect.value);
+            console.log('📋 Using selected queue:', queueSelect.value);
             return queueSelect.value;
+        }
+        
+        // Fallback: window.state (session state)
+        if (window.state && window.state.currentQueue) {
+            console.log('📋 Using session queue:', window.state.currentQueue);
+            return window.state.currentQueue;
+        }
         }
         
         // Last resort: alternative selectors
@@ -832,17 +833,17 @@ class MLDashboard {
     }
 
     /**
-     * Get current desk ID from logged user's session
-     * Priority: window.state (user's session) > UI selectors
+     * Get current desk ID - fixed from logged user
+     * Priority: window.state (user's fixed desk) > UI selectors
      */
     getCurrentDeskId() {
-        // Priority 1: User's logged session state
+        // Priority 1: User's logged desk (fixed, doesn't change)
         if (window.state && window.state.currentDesk) {
-            console.log('🎯 Using logged user desk:', window.state.currentDesk);
+            console.log('🏢 Using logged user desk:', window.state.currentDesk);
             return window.state.currentDesk;
         }
         
-        // Fallback: UI selector (filter bar)
+        // Fallback: UI selector (filter bar) - rare case
         const deskSelect = document.getElementById('deskSelectFilter');
         if (deskSelect && deskSelect.value) {
             return deskSelect.value;

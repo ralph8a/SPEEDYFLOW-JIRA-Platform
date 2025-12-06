@@ -136,7 +136,14 @@ def get_default_queue(desk: Dict) -> Optional[Dict]:
 def preload_ml_data_background(desk_id=None, queue_id=None):
     """
     Background thread to preload ML data
-    Uses provided desk/queue from user session, or auto-detects if not provided
+    
+    Args:
+        desk_id: User's fixed desk (from logged session)
+        queue_id: Currently selected queue (variable, can be any custom queue)
+    
+    Logic:
+        - DESK: Fixed from logged user, doesn't change
+        - QUEUE: Variable, user can select different custom queues
     """
     global preload_status
     
@@ -318,7 +325,10 @@ def trigger_preload():
     Trigger ML data preload in background
     Returns immediately with status
     Body (optional):
-        {"desk_id": "123", "queue_id": "456"} - Use user's logged session
+        {
+            "desk_id": "123",    # User's fixed desk (logged session)
+            "queue_id": "456"    # Currently selected queue (variable, can be any custom queue)
+        }
     """
     global preload_status
     
