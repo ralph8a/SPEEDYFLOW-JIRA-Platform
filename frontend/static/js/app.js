@@ -677,18 +677,16 @@ async function loadIssues(queueId) {
         }
         
         // Update view toggle button state
-        const viewToggleBtn = document.getElementById('viewToggleBtn');
-        if (viewToggleBtn) {
-          const icon = viewToggleBtn.querySelector('i.fa-list, i.fa-th-large');
-          const text = viewToggleBtn.querySelector('span:not(.badge)');
-          if (state.currentView === 'list') {
-            if (icon) icon.className = 'fas fa-th-large me-1';
-            if (text) text.textContent = 'Kanban View';
+        document.querySelectorAll('[data-view]').forEach(btn => {
+          const view = btn.getAttribute('data-view');
+          if (view === state.currentView) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
           } else {
-            if (icon) icon.className = 'fas fa-list me-1';
-            if (text) text.textContent = 'List View';
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
           }
-        }
+        });
       }
       
       // Render immediately with cached data
@@ -903,18 +901,16 @@ async function loadIssues(queueId) {
       }
       
       // Update view toggle button state
-      const viewToggleBtn = document.getElementById('viewToggleBtn');
-      if (viewToggleBtn) {
-        const icon = viewToggleBtn.querySelector('i.fa-list, i.fa-th-large');
-        const text = viewToggleBtn.querySelector('span:not(.badge)');
-        if (state.currentView === 'list') {
-          if (icon) icon.className = 'fas fa-th-large me-1';
-          if (text) text.textContent = 'Kanban View';
+      document.querySelectorAll('[data-view]').forEach(btn => {
+        const view = btn.getAttribute('data-view');
+        if (view === state.currentView) {
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
         } else {
-          if (icon) icon.className = 'fas fa-list me-1';
-          if (text) text.textContent = 'List View';
+          btn.classList.remove('active');
+          btn.setAttribute('aria-selected', 'false');
         }
-      }
+      });
     }
     
     // Save to cache with appropriate TTL
