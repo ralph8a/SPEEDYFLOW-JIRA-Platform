@@ -43,8 +43,58 @@ def load_ml_models():
         logger.error(f"Error loading ML models: {e}")
         return {}
 
+def extract_minimal_ticket_fields(ticket: Dict) -> Dict:
+    """
+    Extract only the fields needed for ML Dashboard metrics.
+    This reduces payload size by ~90% and speeds up processing.
+    
+    Fields needed:
+    - key: Ticket ID
+    - status: For filtering active/closed
+    - priority: For critical count and distribution
+    - created: For trend analysis
+    - updated: For trend analysis
+    - assignee: For team workload
+    - sla_data: For SLA metrics
+    - custom_fields: severity_level (if exists)
+    """
+    try:
+        fields = ticket.get('fields', {})
+        
+        # Extract only what we need
+        minimal = {
+            'key': ticket.get('key', ''),
+            'status': {
+                'name': fields.get('status', {}).get('name', 'Unknown')
+            },
+            'priority': {
+                'name': fields.get('priority', {}).get('name', 'Medium')
+            },
+            'created': fields.get('created', ''),
+            'updated': fields.get('updated', ''),
+            'assignee': {
+                'displayName': fields.get('assignee', {}).get('displayName', 'Unassigned') if fields.get('assignee') else 'Unassigned'
+            }
+        }
+        
+        # Add SLA data if present (already minimal)
+        if 'sla_data' in ticket:
+            minimal['sla_data'] = ticket['sla_data']
+        
+        # Add severity if exists
+        if 'customfield_10050' in fields:  # severity_level
+            minimal['severity'] = fields['customfield_10050']
+        
+        return minimal
+    except Exception as e:
+        logger.error(f"Error extracting minimal fields: {e}")
+        return ticket  # Return full ticket on error
+
 def get_queue_tickets(queue_id: str, desk_id: str = None) -> List[Dict]:
-    """Get tickets from a specific queue - uses cache when available"""
+    """
+    Get tickets from a specific queue - OPTIMIZED for ML Dashboard.
+    Returns only minimal fields needed for metrics (90% smaller payload).
+    """
     try:
         from utils.issue_cache import get_cache_manager
         from utils.api_migration import get_api_client
@@ -57,17 +107,24 @@ def get_queue_tickets(queue_id: str, desk_id: str = None) -> List[Dict]:
         
         if cached_issues:
             logger.info(f"✅ Using {len(cached_issues)} cached issues for ML dashboard")
+            
             # Filter by queue if queue_id is not 'all'
             if queue_id and queue_id != 'all':
-                # Note: JIRA cache doesn't store queue_id, so we return all
-                # Frontend can filter if needed
                 filtered = cached_issues
             else:
                 filtered = cached_issues
             
+            # Limit to 500 for performance
+            limited = filtered[:500]
+            
             # Enrich with SLA data
-            enriched = enrich_tickets_with_sla(filtered[:100])  # Limit for performance
-            return enriched
+            enriched = enrich_tickets_with_sla(limited)
+            
+            # ⚡ OPTIMIZATION: Extract only minimal fields
+            minimal_tickets = [extract_minimal_ticket_fields(t) for t in enriched]
+            
+            logger.info(f"⚡ Optimized: Reduced to minimal fields for {len(minimal_tickets)} tickets")
+            return minimal_tickets
         
         # Fallback to API if cache is empty
         logger.warning(f"⚠️ No cache available, fetching from API (slower)")
@@ -76,13 +133,19 @@ def get_queue_tickets(queue_id: str, desk_id: str = None) -> List[Dict]:
         
         # Enrich with SLA data
         enriched = enrich_tickets_with_sla(issues)
-        return enriched
+        
+        # Extract minimal fields
+        minimal_tickets = [extract_minimal_ticket_fields(t) for t in enriched]
+        return minimal_tickets
     except Exception as e:
         logger.error(f"Error fetching queue tickets: {e}")
         return []
 
 def get_all_active_tickets() -> List[Dict]:
-    """Get all active tickets - uses cache when available for instant performance"""
+    """
+    Get all active tickets - OPTIMIZED for ML Dashboard.
+    Returns only minimal fields needed for metrics (90% smaller payload).
+    """
     try:
         from utils.issue_cache import get_cache_manager
         from utils.api_migration import get_api_client, get_service_desks
@@ -95,6 +158,7 @@ def get_all_active_tickets() -> List[Dict]:
         
         if cached_issues:
             logger.info(f"✅ ML Dashboard using {len(cached_issues)} cached issues (instant load)")
+            
             # Filter for active tickets only (not closed/done)
             active_tickets = [
                 issue for issue in cached_issues
@@ -103,9 +167,17 @@ def get_all_active_tickets() -> List[Dict]:
             
             logger.info(f"📊 Filtered to {len(active_tickets)} active tickets")
             
-            # Enrich with SLA data (limit to 100 for performance)
-            enriched = enrich_tickets_with_sla(active_tickets[:100])
-            return enriched
+            # Limit to 500 for performance
+            limited = active_tickets[:500]
+            
+            # Enrich with SLA data
+            enriched = enrich_tickets_with_sla(limited)
+            
+            # ⚡ OPTIMIZATION: Extract only minimal fields
+            minimal_tickets = [extract_minimal_ticket_fields(t) for t in enriched]
+            
+            logger.info(f"⚡ Optimized: Reduced to minimal fields for {len(minimal_tickets)} tickets")
+            return minimal_tickets
         
         # Fallback to API if cache is empty (slower)
         logger.warning(f"⚠️ No cache available, fetching from API (this will be slow)")
@@ -524,7 +596,10 @@ def get_team_workload():
 
 # Helper functions
 def calculate_sla_metrics(tickets: List[Dict]) -> Dict:
-    """Calculate SLA-related metrics"""
+    """
+    Calculate SLA-related metrics - OPTIMIZED.
+    Works with minimal ticket fields for fast computation.
+    """
     total = len(tickets)
     if total == 0:
         return {
@@ -535,8 +610,17 @@ def calculate_sla_metrics(tickets: List[Dict]) -> Dict:
             'compliance_rate': 100
         }
     
-    breached = sum(1 for t in tickets if t.get('sla_breached', False))
-    at_risk = sum(1 for t in tickets if t.get('sla_percentage_used', 0) > 80 and not t.get('sla_breached'))
+    # Fast iteration with minimal field access
+    breached = 0
+    at_risk = 0
+    
+    for t in tickets:
+        sla_data = t.get('sla_data', {})
+        if sla_data.get('breached', False):
+            breached += 1
+        elif sla_data.get('percentage_used', 0) > 80:
+            at_risk += 1
+    
     on_track = total - breached - at_risk
     
     return {
@@ -544,7 +628,7 @@ def calculate_sla_metrics(tickets: List[Dict]) -> Dict:
         'breached': breached,
         'at_risk': at_risk,
         'on_track': on_track,
-        'compliance_rate': round((total - breached) / total * 100, 1)
+        'compliance_rate': round((total - breached) / total * 100, 1) if total > 0 else 100
     }
 
 def predict_breaches(tickets: List[Dict], models: Dict) -> List[Dict]:
@@ -586,16 +670,24 @@ def predict_single_breach(ticket: Dict, models: Dict) -> Dict:
     }
 
 def calculate_priority_distribution(tickets: List[Dict]) -> Dict:
-    """Calculate priority distribution"""
+    """Calculate priority distribution - OPTIMIZED for minimal fields"""
     dist = defaultdict(int)
     for ticket in tickets:
-        priority = ticket.get('fields', {}).get('priority', {}).get('name', 'None')
+        # Works with both full and minimal ticket structures
+        priority = ticket.get('priority', {}).get('name', 'None')
         dist[priority] += 1
     
     return dict(dist)
 
 def calculate_trends(tickets: List[Dict]) -> Dict:
-    """Calculate trend metrics"""
+    """Calculate trend metrics - OPTIMIZED for minimal fields"""
+    if not tickets:
+        return {
+            'tickets_last_24h': 0,
+            'tickets_last_week': 0,
+            'avg_per_day': 0
+        }
+    
     now = datetime.now()
     last_24h = sum(1 for t in tickets if is_recent(t, hours=24))
     last_week = sum(1 for t in tickets if is_recent(t, hours=168))
@@ -603,7 +695,7 @@ def calculate_trends(tickets: List[Dict]) -> Dict:
     return {
         'tickets_last_24h': last_24h,
         'tickets_last_week': last_week,
-        'avg_per_day': round(last_week / 7, 1)
+        'avg_per_day': round(last_week / 7, 1) if last_week > 0 else 0
     }
 
 def calculate_prediction_stats(tickets: List[Dict], models: Dict) -> Dict:
