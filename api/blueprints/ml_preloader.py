@@ -44,6 +44,19 @@ preload_status = {
     'error': None
 }
 
+# Global cache indicator - accessible by all components
+cache_indicator = {
+    'has_cache': False,
+    'total_tickets': 0,
+    'desk_id': None,
+    'desk_name': None,
+    'queue_id': None,
+    'queue_name': None,
+    'cached_at': None,
+    'cache_file': 'data/cache/ml_preload_cache.json.gz',
+    'metadata_file': 'data/cache/ml_cache_indicator.json'
+}
+
 def compress_data(data: Dict) -> bytes:
     """Compress JSON data with gzip"""
     json_str = json.dumps(data, ensure_ascii=False)
@@ -220,6 +233,30 @@ def preload_ml_data_background():
         logger.info(f"💾 Cached {len(enriched_tickets)} tickets")
         logger.info(f"📊 Compression: {original_size:,} → {compressed_size:,} bytes ({compression_ratio:.1f}% saved)")
         
+        # Save cache indicator metadata (lightweight, accessible by other components)
+        global cache_indicator
+        cache_indicator = {
+            'has_cache': True,
+            'total_tickets': len(enriched_tickets),
+            'desk_id': desk['id'],
+            'desk_name': desk['name'],
+            'queue_id': queue['id'],
+            'queue_name': queue['name'],
+            'cached_at': ml_data['cached_at'],
+            'cache_file': str(compressed_file),
+            'metadata_file': 'data/cache/ml_cache_indicator.json',
+            'file_size_bytes': compressed_size,
+            'compression_ratio_percent': round(compression_ratio, 1)
+        }
+        
+        # Save indicator to separate JSON file for easy access
+        indicator_file = cache_dir / 'ml_cache_indicator.json'
+        with open(indicator_file, 'w', encoding='utf-8') as f:
+            json.dump(cache_indicator, f, ensure_ascii=False, indent=2)
+        
+        logger.info(f"📍 Cache indicator saved: {indicator_file}")
+        logger.info(f"🎯 Other components can now use cached tickets: {len(enriched_tickets)} tickets from '{queue['name']}'")
+        
         # Step 7: Complete
         preload_status['progress'] = 100
         preload_status['message'] = f'✅ ML Dashboard ready! {len(enriched_tickets)} tickets analyzed'
@@ -298,6 +335,71 @@ def get_preload_data():
         })
     except Exception as e:
         logger.error(f"Error loading preloaded data: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@ml_preloader_bp.route('/preload/cache-info', methods=['GET'])
+def get_cache_info():
+    """
+    Get cache indicator - lightweight metadata about cached tickets.
+    Other components should check this endpoint first before loading full data.
+    
+    Returns:
+        - has_cache: bool - Whether cache exists
+        - total_tickets: int - Number of cached tickets
+        - desk_id, desk_name, queue_id, queue_name - Source info
+        - cached_at: timestamp
+        - file_size_bytes, compression_ratio_percent
+    
+    Example usage:
+        // Check if cache exists
+        const info = await fetch('/api/ml/preload/cache-info').then(r => r.json());
+        if (info.has_cache) {
+            console.log(`✅ ${info.total_tickets} tickets cached from ${info.queue_name}`);
+            // Use cached data...
+        }
+    """
+    try:
+        from pathlib import Path
+        
+        # Try to load indicator file
+        indicator_file = Path('data/cache/ml_cache_indicator.json')
+        
+        if indicator_file.exists():
+            with open(indicator_file, 'r', encoding='utf-8') as f:
+                indicator = json.load(f)
+            
+            return jsonify({
+                'success': True,
+                'cache_info': indicator
+            })
+        else:
+            # No indicator file, check if cache file exists
+            cache_file = Path('data/cache/ml_preload_cache.json.gz')
+            if cache_file.exists():
+                # Cache exists but no indicator (legacy)
+                return jsonify({
+                    'success': True,
+                    'cache_info': {
+                        'has_cache': True,
+                        'total_tickets': 0,  # Unknown
+                        'message': 'Cache exists but indicator missing. Run preload again.'
+                    }
+                })
+            else:
+                # No cache at all
+                return jsonify({
+                    'success': True,
+                    'cache_info': {
+                        'has_cache': False,
+                        'total_tickets': 0,
+                        'message': 'No cache available. Run /api/ml/preload to create cache.'
+                    }
+                })
+    except Exception as e:
+        logger.error(f"Error getting cache info: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
