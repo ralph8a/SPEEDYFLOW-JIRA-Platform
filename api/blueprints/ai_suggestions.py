@@ -11,6 +11,7 @@ Funcionalidad similar a Atlassian Intelligence:
 from flask import Blueprint, request
 from typing import Any, Dict, List
 import logging
+import json
 from utils.decorators import (
     handle_api_error,
     json_response,
@@ -44,6 +45,8 @@ def api_analyze_queue():
     Usa el caché completo para aprender patrones, pero solo sugiere mejoras
     para los tickets de la cola actual.
     
+    🚀 CACHING: Results cached in DB with 1-3h TTL (adaptive based on queue size)
+    
     Request Body:
         {
             "desk_id": "1",  # Required
@@ -55,7 +58,9 @@ def api_analyze_queue():
             "analyzed_count": 33,
             "issues_with_suggestions": 24,
             "suggestions": [...],
-            "cache_size": 1234  # Total tickets en caché para contexto
+            "cache_size": 1234,  # Total tickets en caché para contexto
+            "cached": true,  # Whether this response came from cache
+            "generated_at": "2025-01-15T10:30:00"
         }
     """
     data = request.get_json() or {}
@@ -64,6 +69,33 @@ def api_analyze_queue():
     
     if not desk_id:
         return {'error': 'desk_id is required'}, 400
+    
+    # 🔍 LEVEL 3: Check backend DB cache (before expensive ML analysis)
+    from utils.db import get_db
+    from datetime import datetime, timedelta
+    
+    try:
+        conn = get_db()
+        cached = conn.execute("""
+            SELECT data, generated_at 
+            FROM ml_analysis_cache 
+            WHERE service_desk_id = ? AND queue_id = ? AND expires_at > ?
+        """, (desk_id, queue_id, datetime.now().isoformat())).fetchone()
+        
+        if cached:
+            cached_data = json.loads(cached[0])
+            generated_at = cached[1]
+            logger.info(f"✅ Using cached ML analysis from {generated_at} (desk={desk_id}, queue={queue_id})")
+            return {
+                **cached_data,
+                'cached': True,
+                'generated_at': generated_at
+            }
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to check ML analysis cache: {e}")
+    
+    # 💡 Cache miss - perform expensive ML analysis
+    logger.info(f"🔬 Performing fresh ML analysis (desk={desk_id}, queue={queue_id})")
     
     try:
         # PASO 1: Cargar caché global para patrones (contexto de aprendizaje)
@@ -188,8 +220,42 @@ def api_analyze_queue():
             'suggestions': results,
             'cache_size': cache_size,
             'desk_id': desk_id,
-            'queue_id': queue_id
+            'queue_id': queue_id,
+            'cached': False,
+            'generated_at': datetime.now().isoformat()
         }
+        
+        # 💾 Save to backend DB cache with adaptive TTL
+        try:
+            from core.api import load_queue_issues
+            # Get queue size to determine TTL
+            df_size, _ = load_queue_issues(desk_id, queue_id)
+            queue_size = len(df_size) if df_size is not None and not getattr(df_size, 'empty', True) else 0
+            
+            # Adaptive TTL: 3h for large queues (≥50), 1h for small queues
+            cache_hours = 3 if queue_size >= 50 else 1
+            expires_at = datetime.now() + timedelta(hours=cache_hours)
+            
+            conn = get_db()
+            conn.execute("""
+                INSERT INTO ml_analysis_cache (service_desk_id, queue_id, data, generated_at, expires_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(service_desk_id, queue_id) DO UPDATE SET
+                    data = excluded.data,
+                    generated_at = excluded.generated_at,
+                    expires_at = excluded.expires_at
+            """, (
+                desk_id, 
+                queue_id, 
+                json.dumps(response_data), 
+                datetime.now().isoformat(), 
+                expires_at.isoformat()
+            ))
+            conn.commit()
+            
+            logger.info(f"💾 Cached ML analysis in DB (TTL: {cache_hours}h, queue_size: {queue_size}, expires: {expires_at.isoformat()})")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to cache ML analysis: {e}")
         
         logger.info(f"Response structure: analyzed={analyzed_count}, suggestions_count={len(results)}, cache={cache_size}")
         

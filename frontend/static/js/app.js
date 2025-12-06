@@ -64,7 +64,7 @@ const state = {
   currentQueue: null,
   issues: [],
   issueTransitions: {},
-  currentView: 'kanban',
+  currentView: '', // Will be auto-selected based on ticket count on first load
   theme: localStorage.getItem('theme') || 'light',
   currentUser: null,
   filteredIssues: [],
@@ -73,12 +73,17 @@ const state = {
   severityMapping: null // Mapping for severity classification
 };
 
+// Make state globally accessible IMMEDIATELY to prevent "undefined" errors
+// in other modules that initialize at the same time (like sidebar-actions.js)
+window.state = state;
+
 // ============================================================================
 // CACHE UTILITIES - LocalStorage with TTL
 // ============================================================================
 const CacheManager = {
   TTL: 15 * 60 * 1000, // 15 minutes in milliseconds
   TRANSITIONS_TTL: 30 * 60 * 1000, // 30 minutes for transitions (rarely change)
+  LARGE_QUEUE_TTL: 3 * 60 * 60 * 1000, // 3 hours for large queues (50+ tickets)
   
   /**
    * Set item in cache with timestamp
@@ -216,8 +221,13 @@ async function initApp() {
   // Cargar filtros guardados si existen
   loadSavedFilters();
   
-  // NOTE: Auto-selection is now handled by header-menu-controller.js
-  // which uses the new filter selectors (serviceDeskSelectFilter, queueSelectFilter)
+  // 🎯 NEW: Don't load preferred view on init - let loadIssues() auto-select
+  // based on ticket count. View preference will be saved after user manually switches.
+  // This ensures optimal view is selected based on data size, not last session's choice.
+  state.currentView = ''; // Start empty, will be auto-selected in loadIssues()
+  
+  // NOTE: Auto-selection is now handled by loadIssues() function
+  // which intelligently selects view based on ticket count (20 ticket threshold)
   
   console.log('✅ SpeedyFlow ready');
 }
@@ -263,6 +273,10 @@ function setupEventListeners() {
       console.log(`📋 Queue changed to: ${state.currentQueue}`);
       console.log(`🔍 Current state:`, { desk: state.currentDesk, queue: state.currentQueue });
       
+      // 🎯 Reset view selection to allow auto-selection based on new queue size
+      state.currentView = '';
+      console.log('🔄 View reset - will auto-select based on ticket count');
+      
       // Update breadcrumb with queue name
       if (state.currentQueue) {
         const desk = state.desks.find(d => d.id === state.currentDesk);
@@ -279,9 +293,6 @@ function setupEventListeners() {
       }
     });
   }
-  
-  // Make state globally accessible for AI analyzer
-  window.state = state;
 
   // Auto-refresh every 10 minutes
   setInterval(refreshIssues, 600000);
@@ -290,8 +301,32 @@ function setupEventListeners() {
   const toggleButtons = document.querySelectorAll('[data-view]');
   if (toggleButtons.length > 0) {
     toggleButtons.forEach(btn => {
-      // addEventListener disabled - visual only mode
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const view = btn.getAttribute('data-view');
+        
+        // Warn user if switching to kanban with too many tickets
+        if (view === 'kanban' && state.issues && state.issues.length > 20) {
+          const confirmed = confirm(
+            `⚠️ Performance Warning\n\n` +
+            `You have ${state.issues.length} tickets in this queue.\n\n` +
+            `Kanban view may be slow with this many tickets. ` +
+            `List view is recommended for better performance.\n\n` +
+            `Switch to Kanban anyway?`
+          );
+          
+          if (!confirmed) {
+            return;
+          }
+          
+          // Clear auto-switch flag if user manually switches
+          state.wasAutoSwitched = false;
+        }
+        
+        switchView(view);
+      });
     });
+    console.log('✅ View toggle buttons enabled');
   }
 
   // New ticket button functionality handled by header-menu-controller.js
@@ -333,6 +368,46 @@ function setupEventListeners() {
 
   // Quick action button is now handled by quick-action-button.js
   // (Removed duplicate listener that was causing conflicts)
+}
+
+/**
+ * Close all open modals before navigating to a ticket
+ */
+function closeAllModals() {
+  // Close Quick Triage modal
+  const triageModal = document.getElementById('quickTriageModal');
+  if (triageModal) {
+    triageModal.style.display = 'none';
+  }
+  
+  // Close AI Queue Analyzer modal
+  const aiModal = document.getElementById('aiQueueModal');
+  if (aiModal) {
+    aiModal.style.display = 'none';
+  }
+  
+  // Close Search Panel
+  const searchPanel = document.getElementById('searchPanel');
+  if (searchPanel) {
+    searchPanel.classList.remove('active');
+    searchPanel.style.display = 'none';
+  }
+  
+  // Close AI Field Suggestions modal
+  const aiSuggestionsModal = document.querySelector('.ai-suggestions-modal');
+  if (aiSuggestionsModal && aiSuggestionsModal.parentElement) {
+    aiSuggestionsModal.parentElement.remove();
+  }
+  
+  // Close any other modal with class 'modal' or 'modal-container'
+  document.querySelectorAll('.modal:not(#rightSidebar), .modal-container:not(.right-sidebar)').forEach(modal => {
+    if (modal.style.display !== 'none') {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  });
+  
+  console.log('🚪 All modals closed before opening ticket');
 }
 
 /**
@@ -588,6 +663,34 @@ async function loadIssues(queueId) {
         state.filteredIssues = allIssues;
       }
       
+      // 🎯 INTELLIGENT INITIAL VIEW SELECTION (cached path)
+      // Auto-select best view based on ticket count BEFORE first render
+      const AUTO_SWITCH_THRESHOLD = 20;
+      if (!state.currentView || state.currentView === '') {
+        // Initial load - no view set yet
+        if (state.issues.length > AUTO_SWITCH_THRESHOLD) {
+          state.currentView = 'list';
+          console.log(`🎯 Auto-selected LIST view (${state.issues.length} tickets > ${AUTO_SWITCH_THRESHOLD}) [cached]`);
+        } else {
+          state.currentView = 'kanban';
+          console.log(`🎯 Auto-selected KANBAN view (${state.issues.length} tickets ≤ ${AUTO_SWITCH_THRESHOLD}) [cached]`);
+        }
+        
+        // Update view toggle button state
+        const viewToggleBtn = document.getElementById('viewToggleBtn');
+        if (viewToggleBtn) {
+          const icon = viewToggleBtn.querySelector('i.fa-list, i.fa-th-large');
+          const text = viewToggleBtn.querySelector('span:not(.badge)');
+          if (state.currentView === 'list') {
+            if (icon) icon.className = 'fas fa-th-large me-1';
+            if (text) text.textContent = 'Kanban View';
+          } else {
+            if (icon) icon.className = 'fas fa-list me-1';
+            if (text) text.textContent = 'List View';
+          }
+        }
+      }
+      
       // Render immediately with cached data
       renderView();
       
@@ -611,14 +714,61 @@ async function loadIssues(queueId) {
     }
     
     console.log('📡 Fetching issues for queue:', queueId);
-    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    
+    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}`, {
+      headers: {
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeoutId));
     let json;
     try {
-      json = await response.json();
+      const responseText = await response.text();
+      console.log(`📊 Response size: ${responseText.length} bytes`);
+      
+      // Log first 500 chars if parse fails
+      try {
+        json = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError.message);
+        console.error('📄 Response preview (first 500 chars):', responseText.substring(0, 500));
+        console.error('📄 Response end (last 500 chars):', responseText.substring(Math.max(0, responseText.length - 500)));
+        throw parseError;
+      }
     } catch (e) {
-      console.warn('⚠️ Failed to parse issues JSON, using empty list', e);
-      json = {};
+      console.error('❌ Failed to fetch/parse issues:', e);
+      
+      // Show user-friendly error notification
+      if (window.showNotification) {
+        window.showNotification(
+          'Error loading tickets. The queue may be too large or have data issues. Please try a smaller queue or contact support.',
+          'error',
+          10000
+        );
+      }
+      
+      // Update status indicator
+      if (statusEl) {
+        statusEl.textContent = 'Error loading tickets';
+        statusEl.classList.remove('status-info', 'status-success');
+        statusEl.classList.add('status-warn');
+      }
+      
+      // Hide loading indicator
+      if (window.loadingDotsManager) {
+        window.loadingDotsManager.hide();
+      }
+      
+      // Return early with empty state
+      state.issues = [];
+      state.filteredIssues = [];
+      renderView();
+      return;
     }
+    
     // Unwrap nested response: json_response decorator wraps original dict under data
     // Original issues blueprint returns { data: [...], count: N }
     let allIssuesWrapper = json.data || json.payload || json.result || json; // attempt generic wrapper
@@ -731,9 +881,47 @@ async function loadIssues(queueId) {
     
     console.log(`✅ Issues loaded: ${state.issues.length}/${allIssues.length}`);
     
-    // Save to cache (reuse cacheKey from line 519)
-    CacheManager.set(cacheKey, allIssues);
-    console.log(`💾 Cached ${allIssues.length} issues`);
+    // Reset SLA tracking when loading new queue
+    if (state.listView) {
+      state.listView.slaLoadedCount = 0;
+      state.listView.slaLoadedKeys = new Set();
+      state.listView.lastSlaFetch = 0;
+      console.log('🔄 SLA tracking reset for new queue');
+    }
+    
+    // 🎯 INTELLIGENT INITIAL VIEW SELECTION
+    // Auto-select best view based on ticket count BEFORE first render
+    const AUTO_SWITCH_THRESHOLD = 20;
+    if (!state.currentView || state.currentView === '') {
+      // Initial load - no view set yet
+      if (state.issues.length > AUTO_SWITCH_THRESHOLD) {
+        state.currentView = 'list';
+        console.log(`🎯 Auto-selected LIST view (${state.issues.length} tickets > ${AUTO_SWITCH_THRESHOLD})`);
+      } else {
+        state.currentView = 'kanban';
+        console.log(`🎯 Auto-selected KANBAN view (${state.issues.length} tickets ≤ ${AUTO_SWITCH_THRESHOLD})`);
+      }
+      
+      // Update view toggle button state
+      const viewToggleBtn = document.getElementById('viewToggleBtn');
+      if (viewToggleBtn) {
+        const icon = viewToggleBtn.querySelector('i.fa-list, i.fa-th-large');
+        const text = viewToggleBtn.querySelector('span:not(.badge)');
+        if (state.currentView === 'list') {
+          if (icon) icon.className = 'fas fa-th-large me-1';
+          if (text) text.textContent = 'Kanban View';
+        } else {
+          if (icon) icon.className = 'fas fa-list me-1';
+          if (text) text.textContent = 'List View';
+        }
+      }
+    }
+    
+    // Save to cache with appropriate TTL
+    const cacheTTL = allIssues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
+    CacheManager.set(cacheKey, allIssues, cacheTTL);
+    const ttlHours = (cacheTTL / (60 * 60 * 1000)).toFixed(1);
+    console.log(`💾 Cached ${allIssues.length} issues (TTL: ${ttlHours}h)`);
     
     // Update breadcrumb
     if (window.headerMenus && window.headerMenus.syncQueueBreadcrumb) {
@@ -746,10 +934,33 @@ async function loadIssues(queueId) {
       filterInfo.textContent = `📊 ${state.issues.length} ticket${state.issues.length !== 1 ? 's' : ''} assigned to you`;
     }
     
-    // Cargar transiciones de forma lazy (solo cuando se necesiten)
-    loadIssueTransitionsLazy();
-    
-    renderView();
+    // Progressive rendering strategy for large queues
+    if (allIssues.length > 20) {
+      console.log(`🚀 Progressive loading: Rendering first 20 tickets immediately, ${allIssues.length - 20} in background`);
+      
+      // Render first 20 immediately for fast initial display
+      renderView();
+      
+      // Load remaining tickets in background (non-blocking)
+      setTimeout(() => {
+        console.log(`🔄 Loading remaining ${allIssues.length - 20} tickets in background...`);
+        // Trigger a re-render to show all tickets
+        renderView();
+      }, 100);
+      
+      // Load transitions lazily in background
+      setTimeout(() => loadIssueTransitionsLazy(), 200);
+      
+      // Preload metrics and ML in background after initial render
+      setTimeout(() => preloadMetricsInBackground(), 300);
+      setTimeout(() => preloadMLAnalysisInBackground(), 400);
+    } else {
+      // For small queues, render everything immediately
+      loadIssueTransitionsLazy();
+      preloadMetricsInBackground();
+      preloadMLAnalysisInBackground();
+      renderView();
+    }
     if (statusEl) {
       statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''}`;
       statusEl.classList.remove('status-info','status-warn');
@@ -809,7 +1020,16 @@ async function enrichIssuesWithCustomFields() {
 async function fetchIssuesBackground(queueId, cacheKey) {
   try {
     console.log('🔄 Fetching fresh issues in background...');
-    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout for background
+    
+    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}`, {
+      headers: {
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeoutId));
     const json = await response.json();
     
     let allIssuesWrapper = json.data || json.payload || json.result || json;
@@ -825,12 +1045,160 @@ async function fetchIssuesBackground(queueId, cacheKey) {
     }
     
     if (allIssues.length > 0) {
-      // Update cache silently
-      CacheManager.set(cacheKey, allIssues);
-      console.log(`💾 Cache updated with ${allIssues.length} fresh issues`);
+      // Update cache silently with appropriate TTL
+      const cacheTTL = allIssues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
+      CacheManager.set(cacheKey, allIssues, cacheTTL);
+      const ttlHours = (cacheTTL / (60 * 60 * 1000)).toFixed(1);
+      console.log(`💾 Cache updated with ${allIssues.length} fresh issues (TTL: ${ttlHours}h)`);
     }
   } catch (error) {
     console.warn('⚠️ Background fetch failed:', error);
+  }
+}
+
+/**
+ * Preload metrics in background with 3-level caching strategy
+ * Level 1: Memory cache (instant)
+ * Level 2: LocalStorage cache (15min/3h TTL)
+ * Level 3: Backend DB cache (1h TTL)
+ */
+async function preloadMetricsInBackground() {
+  if (!state.currentDesk || !state.currentQueue) {
+    console.log('ℹ️ Skipping metrics preload: no desk/queue selected');
+    return;
+  }
+  
+  const cacheKey = `metrics_${state.currentDesk}_${state.currentQueue}`;
+  
+  // Level 1: Check memory cache (instant)
+  if (window.metricsCache && window.metricsCache[cacheKey]) {
+    const cached = window.metricsCache[cacheKey];
+    const age = Date.now() - cached.timestamp;
+    const ttl = state.issues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
+    
+    if (age < ttl) {
+      console.log(`💨 Metrics in memory cache (${(age / 1000).toFixed(0)}s old)`);
+      return; // Already cached in memory
+    }
+  }
+  
+  // Level 2: Check LocalStorage cache
+  const localCached = CacheManager.get(cacheKey);
+  if (localCached) {
+    console.log('💾 Metrics in LocalStorage cache');
+    // Store in memory for faster access
+    window.metricsCache = window.metricsCache || {};
+    window.metricsCache[cacheKey] = {
+      data: localCached,
+      timestamp: Date.now()
+    };
+    return; // Already cached locally
+  }
+  
+  // Level 3: Fetch from backend (with DB cache)
+  console.log('🔄 Preloading metrics in background...');
+  
+  try {
+    const url = `/api/reports/metrics?serviceDeskId=${state.currentDesk}&queueId=${state.currentQueue}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.data?.cached && data.data?.metrics) {
+      const metrics = data.data.metrics;
+      
+      // Store in memory cache
+      window.metricsCache = window.metricsCache || {};
+      window.metricsCache[cacheKey] = {
+        data: metrics,
+        timestamp: Date.now()
+      };
+      
+      // Store in LocalStorage cache
+      const ttl = state.issues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
+      CacheManager.set(cacheKey, metrics, ttl);
+      
+      console.log(`✅ Metrics preloaded: ${metrics.summary?.total || 0} tickets analyzed`);
+    } else if (data.data?.refresh_status) {
+      console.log(`🔄 Metrics refresh in progress: ${data.data.refresh_status.progress}%`);
+      // Will be available on next load from DB cache
+    } else {
+      console.log('ℹ️ Metrics not yet available');
+    }
+  } catch (error) {
+    console.warn('⚠️ Background metrics preload failed:', error);
+  }
+}
+
+/**
+ * Preload ML analysis in background with 3-level caching strategy
+ * Level 1: Memory cache (instant)
+ * Level 2: LocalStorage cache (15min/3h TTL)
+ * Level 3: Backend DB cache (1h TTL)
+ */
+async function preloadMLAnalysisInBackground() {
+  if (!state.currentDesk || !state.currentQueue) {
+    console.log('ℹ️ Skipping ML analysis preload: no desk/queue selected');
+    return;
+  }
+  
+  const cacheKey = `ml_analysis_${state.currentDesk}_${state.currentQueue}`;
+  
+  // Level 1: Check memory cache (instant)
+  if (window.mlAnalysisCache && window.mlAnalysisCache[cacheKey]) {
+    const cached = window.mlAnalysisCache[cacheKey];
+    const age = Date.now() - cached.timestamp;
+    const ttl = state.issues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
+    
+    if (age < ttl) {
+      console.log(`💨 ML Analysis in memory cache (${(age / 1000).toFixed(0)}s old)`);
+      return;
+    }
+  }
+  
+  // Level 2: Check LocalStorage cache
+  const localCached = CacheManager.get(cacheKey);
+  if (localCached) {
+    console.log('💾 ML Analysis in LocalStorage cache');
+    window.mlAnalysisCache = window.mlAnalysisCache || {};
+    window.mlAnalysisCache[cacheKey] = {
+      data: localCached,
+      timestamp: Date.now()
+    };
+    return;
+  }
+  
+  // Level 3: Fetch from backend (with DB cache)
+  console.log('🔄 Preloading ML analysis in background...');
+  
+  try {
+    const response = await fetch('/api/ai/analyze-queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        desk_id: state.currentDesk,
+        queue_id: state.currentQueue
+      })
+    });
+    
+    const data = await response.json();
+    let analysis = data.data || data;
+    
+    if (analysis && !analysis.error) {
+      // Store in memory cache
+      window.mlAnalysisCache = window.mlAnalysisCache || {};
+      window.mlAnalysisCache[cacheKey] = {
+        data: analysis,
+        timestamp: Date.now()
+      };
+      
+      // Store in LocalStorage cache
+      const ttl = state.issues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
+      CacheManager.set(cacheKey, analysis, ttl);
+      
+      console.log(`✅ ML Analysis preloaded: ${analysis.analyzed_count || 0} tickets analyzed`);
+    }
+  } catch (error) {
+    console.warn('⚠️ Background ML analysis preload failed:', error);
   }
 }
 
@@ -1045,7 +1413,168 @@ async function refreshIssues() {
   }
 }
 
+function autoSwitchViewIfNeeded() {
+  // Force list view if more than 20 tickets
+  const issueCount = state.issues?.length || 0;
+  
+  if (issueCount > 20 && state.currentView === 'kanban') {
+    console.log(`⚡ Auto-switching to list view (${issueCount} tickets > 20)`);
+    
+    // Mark as auto-switched
+    state.wasAutoSwitched = true;
+    
+    switchView('list');
+    
+    // Show notification with custom styling
+    showAutoSwitchNotification(issueCount);
+    
+    return true;
+  }
+  
+  // Clear auto-switch flag if manually switching or less than 20 tickets
+  if (issueCount <= 20) {
+    state.wasAutoSwitched = false;
+  }
+  
+  return false;
+}
+
+function showAutoSwitchNotification(issueCount) {
+  // Create custom notification
+  const notification = document.createElement('div');
+  notification.className = 'auto-switch-notification';
+  notification.innerHTML = `
+    <div class="auto-switch-content">
+      <div class="auto-switch-icon">📊</div>
+      <div class="auto-switch-text">
+        <strong>List View Activated</strong>
+        <p>${issueCount} tickets detected. Using list view for better performance.</p>
+      </div>
+      <button class="auto-switch-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.classList.add('fade-out');
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, 5000);
+}
+
+function switchView(view) {
+  console.log('🔄 Switching view to:', view);
+  
+  // Update state
+  state.currentView = view;
+  
+  // Update button states
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    if (btn.getAttribute('data-view') === view) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+    } else {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    }
+  });
+  
+  // Add/remove auto-switch badge
+  updateAutoSwitchBadge();
+  
+  // Show/hide views
+  const kanbanView = document.getElementById('kanbanView');
+  const listView = document.getElementById('listView');
+  const boardWrapper = document.getElementById('boardWrapper');
+  
+  // Force layout reset by clearing both views first
+  if (kanbanView) {
+    kanbanView.style.display = 'none';
+    kanbanView.style.height = '';
+    kanbanView.style.minHeight = '';
+    kanbanView.style.maxHeight = '';
+    kanbanView.style.transform = '';
+    kanbanView.style.opacity = '';
+  }
+  
+  if (listView) {
+    listView.style.display = 'none';
+    listView.style.height = '';
+    listView.style.minHeight = '';
+    listView.style.maxHeight = '';
+    listView.style.transform = '';
+    listView.style.opacity = '';
+  }
+  
+  // Reset scroll position when switching views
+  if (boardWrapper) {
+    boardWrapper.scrollTop = 0;
+    boardWrapper.style.height = '';
+  }
+  
+  // Force reflow to ensure styles are applied
+  if (boardWrapper) {
+    void boardWrapper.offsetHeight;
+  }
+  
+  // Now show the selected view
+  if (view === 'kanban' && kanbanView) {
+    kanbanView.style.display = 'block';
+    // Re-apply SLA styling when switching back to kanban
+    setTimeout(() => {
+      if (state.currentView === 'kanban') {
+        console.log('🎨 Re-applying SLA styling after switching to kanban...');
+        applySLAStyling();
+      }
+    }, 150);
+  } else if (view === 'list' && listView) {
+    listView.style.display = 'block';
+  }
+  
+  // Render the view
+  renderView();
+  
+  // Save preference (only if not auto-switched)
+  if (!state.wasAutoSwitched) {
+    localStorage.setItem('preferredView', view);
+  }
+}
+
+function updateAutoSwitchBadge() {
+  // Remove existing badge
+  const existingBadge = document.querySelector('.auto-switch-badge');
+  if (existingBadge) {
+    existingBadge.remove();
+  }
+  
+  // Add badge if auto-switched and in list view
+  if (state.wasAutoSwitched && state.currentView === 'list') {
+    const listBtn = document.querySelector('[data-view="list"]');
+    if (listBtn && !listBtn.querySelector('.auto-switch-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'auto-switch-badge';
+      badge.textContent = 'Auto';
+      badge.title = `Automatically switched due to ${state.issues?.length || 0} tickets`;
+      listBtn.appendChild(badge);
+    }
+  }
+}
+
 function renderView() {
+  // Only auto-switch if view is already set (not initial load)
+  // Initial load view is selected intelligently in loadIssues()
+  if (state.currentView && state.currentView !== '') {
+    const wasAutoSwitched = autoSwitchViewIfNeeded();
+    
+    // If auto-switched, the switchView() function already handled the render
+    if (wasAutoSwitched) {
+      return;
+    }
+  }
+  
   if (state.currentView === 'kanban') {
     renderKanban();
   } else {
@@ -1074,18 +1603,15 @@ async function getSLAStatusClass(issueKey) {
     const cycle = data.data.cycles[0];
     const isSecondary = data.data.is_secondary || false;
     
-    // If using secondary SLA (Cierre Ticket), use amber/orange badge
+    // IMPORTANT: Don't style tickets with only "Cierre Ticket" (secondary) SLA
+    // These tickets should appear NORMAL without amber highlighting
+    // Amber would incorrectly suggest a problem/warning when it's just a default SLA
     if (isSecondary) {
-      if (cycle.paused) {
-        return 'ticket-key-sla-secondary-paused';
-      } else if (cycle.breached) {
-        return 'ticket-key-sla-secondary-breached';
-      } else {
-        return 'ticket-key-sla-secondary';
-      }
+      return ''; // No styling for secondary-only tickets
     }
     
-    // Determine SLA status class based on state (primary SLA)
+    // Determine SLA status class based on state from JIRA
+    // Show paused status ONLY when JIRA reports paused=true
     if (cycle.paused) {
       return 'ticket-key-sla-paused';
     } else if (cycle.breached) {
@@ -1110,9 +1636,20 @@ async function getSLAStatusClass(issueKey) {
 async function renderKanban() {
   const kanbanView = document.getElementById('kanbanView');
   
-  if (state.issues.length === 0) {
+  // Use state.issues which already contains filtered issues
+  const issuesToRender = state.issues;
+  
+  if (!issuesToRender || issuesToRender.length === 0) {
     kanbanView.innerHTML = '<p class="placeholder">No issues in this queue</p>';
     return;
+  }
+  
+  // Progressive rendering for large datasets - adaptive thresholds
+  const INITIAL_RENDER_COUNT = issuesToRender.length > 50 ? 15 : 20;
+  const shouldProgressiveRender = issuesToRender.length > 25; // Lower threshold
+  
+  if (shouldProgressiveRender) {
+    console.log(`🎭 Progressive Kanban: ${issuesToRender.length} total tickets, rendering first ${INITIAL_RENDER_COUNT} immediately`);
   }
 
   // Usar endpoint /api/kanban del backend para obtener orden correcto
@@ -1135,17 +1672,23 @@ async function renderKanban() {
   let columnsToRender = [];
   if (kanbanData && kanbanData.columns && kanbanData.statuses) {
     // Usar columnas del backend (ya ordenadas)
+    // But filter by smart filter if active
     columnsToRender = kanbanData.statuses.map(status => {
       const column = kanbanData.columns.find(c => c.status === status);
+      const columnIssues = column ? column.issues : [];
+      // If smart filter is active, filter the column issues
+      const filteredColumnIssues = window.app?.filteredIssues
+        ? columnIssues.filter(issue => issuesToRender.some(fi => fi.key === issue.key))
+        : columnIssues;
       return {
         status: status,
-        issues: column ? column.issues : []
+        issues: filteredColumnIssues
       };
     });
   } else {
     // Fallback: agrupar localmente con orden manual
     const columns = {};
-    state.issues.forEach(issue => {
+    issuesToRender.forEach(issue => {
       const currentStatus = issue.status || issue.fields?.status?.name || 'Sin Estado';
       if (!columns[currentStatus]) columns[currentStatus] = [];
       columns[currentStatus].push(issue);
@@ -1177,25 +1720,40 @@ async function renderKanban() {
     }));
   }
 
-  let html = '';
+  let html = '<div class="kanban-board">';
   let colIndex = 0;
   const colors = ['col-blue', 'col-purple', 'col-cyan', 'col-green', 'col-red', 'col-yellow', 'col-pink', 'col-indigo', 'col-teal', 'col-orange'];
 
-  columnsToRender.forEach(({ status, issues }) => {
-    if (!issues || issues.length === 0) return; // Skip empty columns
-    const color = colors[colIndex % colors.length];
-    colIndex++;
+  // Render columns in chunks for better performance
+  const renderColumnChunk = (columns, startIdx, chunkSize) => {
+    const endIdx = Math.min(startIdx + chunkSize, columns.length);
+    let chunkHtml = '';
     
-    html += `<div class="kanban-column glassmorphic-secondary ${color}" data-status="${status}">
-      <div class="kanban-column-header">
-        <div class="kanban-column-title">${status}</div>
-        <div class="kanban-column-count">${issues.length}</div>
-      </div>
-      <div class="kanban-cards">`;
-
-    issues.forEach(issue => {
-      // Get full issue data from cache (includes all customfields)
-      const fullIssue = window.app?.issuesCache?.get(issue.key) || issue;
+    for (let i = startIdx; i < endIdx; i++) {
+      const { status, issues } = columns[i];
+      if (!issues || issues.length === 0) {
+        console.log(`⏭️ Skipping empty column: ${status}`);
+        continue;
+      }
+      
+      console.log(`📦 Rendering column: ${status} with ${issues.length} issues`);
+      
+      const color = colors[colIndex % colors.length];
+      colIndex++;
+      
+      chunkHtml += `<div class="kanban-column glassmorphic-secondary ${color}" data-status="${status}">
+        <div class="kanban-column-header">
+          <div class="kanban-column-title">${status}</div>
+          <div class="kanban-column-count">${issues.length}</div>
+        </div>
+        <div class="kanban-cards">`;
+      
+      // Render only first 20 cards per column initially if progressive rendering
+      const cardsToRender = shouldProgressiveRender && i < 2 ? issues.slice(0, INITIAL_RENDER_COUNT) : issues;
+      
+      cardsToRender.forEach(issue => {
+        // Get full issue data from cache (includes all customfields)
+        const fullIssue = window.app?.issuesCache?.get(issue.key) || issue;
       const transitions = state.issueTransitions[issue.key] || [];
       
       // Debug: Log first issue to see structure
@@ -1287,7 +1845,7 @@ async function renderKanban() {
         else timeAgo = `${Math.floor(diffDays / 7)}w ago`;
       }
 
-      html += `<div class="${cardClass} kanban-card" 
+      chunkHtml += `<div class="${cardClass} kanban-card" 
                     data-issue="${issue.key}" 
                     data-issue-key="${issue.key}" 
                     draggable="true">
@@ -1323,22 +1881,86 @@ async function renderKanban() {
 
       // Renderizar botones de transición (solo si hay espacio)
       if (transitions.length > 0 && transitions.length <= 2) {
-        html += `<div class="issue-card-actions">`;
+        chunkHtml += `<div class="issue-card-actions">`;
         transitions.forEach(transition => {
-          html += `<button class="btn-transition-mini" onclick-disabled="event.stopPropagation(); transitionIssue('${issue.key}', ${transition.id})" title="${transition.name}">
+          chunkHtml += `<button class="btn-transition-mini" onclick-disabled="event.stopPropagation(); transitionIssue('${issue.key}', ${transition.id})" title="${transition.name}">
             ${transition.name.substring(0, 10)}
           </button>`;
         });
-        html += `</div>`;
+        chunkHtml += `</div>`;
       }
 
-      html += `</div>`;
-    });
+      chunkHtml += `</div>`;
+      });
+      
+      chunkHtml += `</div></div>`;
+    }
+    
+    return chunkHtml;
+  };
+  
+  // Initial render: first 3 columns or all if small
+  const COLUMNS_PER_CHUNK = 3;
+  html += renderColumnChunk(columnsToRender, 0, COLUMNS_PER_CHUNK);
+  html += '</div>'; // Close kanban-board container
 
-    html += `</div></div>`;
-  });
-
+  console.log(`📋 Initial HTML length: ${html.length} characters`);
   kanbanView.innerHTML = html;
+  
+  // Render remaining columns in background with progressive chunking
+  if (columnsToRender.length > COLUMNS_PER_CHUNK) {
+    let currentColumnChunk = COLUMNS_PER_CHUNK;
+    
+    const renderNextColumnChunk = () => {
+      if (currentColumnChunk >= columnsToRender.length) {
+        console.log('✅ All Kanban columns rendered');
+        return;
+      }
+      
+      const endIdx = Math.min(currentColumnChunk + COLUMNS_PER_CHUNK, columnsToRender.length);
+      const chunkHtml = renderColumnChunk(columnsToRender, currentColumnChunk, COLUMNS_PER_CHUNK);
+      
+      // Append to existing content (before closing </div>)
+      const closingDiv = '</div>';
+      if (kanbanView.innerHTML.endsWith(closingDiv)) {
+        kanbanView.innerHTML = kanbanView.innerHTML.slice(0, -closingDiv.length) + chunkHtml + closingDiv;
+      } else {
+        kanbanView.innerHTML += chunkHtml;
+      }
+      
+      // Re-apply effects
+      if (window.transparencyManager) {
+        window.transparencyManager.applyToKanbanColumns();
+        window.transparencyManager.applyTransparency();
+      }
+      
+      // Re-setup click handlers
+      if (typeof setupIssueCardClickHandlers === 'function') {
+        setupIssueCardClickHandlers();
+      } else if (window.setupIssueCardClickHandlers) {
+        window.setupIssueCardClickHandlers();
+      }
+      
+      currentColumnChunk = endIdx;
+      
+      // Continue with next chunk
+      if (currentColumnChunk < columnsToRender.length) {
+        requestAnimationFrame(() => {
+          setTimeout(renderNextColumnChunk, 60); // Shorter delay for faster loading
+        });
+      } else {
+        // All columns rendered - re-apply SLA styling to newly added cards
+        console.log('✅ All columns rendered, re-applying SLA styling...');
+        setTimeout(() => applySLAStyling(), 100);
+      }
+    };
+    
+    // Start rendering additional columns
+    setTimeout(() => {
+      console.log(`🔄 Rendering ${columnsToRender.length - COLUMNS_PER_CHUNK} additional columns in background...`);
+      renderNextColumnChunk();
+    }, 100);
+  }
   
   // Apply transparency effects to kanban columns after DOM settles
   // Try immediately with requestAnimationFrame
@@ -1414,16 +2036,29 @@ async function applySLAStyling() {
   const ticketKeys = document.querySelectorAll('.issue-card-key[id^="key-"]');
   console.log(`🎨 Applying SLA styling to ${ticketKeys.length} tickets`);
   
+  if (ticketKeys.length === 0) {
+    console.warn('⚠️ No ticket keys found for SLA styling');
+    return;
+  }
+  
   // Process tickets in batches to avoid overwhelming the server
   const batchSize = 5;
   for (let i = 0; i < ticketKeys.length; i += batchSize) {
     const batch = Array.from(ticketKeys).slice(i, i + batchSize);
     
     await Promise.all(batch.map(async (keyElement) => {
-      const issueKey = keyElement.textContent;
+      const issueKey = keyElement.textContent.trim();
+      
+      // Skip if already styled (has SLA class)
+      if (keyElement.className.includes('ticket-key-sla-')) {
+        return;
+      }
+      
       try {
         const slaClass = await getSLAStatusClass(issueKey);
         if (slaClass) {
+          // Remove any existing SLA classes first
+          keyElement.className = keyElement.className.replace(/ticket-key-sla-\w+/g, '').trim();
           keyElement.classList.add(slaClass);
           console.log(`✅ Applied ${slaClass} to ${issueKey}`);
         }
@@ -1457,49 +2092,803 @@ function transitionIssue(issueKey, transitionId) {
   // Implementar lógica de transición aquí
 }
 
+/**
+ * Render issues for list view - separate function to avoid interference with kanban
+ */
+function renderListIssues(issues) {
+  if (!issues || issues.length === 0) {
+    return [];
+  }
+  
+  return issues;
+}
+
 function renderList() {
   const listView = document.getElementById('listView');
   
-  if (state.issues.length === 0) {
-    listView.innerHTML = '<p class="placeholder">No issues in this queue</p>';
+  // Get issues using renderListIssues to ensure proper data handling
+  const issuesToRender = renderListIssues(state.issues);
+  
+  if (!issuesToRender || issuesToRender.length === 0) {
+    listView.innerHTML = `
+      <div class="list-placeholder">
+        <div class="placeholder-icon">📋</div>
+        <p class="placeholder-text">No issues in this queue</p>
+      </div>
+    `;
     return;
   }
 
+  console.log(`📝 Rendering list view with ${issuesToRender.length} issues`);
+  
+  // Initialize list state if not exists
+  if (!state.listView) {
+    // Adaptive pageSize: smaller for better performance with large datasets
+    const adaptivePageSize = issuesToRender.length > 100 ? 30 : 50;
+    
+    state.listView = {
+      currentPage: 1,
+      pageSize: adaptivePageSize,
+      searchTerm: '',
+      sortBy: 'created',
+      sortDir: 'desc',
+      slaLoadedCount: 0,
+      slaLoadedKeys: new Set(),
+      lastSlaFetch: 0
+    };
+    
+    console.log(`📋 List view initialized with pageSize: ${adaptivePageSize} (${issuesToRender.length} total tickets)`);
+  }
+  
+  // Filter issues by search term
+  let filteredIssues = issuesToRender;
+  if (state.listView.searchTerm) {
+    const term = state.listView.searchTerm.toLowerCase();
+    filteredIssues = issuesToRender.filter(issue => 
+      issue.key.toLowerCase().includes(term) ||
+      (issue.summary || '').toLowerCase().includes(term) ||
+      (issue.assignee || '').toLowerCase().includes(term)
+    );
+  }
+  
+  // Sort issues
+  filteredIssues = sortIssues(filteredIssues, state.listView.sortBy, state.listView.sortDir);
+  
+  // Calculate pagination
+  const totalIssues = filteredIssues.length;
+  const totalPages = Math.ceil(totalIssues / state.listView.pageSize);
+  const startIdx = (state.listView.currentPage - 1) * state.listView.pageSize;
+  const endIdx = Math.min(startIdx + state.listView.pageSize, totalIssues);
+  const pageIssues = filteredIssues.slice(startIdx, endIdx);
+  
+  // Progressive rendering for large pages - more aggressive for better performance
+  const INITIAL_LIST_RENDER = Math.min(15, Math.ceil(pageIssues.length * 0.3)); // 30% or 15 max
+  const shouldProgressiveRender = pageIssues.length > INITIAL_LIST_RENDER;
+  const initialRenderIssues = shouldProgressiveRender ? pageIssues.slice(0, INITIAL_LIST_RENDER) : pageIssues;
+  
+  if (shouldProgressiveRender) {
+    console.log(`🎯 Progressive list: Rendering ${INITIAL_LIST_RENDER}/${pageIssues.length} rows immediately (~${Math.round((INITIAL_LIST_RENDER/pageIssues.length)*100)}%)`);
+  }
+  
   let html = `
-    <table class="issues-table">
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Summary</th>
-          <th>Status</th>
-          <th>Severity</th>
-          <th>Assignee</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div class="list-container">
+      <!-- Header with search and controls -->
+      <div class="list-header">
+        <div class="list-stats">
+          <span class="stat-badge">📊 ${totalIssues} tickets</span>
+          ${state.listView.searchTerm ? `<span class="stat-badge">🔍 Filtered</span>` : ''}
+          <span class="stat-badge">📄 Page ${state.listView.currentPage}/${totalPages}</span>
+          <label class="assignee-edit-toggle" title="Enable assignee editing">
+            <input type="checkbox" id="enableAssigneeEdit" />
+            <span>✏️ Edit Assignees</span>
+          </label>
+        </div>
+        <div class="list-controls">
+          <input 
+            type="text" 
+            class="list-search" 
+            placeholder="🔍 Search tickets..." 
+            value="${state.listView.searchTerm}"
+            id="listSearchInput"
+          />
+          <select class="list-sort" id="listSortSelect">
+            <option value="created-desc" ${state.listView.sortBy === 'created' && state.listView.sortDir === 'desc' ? 'selected' : ''}>📅 Newest First</option>
+            <option value="created-asc" ${state.listView.sortBy === 'created' && state.listView.sortDir === 'asc' ? 'selected' : ''}>📅 Oldest First</option>
+            <option value="key-asc" ${state.listView.sortBy === 'key' ? 'selected' : ''}>🔢 Key</option>
+            <option value="priority-desc">⚡ Priority</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Issues table -->
+      <div class="list-table-wrapper">
+        <table class="issues-table">
+          <thead>
+            <tr>
+              <th class="col-key sortable ${state.listView.sortBy === 'key' ? 'sorted sorted-' + state.listView.sortDir : ''}" data-sort="key">
+                Key ${state.listView.sortBy === 'key' ? (state.listView.sortDir === 'asc' ? '▲' : '▼') : ''}
+              </th>
+              <th class="col-summary sortable ${state.listView.sortBy === 'summary' ? 'sorted sorted-' + state.listView.sortDir : ''}" data-sort="summary">
+                Summary ${state.listView.sortBy === 'summary' ? (state.listView.sortDir === 'asc' ? '▲' : '▼') : ''}
+              </th>
+              <th class="col-status-severity sortable ${state.listView.sortBy === 'status' ? 'sorted sorted-' + state.listView.sortDir : ''}" data-sort="status">
+                Status / Severity ${state.listView.sortBy === 'status' ? (state.listView.sortDir === 'asc' ? '▲' : '▼') : ''}
+              </th>
+              <th class="col-sla">SLA</th>
+              <th class="col-assignee sortable ${state.listView.sortBy === 'assignee' ? 'sorted sorted-' + state.listView.sortDir : ''}" data-sort="assignee">
+                Assignee ${state.listView.sortBy === 'assignee' ? (state.listView.sortDir === 'asc' ? '▲' : '▼') : ''}
+              </th>
+              <th class="col-created sortable ${state.listView.sortBy === 'created' ? 'sorted sorted-' + state.listView.sortDir : ''}" data-sort="created">
+                Created ${state.listView.sortBy === 'created' ? (state.listView.sortDir === 'asc' ? '▲' : '▼') : ''}
+              </th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="listViewTbody">
   `;
   
-  state.issues.forEach(issue => {
+  // Render initial batch of issues
+  initialRenderIssues.forEach(issue => {
     const status = issue.status || issue.fields?.status?.name || 'Unknown';
-    const severity = issue.severity;
+    const severity = issue.severity || issue.customfield_10125?.value || '-';
     const assignee = issue.assignee || issue.fields?.assignee?.displayName || 'Unassigned';
-    const transitions = state.issueTransitions[issue.key] || [];
+    const created = new Date(issue.created || issue.fields?.created);
+    const createdStr = created.toLocaleDateString() + ' ' + created.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const summary = issue.summary || issue.fields?.summary || 'No summary';
+    
+    // Get severity color
+    let severityClass = 'severity-default';
+    if (severity.toLowerCase().includes('critico') || severity.toLowerCase().includes('critical')) {
+      severityClass = 'severity-critical';
+    } else if (severity.toLowerCase().includes('mayor') || severity.toLowerCase().includes('major')) {
+      severityClass = 'severity-major';
+    } else if (severity.toLowerCase().includes('menor') || severity.toLowerCase().includes('minor')) {
+      severityClass = 'severity-minor';
+    }
+    
+    // Get SLA status (will be loaded async)
+    const slaId = `sla-${issue.key}`;
     
     html += `
-      <tr>
-        <td>${issue.key}</td>
-        <td>${issue.summary || issue.fields?.summary || 'No summary'}</td>
-        <td>${status}</td>
-        <td>${severity || '-'}</td>
-        <td>${assignee}</td>
-        <td>${transitions.length} actions</td>
+      <tr class="issue-row" data-issue-key="${issue.key}">
+        <td class="col-key">
+          <span class="issue-key-link">${issue.key}</span>
+        </td>
+        <td class="col-summary" title="${escapeHtml(summary)}">
+          <span class="issue-summary">${truncateText(summary, 80)}</span>
+        </td>
+        <td class="col-status-severity">
+          <div class="status-severity-compact">
+            <span class="status-badge status-${status.toLowerCase().replace(/\s+/g, '-')}">${status}</span>
+            <span class="severity-badge ${severityClass}">${severity}</span>
+          </div>
+        </td>
+        <td class="col-sla">
+          <div id="${slaId}" class="sla-indicator-list">
+            <span class="sla-loading">⏳</span>
+          </div>
+        </td>
+        <td class="col-assignee" data-issue-key="${issue.key}">
+          <span class="assignee-display">${assignee}</span>
+          <input 
+            type="text" 
+            class="assignee-edit-input" 
+            value="${assignee}" 
+            placeholder="Type user name..."
+            data-issue-key="${issue.key}"
+          />
+        </td>
+        <td class="col-created">
+          <span class="created-date">${createdStr}</span>
+        </td>
+        <td class="col-actions">
+          <button class="btn-view-details" data-issue-key="${issue.key}" title="View details">
+            👁️ Details
+          </button>
+          <button class="list-transition-trigger" data-issue-key="${issue.key}" title="Show transitions">
+            ⚡ Transitions
+          </button>
+        </td>
       </tr>
     `;
   });
 
-  html += '</tbody></table>';
+  html += `
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="list-pagination">
+        <button 
+          class="pagination-btn" 
+          id="listPrevBtn" 
+          ${state.listView.currentPage === 1 ? 'disabled' : ''}
+        >
+          ⬅️ Previous
+        </button>
+        <span class="pagination-info">
+          Showing ${startIdx + 1}-${endIdx} of ${totalIssues}
+        </span>
+        <button 
+          class="pagination-btn" 
+          id="listNextBtn" 
+          ${state.listView.currentPage === totalPages ? 'disabled' : ''}
+        >
+          Next ➡️
+        </button>
+      </div>
+    </div>
+  `;
+  
   listView.innerHTML = html;
+  
+  // Render remaining issues in background with chunking for better performance
+  if (shouldProgressiveRender) {
+    const remainingIssues = pageIssues.slice(INITIAL_LIST_RENDER);
+    const CHUNK_SIZE = 10; // Render in small chunks for smoother UI
+    let currentChunk = 0;
+    
+    const renderNextChunk = () => {
+      const startIdx = currentChunk * CHUNK_SIZE;
+      const endIdx = Math.min(startIdx + CHUNK_SIZE, remainingIssues.length);
+      
+      if (startIdx >= remainingIssues.length) {
+        console.log('✅ All background rows rendered');
+        return;
+      }
+      
+      const tbody = document.getElementById('listViewTbody');
+      if (!tbody) return;
+      
+      const chunkIssues = remainingIssues.slice(startIdx, endIdx);
+      let chunkHtml = '';
+      
+      chunkIssues.forEach(issue => {
+        const status = issue.status || issue.fields?.status?.name || 'Unknown';
+        const severity = issue.severity || issue.customfield_10125?.value || '-';
+        const assignee = issue.assignee || issue.fields?.assignee?.displayName || 'Unassigned';
+        const created = new Date(issue.created || issue.fields?.created);
+        const createdStr = created.toLocaleDateString() + ' ' + created.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const summary = issue.summary || issue.fields?.summary || 'No summary';
+        
+        let severityClass = 'severity-default';
+        if (severity.toLowerCase().includes('critico') || severity.toLowerCase().includes('critical')) {
+          severityClass = 'severity-critical';
+        } else if (severity.toLowerCase().includes('mayor') || severity.toLowerCase().includes('major')) {
+          severityClass = 'severity-major';
+        } else if (severity.toLowerCase().includes('menor') || severity.toLowerCase().includes('minor')) {
+          severityClass = 'severity-minor';
+        }
+        
+        chunkHtml += `
+          <tr class="issue-row" data-issue-key="${issue.key}">
+            <td class="col-key"><a href="#" class="issue-key-link" data-issue-key="${issue.key}">${issue.key}</a></td>
+            <td class="col-summary">${summary}</td>
+            <td class="col-status-severity">
+              <div class="status-severity-compact">
+                <span class="status-badge status-${status.toLowerCase().replace(/\\s+/g, '-')}">${status}</span>
+                <span class="severity-badge ${severityClass}">${severity}</span>
+              </div>
+            </td>
+            <td class="col-sla"><span class="sla-loading" id="sla-${issue.key}">⏳</span></td>
+            <td class="col-assignee" data-issue-key="${issue.key}">
+              <span class="assignee-display">${assignee}</span>
+              <input type="text" class="assignee-edit-input" value="${assignee}" placeholder="Type user name..." data-issue-key="${issue.key}" />
+            </td>
+            <td class="col-created"><span class="created-date">${createdStr}</span></td>
+            <td class="col-actions">
+              <button class="btn-view-details" data-issue-key="${issue.key}" title="View details">👁️ Details</button>
+              <button class="list-transition-trigger" data-issue-key="${issue.key}" title="Show transitions">⚡ Transitions</button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML += chunkHtml;
+      
+      currentChunk++;
+      
+      // Continue rendering next chunk
+      if (endIdx < remainingIssues.length) {
+        // Use requestAnimationFrame for smoother rendering
+        requestAnimationFrame(() => {
+          setTimeout(renderNextChunk, 50); // Small delay between chunks
+        });
+      } else {
+        // All chunks rendered, finalize
+        console.log(`✅ All ${remainingIssues.length} background rows rendered in ${currentChunk} chunks`);
+        
+        // Re-attach event listeners once at the end
+        attachListEventListeners();
+        
+        // Load SLAs for remaining issues
+        loadSLAForListView(remainingIssues);
+      }
+    };
+    
+    // Start rendering first chunk after short delay
+    setTimeout(() => {
+      console.log(`🔄 Starting background rendering: ${remainingIssues.length} rows in chunks of ${CHUNK_SIZE}...`);
+      renderNextChunk();
+    }, 80);
+  }
+  
+  // Attach event listeners
+  attachListEventListeners();
+  
+  // Setup scroll-based lazy rendering if many rows pending
+  if (shouldProgressiveRender && pageIssues.length > 30) {
+    setupLazyRowRendering();
+  }
+  
+  // Load SLA data for visible issues (initial batch or all if small)
+  loadSLAForListView(initialRenderIssues);
+}
+
+function attachListEventListeners() {
+  // Search input
+  const searchInput = document.getElementById('listSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      state.listView.searchTerm = e.target.value;
+      state.listView.currentPage = 1; // Reset to first page
+      renderList();
+    });
+  }
+  
+  // Sort select
+  const sortSelect = document.getElementById('listSortSelect');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      const [sortBy, sortDir] = e.target.value.split('-');
+      state.listView.sortBy = sortBy;
+      state.listView.sortDir = sortDir || 'desc';
+      renderList();
+    });
+  }
+  
+  // Sortable column headers
+  document.querySelectorAll('.issues-table th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const sortBy = th.getAttribute('data-sort');
+      
+      // Toggle direction if same column, otherwise default to desc
+      if (state.listView.sortBy === sortBy) {
+        state.listView.sortDir = state.listView.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.listView.sortBy = sortBy;
+        state.listView.sortDir = 'desc';
+      }
+      
+      renderList();
+    });
+  });
+  
+  // Pagination buttons
+  const prevBtn = document.getElementById('listPrevBtn');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (state.listView.currentPage > 1) {
+        state.listView.currentPage--;
+        renderList();
+        document.querySelector('.list-table-wrapper').scrollTop = 0;
+        
+        // Trigger progressive SLA loading for new page
+        const startIdx = (state.listView.currentPage - 1) * state.listView.pageSize;
+        const endIdx = startIdx + state.listView.pageSize;
+        const pageIssues = state.issues.slice(startIdx, endIdx);
+        loadSLAForListView(pageIssues);
+      }
+    });
+  }
+  
+  const nextBtn = document.getElementById('listNextBtn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const totalPages = Math.ceil(
+        state.issues.length / state.listView.pageSize
+      );
+      if (state.listView.currentPage < totalPages) {
+        state.listView.currentPage++;
+        renderList();
+        document.querySelector('.list-table-wrapper').scrollTop = 0;
+        
+        // Trigger progressive SLA loading for new page
+        const startIdx = (state.listView.currentPage - 1) * state.listView.pageSize;
+        const endIdx = startIdx + state.listView.pageSize;
+        const pageIssues = state.issues.slice(startIdx, endIdx);
+        loadSLAForListView(pageIssues);
+      }
+    });
+  }
+  
+  // View details buttons
+  document.querySelectorAll('.btn-view-details').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const issueKey = btn.getAttribute('data-issue-key');
+      if (window.openIssueDetails) {
+        window.openIssueDetails(issueKey);
+      }
+    });
+  });
+  
+  // Row click to view details
+  document.querySelectorAll('.issue-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Don't trigger if clicking on buttons or assignee edit
+      if (!e.target.closest('.btn-view-details') && 
+          !e.target.closest('.list-transition-trigger') &&
+          !e.target.closest('.col-assignee')) {
+        const issueKey = row.getAttribute('data-issue-key');
+        if (window.openIssueDetails) {
+          window.openIssueDetails(issueKey);
+        }
+      }
+    });
+  });
+  
+  // Assignee edit toggle checkbox
+  const editToggle = document.getElementById('enableAssigneeEdit');
+  if (editToggle) {
+    editToggle.addEventListener('change', async (e) => {
+      const isEnabled = e.target.checked;
+      
+      // Refetch users from DB when enabling edit mode (always get fresh data)
+      if (isEnabled) {
+        console.log('🔄 Fetching latest users from DB...');
+        try {
+          const response = await fetch('/api/users');
+          if (response.ok) {
+            window.cachedUsers = await response.json();
+            console.log('✅ Users loaded from DB:', window.cachedUsers.length);
+          }
+        } catch (error) {
+          console.error('Error loading users:', error);
+        }
+      }
+      
+      document.querySelectorAll('.col-assignee').forEach(cell => {
+        if (isEnabled) {
+          cell.classList.add('edit-mode');
+          // Store original value in data attribute
+          const input = cell.querySelector('.assignee-edit-input');
+          const display = cell.querySelector('.assignee-display');
+          if (input && display) {
+            input.dataset.originalValue = display.textContent.trim();
+          }
+        } else {
+          cell.classList.remove('edit-mode');
+          // Restore original value if not changed
+          const input = cell.querySelector('.assignee-edit-input');
+          const display = cell.querySelector('.assignee-display');
+          if (input && display && input.dataset.originalValue) {
+            input.value = input.dataset.originalValue;
+            display.textContent = input.dataset.originalValue;
+          }
+          // Close any open autocomplete
+          const autocomplete = document.querySelector('.assignee-autocomplete');
+          if (autocomplete) autocomplete.remove();
+        }
+      });
+    });
+  }
+  
+  // Pre-load users when edit mode is enabled
+  const editToggleCheckbox = document.getElementById('enableAssigneeEdit');
+  if (editToggleCheckbox && editToggleCheckbox.checked && !window.cachedUsers) {
+    // Load users in background
+    fetch('/api/users').then(response => {
+      if (response.ok) {
+        return response.json();
+      }
+    }).then(users => {
+      window.cachedUsers = users;
+      console.log('✅ Users pre-loaded:', users.length);
+    }).catch(error => {
+      console.error('Error pre-loading users:', error);
+    });
+  }
+  
+  // Assignee input handling
+  document.querySelectorAll('.assignee-edit-input').forEach(input => {
+    let autocompleteDiv = null;
+    let selectedIndex = -1;
+    let allUsers = [];
+    
+    // Store original value on focus
+    input.addEventListener('focus', (e) => {
+      const display = e.target.closest('.col-assignee').querySelector('.assignee-display');
+      if (display) {
+        input.dataset.originalValue = display.textContent.trim();
+      }
+    });
+    
+    input.addEventListener('click', async (e) => {
+      // Don't create duplicate autocomplete
+      if (autocompleteDiv) return;
+      
+      // Create autocomplete dropdown
+      autocompleteDiv = document.createElement('div');
+      autocompleteDiv.className = 'assignee-autocomplete';
+      
+      // Position it below the input
+      const rect = input.getBoundingClientRect();
+      autocompleteDiv.style.top = `${rect.bottom + 2}px`;
+      autocompleteDiv.style.left = `${rect.left}px`;
+      autocompleteDiv.style.width = `${rect.width}px`;
+      
+      document.body.appendChild(autocompleteDiv);
+      
+      // Check if users are cached
+      if (window.cachedUsers) {
+        allUsers = window.cachedUsers;
+        filterAndDisplayUsers(input.value);
+      } else {
+        autocompleteDiv.innerHTML = '<div class="assignee-loading">Loading users...</div>';
+        
+        // Fetch users if not cached
+        try {
+          const response = await fetch('/api/users');
+          if (response.ok) {
+            window.cachedUsers = await response.json();
+            allUsers = window.cachedUsers;
+            filterAndDisplayUsers(input.value);
+          }
+        } catch (error) {
+          console.error('Error fetching users:', error);
+          autocompleteDiv.innerHTML = '<div class="assignee-loading">Error loading users</div>';
+          return;
+        }
+      }
+    });
+    
+    input.addEventListener('input', (e) => {
+      filterAndDisplayUsers(e.target.value);
+    });
+    
+    input.addEventListener('keydown', (e) => {
+      const items = autocompleteDiv ? autocompleteDiv.querySelectorAll('.assignee-autocomplete-item') : [];
+      
+      if (e.key === 'ArrowDown' && autocompleteDiv) {
+        e.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+        updateSelection(items);
+      } else if (e.key === 'ArrowUp' && autocompleteDiv) {
+        e.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        updateSelection(items);
+      } else if (e.key === 'Enter' && autocompleteDiv) {
+        e.preventDefault();
+        if (selectedIndex >= 0 && items[selectedIndex]) {
+          items[selectedIndex].click();
+        }
+      } else if (e.key === 'Escape') {
+        // Restore original value
+        if (input.dataset.originalValue) {
+          input.value = input.dataset.originalValue;
+          const display = input.closest('.col-assignee').querySelector('.assignee-display');
+          if (display) {
+            display.textContent = input.dataset.originalValue;
+          }
+        }
+        
+        // Close autocomplete
+        if (autocompleteDiv) {
+          autocompleteDiv.remove();
+          autocompleteDiv = null;
+        }
+        
+        input.blur();
+      }
+    });
+    
+    input.addEventListener('blur', (e) => {
+      // Delay to allow click on autocomplete item
+      setTimeout(() => {
+        if (autocompleteDiv) {
+          // Restore original value if nothing was selected
+          if (input.value !== input.dataset.originalValue) {
+            const cell = input.closest('.col-assignee');
+            const issue = state.issues.find(i => i.key === cell.dataset.issueKey);
+            if (issue && input.value !== issue.assignee) {
+              // Value was manually typed but not from autocomplete, restore original
+              input.value = input.dataset.originalValue;
+            }
+          }
+          
+          autocompleteDiv.remove();
+          autocompleteDiv = null;
+        }
+      }, 200);
+    });
+    
+    function filterAndDisplayUsers(query) {
+      if (!autocompleteDiv) return;
+      
+      const filtered = allUsers.filter(user => {
+        const searchStr = `${user.displayName} ${user.emailAddress}`.toLowerCase();
+        return searchStr.includes(query.toLowerCase());
+      }).slice(0, 10); // Limit to 10 results
+      
+      if (filtered.length === 0) {
+        autocompleteDiv.innerHTML = '<div class="assignee-loading">No users found</div>';
+        return;
+      }
+      
+      autocompleteDiv.innerHTML = filtered.map(user => `
+        <div class="assignee-autocomplete-item" data-account-id="${user.accountId}" data-display-name="${escapeHtml(user.displayName)}">
+          <strong>${escapeHtml(user.displayName)}</strong><br>
+          <small style="color: #64748b;">${escapeHtml(user.emailAddress || '')}</small>
+        </div>
+      `).join('');
+      
+      selectedIndex = -1;
+      
+      // Add click handlers
+      autocompleteDiv.querySelectorAll('.assignee-autocomplete-item').forEach(item => {
+        item.addEventListener('mousedown', async (e) => {
+          e.preventDefault(); // Prevent blur event
+          const accountId = item.getAttribute('data-account-id');
+          const displayName = item.getAttribute('data-display-name');
+          const issueKey = input.getAttribute('data-issue-key');
+          
+          // Mark as user-selected (to prevent restoration)
+          input.dataset.userSelected = 'true';
+          
+          await updateAssignee(issueKey, accountId, displayName, input);
+          
+          if (autocompleteDiv) {
+            autocompleteDiv.remove();
+            autocompleteDiv = null;
+          }
+        });
+      });
+    }
+    
+    function updateSelection(items) {
+      items.forEach((item, idx) => {
+        if (idx === selectedIndex) {
+          item.classList.add('selected');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
+  });
+}
+
+async function updateAssignee(issueKey, accountId, displayName, inputElement) {
+  const cell = inputElement.closest('.col-assignee');
+  const displaySpan = cell.querySelector('.assignee-display');
+  
+  // Show loading state
+  inputElement.disabled = true;
+  inputElement.value = 'Updating...';
+  
+  try {
+    const response = await fetch(`/api/issues/${issueKey}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fields: {
+          assignee: { accountId: accountId }
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update assignee');
+    }
+    
+    // Update UI
+    inputElement.value = displayName;
+    displaySpan.textContent = displayName;
+    
+    // Update state
+    const issue = state.issues.find(i => i.key === issueKey);
+    if (issue) {
+      issue.assignee = displayName;
+      if (issue.fields) {
+        issue.fields.assignee = { displayName: displayName, accountId: accountId };
+      }
+    }
+    
+    // Check if we need to remove from current view (Assigned to me queue)
+    const currentUser = state.currentUser;
+    if (currentUser && displayName !== currentUser) {
+      // Get current queue name from select element
+      const queueSelect = document.getElementById('queueSelect');
+      const queueName = queueSelect ? queueSelect.options[queueSelect.selectedIndex]?.text || '' : '';
+      
+      // If this is "Assigned to me" queue, remove the ticket
+      if (queueName.toLowerCase().includes('assigned to me') || 
+          queueName.toLowerCase().includes('asignados a mí') ||
+          queueName.toLowerCase().includes('mis tickets')) {
+        // Remove from state
+        state.issues = state.issues.filter(i => i.key !== issueKey);
+        state.filteredIssues = state.filteredIssues.filter(i => i.key !== issueKey);
+        
+        // Re-render list
+        renderList();
+        
+        showNotification('✅ Assignee updated. Ticket removed from this queue.', 'success');
+        return;
+      }
+    }
+    
+    showNotification('✅ Assignee updated successfully', 'success');
+    
+  } catch (error) {
+    console.error('Error updating assignee:', error);
+    showNotification('❌ Failed to update assignee', 'error');
+    
+    // Restore original value
+    const issue = state.issues.find(i => i.key === issueKey);
+    if (issue) {
+      inputElement.value = issue.assignee || 'Unassigned';
+    }
+  } finally {
+    inputElement.disabled = false;
+  }
+}
+
+/**
+ * Setup lazy row rendering based on scroll position
+ * Speeds up rendering by only rendering visible + buffer rows
+ */
+function setupLazyRowRendering() {
+  const listContainer = document.querySelector('.list-view-container');
+  if (!listContainer) return;
+  
+  let lastScrollTop = 0;
+  let scrollTimeout;
+  
+  const handleScroll = () => {
+    const scrollTop = listContainer.scrollTop;
+    const scrollDirection = scrollTop > lastScrollTop ? 'down' : 'up';
+    lastScrollTop = scrollTop;
+    
+    // Debounce scroll events
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      // Check if near bottom (80% scrolled)
+      const scrollPercentage = (scrollTop + listContainer.clientHeight) / listContainer.scrollHeight;
+      
+      if (scrollPercentage > 0.8 && scrollDirection === 'down') {
+        // User is near bottom, ensure all rows are rendered
+        const tbody = document.getElementById('listViewTbody');
+        if (tbody && tbody.dataset.hasMore === 'true') {
+          console.log('📜 User scrolling near bottom, ensuring all rows rendered');
+        }
+      }
+    }, 150);
+  };
+  
+  listContainer.addEventListener('scroll', handleScroll, { passive: true });
+  
+  // Store cleanup function
+  if (!window.lazyRenderingCleanup) {
+    window.lazyRenderingCleanup = [];
+  }
+  window.lazyRenderingCleanup.push(() => {
+    listContainer.removeEventListener('scroll', handleScroll);
+  });
+}
+
+function truncateText(text, maxLength) {
+  if (!text) return '';
+  if (text.length <= maxLength) return escapeHtml(text);
+  return escapeHtml(text.substring(0, maxLength)) + '...';
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 /**
@@ -1704,5 +3093,213 @@ function loadSavedFilters() {
   }
 }
 
+/**
+ * Sort issues array by field and direction
+ */
+function sortIssues(issues, sortBy, sortDir) {
+  const sorted = [...issues].sort((a, b) => {
+    let valA, valB;
+    
+    switch(sortBy) {
+      case 'key':
+        valA = a.key || '';
+        valB = b.key || '';
+        break;
+      case 'summary':
+        valA = (a.summary || a.fields?.summary || '').toLowerCase();
+        valB = (b.summary || b.fields?.summary || '').toLowerCase();
+        break;
+      case 'status':
+        valA = (a.status || a.fields?.status?.name || '').toLowerCase();
+        valB = (b.status || b.fields?.status?.name || '').toLowerCase();
+        break;
+      case 'severity':
+        const severityOrder = { 'critico': 4, 'critical': 4, 'mayor': 3, 'major': 3, 'menor': 2, 'minor': 2 };
+        const sevA = (a.severity || a.customfield_10125?.value || '').toLowerCase();
+        const sevB = (b.severity || b.customfield_10125?.value || '').toLowerCase();
+        valA = severityOrder[sevA] || 1;
+        valB = severityOrder[sevB] || 1;
+        break;
+      case 'assignee':
+        valA = (a.assignee || a.fields?.assignee?.displayName || 'Unassigned').toLowerCase();
+        valB = (b.assignee || b.fields?.assignee?.displayName || 'Unassigned').toLowerCase();
+        break;
+      case 'created':
+        valA = new Date(a.created || a.fields?.created || 0).getTime();
+        valB = new Date(b.created || b.fields?.created || 0).getTime();
+        break;
+      default:
+        return 0;
+    }
+    
+    // Compare values
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  return sorted;
+}
+
+/**
+ * Load SLA data for issues in list view with progressive loading strategy
+ */
+async function loadSLAForListView(issues) {
+  if (!issues || issues.length === 0) return;
+  
+  // Throttle SLA fetches to once every 3 minutes
+  const now = Date.now();
+  const THREE_MINUTES = 3 * 60 * 1000;
+  if (state.listView.lastSlaFetch && (now - state.listView.lastSlaFetch) < THREE_MINUTES) {
+    console.log('⏳ SLA fetch throttled (3 min cooldown)');
+    return;
+  }
+  
+  // Filter out already loaded issues
+  const issuesToLoad = issues.filter(issue => !state.listView.slaLoadedKeys.has(issue.key));
+  if (issuesToLoad.length === 0) {
+    console.log('✅ All visible SLAs already loaded');
+    return;
+  }
+  
+  // Progressive loading strategy based on current page
+  let loadCount;
+  if (state.listView.currentPage === 1) {
+    // First page: load first 20 immediately
+    loadCount = Math.min(20, issuesToLoad.length);
+    console.log(`🔄 Loading first ${loadCount} SLAs immediately...`);
+  } else if (state.listView.currentPage === 2) {
+    // Second page: load next 20
+    loadCount = Math.min(20, issuesToLoad.length);
+    console.log(`🔄 Loading next ${loadCount} SLAs (page 2)...`);
+  } else {
+    // Page 3+: load 30 at a time
+    loadCount = Math.min(30, issuesToLoad.length);
+    console.log(`🔄 Loading ${loadCount} SLAs (page ${state.listView.currentPage})...`);
+  }
+  
+  const issuesToFetch = issuesToLoad.slice(0, loadCount);
+  state.listView.lastSlaFetch = now;
+  
+  // Load SLA data in batches of 10 to avoid overwhelming the API
+  const batchSize = 10;
+  for (let i = 0; i < issuesToFetch.length; i += batchSize) {
+    const batch = issuesToFetch.slice(i, i + batchSize);
+    
+    await Promise.all(batch.map(async (issue) => {
+      try {
+        const slaElement = document.getElementById(`sla-${issue.key}`);
+        if (!slaElement) return;
+        
+        const response = await fetch(`/api/issues/${issue.key}/sla`);
+        if (!response.ok) {
+          slaElement.innerHTML = '<span class="sla-none">-</span>';
+          state.listView.slaLoadedKeys.add(issue.key);
+          return;
+        }
+        
+        const data = await response.json();
+        if (!data.success || !data.data || !data.data.cycles || data.data.cycles.length === 0) {
+          slaElement.innerHTML = '<span class="sla-none">-</span>';
+          state.listView.slaLoadedKeys.add(issue.key);
+          return;
+        }
+        
+        const cycle = data.data.cycles[0];
+        const isSecondary = data.data.is_secondary || false;
+        
+        let slaHtml = '';
+        
+        if (cycle.breached) {
+          slaHtml = `<span class="sla-breached" title="SLA Breached">🔴 Breached</span>`;
+        } else if (cycle.paused) {
+          slaHtml = `<span class="sla-paused" title="SLA Paused">⏸️ Paused</span>`;
+        } else if (cycle.remaining_time) {
+          const remaining = cycle.remaining_time;
+          let statusClass = 'sla-healthy';
+          let icon = '🟢';
+          
+          // Determine status based on remaining time
+          if (remaining.includes('m') && !remaining.includes('h')) {
+            statusClass = 'sla-warning';
+            icon = '🟡';
+          } else if (remaining.includes('h')) {
+            const hours = parseInt(remaining);
+            if (hours < 2) {
+              statusClass = 'sla-warning';
+              icon = '🟡';
+            }
+          }
+          
+          slaHtml = `<span class="${statusClass}" title="Time remaining: ${remaining}">${icon} ${remaining}</span>`;
+        } else {
+          slaHtml = '<span class="sla-none">-</span>';
+        }
+        
+        slaElement.innerHTML = slaHtml;
+        state.listView.slaLoadedKeys.add(issue.key);
+        state.listView.slaLoadedCount++;
+        
+      } catch (error) {
+        console.error(`❌ Error loading SLA for ${issue.key}:`, error);
+        const slaElement = document.getElementById(`sla-${issue.key}`);
+        if (slaElement) {
+          slaElement.innerHTML = '<span class="sla-error" title="Error loading SLA">⚠️</span>';
+        }
+        state.listView.slaLoadedKeys.add(issue.key);
+      }
+    }));
+    
+    // Delay between batches (200ms to be gentle on API)
+    if (i + batchSize < issuesToFetch.length) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+  
+  console.log(`✅ SLA data loaded: ${issuesToFetch.length} issues (Total: ${state.listView.slaLoadedCount})`);
+}
+
 // Export openIssueDetails to global scope for onclick handlers
 window.openIssueDetails = openIssueDetails;
+
+/**
+ * Show notification toast
+ */
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  
+  // Add to body
+  document.body.appendChild(notification);
+  
+  // Trigger animation
+  setTimeout(() => notification.classList.add('show'), 10);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+/**
+ * Refetch users from database (global utility)
+ */
+async function refetchUsers() {
+  console.log('🔄 Refetching users from database...');
+  try {
+    const response = await fetch('/api/users');
+    if (response.ok) {
+      window.cachedUsers = await response.json();
+      console.log('✅ Users refetched from DB:', window.cachedUsers.length);
+      return window.cachedUsers;
+    }
+  } catch (error) {
+    console.error('❌ Error refetching users:', error);
+  }
+  return null;
+}
+
+// Export to global scope
+window.refetchUsers = refetchUsers;

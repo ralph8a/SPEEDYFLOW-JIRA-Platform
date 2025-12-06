@@ -56,6 +56,9 @@ function openIssueDetails(issueKey) {
   console.log('🔍 [Right Sidebar] Opening issue details for:', issueKey);
   console.log('🔍 [Right Sidebar] Current state.issues length:', state.issues?.length || 0);
   
+  // Close any open modals before opening ticket
+  closeAllModals();
+  
   const issue = state.issues.find(i => i.key === issueKey);
   if (!issue) {
     console.error('❌ [Right Sidebar] Issue not found:', issueKey);
@@ -888,11 +891,42 @@ function extractAllFields(issue) {
     'customfield_10037': '📖 Epic Link'
   };
   
+  // SLA custom field IDs (primary and secondary)
+  const slaFieldIds = [
+    'customfield_10170', // SLA's Incidente HUB
+    'customfield_10176', // Cierre Ticket (secondary)
+    'customfield_10181', // SLA's Servicios Streaming
+    'customfield_10182', // SLA's Servicios Streaming (SR)
+    'customfield_10183', // SLA's Solicitud de CDRs
+    'customfield_10184', // SLA's Cotización Orden de Compra
+    'customfield_10185', // SLA's Errores Pruebas de Integración
+    'customfield_10186', // SLA's Actualización de SDK
+    'customfield_10187', // SLA's Splunk
+    'customfield_10190', // SLA's Soporte Aplicaciones
+    'customfield_10259', // SLA War Room
+    'customfield_11957'  // Salud de Servicios
+  ];
+  
   // Helper to extract fields from an object
   const extractFields = (obj, checkExcluded = false) => {
     if (!obj) return;
     Object.entries(obj).forEach(([key, value]) => {
       if ((checkExcluded && excludeFields.has(key)) || !hasValue(value) || seenKeys.has(key)) return;
+      
+      // 🔍 FILTER SLA FIELDS: Only show SLAs with active ongoingCycle
+      if (slaFieldIds.includes(key)) {
+        // Skip SLA fields that don't have an ongoingCycle
+        if (!value || typeof value !== 'object' || !value.ongoingCycle) {
+          console.log(`⏭️ Skipping ${key} - no active ongoingCycle`);
+          return;
+        }
+        console.log(`✅ Including ${key} - has active ongoingCycle:`, value.name);
+        
+        // Mark secondary SLA (Cierre Ticket - customfield_10176)
+        if (key === 'customfield_10176') {
+          value._isSecondarySLA = true;
+        }
+      }
       
       fields.push({ 
         label: fieldMappings[key] || humanizeFieldName(key),
@@ -1098,6 +1132,7 @@ function formatFieldValue(value, type, issueKey) {
         const elapsed = value.ongoingCycle.elapsedTime;
         const remaining = value.ongoingCycle.remainingTime;
         const paused = value.ongoingCycle.paused || false;
+        const breached = value.ongoingCycle.breached || false;
         
         const elapsedMs = elapsed?.millis || 0;
         const remainingMs = remaining?.millis || 0;
@@ -1105,12 +1140,22 @@ function formatFieldValue(value, type, issueKey) {
         const elapsedHrs = (elapsedMs / (1000 * 60 * 60)).toFixed(1);
         const remainingHrs = (remainingMs / (1000 * 60 * 60)).toFixed(1);
         
+        // Check if this is marked as secondary SLA (by field ID customfield_10176)
+        const slaName = value.name || 'SLA';
+        const isSecondarySLA = value._isSecondarySLA === true;
+        
         const pausedBadge = paused ? '<span style="color: #f59e0b; font-weight: bold;"> ⏸️ PAUSED</span>' : '';
+        const secondaryBadge = isSecondarySLA ? '<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; margin-left: 4px;">⚠️ FALLBACK</span>' : '';
+        const breachedBadge = breached ? '<span style="color: #ef4444; font-weight: bold;"> 🔴 BREACHED</span>' : '';
+        
+        const statusColor = breached ? '#ef4444' : (remainingMs < 0 ? '#ef4444' : '#10b981');
+        const nameColor = isSecondarySLA ? '#f59e0b' : (breached ? '#ef4444' : '#1e293b');
         
         return `<div style="font-size: 11px;">
-          <strong>${value.name || 'SLA'}</strong>${pausedBadge}<br>
+          <strong style="color: ${nameColor};">${slaName}</strong>${secondaryBadge}${pausedBadge}${breachedBadge}<br>
           <span style="color: #3b82f6;">⏱️ Elapsed: ${elapsedHrs}h (${elapsedMs.toLocaleString()}ms)</span><br>
-          <span style="color: ${remainingMs < 0 ? '#ef4444' : '#10b981'};">⏰ Remaining: ${remainingHrs}h (${remainingMs.toLocaleString()}ms)</span>
+          <span style="color: ${statusColor};">⏰ Remaining: ${remainingHrs}h (${remainingMs.toLocaleString()}ms)</span>
+          ${isSecondarySLA ? '<br><span style="color: #f59e0b; font-size: 10px;">⚠️ No primary SLA available for this ticket type</span>' : ''}
         </div>`;
       }
       return value.name || 'SLA Object';

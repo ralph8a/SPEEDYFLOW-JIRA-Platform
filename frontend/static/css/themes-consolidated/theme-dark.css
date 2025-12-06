@@ -98,10 +98,10 @@ body.theme-dark select:focus {
 body.theme-dark .modal,
 body.theme-dark .dropdown,
 body.theme-dark .tooltip {
-  background: rgba(37, 37, 37, 0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: var(--text-primary);
   border: 1px solid var(--border-emphasis);
-  /* backdrop-filter: blur(...); */)
+  /* backdrop-filter: blur(...); */
 }
 
 /* Primary button */
@@ -200,8 +200,7 @@ body.theme-dark .kanban-cards::-webkit-scrollbar-thumb:hover {
 /* Issue cards in dark theme - base styles */
 body.theme-dark .issue-card {
   background: rgba(30, 30, 30, 0.95) !important;
-  /* backdrop-filter: blur(...); */) saturate(150%)
-  -webkit-/* backdrop-filter: blur(...); */) saturate(150%)
+  /* backdrop-filter: blur(8px) saturate(150%); */
   border: 1px solid rgba(128, 128, 128, var(--opacity-subtle));
   border-left: 3px solid #3b82f6;
   box-shadow: var(--shadow-sm);
@@ -210,8 +209,7 @@ body.theme-dark .issue-card {
 
 body.theme-dark .issue-card:hover {
   background: rgba(30, 41, 59, 0.98) !important;
-  /* backdrop-filter: blur(...); */) saturate(180%)
-  -webkit-/* backdrop-filter: blur(...); */) saturate(180%)
+  /* backdrop-filter: blur(12px) saturate(180%); */
   box-shadow: 0 4px 12px rgba(128, 128, 128, 0.3);
   border-color: rgba(128, 128, 128, 0.25);
 }

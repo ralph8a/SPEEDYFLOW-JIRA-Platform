@@ -58,8 +58,14 @@ class AICopilot {
   }
 
   attachEventListeners() {
-    // Toggle button
-    this.toggleBtn?.addEventListener('click', () => this.toggle());
+    // Toggle button - Integrado con FlowingContext para sugerencias de IA
+    this.toggleBtn?.addEventListener('click', () => {
+      this.toggle();
+      // Si FlowingContext está disponible, mostrar sugerencias contextuales
+      if (window.FlowingContext && this.isExpanded) {
+        this.showContextualSuggestions();
+      }
+    });
     
     // Close button
     this.closeBtn?.addEventListener('click', () => this.collapse());
@@ -431,6 +437,43 @@ class AICopilot {
     this.input.value = `Explain the SLA status for ${issueKey}`;
     this.sendMessage();
   }
+
+  /**
+   * Mostrar sugerencias contextuales usando FlowingContext
+   * Integra las capacidades de IA real del sistema Flowing
+   */
+  async showContextualSuggestions() {
+    if (!window.FlowingContext) {
+      console.warn('FlowingContext not available');
+      return;
+    }
+
+    try {
+      // Obtener sugerencias contextuales
+      const suggestions = await window.FlowingContext.getSuggestions();
+      
+      if (!suggestions || !suggestions.suggestions || suggestions.suggestions.length === 0) {
+        return;
+      }
+
+      // Mostrar mensaje con sugerencias
+      const suggestionsList = suggestions.suggestions.map(s => 
+        `• ${s.icon || '💡'} ${s.title}`
+      ).join('\n');
+
+      this.addMessage(
+        `**${suggestions.title || 'Sugerencias Contextuales'}**\n\n${suggestionsList}\n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
+        'assistant'
+      );
+    } catch (error) {
+      console.error('Error showing contextual suggestions:', error);
+    }
+  }
+}
+
+// Exponer FlowingContext globalmente para integración con footer
+if (typeof FlowingContext !== 'undefined') {
+  window.FlowingContext = FlowingContext;
 }
 
 // Initialize on page load

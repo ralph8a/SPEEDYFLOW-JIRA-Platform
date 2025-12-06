@@ -338,106 +338,135 @@ body.theme-dark .secondary-sla-warning {
 }
 
 /* ============================================================
-   SLA TICKET KEY GRADIENTS
+   SLA TICKET KEY SOLID COLORS - PRIMARY SLAs (Blue/Cyan Theme)
+   HIGH SPECIFICITY to override all other styles
    ============================================================ */
 
-.ticket-key-sla-healthy {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.08) 100%) !important;
-  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+/* Healthy SLA - Green */
+.issue-card-key.ticket-key-sla-healthy,
+.ticket-key-sla-healthy,
+#kanbanView .issue-card-key.ticket-key-sla-healthy,
+#listView .issue-card-key.ticket-key-sla-healthy {
+  background: rgba(34, 197, 94, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(22, 163, 74, 1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3) !important;
+  padding: 4px 8px !important;
   animation: sla-pulse-healthy 3s ease-in-out infinite;
 }
 
-.ticket-key-sla-paused {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.08) 100%) !important;
-  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+/* Paused SLA - Blue */
+.issue-card-key.ticket-key-sla-paused,
+.ticket-key-sla-paused,
+#kanbanView .issue-card-key.ticket-key-sla-paused,
+#listView .issue-card-key.ticket-key-sla-paused {
+  background: rgba(59, 130, 246, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3) !important;
+  padding: 4px 8px !important;
   animation: sla-pulse-paused 2s ease-in-out infinite;
 }
 
-.ticket-key-sla-breached {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.08) 100%) !important;
-  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+/* Breached SLA - Red */
+.issue-card-key.ticket-key-sla-breached,
+.ticket-key-sla-breached,
+#kanbanView .issue-card-key.ticket-key-sla-breached,
+#listView .issue-card-key.ticket-key-sla-breached {
+  background: rgba(239, 68, 68, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(220, 38, 38, 1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3) !important;
+  padding: 4px 8px !important;
   animation: sla-pulse-breached 1.5s ease-in-out infinite;
 }
 
-.ticket-key-sla-warning {
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.25) 0%, rgba(251, 146, 60, 0.08) 100%) !important;
-  border: 1px solid rgba(251, 146, 60, 0.3) !important;
+/* Warning SLA - Yellow/Amber */
+.issue-card-key.ticket-key-sla-warning,
+.ticket-key-sla-warning,
+#kanbanView .issue-card-key.ticket-key-sla-warning,
+#listView .issue-card-key.ticket-key-sla-warning {
+  background: rgba(251, 191, 36, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(245, 158, 11, 1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 6px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3) !important;
+  padding: 4px 8px !important;
   animation: sla-pulse-warning 2.5s ease-in-out infinite;
 }
 
-/* Secondary SLA Badges (Cierre Ticket) - Amber/Orange Theme */
+/* Secondary SLA Badges (Cierre Ticket) - Purple/Magenta Theme */
 .ticket-key-sla-secondary {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.12) 100%) !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  background: rgba(147, 51, 234, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(126, 34, 206, 1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 2px 6px rgba(147, 51, 234, 0.3) !important;
   animation: sla-pulse-secondary-badge 2s ease-in-out infinite;
 }
 
 .ticket-key-sla-secondary-paused {
-  background: linear-gradient(135deg, rgba(217, 119, 6, 0.3) 0%, rgba(217, 119, 6, 0.12) 100%) !important;
-  border: 1px solid rgba(217, 119, 6, 0.4) !important;
+  background: rgba(124, 58, 237, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(109, 40, 217, 1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3) !important;
   animation: sla-pulse-secondary-paused 2s ease-in-out infinite;
 }
 
 .ticket-key-sla-secondary-breached {
-  background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(234, 88, 12, 0.12) 100%) !important;
-  border: 1px solid rgba(234, 88, 12, 0.4) !important;
+  background: rgba(190, 24, 93, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(159, 18, 57, 1) !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 2px 6px rgba(190, 24, 93, 0.3) !important;
   animation: sla-pulse-secondary-breached 1.5s ease-in-out infinite;
 }
 
-/* SLA Pulse Animations */
+/* SLA Pulse Animations - Primary (Blue/Cyan) */
 @keyframes sla-pulse-healthy {
-  0%, 100% { box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-  50% { box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+  0%, 100% { box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3); }
+  50% { box-shadow: 0 2px 10px rgba(34, 197, 94, 0.5); }
 }
 
 @keyframes sla-pulse-paused {
-  0%, 100% { box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-  50% { box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+  0%, 100% { box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 2px 10px rgba(59, 130, 246, 0.5); }
 }
 
 @keyframes sla-pulse-breached {
-  0%, 100% { box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-  50% { box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+  0%, 100% { box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 2px 12px rgba(239, 68, 68, 0.6); }
 }
 
 @keyframes sla-pulse-warning {
-  0%, 100% { box-shadow: 0 2px 6px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-  50% { box-shadow: 0 2px 8px rgba(251, 146, 60, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+  0%, 100% { box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 2px 10px rgba(251, 191, 36, 0.5); }
 }
 
+/* SLA Pulse Animations - Secondary (Purple/Magenta) */
 @keyframes sla-pulse-secondary-badge {
   0%, 100% { 
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 6px rgba(147, 51, 234, 0.3);
     transform: scale(1);
   }
   50% { 
-    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    box-shadow: 0 2px 10px rgba(147, 51, 234, 0.5);
     transform: scale(1.02);
   }
 }
 
 @keyframes sla-pulse-secondary-paused {
-  0%, 100% { box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
-  50% { box-shadow: 0 2px 12px rgba(217, 119, 6, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+  0%, 100% { box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3); }
+  50% { box-shadow: 0 2px 10px rgba(124, 58, 237, 0.5); }
 }
 
 @keyframes sla-pulse-secondary-breached {
-  0%, 100% { box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
-  50% { box-shadow: 0 2px 14px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+  0%, 100% { box-shadow: 0 2px 6px rgba(190, 24, 93, 0.3); }
+  50% { box-shadow: 0 2px 10px rgba(190, 24, 93, 0.5); }
 }
 
 /* ============================================================

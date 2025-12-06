@@ -70,8 +70,7 @@ html body .sidebar,
 html body .sidebar-header-component,
 html body .sidebar-content-component,
 html body .right-sidebar,
-html body .filter-bar-enhanced,
-html body .ai-copilot-footer,
+html body .flowing-footer,
 html body.theme-light .header,
 html body.theme-light .header-enhanced,
 html body.theme-light .header-bar-enhanced,
@@ -79,8 +78,7 @@ html body.theme-light .sidebar,
 html body.theme-light .sidebar-header-component,
 html body.theme-light .sidebar-content-component,
 html body.theme-light .right-sidebar,
-html body.theme-light .filter-bar-enhanced,
-html body.theme-light .ai-copilot-footer {
+html body.theme-light .flowing-footer {
   background: rgba(255, 255, 255, var(--glasmorphic-primary-opacity)) !important;
   backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
   -webkit-backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
@@ -95,15 +93,13 @@ html body.theme-dark .sidebar,
 html body.theme-dark .sidebar-header-component,
 html body.theme-dark .sidebar-content-component,
 html body.theme-dark .right-sidebar,
-html body.theme-dark .filter-bar-enhanced,
-html body.theme-dark .ai-copilot-footer {
+html body.theme-dark .flowing-footer {
   background: rgba(26, 26, 26, var(--glasmorphic-primary-opacity)) !important;
+  backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
-
-/* Filter Bar - Allow its own glassmorphic styles from filter-bar-enhanced.css */
-/* No overrides here to prevent conflicts */
 
 /* Board Wrapper - TRANSPARENT (no background interference with AI backgrounds) */
 .board-wrapper {
@@ -279,3 +275,35 @@ body.theme-dark .btn-reset-effects:hover {
   background: linear-gradient(135deg, rgba(100, 181, 246, 0.5), rgba(100, 181, 246, 0.4));
   color: #93c5fd;
 }
+
+/* ============================================================
+   FILTER BAR - FORCE SAME BACKGROUND AS HEADER/SIDEBAR
+   MAXIMUM SPECIFICITY - Must override all other styles
+   ============================================================ */
+
+/* Light Theme */
+html body:not(.theme-dark):not([data-theme="dark"]) .filter-bar-enhanced,
+html body.theme-light .filter-bar-enhanced,
+html body[data-theme="light"] .filter-bar-enhanced,
+body:not(.theme-dark):not([data-theme="dark"]) .filter-bar-enhanced {
+  background: rgba(255, 255, 255, var(--glasmorphic-primary-opacity)) !important;
+  backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1), 0 2px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Dark Theme */
+html body.theme-dark .filter-bar-enhanced,
+html body[data-theme="dark"] .filter-bar-enhanced,
+body.theme-dark .filter-bar-enhanced,
+body[data-theme="dark"] .filter-bar-enhanced,
+[data-theme="dark"] .filter-bar-enhanced {
+  background: rgba(26, 26, 26, var(--glasmorphic-primary-opacity)) !important;
+  backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+

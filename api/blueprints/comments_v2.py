@@ -159,11 +159,22 @@ def convert_text_to_adf(text: str) -> Dict[str, Any]:
     Returns:
         ADF document structure
     """
-    if not text:
+    if not text or not text.strip():
+        # Return minimal valid ADF with empty paragraph
         return {
             "version": 1,
             "type": "doc",
-            "content": []
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": " "
+                        }
+                    ]
+                }
+            ]
         }
     
     # Split text into paragraphs
@@ -193,6 +204,20 @@ def convert_text_to_adf(text: str) -> Dict[str, Any]:
                 "type": "paragraph",
                 "content": paragraph_content
             })
+    
+    # Ensure we have at least one paragraph
+    if not content:
+        content = [
+            {
+                "type": "paragraph",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": text.strip()
+                    }
+                ]
+            }
+        ]
     
     return {
         "version": 1,
@@ -517,23 +542,48 @@ def add_comment_v2(issue_key):
     # Build comment payload
     payload = {}
     
-    # Convert text to appropriate format
+    # Convert text to appropriate format - API v3 requires ADF
     if format_type == 'adf':
-        payload['body'] = comment_text  # Assume already in ADF format
+        # Assume already in ADF format (dict)
+        if isinstance(comment_text, dict):
+            payload['body'] = comment_text
+        else:
+            # If string, convert to ADF
+            payload['body'] = convert_text_to_adf(comment_text)
     else:
+        # Plain text - convert to ADF
         payload['body'] = convert_text_to_adf(comment_text)
     
-    # Set visibility
-    if is_internal:
-        payload['jsdPublic'] = False
+    # Set visibility for Service Desk using API v3 properties structure
+    # API v3 uses "properties" array for Service Desk visibility
+    if not is_internal:
+        # Public comment (visible to customers)
+        payload['properties'] = [
+            {
+                "key": "sd.public.comment",
+                "value": {"internal": False}
+            }
+        ]
+    else:
+        # Internal comment (only agents can see)
+        payload['properties'] = [
+            {
+                "key": "sd.public.comment",
+                "value": {"internal": True}
+            }
+        ]
     
     visibility_str = 'internal' if is_internal else 'public'
     logger.info(f"Adding {visibility_str} comment to {issue_key}")
     if mentions:
         logger.info(f"📢 Mentions detected: {', '.join(mentions)}")
     
-    # Make request
-    url = f"{site}/rest/api/2/issue/{issue_key}/comment"
+    # Log the payload for debugging
+    import json
+    logger.info(f"📝 Comment payload: {json.dumps(payload, indent=2)}")
+    
+    # Make request using API v3 for better Service Desk support
+    url = f"{site}/rest/api/3/issue/{issue_key}/comment"
     response = _make_request('POST', url, headers, json=payload)
     
     if not response:

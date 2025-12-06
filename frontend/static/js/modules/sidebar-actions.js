@@ -37,6 +37,9 @@ class SidebarActions {
     // Cache notifications periodically
     this.cacheNotifications();
     
+    // Cache users for autocomplete (global cache)
+    this.cacheUsers();
+    
     // Refresh cache every 5 minutes
     setInterval(() => {
       this.refreshCache();
@@ -97,6 +100,28 @@ class SidebarActions {
   }
   
   /**
+   * Cache users for autocomplete in background
+   */
+  async cacheUsers(forceRefresh = false) {
+    try {
+      if (window.cachedUsers && !forceRefresh) {
+        console.log('💾 Users already cached:', window.cachedUsers.length);
+        return;
+      }
+      
+      console.log('🔄 Fetching users from database...');
+      const response = await fetch('/api/users');
+      if (response.ok) {
+        const users = await response.json();
+        window.cachedUsers = users;
+        console.log('💾 Cached users for autocomplete:', users.length);
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to cache users:', error);
+    }
+  }
+  
+  /**
    * Refresh all cached data
    */
   async refreshCache() {
@@ -106,7 +131,8 @@ class SidebarActions {
     await Promise.all([
       this.cacheCurrentUser(),
       this.cacheServiceDesks(),
-      this.cacheNotifications()
+      this.cacheNotifications(),
+      this.cacheUsers()
     ]);
     
     console.log('✅ Sidebar cache refreshed');
@@ -482,7 +508,7 @@ class SidebarActions {
           if (foundQueue) {
             // Quick check: fetch a few issues from this queue
             try {
-              const issuesResponse = await fetch(`/api/queue/${foundQueue.id}/issues?maxResults=10`);
+              const issuesResponse = await fetch(`/api/issues?desk_id=${desk.id}&queue_id=${foundQueue.id}&maxResults=10`);
               if (issuesResponse.ok) {
                 const issuesData = await issuesResponse.json();
                 const issues = issuesData.data || issuesData.issues || issuesData || [];
@@ -721,7 +747,10 @@ class SidebarActions {
   /**
    * Open Advanced Search
    */
-  openAdvancedSearch() {
+  async openAdvancedSearch() {
+    // Refetch users for fresh data
+    await this.cacheUsers(true);
+    
     let panel = document.getElementById('searchPanel');
     
     if (!panel) {
@@ -751,9 +780,10 @@ class SidebarActions {
         </div>
         <div class="modal-body">
           <div class="search-form">
-            <div class="search-field">
+            <div class="search-field" style="position: relative;">
               <label for="searchKeyword">🔎 Keyword</label>
               <input type="text" id="searchKeyword" placeholder="Search in summary, description..." autocomplete="off">
+              <div id="searchSuggestions" class="search-suggestions" style="display: none;"></div>
             </div>
             
             <div class="search-row">
@@ -781,14 +811,16 @@ class SidebarActions {
             </div>
             
             <div class="search-row">
-              <div class="search-field">
+              <div class="search-field" style="position: relative;">
                 <label for="searchAssignee">Assignee</label>
-                <input type="text" id="searchAssignee" placeholder="Assignee name...">
+                <input type="text" id="searchAssignee" placeholder="Assignee name..." autocomplete="off">
+                <div id="assigneeSuggestions" class="search-suggestions" style="display: none;"></div>
               </div>
               
-              <div class="search-field">
+              <div class="search-field" style="position: relative;">
                 <label for="searchReporter">Reporter</label>
-                <input type="text" id="searchReporter" placeholder="Reporter name...">
+                <input type="text" id="searchReporter" placeholder="Reporter name..." autocomplete="off">
+                <div id="reporterSuggestions" class="search-suggestions" style="display: none;"></div>
               </div>
             </div>
             
@@ -830,7 +862,241 @@ class SidebarActions {
       }
     });
     
+    // Initialize autocomplete for search fields
+    this.initSearchAutocomplete(panel);
+    
     return panel;
+  }
+
+  /**
+   * Initialize autocomplete for search fields
+   */
+  initSearchAutocomplete(panel) {
+    const keywordInput = panel.querySelector('#searchKeyword');
+    const assigneeInput = panel.querySelector('#searchAssignee');
+    const reporterInput = panel.querySelector('#searchReporter');
+    
+    const keywordSuggestions = panel.querySelector('#searchSuggestions');
+    const assigneeSuggestions = panel.querySelector('#assigneeSuggestions');
+    const reporterSuggestions = panel.querySelector('#reporterSuggestions');
+    
+    // Keyword autocomplete (suggest from ticket summaries and keys)
+    keywordInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (query.length < 2) {
+        keywordSuggestions.style.display = 'none';
+        return;
+      }
+      
+      const suggestions = this.getKeywordSuggestions(query);
+      this.displaySuggestions(keywordSuggestions, suggestions, (value) => {
+        keywordInput.value = value;
+        keywordSuggestions.style.display = 'none';
+        keywordInput.focus();
+      });
+    });
+    
+    // Assignee autocomplete (instant with cache)
+    let assigneeDebounceTimer;
+    assigneeInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (query.length < 2) {
+        assigneeSuggestions.style.display = 'none';
+        return;
+      }
+      
+      clearTimeout(assigneeDebounceTimer);
+      this.showLoadingSuggestions(assigneeSuggestions);
+      
+      assigneeDebounceTimer = setTimeout(async () => {
+        const suggestions = await this.getUserSuggestionsFromDB(query);
+        this.displaySuggestions(assigneeSuggestions, suggestions, (value) => {
+          assigneeInput.value = value;
+          assigneeSuggestions.style.display = 'none';
+          assigneeInput.focus();
+        });
+      }, 100);
+    });
+    
+    // Reporter autocomplete (instant with cache)
+    let reporterDebounceTimer;
+    reporterInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (query.length < 2) {
+        reporterSuggestions.style.display = 'none';
+        return;
+      }
+      
+      clearTimeout(reporterDebounceTimer);
+      this.showLoadingSuggestions(reporterSuggestions);
+      
+      reporterDebounceTimer = setTimeout(async () => {
+        const suggestions = await this.getUserSuggestionsFromDB(query);
+        this.displaySuggestions(reporterSuggestions, suggestions, (value) => {
+          reporterInput.value = value;
+          reporterSuggestions.style.display = 'none';
+          reporterInput.focus();
+        });
+      }, 100);
+    });
+    
+    // Close suggestions on click outside
+    document.addEventListener('click', (e) => {
+      if (!keywordInput.contains(e.target) && !keywordSuggestions.contains(e.target)) {
+        keywordSuggestions.style.display = 'none';
+      }
+      if (!assigneeInput.contains(e.target) && !assigneeSuggestions.contains(e.target)) {
+        assigneeSuggestions.style.display = 'none';
+      }
+      if (!reporterInput.contains(e.target) && !reporterSuggestions.contains(e.target)) {
+        reporterSuggestions.style.display = 'none';
+      }
+    });
+  }
+
+  /**
+   * Get keyword suggestions from tickets
+   */
+  getKeywordSuggestions(query) {
+    if (!window.state?.issues || window.state.issues.length === 0) {
+      return [];
+    }
+    
+    const queryLower = query.toLowerCase();
+    const suggestions = new Set();
+    const ticketMatches = [];
+    
+    // Get ticket key matches (exact start match has highest priority)
+    window.state.issues.forEach(issue => {
+      const key = issue.key || '';
+      if (key.toLowerCase().startsWith(queryLower)) {
+        ticketMatches.push({
+          type: 'ticket',
+          value: key,
+          label: `${key} - ${(issue.summary || '').substring(0, 50)}...`,
+          priority: 1
+        });
+      }
+    });
+    
+    // Get summary word matches
+    window.state.issues.forEach(issue => {
+      const summary = issue.summary || '';
+      const words = summary.split(/\s+/);
+      
+      words.forEach(word => {
+        if (word.length >= 3 && word.toLowerCase().includes(queryLower)) {
+          suggestions.add(word);
+        }
+      });
+    });
+    
+    // Convert suggestions to array with metadata
+    const wordSuggestions = Array.from(suggestions).slice(0, 5).map(word => ({
+      type: 'word',
+      value: word,
+      label: word,
+      priority: 2
+    }));
+    
+    // Combine and sort by priority
+    const allSuggestions = [...ticketMatches.slice(0, 5), ...wordSuggestions];
+    return allSuggestions.slice(0, 10);
+  }
+
+  /**
+   * Get user suggestions from database (async)
+   */
+  async getUserSuggestionsFromDB(query) {
+    try {
+      let users = [];
+      
+      // Use global cache if available (instant)
+      if (window.cachedUsers) {
+        const lowerQuery = query.toLowerCase();
+        users = window.cachedUsers.filter(user => {
+          const searchStr = `${user.displayName || ''} ${user.emailAddress || ''}`.toLowerCase();
+          return searchStr.includes(lowerQuery);
+        });
+        console.log(`✅ Found ${users.length} users from cache (instant)`);
+      } else {
+        // Fallback to API if cache not ready
+        const serviceDeskId = window.state?.serviceDeskId || '';
+        const response = await fetch(`/api/users?query=${encodeURIComponent(query)}&serviceDeskId=${serviceDeskId}`);
+        
+        if (!response.ok) {
+          console.warn('Failed to fetch users from DB, falling back to empty list');
+          return [];
+        }
+        
+        const result = await response.json();
+        
+        // The response is wrapped in {success, data: {users: [...], count, cached}}
+        if (!result.success || !result.data || !result.data.users) {
+          console.warn('Invalid response structure from /api/users:', result);
+          return [];
+        }
+        
+        users = result.data.users;
+        console.log(`✅ Found ${users.length} users from API`);
+      }
+      
+      // Format users for suggestions
+      return users.slice(0, 10).map(user => ({
+        type: 'user',
+        value: user.displayName || user.name || user.emailAddress,
+        label: user.displayName || user.name || user.emailAddress,
+        icon: '👤',
+        accountId: user.accountId
+      }));
+      
+    } catch (error) {
+      console.error('Error fetching user suggestions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Display suggestions in dropdown
+   */
+  displaySuggestions(container, suggestions, onSelect) {
+    if (suggestions.length === 0) {
+      container.innerHTML = '<div class="suggestion-item" style="cursor: default; opacity: 0.6;">No se encontraron resultados</div>';
+      container.style.display = 'block';
+      return;
+    }
+    
+    container.innerHTML = suggestions.map(sug => {
+      const icon = sug.icon || (sug.type === 'ticket' ? '🎫' : sug.type === 'user' ? '👤' : '🔍');
+      return `
+        <div class="suggestion-item" data-value="${sug.value}">
+          <span class="suggestion-icon">${icon}</span>
+          <span class="suggestion-label">${sug.label}</span>
+        </div>
+      `;
+    }).join('');
+    
+    container.style.display = 'block';
+    
+    // Add click listeners
+    container.querySelectorAll('.suggestion-item').forEach(item => {
+      item.addEventListener('click', () => {
+        onSelect(item.dataset.value);
+      });
+    });
+  }
+
+  /**
+   * Show loading indicator in suggestions
+   */
+  showLoadingSuggestions(container) {
+    container.innerHTML = `
+      <div class="suggestion-item" style="cursor: default;">
+        <span class="suggestion-icon">⏳</span>
+        <span class="suggestion-label">Buscando...</span>
+      </div>
+    `;
+    container.style.display = 'block';
   }
 
   /**
@@ -931,10 +1197,8 @@ class SidebarActions {
    * Open Ticket from Search
    */
   openTicketFromSearch(issueKey) {
-    // Close search modal
-    const panel = document.getElementById('searchPanel');
-    panel.classList.remove('active');
-    setTimeout(() => panel.style.display = 'none', 300);
+    // Close all modals (search, AI analyzer, etc)
+    closeAllModals();
     
     // Open ticket details
     if (typeof showTicketDetails === 'function') {
@@ -998,153 +1262,867 @@ class SidebarActions {
   }
 
   /**
-   * Create Reports Dashboard
+   * Create Reports Dashboard (Compact Version)
    */
   createReportsDashboard() {
     const panel = document.createElement('div');
     panel.id = 'reportsPanel';
     panel.className = 'modal-overlay';
     panel.innerHTML = `
-      <div class="modal-container reports-modal">
+      <div class="modal-container reports-modal-compact">
         <div class="modal-header">
-          <h2>📊 Reports & Analytics</h2>
-          <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">&times;</button>
+          <h2>📊 Metrics & Insights</h2>
+          <div id="metricsCacheIndicator" style="display: none; align-items: center; gap: 8px; margin-left: auto; margin-right: 8px; font-size: 12px; color: #64748b;"></div>
+          <div class="header-actions">
+            <button class="btn-icon" onclick="window.sidebarActions.showComparisonModal()" title="Compare Periods"><span>📊</span></button>
+            <button class="btn-icon" onclick="window.sidebarActions.showDateFilterModal()" title="Date Range"><span>📅</span></button>
+            <button class="btn-icon" onclick="window.sidebarActions.refreshReports()" title="Refresh"><span>🔄</span></button>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">&times;</button>
+          </div>
         </div>
         <div class="modal-body">
-          <div class="reports-grid">
-            <!-- Summary Cards -->
-            <div class="report-card summary-card">
-              <h3>📋 Total Tickets</h3>
-              <div class="report-value" id="totalTickets">0</div>
-              <div class="report-change">Last 7 days</div>
+          <div id="reportsLoading" class="reports-loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Generating intelligent metrics...</p>
+          </div>
+          
+          <!-- AI Insights Section -->
+          <div id="insightsSection" class="insights-section" style="display: none;">
+            <h3>💡 Smart Insights</h3>
+            <div id="insightsList" class="insights-list"></div>
+          </div>
+          
+          <!-- Period Comparison -->
+          <div id="comparisonSection" class="comparison-section" style="display: none;">
+            <div class="comparison-card">
+              <span class="comparison-label">This Month</span>
+              <span class="comparison-value" id="currentMonthValue">-</span>
+              <span class="comparison-change" id="comparisonChange">-</span>
             </div>
-            
-            <div class="report-card summary-card">
-              <h3>🔄 In Progress</h3>
-              <div class="report-value" id="inProgressTickets">0</div>
-              <div class="report-change">Active now</div>
+          </div>
+          
+          <!-- Compact Metrics Grid -->
+          <div class="metrics-compact-grid">
+            <div class="metric-card">
+              <span class="metric-icon">📋</span>
+              <div class="metric-content">
+                <div class="metric-value" id="totalTickets">-</div>
+                <div class="metric-label">Total</div>
+              </div>
             </div>
-            
-            <div class="report-card summary-card">
-              <h3>✅ Completed</h3>
-              <div class="report-value" id="completedTickets">0</div>
-              <div class="report-change">This week</div>
+            <div class="metric-card">
+              <span class="metric-icon">🔄</span>
+              <div class="metric-content">
+                <div class="metric-value" id="openTickets">-</div>
+                <div class="metric-label">Open</div>
+              </div>
             </div>
-            
-            <div class="report-card summary-card">
-              <h3>⏱️ Avg. Resolution Time</h3>
-              <div class="report-value" id="avgResolutionTime">0h</div>
-              <div class="report-change">Last 30 days</div>
+            <div class="metric-card">
+              <span class="metric-icon">✅</span>
+              <div class="metric-content">
+                <div class="metric-value" id="closedTickets">-</div>
+                <div class="metric-label">Closed</div>
+              </div>
             </div>
-            
-            <!-- Status Distribution -->
-            <div class="report-card chart-card">
-              <h3>Status Distribution</h3>
-              <div id="statusChart" class="chart-container"></div>
+            <div class="metric-card">
+              <span class="metric-icon">⏱️</span>
+              <div class="metric-content">
+                <div class="metric-value" id="avgResolutionTime">-</div>
+                <div class="metric-label">Avg. Time</div>
+              </div>
             </div>
-            
-            <!-- Priority Distribution -->
-            <div class="report-card chart-card">
-              <h3>Priority Distribution</h3>
-              <div id="priorityChart" class="chart-container"></div>
+          </div>
+          
+          <!-- Trend Chart (7 days) -->
+          <div class="chart-compact">
+            <h3>📈 Last 7 Days Trend</h3>
+            <div id="trendChart" class="chart-container-compact"></div>
+          </div>
+          
+          <!-- Quick Stats -->
+          <div class="quick-stats">
+            <div class="stat-row">
+              <span class="stat-label">By Status</span>
+              <div id="statusQuickStats" class="stat-pills"></div>
             </div>
-            
-            <!-- Assignee Distribution -->
-            <div class="report-card chart-card full-width">
-              <h3>Tickets by Assignee</h3>
-              <div id="assigneeChart" class="chart-container"></div>
+            <div class="stat-row">
+              <span class="stat-label">By Priority</span>
+              <div id="priorityQuickStats" class="stat-pills"></div>
             </div>
-            
-            <!-- Recent Activity -->
-            <div class="report-card activity-card full-width">
-              <h3>Recent Activity</h3>
-              <div id="recentActivity" class="activity-list"></div>
+            <div class="stat-row">
+              <span class="stat-label">Top Assignees</span>
+              <div id="assigneeQuickStats" class="stat-pills"></div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-secondary" onclick="window.sidebarActions.exportReport()">📥 Export CSV</button>
-          <button class="btn-secondary" onclick="window.sidebarActions.exportReport('pdf')">📄 Export PDF</button>
-          <button class="btn-primary" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">Close</button>
+          <div class="footer-left">
+            <button class="btn-secondary btn-sm" onclick="window.sidebarActions.exportReport('csv')">📥 CSV</button>
+            <button class="btn-secondary btn-sm" onclick="window.sidebarActions.exportReport('json')">📄 JSON</button>
+            <button class="btn-secondary btn-sm" onclick="window.sidebarActions.exportReport('excel')">📊 Excel</button>
+          </div>
+          <button class="btn-primary btn-sm" onclick="this.closest('.modal-overlay').classList.remove('active'); setTimeout(() => this.closest('.modal-overlay').style.display='none', 300)">Close</button>
         </div>
       </div>
     `;
     
+    // Add compact styles
+    this.addCompactReportsStyles();
+    
     return panel;
+  }
+  
+  /**
+   * Add Compact Reports Styles
+   */
+  addCompactReportsStyles() {
+    if (document.getElementById('compactReportsStyles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'compactReportsStyles';
+    style.textContent = `
+      .reports-modal-compact {
+        max-width: 700px;
+        max-height: 85vh;
+      }
+      
+      .modal-header .header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      
+      .btn-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: background 0.2s;
+      }
+      
+      .btn-icon:hover {
+        background: rgba(255,255,255,0.1);
+      }
+      
+      .reports-loading {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      
+      .spinner {
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top: 3px solid #4a90e2;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .insights-section {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: rgba(74, 144, 226, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #4a90e2;
+      }
+      
+      .insights-section h3 {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      
+      .insights-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .insight-item {
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 6px;
+        font-size: 12px;
+        display: flex;
+        align-items: start;
+        gap: 8px;
+      }
+      
+      .insight-item.warning {
+        background: rgba(255, 193, 7, 0.1);
+        border-left: 2px solid #ffc107;
+      }
+      
+      .insight-item.success {
+        background: rgba(76, 175, 80, 0.1);
+        border-left: 2px solid #4caf50;
+      }
+      
+      .insight-item.info {
+        background: rgba(33, 150, 243, 0.1);
+        border-left: 2px solid #2196f3;
+      }
+      
+      .metrics-compact-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      
+      .metric-card {
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      
+      .metric-icon {
+        font-size: 20px;
+      }
+      
+      .metric-content {
+        flex: 1;
+      }
+      
+      .metric-value {
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 4px;
+      }
+      
+      .metric-label {
+        font-size: 11px;
+        opacity: 0.7;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .chart-compact {
+        margin-bottom: 20px;
+      }
+      
+      .chart-compact h3 {
+        font-size: 14px;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+      
+      .chart-container-compact {
+        height: 120px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        justify-content: space-between;
+      }
+      
+      .chart-bar {
+        flex: 1;
+        background: linear-gradient(to top, #4a90e2, #64b5f6);
+        border-radius: 4px 4px 0 0;
+        min-height: 20px;
+        position: relative;
+        transition: all 0.3s;
+      }
+      
+      .chart-bar:hover {
+        background: linear-gradient(to top, #2196f3, #64b5f6);
+        transform: translateY(-2px);
+      }
+      
+      .chart-bar-label {
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 9px;
+        opacity: 0.6;
+        white-space: nowrap;
+      }
+      
+      .quick-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .stat-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .stat-label {
+        font-size: 11px;
+        opacity: 0.7;
+        min-width: 80px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .stat-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      
+      .stat-pill {
+        padding: 4px 10px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 12px;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      
+      .modal-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .footer-left {
+        display: flex;
+        gap: 8px;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   /**
-   * Generate Reports
+   * Generate Reports (with Smart Backend)
    */
   async generateReports() {
-    let issues = [];
+    const loadingEl = document.getElementById('reportsLoading');
     
-    // Try to get issues from state first
-    if (window.state && window.state.issues && window.state.issues.length > 0) {
-      issues = window.state.issues;
-    } else if (window.state && window.state.filteredIssues && window.state.filteredIssues.length > 0) {
-      issues = window.state.filteredIssues;
-    } else {
-      // Try to load from API
-      console.log('📊 No issues in state, loading from API...');
-      try {
-        const response = await fetch('/api/issues');
-        if (response.ok) {
-          const data = await response.json();
-          issues = data.issues || data || [];
+    try {
+      // Get current service desk and queue
+      const serviceDeskId = window.state?.currentDesk || '4';
+      const queueId = window.state?.currentQueue || '';
+      
+      const cacheKey = `metrics_${serviceDeskId}_${queueId}`;
+      
+      // 🚀 LEVEL 1: Check memory cache (INSTANT - <1ms)
+      if (window.metricsCache && window.metricsCache[cacheKey]) {
+        const cached = window.metricsCache[cacheKey];
+        const age = Date.now() - cached.timestamp;
+        const maxAge = window.state?.issues?.length >= 50 ? 3 * 60 * 60 * 1000 : 15 * 60 * 1000;
+        
+        if (age < maxAge) {
+          console.log(`💨 Using memory cache (${(age / 1000).toFixed(0)}s old) - INSTANT LOAD`);
+          if (loadingEl) loadingEl.style.display = 'none';
+          this.renderCompactMetrics(cached.data);
+          this.showMetricsCacheIndicator('memory', age);
+          return;
         }
-      } catch (error) {
-        console.error('❌ Failed to load issues for reports:', error);
       }
+      
+      // 🏃 LEVEL 2: Check LocalStorage (FAST - <10ms)
+      const localCached = window.CacheManager?.get(cacheKey);
+      if (localCached) {
+        console.log('💾 Using LocalStorage cache - FAST LOAD');
+        if (loadingEl) loadingEl.style.display = 'none';
+        
+        // Store in memory for next time
+        window.metricsCache = window.metricsCache || {};
+        window.metricsCache[cacheKey] = {
+          data: localCached,
+          timestamp: Date.now()
+        };
+        
+        this.renderCompactMetrics(localCached);
+        this.showMetricsCacheIndicator('localStorage', 0);
+        return;
+      }
+      
+      // 📡 LEVEL 3: Fetch from backend (NETWORK - ~500ms)
+      console.log(`📊 Fetching intelligent metrics for desk=${serviceDeskId}, queue=${queueId}`);
+      if (loadingEl) loadingEl.style.display = 'block';
+      
+      let url = `/api/reports/metrics?serviceDeskId=${serviceDeskId}`;
+      if (queueId) url += `&queueId=${queueId}`;
+      
+      // Add date range filters if available
+      if (window.state?.dateRange) {
+        url += `&startDate=${window.state.dateRange.startDate}&endDate=${window.state.dateRange.endDate}`;
+        console.log(`📅 Applying date filter: ${window.state.dateRange.startDate} to ${window.state.dateRange.endDate}`);
+      }
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (loadingEl) loadingEl.style.display = 'none';
+      
+      if (data.cached && data.metrics) {
+        // Backend returned cached metrics (from DB)
+        console.log('✅ Using backend cached metrics');
+        
+        // Store in BOTH caches for next time
+        // Memory cache (LEVEL 1 - instant)
+        window.metricsCache = window.metricsCache || {};
+        window.metricsCache[cacheKey] = {
+          data: data.metrics,
+          timestamp: Date.now()
+        };
+        
+        // LocalStorage cache (LEVEL 2 - fast)
+        const ttl = window.state?.issues?.length >= 50 ? 3 * 60 * 60 * 1000 : 15 * 60 * 1000;
+        if (window.CacheManager) {
+          window.CacheManager.set(cacheKey, data.metrics, ttl);
+        }
+        
+        console.log(`💾 Cached metrics in memory + localStorage (TTL: ${(ttl / (60 * 60 * 1000)).toFixed(1)}h)`);
+        
+        this.renderCompactMetrics(data.metrics);
+        this.showMetricsCacheIndicator('backend', 0);
+      } else if (data.refresh_status) {
+        // Background refresh in progress
+        console.log('🔄 Metrics refresh in progress:', data.refresh_status);
+        this.showRefreshProgress(data.refresh_status);
+        
+        // Poll for completion
+        this.pollMetricsRefresh(serviceDeskId, queueId);
+      } else {
+        console.warn('⚠️ Unexpected response format');
+        this.showEmptyState();
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to load metrics:', error);
+      if (loadingEl) loadingEl.style.display = 'none';
+      this.showEmptyState();
+    }
+  }
+  
+  /**
+   * Render Compact Metrics
+   */
+  renderCompactMetrics(metrics) {
+    const summary = metrics.summary || {};
+    const trends = metrics.trends || {};
+    const performance = metrics.performance || {};
+    const insights = metrics.insights || [];
+    
+    // Update metric cards
+    document.getElementById('totalTickets').textContent = summary.total || 0;
+    document.getElementById('openTickets').textContent = summary.open || 0;
+    document.getElementById('closedTickets').textContent = summary.closed || 0;
+    
+    const avgHours = performance.avg_resolution_hours || 0;
+    const avgText = avgHours < 1 ? '<1h' : 
+                    avgHours < 24 ? `${Math.round(avgHours)}h` :
+                    `${Math.round(avgHours / 24)}d`;
+    document.getElementById('avgResolutionTime').textContent = avgText;
+    
+    // Render insights
+    if (insights.length > 0) {
+      const insightsSection = document.getElementById('insightsSection');
+      const insightsList = document.getElementById('insightsList');
+      insightsSection.style.display = 'block';
+      insightsList.innerHTML = insights.map(insight => `
+        <div class="insight-item ${insight.type}">
+          <div>
+            <strong>${insight.title}:</strong> ${insight.message}
+            ${insight.metric ? `<br><span style="opacity:0.7; font-size:11px;">${insight.metric}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
     }
     
-    if (issues.length === 0) {
-      console.warn('⚠️ No issues data available for reports');
-      // Show empty state in reports
-      document.getElementById('totalTickets').textContent = '0';
-      document.getElementById('inProgressTickets').textContent = '0';
-      document.getElementById('completedTickets').textContent = '0';
-      document.getElementById('avgResolutionTime').textContent = '0h';
+    // Render 7-day trend
+    if (trends.last_7_days) {
+      this.renderTrendChart(trends.last_7_days);
+    }
+    
+    // Render quick stats
+    if (summary.by_status) {
+      this.renderQuickStats('statusQuickStats', summary.by_status);
+    }
+    if (summary.by_priority) {
+      this.renderQuickStats('priorityQuickStats', summary.by_priority);
+    }
+    if (summary.by_assignee) {
+      this.renderQuickStats('assigneeQuickStats', summary.by_assignee, 5);
+    }
+  }
+  
+  /**
+   * Render Trend Chart (7 days)
+   */
+  renderTrendChart(trendData) {
+    const container = document.getElementById('trendChart');
+    if (!container) return;
+    
+    // Check if Chart.js is available
+    if (typeof Chart !== 'undefined') {
+      // Use Chart.js for interactive charts
+      container.innerHTML = '<canvas id="trendChartCanvas" style="max-height: 200px;"></canvas>';
+      const canvas = document.getElementById('trendChartCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      const labels = trendData.map(d => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+      });
+      
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Created',
+              data: trendData.map(d => d.created),
+              backgroundColor: 'rgba(74, 144, 226, 0.6)',
+              borderColor: 'rgba(74, 144, 226, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Resolved',
+              data: trendData.map(d => d.resolved),
+              backgroundColor: 'rgba(76, 175, 80, 0.6)',
+              borderColor: 'rgba(76, 175, 80, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: 'rgba(255, 255, 255, 0.7)'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              }
+            },
+            x: {
+              ticks: {
+                color: 'rgba(255, 255, 255, 0.7)'
+              },
+              grid: {
+                display: false
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: 'rgba(255, 255, 255, 0.8)',
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    } else {
+      // Fallback to basic HTML bars
+      const maxValue = Math.max(...trendData.map(d => Math.max(d.created, d.resolved)));
+      
+      container.innerHTML = trendData.map(day => {
+        const createdHeight = maxValue > 0 ? (day.created / maxValue * 100) : 0;
+        const date = new Date(day.date);
+        const label = date.toLocaleDateString('en', { weekday: 'short' });
+        
+        return `
+          <div class="chart-bar" style="height: ${createdHeight}%" title="${day.date}: ${day.created} created, ${day.resolved} resolved">
+            <div class="chart-bar-label">${label}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+  
+  /**
+   * Render Quick Stats Pills
+   */
+  renderQuickStats(containerId, data, limit = 10) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const entries = Object.entries(data).slice(0, limit);
+    container.innerHTML = entries.map(([key, value]) => 
+      `<span class="stat-pill">${key}: <strong>${value}</strong></span>`
+    ).join('');
+  }
+  
+  /**
+   * Show Refresh Progress
+   */
+  showRefreshProgress(status) {
+    const loadingEl = document.getElementById('reportsLoading');
+    if (loadingEl) {
+      loadingEl.style.display = 'block';
+      loadingEl.innerHTML = `
+        <div class="spinner"></div>
+        <p>${status.status || 'Generating'} (${status.progress || 0}%)</p>
+      `;
+    }
+  }
+  
+  /**
+   * Poll Metrics Refresh
+   */
+  async pollMetricsRefresh(serviceDeskId, queueId, attempts = 0) {
+    if (attempts >= 30) {
+      console.warn('⚠️ Metrics refresh timeout');
+      this.showEmptyState();
       return;
     }
     
-    console.log(`📊 Generating reports for ${issues.length} issues`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Total tickets
-    document.getElementById('totalTickets').textContent = issues.length;
+    try {
+      let url = `/api/reports/metrics?serviceDeskId=${serviceDeskId}`;
+      if (queueId) url += `&queueId=${queueId}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.cached && data.metrics) {
+        this.renderCompactMetrics(data.metrics);
+      } else if (data.refresh_status && data.refresh_status.status !== 'completed') {
+        this.showRefreshProgress(data.refresh_status);
+        this.pollMetricsRefresh(serviceDeskId, queueId, attempts + 1);
+      }
+    } catch (error) {
+      console.error('❌ Poll error:', error);
+    }
+  }
+  
+  /**
+   * Show Empty State
+   */
+  showEmptyState() {
+    document.getElementById('totalTickets').textContent = '0';
+    document.getElementById('openTickets').textContent = '0';
+    document.getElementById('closedTickets').textContent = '0';
+    document.getElementById('avgResolutionTime').textContent = '-';
+  }
+  
+  /**
+   * Refresh Reports
+   */
+  async refreshReports() {
+    const serviceDeskId = window.state?.currentDesk || '4';
+    const queueId = window.state?.currentQueue || '';
     
-    // In Progress - check multiple status variations
-    const inProgress = issues.filter(i => {
-      const status = (i.status || i.estado || '').toLowerCase();
-      return status.includes('progress') || status.includes('progreso') || 
-             status.includes('in process') || status.includes('working');
-    }).length;
-    document.getElementById('inProgressTickets').textContent = inProgress;
+    let url = `/api/reports/metrics?serviceDeskId=${serviceDeskId}&forceRefresh=true`;
+    if (queueId) url += `&queueId=${queueId}`;
     
-    // Completed - check multiple status variations
-    const completed = issues.filter(i => {
-      const status = (i.status || i.estado || '').toLowerCase();
-      return status.includes('done') || status.includes('closed') || 
-             status.includes('resolved') || status.includes('completado') ||
-             status.includes('cerrado');
-    }).length;
-    document.getElementById('completedTickets').textContent = completed;
+    const loadingEl = document.getElementById('reportsLoading');
+    if (loadingEl) loadingEl.style.display = 'block';
     
-    // Calculate actual average resolution time
-    const avgTime = this.calculateAvgResolutionTime(issues);
-    document.getElementById('avgResolutionTime').textContent = avgTime;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.refresh_status) {
+        this.showRefreshProgress(data.refresh_status);
+        this.pollMetricsRefresh(serviceDeskId, queueId);
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh:', error);
+      if (loadingEl) loadingEl.style.display = 'none';
+    }
+  }
+  
+  /**
+   * Show Comparison Modal
+   */
+  async showComparisonModal() {
+    const serviceDeskId = window.state?.currentDesk || '4';
+    const queueId = window.state?.currentQueue || '';
     
-    // Status Distribution
-    this.renderStatusChart(issues);
+    try {
+      let url = `/api/reports/compare?serviceDeskId=${serviceDeskId}`;
+      if (queueId) url += `&queueId=${queueId}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (!data.success) {
+        this.showNotification('Comparison Error', data.error || 'Failed to load comparison', 'error');
+        return;
+      }
+      
+      // Update comparison section
+      const section = document.getElementById('comparisonSection');
+      if (section) {
+        section.style.display = 'block';
+        
+        const card = section.querySelector('.comparison-card');
+        if (card) {
+          const currentValue = data.comparison.current_month?.total_issues || 0;
+          const growthPercent = data.comparison.growth_percent || 0;
+          const trend = data.comparison.trend || 'stable';
+          
+          const trendIcon = trend === 'up' ? '📈' : trend === 'down' ? '📉' : '➡️';
+          const trendColor = trend === 'up' ? '#4caf50' : trend === 'down' ? '#f44336' : '#ff9800';
+          
+          card.innerHTML = `
+            <h4>Period Comparison</h4>
+            <div style="display: flex; gap: 20px; margin-top: 12px;">
+              <div style="flex: 1;">
+                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 4px;">Current Month</div>
+                <div style="font-size: 24px; font-weight: 700;">${currentValue}</div>
+              </div>
+              <div style="flex: 1;">
+                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 4px;">Growth</div>
+                <div style="font-size: 24px; font-weight: 700; color: ${trendColor};">
+                  ${trendIcon} ${growthPercent > 0 ? '+' : ''}${growthPercent.toFixed(1)}%
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      this.showNotification('Comparison Loaded', 'Period comparison updated', 'success');
+    } catch (error) {
+      console.error('❌ Comparison error:', error);
+      this.showNotification('Comparison Error', 'Failed to load comparison data', 'error');
+    }
+  }
+  
+  /**
+   * Show Date Filter Modal
+   */
+  showDateFilterModal() {
+    const existingModal = document.getElementById('dateFilterModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
     
-    // Priority Distribution
-    this.renderPriorityChart(issues);
+    const modal = document.createElement('div');
+    modal.id = 'dateFilterModal';
+    modal.className = 'modal-overlay active';
+    modal.style.display = 'flex';
     
-    // Assignee Distribution
-    this.renderAssigneeChart(issues);
+    const today = new Date().toISOString().split('T')[0];
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
-    // Recent Activity
-    this.renderRecentActivity(issues);
+    modal.innerHTML = `
+      <div class="modal-content reports-modal-compact" style="max-width: 400px;">
+        <div class="modal-header">
+          <h2>📅 Date Range Filter</h2>
+          <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <label for="startDate" style="display: block; margin-bottom: 6px; font-size: 12px; opacity: 0.8;">Start Date</label>
+              <input type="date" id="startDate" value="${thirtyDaysAgo}" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff;">
+            </div>
+            <div>
+              <label for="endDate" style="display: block; margin-bottom: 6px; font-size: 12px; opacity: 0.8;">End Date</label>
+              <input type="date" id="endDate" value="${today}" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff;">
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn-secondary btn-sm" onclick="window.sidebarActions.applyDatePreset('today')">Today</button>
+              <button class="btn-secondary btn-sm" onclick="window.sidebarActions.applyDatePreset('week')">Last 7 Days</button>
+              <button class="btn-secondary btn-sm" onclick="window.sidebarActions.applyDatePreset('month')">Last 30 Days</button>
+              <button class="btn-secondary btn-sm" onclick="window.sidebarActions.applyDatePreset('quarter')">Last 90 Days</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+          <button class="btn-primary btn-sm" onclick="window.sidebarActions.applyDateFilter()">Apply Filter</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+  }
+  
+  /**
+   * Apply Date Preset
+   */
+  applyDatePreset(preset) {
+    const today = new Date();
+    const endDate = today.toISOString().split('T')[0];
+    let startDate;
+    
+    switch (preset) {
+      case 'today':
+        startDate = endDate;
+        break;
+      case 'week':
+        startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        break;
+      case 'month':
+        startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        break;
+      case 'quarter':
+        startDate = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        break;
+      default:
+        return;
+    }
+    
+    document.getElementById('startDate').value = startDate;
+    document.getElementById('endDate').value = endDate;
+  }
+  
+  /**
+   * Apply Date Filter
+   */
+  async applyDateFilter() {
+    const startDate = document.getElementById('startDate')?.value;
+    const endDate = document.getElementById('endDate')?.value;
+    
+    if (!startDate || !endDate) {
+      this.showNotification('Invalid Date', 'Please select both start and end dates', 'warning');
+      return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+      this.showNotification('Invalid Date', 'Start date must be before end date', 'warning');
+      return;
+    }
+    
+    // Close date filter modal
+    document.getElementById('dateFilterModal')?.remove();
+    
+    // Store date range in session state
+    if (!window.state) window.state = {};
+    window.state.dateRange = { startDate, endDate };
+    
+    // Regenerate reports with date filter
+    this.showNotification('Applying Filter', `Loading data from ${startDate} to ${endDate}`, 'info');
+    await this.generateReports();
   }
   
   /**
@@ -1435,26 +2413,40 @@ class SidebarActions {
   }
 
   /**
-   * Export Report
+   * Export Report (Enhanced)
    */
-  exportReport(format = 'csv') {
-    if (!window.state || !window.state.issues) return;
+  async exportReport(format = 'csv') {
+    const serviceDeskId = window.state?.currentDesk || '4';
+    const queueId = window.state?.currentQueue || '';
     
-    const issues = window.state.issues;
-    
-    if (format === 'csv') {
-      const csv = this.generateCSV(issues);
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `report-${new Date().getTime()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+    try {
+      let url = `/api/reports/export/${format}?serviceDeskId=${serviceDeskId}`;
+      if (queueId) url += `&queueId=${queueId}`;
       
-      this.showNotification('Report Exported', 'CSV file downloaded', 'success');
-    } else {
-      this.showNotification('PDF Export', 'PDF export coming soon!', 'info');
+      // Add date range filters if available
+      if (window.state?.dateRange) {
+        url += `&startDate=${window.state.dateRange.startDate}&endDate=${window.state.dateRange.endDate}`;
+      }
+      
+      const response = await fetch(url);
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `speedyflow_report_${new Date().getTime()}.${format}`;
+        a.click();
+        URL.revokeObjectURL(downloadUrl);
+        
+        this.showNotification('Report Exported', `${format.toUpperCase()} file downloaded successfully`, 'success');
+      } else {
+        const error = await response.json();
+        this.showNotification('Export Failed', error.error || 'Failed to export report', 'error');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      this.showNotification('Export Error', 'Failed to download report', 'error');
     }
   }
 
@@ -2168,6 +3160,61 @@ class SidebarActions {
     this.logFontAdaptation(presetId);
     
     console.log(`✅ Font preset applied: ${presetId}`);
+  }
+
+  /**
+   * Show cache indicator with refresh button for Metrics
+   * @param {string} source - Cache source: 'memory', 'localStorage', or 'backend'
+   * @param {number} age - Cache age in milliseconds
+   */
+  showMetricsCacheIndicator(source, age) {
+    const indicator = document.getElementById('metricsCacheIndicator');
+    if (!indicator) return;
+    
+    const sourceIcons = {
+      memory: '💨',
+      localStorage: '💾',
+      backend: '📡'
+    };
+    
+    const sourceLabels = {
+      memory: 'En memoria',
+      localStorage: 'En caché local',
+      backend: 'Del servidor'
+    };
+    
+    const ageText = age > 0 ? ` • ${this.formatCacheAge(age)} atrás` : '';
+    
+    indicator.innerHTML = `
+      <span style="display: flex; align-items: center; gap: 6px;">
+        ${sourceIcons[source]} ${sourceLabels[source]}${ageText}
+      </span>
+      <button 
+        onclick="window.sidebarActions.refreshReports()" 
+        style="padding: 4px 8px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 4px; transition: all 0.2s;"
+        onmouseover="this.style.background='#e2e8f0'" 
+        onmouseout="this.style.background='#f1f5f9'"
+        title="Actualizar métricas con datos recientes"
+      >
+        🔄 Actualizar
+      </button>
+    `;
+    indicator.style.display = 'flex';
+  }
+  
+  /**
+   * Format cache age for display
+   * @param {number} ms - Age in milliseconds
+   * @returns {string} Formatted age string
+   */
+  formatCacheAge(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    if (minutes > 0) return `${minutes}m`;
+    return `${seconds}s`;
   }
 
   /**

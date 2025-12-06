@@ -26,15 +26,26 @@
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
   <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
   
+  <!-- BOARD VIEW STYLING (Kanban) -->
+  <link rel="stylesheet" href="/static/views/board/kanban.css?v={{ timestamp }}">
+  
+  <!-- LIST VIEW STYLING -->
+  <link rel="stylesheet" href="/static/views/list/list-view.css?v={{ timestamp }}">
+  
   <!-- DRAG & DROP TRANSITIONS STYLING -->
-  <link rel="stylesheet" href="/static/css/components/transition-bar-vertical.css?v={{ timestamp }}">
+  <link rel="stylesheet" href="/static/views/board/transition-bar-vertical.css?v={{ timestamp }}">
+  <link rel="stylesheet" href="/static/views/list/transition-bar-horizontal.css?v={{ timestamp }}">
   <link rel="stylesheet" href="/static/css/components/transition-fields-modal.css?v={{ timestamp }}">
   
   <!-- QUICK ACTIONS STYLING (Quick Triage & Smart Filters) -->
   <link rel="stylesheet" href="/static/css/components/quick-actions.css?v={{ timestamp }}">
   
-  <!-- AI COPILOT FOOTER STYLING -->
-  <link rel="stylesheet" href="/static/css/components/ai-copilot-footer.css?v={{ timestamp }}">
+  <!-- AUTO-SWITCH NOTIFICATION STYLING -->
+  <link rel="stylesheet" href="/static/css/components/auto-switch-notification.css?v={{ timestamp }}">
+  
+  <!-- FLOWING MVP STYLING -->
+  <link rel="stylesheet" href="/static/flowing-mvp/css/footer.css?v={{ timestamp }}">
+  <link rel="stylesheet" href="/static/flowing-mvp/css/flowing-context-aware.css?v={{ timestamp }}">
   
   <!-- INLINE STYLES FOR SIDEBAR ACTION BUTTON -->
   <style>
@@ -135,6 +146,9 @@
       }, 100);
     });
   </script>
+  
+  <!-- Chart.js for interactive charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   
 </head>
 <body class="theme-light">
@@ -464,35 +478,35 @@
     </div>
   </div>
 
-  <!-- ===== AI COPILOT FOOTER (Fixed at bottom) ===== -->
-  <div id="aiCopilotFooter" class="ai-copilot-footer collapsed">
+  <!-- ===== FLOWING MVP FOOTER (Fixed at bottom) ===== -->
+  <div id="flowingFooter" class="flowing-footer collapsed">
     <!-- Toggle Button -->
-    <button id="copilotToggleBtn" class="copilot-toggle-btn" title="Flowing MVP Assistant">
-      <span class="copilot-icon copilot-sf-logo">SF</span>
-      <div class="copilot-info">
-        <span class="copilot-label">Flowing MVP</span>
-        <span class="copilot-suggestion" id="copilotSuggestion">Analyzing your queue...</span>
+    <button id="flowingToggleBtn" class="flowing-toggle-btn" title="Flowing MVP Assistant">
+      <span class="flowing-icon flowing-sf-logo">SF</span>
+      <div class="flowing-info">
+        <span class="flowing-label">Flowing MVP</span>
+        <span class="flowing-suggestion" id="flowingSuggestion">Analyzing your queue...</span>
       </div>
-      <span class="copilot-chevron">▲</span>
+      <span class="flowing-chevron">▲</span>
     </button>
 
-    <!-- Copilot Content -->
-    <div class="copilot-content">
-      <div class="copilot-header">
-        <div class="copilot-title">
-          <span class="copilot-avatar copilot-sf-logo">SF</span>
-          <div class="copilot-title-text">
+    <!-- Flowing Content -->
+    <div class="flowing-content">
+      <div class="flowing-header">
+        <div class="flowing-title">
+          <span class="flowing-avatar flowing-sf-logo">SF</span>
+          <div class="flowing-title-text">
             <h3>Flowing MVP</h3>
-            <p class="copilot-subtitle">Your AI assistant for tickets, SLAs, and smart suggestions</p>
+            <p class="flowing-subtitle">Your AI assistant for tickets, SLAs, and smart suggestions</p>
           </div>
         </div>
-        <button id="copilotCloseBtn" class="copilot-close-btn" title="Close">✕</button>
+        <button id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</button>
       </div>
 
       <!-- Messages Container -->
-      <div id="copilotMessages" class="copilot-messages">
-        <div class="copilot-message assistant">
-          <div class="message-avatar copilot-sf-logo">SF</div>
+      <div id="flowingMessages" class="flowing-messages">
+        <div class="flowing-message assistant">
+          <div class="message-avatar flowing-sf-logo">SF</div>
           <div class="message-content">
             <p>👋 Hi! I'm Flowing MVP, your SpeedyFlow Ticket Solving Mate! I can help you with:</p>
             <ul>
@@ -507,19 +521,19 @@
       </div>
 
       <!-- Input Area -->
-      <div class="copilot-input-area">
-        <div class="copilot-context-badge" id="copilotContextBadge">
+      <div class="flowing-input-area">
+        <div class="flowing-context-badge" id="flowingContextBadge">
           <span class="context-icon">📌</span>
           <span class="context-text">No context</span>
         </div>
-        <div class="copilot-input-wrapper">
+        <div class="flowing-input-wrapper">
           <textarea 
-            id="copilotInput" 
-            class="copilot-input" 
+            id="flowingInput" 
+            class="flowing-input" 
             placeholder="Ask me anything about your tickets..."
             rows="1"
           ></textarea>
-          <button id="copilotSendBtn" class="copilot-send-btn" title="Send message">
+          <button id="flowingSendBtn" class="flowing-send-btn" title="Send message">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
             </svg>
@@ -582,7 +596,8 @@
   <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
 
   <!-- ===== DRAG & DROP TRANSITIONS ===== -->
-  <script src="/static/js/modules/drag-transition-vertical.js?v={{ timestamp }}"></script>
+  <script src="/static/views/board/drag-transition-vertical.js?v={{ timestamp }}"></script>
+  <script src="/static/views/list/list-view-transitions.js?v={{ timestamp }}"></script>
   
   <!-- ===== QUICK ACTIONS (Quick Triage & Smart Filters) ===== -->
   <script src="/static/js/quick-triage.js?v={{ timestamp }}"></script>
@@ -590,8 +605,9 @@
   <script src="/static/js/smart-functions-modal.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-analytics.js?v={{ timestamp }}"></script>
 
-  <!-- ===== AI COPILOT ASSISTANT ===== -->
-  <script src="/static/js/ai-copilot.js?v={{ timestamp }}"></script>
+  <!-- ===== FLOWING MVP ASSISTANT ===== -->
+  <script src="/static/flowing-mvp/js/footer-assistant.js?v={{ timestamp }}"></script>
+  <script src="/static/flowing-mvp/js/context-detector.js?v={{ timestamp }}"></script>
 
   <!-- ===== DIAGNOSTIC SCRIPT ===== -->
   <script>

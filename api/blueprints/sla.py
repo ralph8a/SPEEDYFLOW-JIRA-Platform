@@ -30,9 +30,12 @@ def _format_minutes(minutes: int) -> str:
 
 
 def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
-    """Get SLA data from JIRA API by fetching issue and extracting SLA fields"""
+    """Get SLA data from JIRA API (database cache disabled)"""
     try:
-        # First try cached report
+        # Database cache disabled - always fetch live from JIRA API
+        # (Database should only store SLA templates, not ticket-specific state)
+        
+        # Try legacy JSON cache file (fallback only)
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         cache_file = os.path.join(base_dir, 'data', 'sla_final_report.json')
 
@@ -70,7 +73,10 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
                     remaining_time = (_format_minutes(remaining_min)
                                       if remaining_min > 0 else 'Overdue')
 
-                    logger.info(f"✅ Found cached SLA data for {issue_key}")
+                    logger.info(f"✅ Found cached SLA data for {issue_key} in JSON file")
+                    
+                    # NOTE: Database caching disabled - storing ticket-specific SLA state is incorrect
+                    
                     return {
                         'issue_key': issue_key,
                         'retrieved_at': datetime.now(UTC).isoformat(),
@@ -238,8 +244,8 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
                 logger.info(f"📋 Found secondary SLA: {sla_name} (paused: {paused}, breached: {breached})")
         
         # Now prioritize SLAs based on rules:
-        # 1. Active (non-paused) PRIMARY SLAs first
-        # 2. Paused PRIMARY SLAs
+        # 1. Active (non-paused) PRIMARY SLAs first (prefer non-breached)
+        # 2. Paused PRIMARY SLAs (still show them with paused status)
         # 3. Active (non-paused) SECONDARY SLA only if no primary exists
         # 4. Paused SECONDARY SLA as last resort
         
@@ -261,19 +267,23 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
             selected = active_primary[0]
             logger.info(f"✅ Selected active primary SLA for {issue_key}: {selected['data']['sla_name']}")
         elif paused_primary:
-            # All primary SLAs are paused, use first primary
+            # Return paused primary SLA to show paused status
             selected = paused_primary[0]
-            logger.warning(f"⏸️ All primary SLAs paused for {issue_key}, using: {selected['data']['sla_name']}")
+            logger.info(f"⏸️ Selected paused primary SLA for {issue_key}: {selected['data']['sla_name']}")
         elif active_secondary:
             # No primary SLA, use active secondary
             selected = active_secondary[0]
-            logger.warning(f"⚠️ Using active secondary SLA (Cierre Ticket) for {issue_key} - no primary SLA available")
+            logger.info(f"📌 Using active secondary SLA for {issue_key}: {selected['data']['sla_name']}")
         elif paused_secondary:
             # Last resort: paused secondary
             selected = paused_secondary[0]
-            logger.warning(f"⚠️⏸️ Using paused secondary SLA (Cierre Ticket) for {issue_key} - no other options")
+            logger.info(f"⏸️ Using paused secondary SLA for {issue_key}: {selected['data']['sla_name']}")
         
         if selected:
+            # NOTE: Database caching disabled - SLA data is already cached by JIRA API
+            # and storing ticket-specific SLA state (elapsed, remaining, breached) in DB
+            # is incorrect. The DB should only store SLA templates/definitions, not ticket state.
+            # TODO: Implement proper sla_templates table for SLA definitions only
             return selected['data']
         
         # No SLA data found
@@ -310,6 +320,7 @@ def api_issue_sla(issue_key: str):
 @log_decorator(logging.INFO)
 def api_sla_health():
     """SLA system health check"""
+    from utils.db import get_db
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cache_file = os.path.join(base_dir, 'data', 'sla_final_report.json')
     
@@ -324,9 +335,59 @@ def api_sla_health():
         except (IOError, json.JSONDecodeError):
             pass
     
+    # Check database cache
+    conn = get_db()
+    db_count = conn.execute("SELECT COUNT(*) as count FROM slas").fetchone()['count']
+    db_breached = conn.execute("SELECT COUNT(*) as count FROM slas WHERE breached = 1 AND expires_at > datetime('now')").fetchone()['count']
+    
     return {
-        'status': 'healthy' if cache_exists else 'degraded',
+        'status': 'healthy',
         'cache_file_exists': cache_exists,
         'tickets_indexed': tickets_count,
-        'cache_file': cache_file
+        'cache_file': cache_file,
+        'database_cache': {
+            'total_slas': db_count,
+            'breached_count': db_breached,
+            'enabled': True
+        }
+    }
+
+
+@sla_bp.route('/api/sla/breached', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def api_breached_slas():
+    """Get all breached SLAs (database cache disabled - endpoint returns empty)"""
+    from flask import request
+    
+    # Database SLA caching disabled - this endpoint no longer functions
+    # TODO: Implement by fetching live from JIRA API if needed
+    service_desk_id = request.args.get('serviceDeskId', '')
+    
+    return {
+        'success': True,
+        'count': 0,
+        'breached_slas': [],
+        'service_desk_id': service_desk_id if service_desk_id else 'all',
+        'note': 'Database SLA caching disabled. Use /api/issues/{key}/sla for live data.'
+    }
+
+
+@sla_bp.route('/api/sla/cache/clear', methods=['POST'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def api_clear_sla_cache():
+    """Clear expired SLA cache entries (database cache disabled - endpoint does nothing)"""
+    
+    # Database SLA caching disabled - this endpoint no longer has any effect
+    # SLA data is always fetched live from JIRA API
+    
+    return {
+        'success': True,
+        'deleted_count': 0,
+        'message': 'Database SLA caching disabled. No cache to clear.'
     }

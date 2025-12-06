@@ -13,6 +13,7 @@ class DragTransitionVertical {
   constructor() {
     this.transitionBar = null;
     this.currentTicket = null;
+    this.currentIssueKey = null;  // Backup storage for issue key
     this.availableTransitions = [];
     this.isDragging = false;
     this.isExecutingTransition = false;
@@ -151,10 +152,11 @@ class DragTransitionVertical {
     
     console.log('🚀 Drag started:', issueKey);
     
-    // Set state
+    // Set state with backup storage
     this.isDragging = true;
     this.dragStartTime = Date.now();
     this.currentTicket = { card, issueKey };
+    this.currentIssueKey = issueKey;  // Store separately as backup
     
     // Add visual feedback
     card.classList.add('dragging');
@@ -375,6 +377,15 @@ class DragTransitionVertical {
     
     this.removeDragOverClasses();
     
+    // Store issue key before any async operations
+    const issueKey = this.currentTicket?.issueKey;
+    
+    if (!issueKey) {
+      console.error('❌ No issue key available for drop');
+      this.onDragEnd();
+      return;
+    }
+    
     // Find transition to check if it has required fields
     const transition = this.availableTransitions.find(t => t.id === transitionId);
     
@@ -382,9 +393,9 @@ class DragTransitionVertical {
       console.log('📋 Transition requires fields - showing modal');
       await this.showFieldsModal(transition);
     } else {
-      // Execute transition directly
+      // Execute transition directly with issueKey
       try {
-        await this.executeTransition(transitionId, targetStatus);
+        await this.executeTransition(transitionId, targetStatus, null, issueKey);
       } finally {
         this.onDragEnd();
       }
@@ -395,6 +406,15 @@ class DragTransitionVertical {
    * Show modal to collect required fields for transition
    */
   async showFieldsModal(transition) {
+    // Store issue key BEFORE showing modal to prevent loss
+    const issueKey = this.currentTicket?.issueKey;
+    
+    if (!issueKey) {
+      console.error('❌ No issue key available for modal');
+      this.onDragEnd();
+      return null;
+    }
+    
     return new Promise((resolve) => {
       // Create modal
       const modal = document.createElement('div');
@@ -407,7 +427,7 @@ class DragTransitionVertical {
             <p>Complete los campos requeridos para esta transición</p>
           </div>
           <form class="transition-fields-form" id="transitionFieldsForm">
-            ${this.renderTransitionFields(transition.fields)}
+            ${this.renderTransitionFields(transition.fields, transition.name)}
           </form>
           <div class="transition-fields-actions">
             <button type="button" class="btn-cancel" id="cancelFieldsBtn">Cancelar</button>
@@ -445,7 +465,8 @@ class DragTransitionVertical {
         setTimeout(() => modal.remove(), 300);
         
         try {
-          await this.executeTransition(transition.id, transition.targetStatus, formData);
+          // Pass issueKey explicitly to avoid loss after modal closes
+          await this.executeTransition(transition.id, transition.targetStatus, formData, issueKey);
         } finally {
           this.onDragEnd();
         }
@@ -458,7 +479,7 @@ class DragTransitionVertical {
   /**
    * Render form fields based on transition field requirements
    */
-  renderTransitionFields(fields) {
+  renderTransitionFields(fields, transitionName = '') {
     const fieldKeys = Object.keys(fields);
     
     return fieldKeys.map(fieldKey => {
@@ -473,7 +494,7 @@ class DragTransitionVertical {
             ${this.escapeHtml(fieldName)}
             ${isRequired ? '<span class="required">*</span>' : ''}
           </label>
-          ${this.renderFieldInput(fieldKey, field, fieldType)}
+          ${this.renderFieldInput(fieldKey, field, fieldType, transitionName)}
         </div>
       `;
     }).join('');
@@ -482,20 +503,46 @@ class DragTransitionVertical {
   /**
    * Render appropriate input for field type
    */
-  renderFieldInput(fieldKey, field, fieldType) {
+  renderFieldInput(fieldKey, field, fieldType, transitionName = '') {
     const placeholder = field.required ? 'Campo requerido' : 'Opcional';
+    const fieldName = field.name || fieldKey;
     
-    // Text area for longer fields
-    if (fieldKey.toLowerCase().includes('comment') || 
-        fieldKey.toLowerCase().includes('descripcion') ||
-        fieldKey.toLowerCase().includes('description')) {
+    // Get solution template based on transition name
+    const template = this.getSolutionTemplate(transitionName, fieldName);
+    
+    // Check if this is a textarea field (not a select with allowedValues)
+    const isTextArea = !field.allowedValues || field.allowedValues.length === 0;
+    
+    // Text area for ALL non-select fields (hacer todos los campos grandes)
+    if (isTextArea && fieldType !== 'number' && fieldType !== 'boolean') {
+      const hasTemplate = template !== '';
+      const rows = hasTemplate ? 12 : 8;  // More rows for template
+      
       return `
-        <textarea 
-          id="field_${fieldKey}" 
-          name="${fieldKey}"
-          placeholder="${placeholder}"
-          rows="4"
-          ${field.required ? 'required' : ''}></textarea>
+        <div class="field-input-container">
+          <textarea 
+            id="field_${fieldKey}" 
+            name="${fieldKey}"
+            placeholder="${placeholder}"
+            rows="${rows}"
+            ${field.required ? 'required' : ''}>${template}</textarea>
+          ${hasTemplate ? `
+            <div class="field-hint">
+              💡 Plantilla precargada - edita según necesites
+            </div>
+            <div class="field-checkbox">
+              <label>
+                <input 
+                  type="checkbox" 
+                  id="comment_${fieldKey}" 
+                  name="comment_${fieldKey}"
+                  checked
+                />
+                <span>📝 Agregar también como comentario público</span>
+              </label>
+            </div>
+          ` : ''}
+        </div>
       `;
     }
     
@@ -511,16 +558,63 @@ class DragTransitionVertical {
       `;
     }
     
-    // Default: text input
+    // Default: text input (larger)
     return `
       <input 
         type="text" 
         id="field_${fieldKey}" 
         name="${fieldKey}"
         placeholder="${placeholder}"
+        style="min-height: 45px; padding: 12px;"
         ${field.required ? 'required' : ''}
       />
     `;
+  }
+  
+  /**
+   * Get solution template based on transition name and field name
+   */
+  getSolutionTemplate(transitionName = '', fieldName = '') {
+    const transitionLower = transitionName.toLowerCase();
+    const fieldLower = fieldName.toLowerCase();
+    
+    // Plantilla SOLO para campo "Adjunto" en transiciones de resolver/validación
+    if ((transitionLower.includes('resolver') || 
+         transitionLower.includes('validaci') || 
+         transitionLower.includes('soluci') ||
+         transitionLower.includes('solution')) &&
+        fieldLower.includes('adjunt')) {
+      return `📋 DETALLES DE LA SOLUCIÓN
+
+🔍 Problema Identificado:
+[Describe brevemente el problema que se encontró]
+
+✅ Solución Aplicada:
+[Explica qué se hizo para resolver el problema]
+
+🛠️ Acciones Realizadas:
+1. [Primera acción]
+2. [Segunda acción]
+3. [Tercera acción]
+
+✓ Resultado:
+[Confirma que el problema está resuelto]
+
+📝 Notas Adicionales:
+[Cualquier información relevante para el cliente o equipo]`;
+    }
+    
+    // Plantilla sencilla para "Acciones de Seguimiento"
+    if ((transitionLower.includes('resolver') || 
+         transitionLower.includes('validaci') || 
+         transitionLower.includes('soluci')) &&
+        (fieldLower.includes('seguimiento') || fieldLower.includes('acciones'))) {
+      return `✅ Solución aplicada
+🔧 Acciones: [describe brevemente]
+📌 Estado: [resuelto/validado]`;
+    }
+    
+    return '';
   }
   
   /**
@@ -528,26 +622,42 @@ class DragTransitionVertical {
    */
   collectFormData(modal) {
     const form = modal.querySelector('#transitionFieldsForm');
-    const formData = new FormData(form);
     const fields = {};
+    const comments = {}; // Track which fields should also be comments
     
-    for (const [key, value] of formData.entries()) {
-      if (value) {
-        fields[key] = value;
+    console.log('📋 Collecting form data...');
+    
+    // Get all textarea values
+    form.querySelectorAll('textarea, input[type="text"], select').forEach(input => {
+      const fieldKey = input.name;
+      if (fieldKey && input.value) {
+        fields[fieldKey] = input.value;
+        console.log(`  ✓ Field: ${fieldKey} = ${input.value.substring(0, 50)}...`);
       }
-    }
+    });
     
-    return fields;
+    // Get all comment checkboxes
+    form.querySelectorAll('input[type="checkbox"][id^="comment_"]').forEach(checkbox => {
+      if (checkbox.checked) {
+        const fieldKey = checkbox.name.replace('comment_', '');
+        comments[fieldKey] = true;
+        console.log(`  💬 Will post comment for: ${fieldKey}`);
+      }
+    });
+    
+    console.log('📦 Form data collected:', { fields: Object.keys(fields), comments: Object.keys(comments) });
+    
+    return { fields, comments };
   }
   
   /**
    * Execute transition via API
    */
-  async executeTransition(transitionId, targetStatus, fields = null) {
+  async executeTransition(transitionId, targetStatus, formData = null, explicitIssueKey = null) {
     this.isExecutingTransition = true;
     
-    // Store issue key before any async operations
-    const issueKey = this.currentTicket?.issueKey;
+    // Try multiple sources for issue key (in order of preference)
+    const issueKey = explicitIssueKey || this.currentTicket?.issueKey || this.currentIssueKey;
     
     if (!issueKey) {
       console.error('❌ No issue key available for transition');
@@ -555,10 +665,27 @@ class DragTransitionVertical {
       return;
     }
     
+    // Extract fields and comments from formData
+    let fields = {};
+    let comments = {};
+    
+    if (formData && typeof formData === 'object') {
+      // If formData has .fields property, use it (new format with comments)
+      if (formData.fields) {
+        fields = formData.fields;
+        comments = formData.comments || {};
+      } else {
+        // Fallback: formData is the fields object directly (old format)
+        fields = formData;
+      }
+    }
+    
     console.log('🚀 Executing transition:', { 
       issueKey,
       transitionId, 
-      targetStatus 
+      targetStatus,
+      fields,
+      comments
     });
     
     try {
@@ -570,7 +697,7 @@ class DragTransitionVertical {
       };
       
       // Add fields if provided
-      if (fields && Object.keys(fields).length > 0) {
+      if (Object.keys(fields).length > 0) {
         body.fields = fields;
       }
       
@@ -588,6 +715,20 @@ class DragTransitionVertical {
       }
       
       console.log('✅ Transition successful');
+      
+      // Post comments for fields that have the checkbox checked
+      if (comments && Object.keys(comments).length > 0) {
+        for (const [fieldKey, shouldComment] of Object.entries(comments)) {
+          if (shouldComment && fields[fieldKey]) {
+            try {
+              await this.postFieldAsComment(issueKey, fields[fieldKey]);
+              console.log(`✅ Comment posted for field: ${fieldKey}`);
+            } catch (commentError) {
+              console.error(`⚠️ Failed to post comment for ${fieldKey}:`, commentError);
+            }
+          }
+        }
+      }
       
       // Show success notification
       this.showNotification(`✅ ${issueKey} → ${targetStatus}`, 'success');
@@ -797,6 +938,7 @@ class DragTransitionVertical {
   clearCurrentTicket() {
     setTimeout(() => {
       this.currentTicket = null;
+      this.currentIssueKey = null;  // Clear backup too
       this.availableTransitions = [];
     }, 500);
   }
@@ -883,6 +1025,34 @@ class DragTransitionVertical {
     }
     
     return '🔄'; // Default icon
+  }
+  
+  /**
+   * Post field content as a public comment
+   */
+  async postFieldAsComment(issueKey, commentBody) {
+    try {
+      const response = await fetch(`/api/issues/${issueKey}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          body: commentBody,
+          public: true
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to post comment: ${response.status}`);
+      }
+      
+      console.log('💬 Comment posted successfully');
+      return await response.json();
+    } catch (error) {
+      console.error('❌ Error posting comment:', error);
+      throw error;
+    }
   }
   
   /**
