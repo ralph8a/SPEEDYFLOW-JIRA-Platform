@@ -79,6 +79,27 @@ class MLPreloader {
         
         console.log('🌍 ML_CACHE_INDICATOR exposed globally:', window.ML_CACHE_INDICATOR);
         console.log('💡 Other components can now use: window.ML_CACHE_INDICATOR.getTickets()');
+        
+        // Enable auto-refresh in background
+        this.enableAutoRefresh();
+    }
+
+    /**
+     * Enable background auto-refresh
+     */
+    async enableAutoRefresh() {
+        try {
+            const response = await fetch('/api/ml/preload/auto-refresh', {
+                method: 'POST'
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log(`🔄 Auto-refresh enabled (every ${result.interval_seconds}s)`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Could not enable auto-refresh:', error);
+        }
     }
 
     /**
