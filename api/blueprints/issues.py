@@ -92,7 +92,22 @@ def api_get_issues_by_queue(queue_id):
             logger.info(f"   customfield_10141: {first_record.get('customfield_10141')}")
             logger.info(f"   customfield_10142: {first_record.get('customfield_10142')}")
             logger.info(f"   customfield_10143: {first_record.get('customfield_10143')}")
-    return {'data': records, 'count': len(records)}
+    
+    # Apply pagination (slice records)
+    total_records = len(records)
+    paginated_records = records[offset:offset + limit]
+    has_more = (offset + limit) < total_records
+    
+    logger.info(f"📄 Pagination: offset={offset}, limit={limit}, total={total_records}, returned={len(paginated_records)}, hasMore={has_more}")
+    
+    return {
+        'data': paginated_records,
+        'count': len(paginated_records),
+        'total': total_records,
+        'hasMore': has_more,
+        'offset': offset,
+        'limit': limit
+    }
 
 
 def _inject_sla_stub(issue: dict) -> dict:

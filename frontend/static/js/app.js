@@ -616,13 +616,92 @@ async function loadQueues(queues) {
   }
 }
 
-async function loadIssues(queueId) {
+/**
+ * Load a specific page of issues from the server
+ * Used by "Load More" button to append additional pages
+ */
+async function loadIssuesPage(queueId, page, pageSize = 100) {
+  if (!queueId) return;
+  
+  console.log(`📦 Loading page ${page} for queue ${queueId}...`);
+  
+  try {
+    const offset = (page - 1) * pageSize;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    
+    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}&limit=${pageSize}&offset=${offset}`, {
+      headers: {
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeoutId));
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const json = await response.json();
+    const newIssues = json.data || [];
+    
+    console.log(`✅ Loaded ${newIssues.length} issues from page ${page}`);
+    
+    // Append to existing issues
+    const serverPagination = state.pagination[queueId];
+    if (serverPagination) {
+      serverPagination.allIssuesLoaded = [...serverPagination.allIssuesLoaded, ...newIssues];
+      serverPagination.currentPage = page;
+      serverPagination.hasMore = newIssues.length >= pageSize;
+      
+      // Update state.issues with all loaded issues
+      state.issues = serverPagination.allIssuesLoaded;
+      state.filteredIssues = state.issues;
+      
+      // Update global cache
+      window.app = window.app || {};
+      window.app.currentIssues = state.issues;
+      
+      // Cache full issue data by key
+      window.app.issuesCache = window.app.issuesCache || new Map();
+      newIssues.forEach(issue => {
+        if (issue.key) {
+          window.app.issuesCache.set(issue.key, issue);
+        }
+      });
+      
+      console.log(`💾 Total issues loaded: ${serverPagination.allIssuesLoaded.length}`);
+    }
+    
+    return newIssues;
+  } catch (error) {
+    console.error(`❌ Failed to load page ${page}:`, error);
+    throw error;
+  }
+}
+
+async function loadIssues(queueId, page = 1, pageSize = 100) {
   if (!queueId) return;
   const statusEl = document.getElementById('filterStatus');
   if (statusEl) {
-    statusEl.textContent = 'Loading issues...';
+    statusEl.textContent = page === 1 ? 'Loading issues...' : `Loading page ${page}...`;
     statusEl.classList.remove('status-success');
     statusEl.classList.add('status-info');
+  }
+  
+  // Initialize pagination state if first page
+  if (page === 1) {
+    if (!state.pagination) {
+      state.pagination = {};
+    }
+    state.pagination[queueId] = {
+      currentPage: 1,
+      pageSize: pageSize,
+      totalPages: 0,
+      totalIssues: 0,
+      hasMore: true,
+      allIssuesLoaded: []
+    };
   }
 
   try {
@@ -634,7 +713,16 @@ async function loadIssues(queueId) {
       console.log(`💾 Using cached issues (${cached.length} tickets)`);
       
       // Process cached data immediately
-      const allIssues = cached;
+      let allIssues = cached;
+      
+      // Check if this is paginated data
+      if (page > 1 && state.pagination && state.pagination[queueId]) {
+        // Append to existing issues
+        allIssues = [...state.pagination[queueId].allIssuesLoaded, ...allIssues];
+        state.pagination[queueId].allIssuesLoaded = allIssues;
+        state.pagination[queueId].currentPage = page;
+      }
+      
       window.app = window.app || {};
       window.app.currentIssues = allIssues;
       
@@ -721,11 +809,12 @@ async function loadIssues(queueId) {
       window.loadingDotsManager.show('Loading tickets');
     }
     
-    console.log('📡 Fetching issues for queue:', queueId);
+    console.log(`📡 Fetching issues for queue: ${queueId}, page: ${page}, limit: ${pageSize}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
     
-    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}`, {
+    const offset = (page - 1) * pageSize;
+    const response = await fetch(`/api/issues/${queueId}?desk_id=${state.currentDesk}&limit=${pageSize}&offset=${offset}`, {
       headers: {
         'Accept-Encoding': 'gzip, deflate, br',
         'Accept': 'application/json'
@@ -888,6 +977,20 @@ async function loadIssues(queueId) {
     }
     
     console.log(`✅ Issues loaded: ${state.issues.length}/${allIssues.length}`);
+    
+    // Update pagination state with response metadata
+    if (json.hasOwnProperty('hasMore')) {
+      if (state.pagination && state.pagination[queueId]) {
+        state.pagination[queueId].hasMore = json.hasMore !== false;
+        state.pagination[queueId].totalIssues = json.total || allIssues.length;
+      }
+    } else {
+      // Determine if there might be more based on page size
+      if (state.pagination && state.pagination[queueId]) {
+        const pageSize = state.pagination[queueId].pageSize;
+        state.pagination[queueId].hasMore = allIssues.length >= pageSize;
+      }
+    }
     
     // Reset SLA tracking when loading new queue
     if (state.listView) {
@@ -2193,12 +2296,18 @@ function renderList() {
     console.log(`🎯 Progressive list: Rendering ${INITIAL_LIST_RENDER}/${pageIssues.length} rows immediately (~${Math.round((INITIAL_LIST_RENDER/pageIssues.length)*100)}%)`);
   }
   
+  // Check if server has more pages available
+  const serverPagination = state.pagination && state.pagination[state.currentQueue];
+  const hasMoreServerPages = serverPagination && serverPagination.hasMore;
+  const loadedFromServer = serverPagination ? serverPagination.allIssuesLoaded.length : totalIssues;
+  
   let html = `
     <div class="list-container">
       <!-- Header with search and controls -->
       <div class="list-header">
         <div class="list-stats">
-          <span class="stat-badge">📊 ${totalIssues} tickets</span>
+          <span class="stat-badge">📊 ${totalIssues} tickets loaded</span>
+          ${hasMoreServerPages ? `<span class="stat-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">📦 More available</span>` : ''}
           ${state.listView.searchTerm ? `<span class="stat-badge">🔍 Filtered</span>` : ''}
           <span class="stat-badge">📄 Page ${state.listView.currentPage}/${totalPages}</span>
           <label class="assignee-edit-toggle" title="Enable assignee editing">
@@ -2331,7 +2440,7 @@ function renderList() {
           ⬅️ Previous
         </button>
         <span class="pagination-info">
-          Showing ${startIdx + 1}-${endIdx} of ${totalIssues}
+          Showing ${startIdx + 1}-${endIdx} of ${totalIssues} loaded
         </span>
         <button 
           class="pagination-btn" 
@@ -2341,6 +2450,22 @@ function renderList() {
           Next ➡️
         </button>
       </div>
+      
+      <!-- Load More from Server -->
+      ${hasMoreServerPages ? `
+        <div class="load-more-container" style="text-align: center; padding: 20px;">
+          <button 
+            class="load-more-btn" 
+            id="loadMoreServerBtn"
+            style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;"
+          >
+            📦 Load More Tickets (100 more)
+          </button>
+          <p style="margin-top: 8px; color: #64748b; font-size: 13px;">
+            ${loadedFromServer} tickets loaded from server
+          </p>
+        </div>
+      ` : ''}
     </div>
   `;
   
@@ -2522,6 +2647,35 @@ function attachListEventListeners() {
         const endIdx = startIdx + state.listView.pageSize;
         const pageIssues = state.issues.slice(startIdx, endIdx);
         loadSLAForListView(pageIssues);
+      }
+    });
+  }
+  
+  // Load More from Server button
+  const loadMoreBtn = document.getElementById('loadMoreServerBtn');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', async () => {
+      const serverPagination = state.pagination[state.currentQueue];
+      if (!serverPagination || !serverPagination.hasMore) return;
+      
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = '⏳ Loading...';
+      
+      try {
+        const nextPage = serverPagination.currentPage + 1;
+        console.log(`📦 Loading page ${nextPage} from server...`);
+        
+        // Load next page and append to current issues
+        await loadIssuesPage(state.currentQueue, nextPage);
+        
+        // Render updated view
+        renderList();
+      } catch (error) {
+        console.error('❌ Failed to load more tickets:', error);
+        showNotification('Failed to load more tickets', 'error');
+      } finally {
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.textContent = '📦 Load More Tickets (100 more)';
       }
     });
   }
