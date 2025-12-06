@@ -42,6 +42,9 @@ from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
 from api.blueprints.sync import sync_bp  # noqa: E402
 from api.blueprints.sla import sla_bp  # noqa: E402
 from api.blueprints.copilot import copilot_bp  # noqa: E402
+from api.blueprints.reports import reports_bp  # noqa: E402
+from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
+from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -84,6 +87,22 @@ app = Flask(
 init_db()
 CORS(app)
 
+# Enable gzip compression for all responses (reduces payload by 70-90%)
+app.config['COMPRESS_MIMETYPES'] = [
+    'text/html', 'text/css', 'text/xml', 'text/plain',
+    'application/json', 'application/javascript', 'application/xml'
+]
+app.config['COMPRESS_LEVEL'] = 6  # Compression level 1-9 (6 is good balance)
+app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
+
+try:
+    from flask_compress import Compress
+    Compress(app)
+    logger.info('✓ Gzip compression enabled (reduces payload by 70-90%)')
+except ImportError:
+    logger.warning('⚠️ flask-compress not installed, compression disabled. Install: pip install flask-compress')
+    pass
+
 # Register active blueprints
 app.register_blueprint(issues_bp)
 app.register_blueprint(comments_v2_bp)
@@ -100,6 +119,9 @@ app.register_blueprint(kanban_bp)
 app.register_blueprint(ai_suggestions_bp)
 app.register_blueprint(sla_bp)
 app.register_blueprint(copilot_bp)
+app.register_blueprint(reports_bp)
+app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & duplicates
+app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
@@ -299,71 +321,145 @@ def api_get_user():
 def api_get_users():
     """
     Get list of users for mentions system.
+    Uses database cache (24h TTL) + fallback to JIRA APIs.
     
     Query Parameters:
         - query: Optional search query to filter users
-        - maxResults: Maximum results to return (default: 50)
+        - serviceDeskId: Optional Service Desk ID for participants
+        - forceRefresh: Force refresh from JIRA APIs (default: false)
     
     Returns:
         {
             "success": true,
-            "users": [
-                {
-                    "accountId": "...",
-                    "displayName": "John Doe",
-                    "emailAddress": "john@example.com",
-                    "avatarUrl": "...",
-                    "username": "john.doe"
-                }
-            ],
-            "count": 10
+            "users": [...],
+            "count": 10,
+            "cached": true/false
         }
     """
     from core.api import get_api_client
+    from utils.db import get_users_from_db, upsert_users
     
     query = request.args.get('query', '')
-    max_results = int(request.args.get('maxResults', 50))
+    service_desk_id = request.args.get('serviceDeskId', '')
+    force_refresh = request.args.get('forceRefresh', 'false').lower() == 'true'
+    
+    # Try to get from database cache first (unless force refresh)
+    if not force_refresh:
+        try:
+            cached_users = get_users_from_db(service_desk_id=service_desk_id, query=query, max_age_hours=24)
+            if cached_users:
+                logger.info(f"✅ Returning {len(cached_users)} users from database cache")
+                return {
+                    'success': True,
+                    'users': cached_users,
+                    'count': len(cached_users),
+                    'cached': True,
+                    'timestamp': datetime.now().isoformat()
+                }
+            logger.info("📋 No valid cache found, fetching from JIRA APIs...")
+        except Exception as e:
+            logger.warning(f"Database cache error: {e}, fetching from JIRA APIs...")
+    else:
+        logger.info("🔄 Force refresh requested, fetching from JIRA APIs...")
     
     client = get_api_client()
+    users_dict = {}  # Use dict to deduplicate by accountId
     
     try:
-        # Use JIRA Platform API v3 user search
-        url = f"{client.site}/rest/api/3/user/search"
-        params = {
-            'maxResults': max_results
-        }
-        
-        if query:
-            params['query'] = query
-        
+        # Fetch from both APIs in parallel
+        platform_users = []
+        sd_users = []
         from core.api import _make_request
-        response = _make_request('GET', url, client.headers, params=params)
         
-        users = []
-        if response and isinstance(response, list):
-            for user in response:
-                account_id = user.get('accountId', '')
-                if account_id:
-                    display_name = user.get('displayName', '')
-                    # Build username from available fields
-                    username = (
-                        user.get('name', '') or
-                        user.get('key', '') or
-                        display_name.lower().replace(' ', '.')
-                    )
-                    
-                    users.append({
+        # Strategy 1: Platform API v3 user search
+        try:
+            url = f"{client.site}/rest/api/3/user/search"
+            params = {
+                'maxResults': 1000,  # Obtener todos los usuarios
+                'query': query if query else ''
+            }
+            
+            response = _make_request('GET', url, client.headers, params=params)
+            
+            if response and isinstance(response, list):
+                platform_users = response
+                logger.info(f"📋 Platform API returned {len(platform_users)} users")
+        except Exception as e:
+            logger.warning(f"Platform API user search failed: {e}")
+        
+        # Strategy 2: Service Desk participants
+        if service_desk_id:
+            try:
+                sd_url = f"{client.site}/rest/servicedeskapi/servicedesk/{service_desk_id}/participants"
+                sd_response = _make_request('GET', sd_url, client.headers, params={'start': 0, 'limit': 1000})
+                
+                if sd_response and 'values' in sd_response:
+                    sd_users = sd_response.get('values', [])
+                    logger.info(f"📋 Service Desk API returned {len(sd_users)} participants")
+            except Exception as e:
+                logger.warning(f"Service Desk API failed: {e}")
+        
+        # Combine both results
+        for user in platform_users:
+            account_id = user.get('accountId', '')
+            if account_id:
+                display_name = user.get('displayName', '')
+                users_dict[account_id] = {
+                    'accountId': account_id,
+                    'displayName': display_name,
+                    'emailAddress': user.get('emailAddress', ''),
+                    'avatarUrl': user.get('avatarUrls', {}).get('48x48', ''),
+                    'username': user.get('name', '') or display_name.lower().replace(' ', '.'),
+                    'source': 'platform'
+                }
+        
+        for user in sd_users:
+            account_id = user.get('accountId', '')
+            if account_id:
+                display_name = user.get('displayName', '')
+                if account_id in users_dict:
+                    users_dict[account_id]['source'] = 'both'
+                else:
+                    users_dict[account_id] = {
                         'accountId': account_id,
                         'displayName': display_name,
                         'emailAddress': user.get('emailAddress', ''),
                         'avatarUrl': user.get('avatarUrls', {}).get('48x48', ''),
-                        'username': username
-                    })
+                        'username': user.get('name', '') or display_name.lower().replace(' ', '.'),
+                        'source': 'servicedesk'
+                    }
+        
+        logger.info(f"✅ Combined total: {len(users_dict)} unique users")
+        users = list(users_dict.values())
+        
+        # Save to database
+        try:
+            from utils.db import upsert_users
+            saved_count = upsert_users(users, service_desk_id=service_desk_id)
+            logger.info(f"💾 Saved {saved_count} users to database")
+        except Exception as e:
+            logger.warning(f"Failed to save users to database: {e}")
+        
+        # Apply query filter if provided
+        if query:
+            query_lower = query.lower()
+            users = [
+                u for u in users
+                if query_lower in u['displayName'].lower() or 
+                   query_lower in u.get('emailAddress', '').lower() or
+                   query_lower in u.get('username', '').lower()
+            ]
+        
+        # Sort by displayName
+        users.sort(key=lambda u: u['displayName'].lower())
+        
+        logger.info(f"✅ Returning {len(users)} users for mentions")
         
         return {
             'success': True,
             'users': users,
             'count': len(users),
+            'cached': False,
             'timestamp': datetime.now().isoformat()
         }
         
@@ -375,6 +471,48 @@ def api_get_users():
             'users': [],
             'count': 0
         }, 500
+
+@app.route('/api/users/refresh', methods=['POST'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def api_refresh_users():
+    """Force refresh users from JIRA APIs and update database."""
+    service_desk_id = request.args.get('serviceDeskId', '')
+    
+    # Force refresh by calling the main endpoint with forceRefresh
+    from flask import make_response
+    request.args = request.args.copy()
+    request.args['forceRefresh'] = 'true'
+    
+    result = api_get_users()
+    
+    return {
+        'success': True,
+        'message': 'Users refreshed successfully',
+        'result': result
+    }
+
+
+@app.route('/api/users/cleanup', methods=['POST'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def api_cleanup_users():
+    """Clean up old users from database (older than 30 days)."""
+    from utils.db import clear_old_users
+    
+    days = int(request.args.get('days', 30))
+    deleted_count = clear_old_users(days=days)
+    
+    return {
+        'success': True,
+        'deleted': deleted_count,
+        'message': f'Deleted {deleted_count} users older than {days} days'
+    }
+
 
 @app.route('/api/projects', methods=['GET'])
 @handle_api_error

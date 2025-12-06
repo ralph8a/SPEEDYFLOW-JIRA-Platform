@@ -778,6 +778,35 @@
   background: #4b5563;
 }
 
+.dark-theme .triage-issue-key,
+.dark-theme .filter-count {
+  color: #a5b4fc;
+}
+
+.dark-theme .triage-badge,
+.dark-theme .filter-active-badge {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.dark-theme .triage-issue-assignee,
+.dark-theme .filter-description {
+  color: #9ca3af;
+}
+
+.dark-theme .quick-triage-subtitle {
+  color: #9ca3af;
+}
+
+.dark-theme .triage-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.dark-theme .triage-btn-primary:hover {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+}
+
 /* ============================================
    LIGHT THEME - ML ANALYSIS
    ============================================ */

@@ -287,6 +287,45 @@ class NotificationsPanel {
     }
 
     container.innerHTML = html;
+    
+    // Attach click handlers to notification cards
+    this.attachNotificationClickHandlers(container);
+  }
+  
+  /**
+   * Attach click handlers to notification cards
+   */
+  attachNotificationClickHandlers(container) {
+    const cards = container.querySelectorAll('.notif-card[data-issue-key]');
+    console.log(`🖱️ Attaching click handlers to ${cards.length} notification cards`);
+    
+    cards.forEach(card => {
+      const issueKey = card.getAttribute('data-issue-key');
+      const notifId = card.getAttribute('data-notif-id');
+      
+      if (!issueKey) return;
+      
+      card.style.cursor = 'pointer';
+      
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log(`📍 Notification clicked: ${issueKey}`);
+        
+        // Open issue details in right sidebar
+        if (window.openIssueDetails) {
+          console.log(`🔍 Opening issue details for: ${issueKey}`);
+          window.openIssueDetails(issueKey);
+          this.closePanel();
+        } else {
+          console.warn('⚠️ window.openIssueDetails not available');
+        }
+        
+        // Mark as read
+        if (notifId) {
+          this.markAsRead(notifId);
+        }
+      });
+    });
   }
 
   /**
@@ -324,18 +363,32 @@ class NotificationsPanel {
     const icon = this.getIcon(notif.type || notif.action);
     const time = this.formatTime(notif.created_at || notif.timestamp);
     const isUnread = !notif.read;
+    const issueKey = notif.issue_key || notif.key;
+    
+    // Build clear message
+    const message = this.buildClearMessage(notif);
     
     const card = `
-      <div class="notif-card ${isUnread ? 'unread' : ''}" onclick="window.notificationsPanel.markAsRead('${notif.id}')">
+      <div class="notif-card ${isUnread ? 'unread' : ''}" 
+           data-issue-key="${issueKey || ''}"
+           data-notif-id="${notif.id}">
         <div style="display: flex; gap: 12px; align-items: start;">
-          <div style="font-size: 24px; flex-shrink: 0;">${icon}</div>
+          <div class="notif-icon" style="font-size: 28px; flex-shrink: 0;">${icon}</div>
           <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 14px; color: ${isUnread ? '#e0e7ff' : '#94a3b8'}; margin-bottom: 4px;">
-              ${notif.message || this.buildMessage(notif)}
+            <div class="notif-message" style="font-size: 14px; font-weight: 500; color: ${isUnread ? '#1e293b' : '#64748b'}; margin-bottom: 6px; line-height: 1.4;">
+              ${message}
             </div>
-            <div style="font-size: 12px; color: #64748b;">${time}</div>
+            ${issueKey ? `
+              <div class="notif-issue-key" style="display: inline-block; padding: 2px 8px; background: rgba(99, 102, 241, 0.1); color: #6366f1; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: monospace; margin-bottom: 6px;">
+                ${issueKey}
+              </div>
+            ` : ''}
+            <div class="notif-time" style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
+              <span>🕐 ${time}</span>
+              ${issueKey ? '<span style="color: #3b82f6; cursor: pointer; font-weight: 600;">→ View Details</span>' : ''}
+            </div>
           </div>
-          ${isUnread ? '<div style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; flex-shrink: 0; margin-top: 6px;"></div>' : ''}
+          ${isUnread ? '<div class="notif-unread-dot" style="width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; flex-shrink: 0; margin-top: 8px; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);"></div>' : ''}
         </div>
       </div>
     `;
@@ -344,17 +397,56 @@ class NotificationsPanel {
   }
 
   /**
-   * Build notification message
+   * Build clear notification message
    */
-  buildMessage(notif) {
-    const user = notif.user || 'Someone';
-    const action = notif.action || 'updated';
-    const key = notif.issue_key || '';
+  buildClearMessage(notif) {
+    const user = notif.user || notif.actor || 'Someone';
+    const action = notif.action || notif.type || 'updated';
+    const summary = notif.summary || notif.title || '';
     
-    let msg = `<strong>${user}</strong> ${action}`;
-    if (key) msg += ` <span style="color: #3b82f6;">${key}</span>`;
+    // Action verb mapping for clarity
+    const actionMap = {
+      'mention': 'mentioned you in',
+      'mentioned': 'mentioned you in',
+      'comment': 'commented on',
+      'commented': 'commented on',
+      'assignment': 'assigned you to',
+      'assigned': 'assigned you to',
+      'status': 'changed the status of',
+      'update': 'updated',
+      'updated': 'updated',
+      'priority': 'changed the priority of',
+      'new': 'created',
+      'created': 'created',
+      'resolved': 'resolved',
+      'closed': 'closed'
+    };
+    
+    const verb = actionMap[action.toLowerCase()] || action;
+    
+    let msg = `<strong style="color: #1e293b;">${user}</strong> ${verb}`;
+    
+    // Add ticket summary if available
+    if (summary) {
+      msg += ` <span style="color: #64748b; font-style: italic;">"${this.truncate(summary, 50)}"</span>`;
+    }
     
     return msg;
+  }
+  
+  /**
+   * Build notification message (legacy fallback)
+   */
+  buildMessage(notif) {
+    return this.buildClearMessage(notif);
+  }
+  
+  /**
+   * Truncate text with ellipsis
+   */
+  truncate(text, maxLength) {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 
   /**

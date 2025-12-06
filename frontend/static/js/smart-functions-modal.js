@@ -668,19 +668,41 @@
       // Handle ML Analysis button
       const mlAnalysisBtn = container.querySelector('#runMLAnalysisBtn');
       if (mlAnalysisBtn) {
-        mlAnalysisBtn.addEventListener('click', function() {
+        mlAnalysisBtn.addEventListener('click', async function() {
           console.log('🤖 Running full ML analysis...');
           
+          // Validate state
+          if (!window.state || !window.state.currentDesk || !window.state.currentQueue) {
+            alert('Por favor selecciona un Service Desk y una Cola primero');
+            console.error('❌ Missing desk or queue:', { 
+              desk: window.state?.currentDesk, 
+              queue: window.state?.currentQueue 
+            });
+            return;
+          }
+          
+          if (!window.state.issues || window.state.issues.length === 0) {
+            alert('No hay tickets en la cola actual para analizar');
+            console.error('❌ No issues in current queue');
+            return;
+          }
+          
           if (window.aiQueueAnalyzer) {
-            window.aiQueueAnalyzer.analyze();
-            
-            // Close modal
-            const modal = getSmartModal();
-            if (modal) {
-              modal.remove();
+            try {
+              await window.aiQueueAnalyzer.analyze();
+              
+              // Close modal
+              const modal = getSmartModal();
+              if (modal) {
+                modal.remove();
+              }
+            } catch (error) {
+              console.error('❌ Error running ML analysis:', error);
+              alert('Error al ejecutar el análisis ML. Por favor intenta de nuevo.');
             }
           } else {
-            alert('AI Analyzer not available');
+            console.error('❌ aiQueueAnalyzer not available');
+            alert('El analizador ML no está disponible. Recarga la página.');
           }
         });
       }

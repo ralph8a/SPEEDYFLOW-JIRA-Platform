@@ -18,66 +18,61 @@ class MentionSystem {
    */
   async init(textareaId) {
     const textarea = document.getElementById(textareaId);
-    if (!textarea) return;
+    if (!textarea) {
+      console.warn('⚠️ [Mentions] Textarea not found:', textareaId);
+      return;
+    }
 
+    console.log('🎯 [Mentions] Initializing for textarea:', textareaId);
+    
     // Fetch available users from API
     await this.loadUsers();
+    console.log(`✅ [Mentions] ${this.users.length} users loaded and ready`);
 
     // Setup event listeners
     textarea.addEventListener('input', (e) => this.handleInput(e, textareaId));
     textarea.addEventListener('keydown', (e) => this.handleKeydown(e));
-    textarea.addEventListener('blur', () => this.closeMentions());
+    // No blur listener - let dropdown stay open for clicking
+    
+    console.log('✅ [Mentions] Event listeners attached');
   }
 
   /**
-   * Load users from API with 7-day cache
+   * Load users from API (cached in database with 24h TTL)
    */
   async loadUsers() {
     try {
-      // Check cache first (7-day TTL)
-      const cacheKey = 'mentions_users_cache';
-      const cached = localStorage.getItem(cacheKey);
-      
-      if (cached) {
-        try {
-          const { users, timestamp } = JSON.parse(cached);
-          const age = Date.now() - timestamp;
-          const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
-          
-          if (age < maxAge) {
-            this.users = users;
-            console.log(`✅ Loaded ${this.users.length} users for mentions (from cache, ${Math.floor(age / 86400000)} days old)`);
-            return;
-          }
-        } catch (e) {
-          // Invalid cache, proceed to fetch
-          console.log('⚠️ Invalid cache, fetching fresh users');
-        }
+      // Fetch from API - backend handles caching in database
+      let apiUrl = '/api/users';
+      const currentDesk = window.state?.currentDesk;
+      if (currentDesk) {
+        apiUrl += `?serviceDeskId=${currentDesk}`;
+        console.log(`📋 Fetching users for Service Desk: ${currentDesk}`);
       }
       
-      // Fetch from API
-      const response = await fetch('/api/users');
+      const response = await fetch(apiUrl);
       const data = await response.json();
       
-      // Handle both flat array and wrapped response formats
+      // Handle multiple response formats
       if (Array.isArray(data)) {
         this.users = data;
+      } else if (data.data?.users && Array.isArray(data.data.users)) {
+        // Format: { data: { users: [...] } }
+        this.users = data.data.users;
       } else if (data.users && Array.isArray(data.users)) {
+        // Format: { users: [...] }
         this.users = data.users;
       } else if (data.data && Array.isArray(data.data)) {
+        // Format: { data: [...] }
         this.users = data.data;
       } else {
         console.warn('⚠️ Unexpected API response format:', data);
+        console.warn('Available keys:', Object.keys(data));
         this.users = [];
       }
       
-      // Save to cache
-      localStorage.setItem(cacheKey, JSON.stringify({
-        users: this.users,
-        timestamp: Date.now()
-      }));
-      
-      console.log(`✅ Loaded ${this.users.length} users for mentions (fresh from API)`);
+      const cacheStatus = data.cached ? '(from database cache)' : '(fresh from JIRA)';
+      console.log(`✅ Loaded ${this.users.length} users for mentions ${cacheStatus}`);
     } catch (error) {
       console.error('Error loading users:', error);
       this.users = [];
@@ -92,12 +87,16 @@ class MentionSystem {
     const cursorPos = textarea.selectionStart;
     const text = textarea.value.substring(0, cursorPos);
     
+    console.log('🔍 [Mentions] Input event, text:', text, '| @ index:', text.lastIndexOf('@'));
+    
     // Look for @ symbol
     const lastAtIndex = text.lastIndexOf('@');
     if (lastAtIndex === -1) {
       this.closeMentions();
       return;
     }
+    
+    console.log('✅ [Mentions] @ detected, showing dropdown...');
 
     // Get text after @
     const beforeAt = text.substring(0, lastAtIndex);
@@ -124,34 +123,66 @@ class MentionSystem {
    * Filter users by query
    */
   filterUsers(query) {
-    if (!query) return this.users.slice(0, 5); // Show first 5 if no query
+    if (!query) return this.users.slice(0, 10); // Show first 10 if no query
 
     return this.users.filter(user => {
       const name = (user.displayName || user.name || '').toLowerCase();
       const email = (user.emailAddress || '').toLowerCase();
       return name.includes(query) || email.includes(query);
-    }).slice(0, 5); // Max 5 results
+    }).slice(0, 20); // Max 20 results para mejor visibilidad
   }
 
   /**
    * Show mention suggestions dropdown
    */
   showMentions(users, textareaId) {
+    console.log('🎨 [Mentions] showMentions called with', users.length, 'users');
+    
     // Remove existing dropdown
     const existing = document.getElementById('mentions-dropdown');
-    if (existing) existing.remove();
+    if (existing) {
+      console.log('🗑️ [Mentions] Removing existing dropdown');
+      existing.remove();
+    }
 
     const textarea = document.getElementById(textareaId);
+    if (!textarea) {
+      console.error('❌ [Mentions] Textarea not found!');
+      return;
+    }
+    
     const rect = textarea.getBoundingClientRect();
+    console.log('📍 [Mentions] Textarea position:', { top: rect.top, bottom: rect.bottom, left: rect.left, width: rect.width });
+    
+    // Calculate position - fixed positioning relative to viewport
+    const dropdownTop = rect.bottom + 5;
+    const dropdownLeft = rect.left;
 
     // Create dropdown
     const dropdown = document.createElement('div');
     dropdown.id = 'mentions-dropdown';
     dropdown.className = 'mentions-dropdown';
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = (rect.bottom + 5) + 'px';
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.width = rect.width + 'px';
+    
+    // CRITICAL: Set all styles inline to override any CSS
+    dropdown.style.cssText = `
+      position: fixed !important;
+      top: ${dropdownTop}px !important;
+      left: ${dropdownLeft}px !important;
+      width: ${rect.width}px !important;
+      z-index: 9999 !important;
+      background-color: white !important;
+      border: 2px solid #4a90e2 !important;
+      border-radius: 6px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+      max-height: 300px !important;
+      overflow-y: auto !important;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      font-size: 12px !important;
+    `;
+    
+    console.log('✨ [Mentions] Dropdown created with styles:', dropdown.style.cssText);
 
     // Add users as options
     users.forEach((user, index) => {
@@ -159,23 +190,56 @@ class MentionSystem {
       option.className = 'mention-option' + (index === 0 ? ' selected' : '');
       option.dataset.userId = user.accountId || user.id;
       option.dataset.userName = user.displayName || user.name;
-      option.innerHTML = `
-        <div class="mention-avatar">👤</div>
-        <div class="mention-info">
-          <div class="mention-name">${user.displayName || user.name}</div>
-          <div class="mention-email">${user.emailAddress || ''}</div>
-        </div>
-      `;
+      
+      // Simple inline styles
+      option.style.padding = '8px 12px';
+      option.style.cursor = 'pointer';
+      option.style.fontSize = '12px';
+      option.style.color = '#333';
+      option.style.borderBottom = '1px solid #eee';
+      option.style.transition = 'background-color 0.15s';
+      option.style.backgroundColor = index === 0 ? '#f0f0f0' : 'white';
+      option.style.lineHeight = '1.4';
+      
+      // Just the name, nothing else
+      option.textContent = user.displayName || user.name;
 
-      option.addEventListener('click', () => this.selectMention(option, textareaId));
-      option.addEventListener('mouseenter', () => this.selectOption(index, dropdown));
+      // Use mousedown to prevent blur, no need for click
+      option.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.selectMention(option, textareaId);
+      });
+      
+      option.addEventListener('mouseenter', () => {
+        this.selectOption(index, dropdown);
+        option.style.backgroundColor = '#f0f0f0';
+      });
+      
+      option.addEventListener('mouseleave', () => {
+        if (!option.classList.contains('selected')) {
+          option.style.backgroundColor = 'white';
+        }
+      });
 
       dropdown.appendChild(option);
+    });
+
+    // Prevent dropdown from closing on mousedown
+    dropdown.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
     });
 
     document.body.appendChild(dropdown);
     this.isOpen = true;
     this.selectedIndex = 0;
+    
+    console.log('✅ [Mentions] Dropdown appended to body!');
+    console.log('📊 [Mentions] Dropdown in DOM:', !!document.getElementById('mentions-dropdown'));
+    console.log('📊 [Mentions] Dropdown display:', dropdown.style.display);
+    console.log('📊 [Mentions] Dropdown visibility:', dropdown.style.visibility);
+    console.log('📊 [Mentions] Dropdown z-index:', dropdown.style.zIndex);
   }
 
   /**

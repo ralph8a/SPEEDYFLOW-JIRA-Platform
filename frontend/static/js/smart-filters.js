@@ -132,14 +132,17 @@ class SmartFilters {
     console.log(`✓ Filter result: ${filteredIssues.length} / ${allIssues.length} tickets`);
 
     // Trigger re-render with filtered issues
-    if (window.renderKanbanBoard) {
+    if (typeof renderKanban === 'function') {
       // Store original issues for restoration
       if (!window.app.originalIssues) {
         window.app.originalIssues = allIssues;
       }
       
+      // Store filtered issues temporarily
+      window.app.filteredIssues = filteredIssues;
+      
       // Render filtered view
-      window.renderKanbanBoard(filteredIssues);
+      renderKanban();
       
       // Show filter badge
       this.showActiveFilterBadge(filter, filteredIssues.length, allIssues.length);
@@ -152,8 +155,11 @@ class SmartFilters {
   clearFilter() {
     if (window.app.originalIssues) {
       console.log('🎯 Clearing smart filter');
-      window.renderKanbanBoard(window.app.originalIssues);
       window.app.originalIssues = null;
+      window.app.filteredIssues = null;
+      if (typeof renderKanban === 'function') {
+        renderKanban();
+      }
       this.hideActiveFilterBadge();
     }
   }

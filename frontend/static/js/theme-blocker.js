@@ -64,9 +64,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.classList.add(`theme-${theme}`);
   document.documentElement.setAttribute('data-theme', theme);
   
-  document.body.classList.remove('theme-light', 'theme-dark');
-  document.body.classList.add(`theme-${theme}`);
-  document.body.setAttribute('data-theme', theme);
-  
-  console.log(`✓ Theme blocker applied: ${theme}`);
+  // ⚡ SAFETY CHECK: Only apply to body if it exists
+  if (document.body) {
+    document.body.classList.remove('theme-light', 'theme-dark');
+    document.body.classList.add(`theme-${theme}`);
+    document.body.setAttribute('data-theme', theme);
+    console.log(`✓ Theme blocker applied: ${theme}`);
+  } else {
+    // Body doesn't exist yet - wait for it
+    console.warn('⚠️ Body not ready, waiting...');
+    requestAnimationFrame(() => {
+      if (document.body) {
+        document.body.classList.remove('theme-light', 'theme-dark');
+        document.body.classList.add(`theme-${theme}`);
+        document.body.setAttribute('data-theme', theme);
+        console.log(`✓ Theme blocker applied (delayed): ${theme}`);
+      }
+    });
+  }
 });
