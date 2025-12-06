@@ -47,6 +47,7 @@ from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: 
 from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
 from api.blueprints.ml_priority import ml_priority_bp  # noqa: E402
 from api.blueprints.ml_dashboard import ml_dashboard_bp  # noqa: E402
+from api.blueprints.ml_preloader import ml_preloader_bp  # noqa: E402
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -126,6 +127,7 @@ app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & du
 app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
 app.register_blueprint(ml_priority_bp)  # ML Priority Engine: Smart prioritization & breach prediction
 app.register_blueprint(ml_dashboard_bp)  # ML Predictive Dashboard: Real-time analytics & forecasting
+app.register_blueprint(ml_preloader_bp)  # ML Preloader: Background data loading with compression
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
