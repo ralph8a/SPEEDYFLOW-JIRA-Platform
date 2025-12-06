@@ -43,14 +43,36 @@ def load_ml_models():
         logger.error(f"Error loading ML models: {e}")
         return {}
 
-def get_queue_tickets(queue_id: str) -> List[Dict]:
-    """Get tickets from a specific queue"""
+def get_queue_tickets(queue_id: str, desk_id: str = None) -> List[Dict]:
+    """Get tickets from a specific queue - uses cache when available"""
     try:
+        from utils.issue_cache import get_cache_manager
         from utils.api_migration import get_api_client
         from api.sla_api import enrich_tickets_with_sla
         
+        # Try to load from cache first
+        cache_manager = get_cache_manager()
+        cache_data = cache_manager._load_json(cache_manager.issues_file, {})
+        cached_issues = cache_data.get('issues', [])
+        
+        if cached_issues:
+            logger.info(f"✅ Using {len(cached_issues)} cached issues for ML dashboard")
+            # Filter by queue if queue_id is not 'all'
+            if queue_id and queue_id != 'all':
+                # Note: JIRA cache doesn't store queue_id, so we return all
+                # Frontend can filter if needed
+                filtered = cached_issues
+            else:
+                filtered = cached_issues
+            
+            # Enrich with SLA data
+            enriched = enrich_tickets_with_sla(filtered[:100])  # Limit for performance
+            return enriched
+        
+        # Fallback to API if cache is empty
+        logger.warning(f"⚠️ No cache available, fetching from API (slower)")
         client = get_api_client()
-        issues = client.get_queue_issues(queue_id)
+        issues = client.get_queue_issues(queue_id, desk_id=desk_id)
         
         # Enrich with SLA data
         enriched = enrich_tickets_with_sla(issues)
@@ -60,11 +82,33 @@ def get_queue_tickets(queue_id: str) -> List[Dict]:
         return []
 
 def get_all_active_tickets() -> List[Dict]:
-    """Get all active tickets from available service desks"""
+    """Get all active tickets - uses cache when available for instant performance"""
     try:
+        from utils.issue_cache import get_cache_manager
         from utils.api_migration import get_api_client, get_service_desks
         from api.sla_api import enrich_tickets_with_sla
         
+        # Try to load from cache first (MUCH faster)
+        cache_manager = get_cache_manager()
+        cache_data = cache_manager._load_json(cache_manager.issues_file, {})
+        cached_issues = cache_data.get('issues', [])
+        
+        if cached_issues:
+            logger.info(f"✅ ML Dashboard using {len(cached_issues)} cached issues (instant load)")
+            # Filter for active tickets only (not closed/done)
+            active_tickets = [
+                issue for issue in cached_issues
+                if issue.get('fields', {}).get('status', {}).get('name', '').lower() not in ['closed', 'done', 'resolved', 'cancelled']
+            ]
+            
+            logger.info(f"📊 Filtered to {len(active_tickets)} active tickets")
+            
+            # Enrich with SLA data (limit to 100 for performance)
+            enriched = enrich_tickets_with_sla(active_tickets[:100])
+            return enriched
+        
+        # Fallback to API if cache is empty (slower)
+        logger.warning(f"⚠️ No cache available, fetching from API (this will be slow)")
         client = get_api_client()
         all_tickets = []
         
@@ -105,10 +149,11 @@ def get_dashboard_overview():
     """
     try:
         queue_id = request.args.get('queue_id')
+        desk_id = request.args.get('desk_id')
         
         # Get tickets
         if queue_id:
-            tickets = get_queue_tickets(queue_id)
+            tickets = get_queue_tickets(queue_id, desk_id)
         else:
             tickets = get_all_active_tickets()
         
@@ -214,7 +259,8 @@ def get_predictions_analytics():
         
         # Get recent predictions (from tickets)
         queue_id = request.args.get('queue_id')
-        tickets = get_queue_tickets(queue_id) if queue_id else get_all_active_tickets()
+        desk_id = request.args.get('desk_id')
+        tickets = get_queue_tickets(queue_id, desk_id) if queue_id else get_all_active_tickets()
         
         # Calculate prediction stats
         prediction_stats = calculate_prediction_stats(tickets, models)
@@ -248,8 +294,9 @@ def get_breach_forecast():
     try:
         hours_ahead = int(request.args.get('hours', 24))
         queue_id = request.args.get('queue_id')
+        desk_id = request.args.get('desk_id')
         
-        tickets = get_queue_tickets(queue_id) if queue_id else get_all_active_tickets()
+        tickets = get_queue_tickets(queue_id, desk_id) if queue_id else get_all_active_tickets()
         
         # Return empty forecast if no tickets
         if not tickets:
@@ -338,8 +385,9 @@ def get_performance_trends():
     try:
         days = int(request.args.get('days', 7))
         queue_id = request.args.get('queue_id')
+        desk_id = request.args.get('desk_id')
         
-        tickets = get_queue_tickets(queue_id) if queue_id else get_all_active_tickets()
+        tickets = get_queue_tickets(queue_id, desk_id) if queue_id else get_all_active_tickets()
         
         # Calculate daily trends
         trends = {
@@ -401,7 +449,8 @@ def get_team_workload():
     """
     try:
         queue_id = request.args.get('queue_id')
-        tickets = get_queue_tickets(queue_id) if queue_id else get_all_active_tickets()
+        desk_id = request.args.get('desk_id')
+        tickets = get_queue_tickets(queue_id, desk_id) if queue_id else get_all_active_tickets()
         
         # Group by assignee
         workload = defaultdict(lambda: {
