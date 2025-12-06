@@ -83,7 +83,7 @@ window.state = state;
 const CacheManager = {
   TTL: 15 * 60 * 1000, // 15 minutes in milliseconds
   TRANSITIONS_TTL: 30 * 60 * 1000, // 30 minutes for transitions (rarely change)
-  LARGE_QUEUE_TTL: 3 * 60 * 60 * 1000, // 3 hours for large queues (50+ tickets)
+  LARGE_QUEUE_TTL: 3 * 24 * 60 * 60 * 1000, // 3 days for large queues (50+ tickets)
   
   /**
    * Set item in cache with timestamp
@@ -705,7 +705,7 @@ async function loadIssues(queueId, page = 1, pageSize = 100) {
   }
 
   try {
-    // Check cache first
+    // Check cache first (use extended TTL for large queues)
     const cacheKey = `issues_${state.currentDesk}_${queueId}`;
     const cached = CacheManager.get(cacheKey);
     
@@ -791,7 +791,13 @@ async function loadIssues(queueId, page = 1, pageSize = 100) {
       renderView();
       
       if (statusEl) {
-        statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''} (cached)`;
+        const isLargeQueue = state.issues.length >= 50;
+        if (isLargeQueue) {
+          statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''} (⚡ 3-day cache)`;
+          statusEl.title = 'Large queue cached for 3 days - instant loading!';
+        } else {
+          statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''} (cached)`;
+        }
         statusEl.classList.remove('status-info','status-warn');
         statusEl.classList.add('status-success');
       }
@@ -1029,8 +1035,19 @@ async function loadIssues(queueId, page = 1, pageSize = 100) {
     // Save to cache with appropriate TTL
     const cacheTTL = allIssues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
     CacheManager.set(cacheKey, allIssues, cacheTTL);
+    const ttlDays = (cacheTTL / (24 * 60 * 60 * 1000)).toFixed(1);
     const ttlHours = (cacheTTL / (60 * 60 * 1000)).toFixed(1);
-    console.log(`💾 Cached ${allIssues.length} issues (TTL: ${ttlHours}h)`);
+    
+    if (allIssues.length >= 50) {
+      console.log(`💾 🚀 Large queue cached for ${ttlDays} days! (${allIssues.length} tickets) - Instant loads for 3 days`);
+      
+      // Show notification for large queue caching
+      if (typeof showNotification === 'function') {
+        showNotification(`⚡ ${allIssues.length} tickets cached for 3 days - instant reloads!`, 'success');
+      }
+    } else {
+      console.log(`💾 Cached ${allIssues.length} issues (TTL: ${ttlHours}h)`);
+    }
     
     // Update breadcrumb
     if (window.headerMenus && window.headerMenus.syncQueueBreadcrumb) {
@@ -1071,7 +1088,13 @@ async function loadIssues(queueId, page = 1, pageSize = 100) {
       renderView();
     }
     if (statusEl) {
-      statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''}`;
+      const isLargeQueue = allIssues.length >= 50;
+      if (isLargeQueue) {
+        statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''} (⚡ cached 3 days)`;
+        statusEl.title = 'Large queue cached for 3 days - instant reloads!';
+      } else {
+        statusEl.textContent = `${state.issues.length} issue${state.issues.length!==1?'s':''}`;
+      }
       statusEl.classList.remove('status-info','status-warn');
       statusEl.classList.add('status-success');
     }
@@ -1157,8 +1180,14 @@ async function fetchIssuesBackground(queueId, cacheKey) {
       // Update cache silently with appropriate TTL
       const cacheTTL = allIssues.length >= 50 ? CacheManager.LARGE_QUEUE_TTL : CacheManager.TTL;
       CacheManager.set(cacheKey, allIssues, cacheTTL);
+      const ttlDays = (cacheTTL / (24 * 60 * 60 * 1000)).toFixed(1);
       const ttlHours = (cacheTTL / (60 * 60 * 1000)).toFixed(1);
-      console.log(`💾 Cache updated with ${allIssues.length} fresh issues (TTL: ${ttlHours}h)`);
+      
+      if (allIssues.length >= 50) {
+        console.log(`💾 ✨ Background cache refreshed: ${allIssues.length} tickets cached for ${ttlDays} days`);
+      } else {
+        console.log(`💾 Cache updated with ${allIssues.length} fresh issues (TTL: ${ttlHours}h)`);
+      }
     }
   } catch (error) {
     console.warn('⚠️ Background fetch failed:', error);
