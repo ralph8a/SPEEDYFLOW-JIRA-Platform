@@ -36,18 +36,34 @@ class MLPreloader {
         
         console.log('⚙️ ML Preloader: No cache found, starting background preload...');
         
-        // Get user's logged desk-queue from session
+        // Get user's DESK (fixed) + currently selected QUEUE (variable)
         const deskId = window.state?.currentDesk || null;
-        const queueId = window.state?.currentQueue || null;
+        const queueId = this.getCurrentQueueId();
         
         if (deskId && queueId) {
-            console.log(`🎯 Using logged user context: desk=${deskId}, queue=${queueId}`);
+            console.log(`🎯 Using: desk=${deskId} (logged user), queue=${queueId} (current selection)`);
+        } else if (deskId) {
+            console.log(`🏢 Using logged desk=${deskId}, queue will auto-detect`);
         } else {
-            console.log('🔍 No user context found, will auto-detect');
+            console.log('🔍 No user context found, will auto-detect both');
         }
         
         // Start background preload with user context
         await this.startPreload(deskId, queueId);
+    }
+
+    /**
+     * Get current queue ID from UI (variable, can be any custom queue)
+     */
+    getCurrentQueueId() {
+        // Try UI selectors first (user's current selection)
+        const queueSelect = document.getElementById('queueSelectFilter');
+        if (queueSelect && queueSelect.value) {
+            return queueSelect.value;
+        }
+        
+        // Fallback to session state
+        return window.state?.currentQueue || null;
     }
 
     /**
