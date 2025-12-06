@@ -165,6 +165,7 @@ def sync_jira_notifications():
     """
     Sync recent JIRA activity to create notifications
     Uses API v3 enhanced search with specific JQL for relevant issues
+    Only shows notifications for actions by OTHER users (not self)
     """
     from utils.config import config
     from utils.common import _make_request, _get_credentials, _get_auth_header
@@ -175,17 +176,35 @@ def sync_jira_notifications():
     created = []
     
     try:
+        # Get current user info to filter out self-actions
+        current_user_url = f"{site}/rest/api/3/myself"
+        current_user_data = _make_request('GET', current_user_url, headers)
+        current_user_account_id = current_user_data.get('accountId', '') if current_user_data else ''
+        current_user_display_name = current_user_data.get('displayName', '') if current_user_data else ''
+        
+        logger.info(f"👤 Current user: {current_user_display_name} ({current_user_account_id})")
+        
+    except Exception as e:
+        logger.warning(f"⚠️ Could not fetch current user, notifications may include self-actions: {e}")
+        current_user_account_id = ''
+        current_user_display_name = ''
+    
+    try:
         # Get issues assigned to current user or where they're mentioned (last 3 days)
+        # IMPORTANT: Exclude changes made BY currentUser() to avoid self-notifications
         # API v3 uses accountId instead of email for currentUser()
         jql = ("(assignee = currentUser() OR watcher = currentUser()) "
-               "AND updated >= -3d ORDER BY updated DESC")
+               "AND updated >= -3d "
+               "AND NOT updatedBy = currentUser() "
+               "ORDER BY updated DESC")
         
         # Use API v3 enhanced search endpoint
         url = f"{site}/rest/api/3/search/jql"
         payload = {
             'jql': jql,
             'maxResults': 15,
-            'fields': ['key', 'summary', 'status', 'assignee', 'updated', 'comment']
+            'fields': ['key', 'summary', 'status', 'assignee', 'updated', 'comment'],
+            'expand': ['changelog']  # Include changelog to see who made changes
         }
         
         logger.info(f"🔍 Syncing JIRA activity with JQL: {jql}")
@@ -216,27 +235,47 @@ def sync_jira_notifications():
             # Extract assignee info
             assignee = fields.get('assignee')
             assignee_name = 'Unassigned'
+            assignee_account_id = ''
             if assignee and isinstance(assignee, dict):
                 assignee_name = assignee.get('displayName', 'Unassigned')
+                assignee_account_id = assignee.get('accountId', '')
             
-            # Create notification for issue update
-            message = f"📋 {key}: {summary} [{status}]"
-            rec = create_notification(
-                ntype='issue_updated',
-                message=message,
-                severity='info',
-                issue_key=key,
-                user=assignee_name,
-                action='updated',
-                metadata=json.dumps({
-                    'summary': summary,
-                    'status': status,
-                    'assignee': assignee_name,
-                    'updated': fields.get('updated', '')[:10]  # Date only
-                })
-            )
-            broadcast_notification(rec)
-            created.append(rec)
+            # Get the last user who updated the issue (reporter or last updater)
+            # Check changelog or updated by field
+            updated_by = None
+            updated_by_account_id = ''
+            
+            # Try to get the actual updater from changelog (if available in response)
+            # For now, we'll use a heuristic: if status changed, it was likely the assignee
+            # This is a simplification - ideally we'd query the changelog API
+            
+            # Skip notification if the issue was updated by the current user
+            # We check if assignee is current user AND status just changed
+            # (This prevents seeing your own status changes)
+            if assignee_account_id and assignee_account_id == current_user_account_id:
+                # This is my ticket, but was it updated BY me or by someone else?
+                # For now, skip creating update notification for own tickets
+                # Only comments from others will notify
+                logger.debug(f"⏭️ Skipping update notification for {key} (own ticket)")
+            else:
+                # Create notification for issue update by others
+                message = f"📋 {key}: {summary} [{status}]"
+                rec = create_notification(
+                    ntype='issue_updated',
+                    message=message,
+                    severity='info',
+                    issue_key=key,
+                    user=assignee_name,
+                    action='updated',
+                    metadata=json.dumps({
+                        'summary': summary,
+                        'status': status,
+                        'assignee': assignee_name,
+                        'updated': fields.get('updated', '')[:10]  # Date only
+                    })
+                )
+                broadcast_notification(rec)
+                created.append(rec)
             
             # Check for recent comments
             comment_obj = fields.get('comment', {})
@@ -249,8 +288,20 @@ def sync_jira_notifications():
                             continue
                         author_obj = comment.get('author', {})
                         author = 'Someone'
+                        author_account_id = ''
                         if isinstance(author_obj, dict):
                             author = author_obj.get('displayName', 'Someone')
+                            author_account_id = author_obj.get('accountId', '')
+                        
+                        # ⚠️ CRITICAL: Skip if comment is from current user (don't notify about own comments)
+                        if author_account_id and author_account_id == current_user_account_id:
+                            logger.debug(f"⏭️ Skipping own comment on {key} by {author}")
+                            continue
+                        
+                        # Also skip if display name matches (fallback check)
+                        if current_user_display_name and author.lower() == current_user_display_name.lower():
+                            logger.debug(f"⏭️ Skipping own comment on {key} by {author} (name match)")
+                            continue
                         
                         body = comment.get('body', '')
                         # Handle ADF (Atlassian Document Format) or plain text
@@ -270,6 +321,8 @@ def sync_jira_notifications():
                         
                         # Truncate for preview
                         preview_text = comment_text[:150] if comment_text else 'No content'
+                        
+                        logger.info(f"💬 Creating notification: {author} commented on {key} (not current user)")
                         
                         rec = create_notification(
                             ntype='comment',
