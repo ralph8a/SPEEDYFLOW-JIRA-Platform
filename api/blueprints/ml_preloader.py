@@ -193,26 +193,36 @@ def preload_ml_data_background():
         
         enriched_tickets = enrich_tickets_with_sla(tickets)
         
-        # Step 5: Build ML analytics
-        preload_status['progress'] = 80
-        preload_status['message'] = 'Building ML analytics...'
+        # Step 4.5: Extract minimal fields (OPTIMIZATION)
+        preload_status['progress'] = 70
+        preload_status['message'] = 'Optimizing ticket data...'
         
         from api.blueprints.ml_dashboard import (
+            extract_minimal_ticket_fields,
             calculate_sla_metrics,
             calculate_priority_distribution,
             calculate_trends
         )
+        
+        # ⚡ Extract only minimal fields needed for ML Dashboard
+        minimal_tickets = [extract_minimal_ticket_fields(t) for t in enriched_tickets]
+        
+        logger.info(f"⚡ Optimized: Reduced tickets to minimal fields (~90% smaller)")
+        
+        # Step 5: Build ML analytics
+        preload_status['progress'] = 80
+        preload_status['message'] = 'Building ML analytics...'
         
         ml_data = {
             'desk_id': desk.get('id'),
             'desk_name': desk.get('name'),
             'queue_id': queue.get('id'),
             'queue_name': queue.get('name'),
-            'tickets': enriched_tickets,
-            'total_tickets': len(enriched_tickets),
-            'sla_metrics': calculate_sla_metrics(enriched_tickets),
-            'priority_distribution': calculate_priority_distribution(enriched_tickets),
-            'trends': calculate_trends(enriched_tickets),
+            'tickets': minimal_tickets,  # ⚡ Using minimal tickets
+            'total_tickets': len(minimal_tickets),
+            'sla_metrics': calculate_sla_metrics(minimal_tickets),
+            'priority_distribution': calculate_priority_distribution(minimal_tickets),
+            'trends': calculate_trends(minimal_tickets),
             'cached_at': datetime.now().isoformat()
         }
         
