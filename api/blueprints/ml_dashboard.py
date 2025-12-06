@@ -60,27 +60,39 @@ def get_queue_tickets(queue_id: str) -> List[Dict]:
         return []
 
 def get_all_active_tickets() -> List[Dict]:
-    """Get all active tickets from configured queues"""
+    """Get all active tickets from available service desks"""
     try:
-        from utils.config import config
-        from utils.api_migration import get_api_client
+        from utils.api_migration import get_api_client, get_service_desks
         from api.sla_api import enrich_tickets_with_sla
         
         client = get_api_client()
         all_tickets = []
         
-        # Get from configured queues
-        queues = config.queues if hasattr(config, 'queues') else []
-        for queue_id in queues:
-            try:
-                issues = client.get_queue_issues(queue_id)
-                all_tickets.extend(issues)
-            except Exception as e:
-                logger.warning(f"Could not fetch queue {queue_id}: {e}")
+        # Get tickets from all available desks/queues
+        try:
+            desks = get_service_desks()
+            for desk in desks[:3]:  # Limit to first 3 desks to avoid timeout
+                desk_id = desk.get('id')
+                queues = desk.get('queues', [])
+                for queue in queues[:2]:  # Limit to 2 queues per desk
+                    queue_id = queue.get('id')
+                    try:
+                        issues = client.get_queue_issues(queue_id, desk_id=desk_id)
+                        all_tickets.extend(issues)
+                        if len(all_tickets) >= 100:  # Max 100 tickets for dashboard
+                            break
+                    except Exception as e:
+                        logger.debug(f"Could not fetch queue {queue_id}: {e}")
+                if len(all_tickets) >= 100:
+                    break
+        except Exception as e:
+            logger.warning(f"Could not fetch desks: {e}")
         
-        # Enrich with SLA data
-        enriched = enrich_tickets_with_sla(all_tickets)
-        return enriched
+        # Enrich with SLA data (only if we have tickets)
+        if all_tickets:
+            enriched = enrich_tickets_with_sla(all_tickets[:100])  # Limit enrichment
+            return enriched
+        return []
     except Exception as e:
         logger.error(f"Error fetching all tickets: {e}")
         return []
@@ -100,11 +112,25 @@ def get_dashboard_overview():
         else:
             tickets = get_all_active_tickets()
         
+        # Return empty state if no tickets (not an error)
         if not tickets:
             return jsonify({
-                'success': False,
-                'message': 'No tickets found'
-            }), 404
+                'success': True,
+                'data': {
+                    'overview': {
+                        'total_tickets': 0,
+                        'critical_tickets': 0,
+                        'models_trained': False,
+                        'predictions_available': False,
+                        'last_updated': datetime.now().isoformat()
+                    },
+                    'sla': {'at_risk': 0, 'breached': 0, 'on_track': 0, 'paused': 0},
+                    'breach_predictions': [],
+                    'priority_distribution': {},
+                    'trends': {'daily_avg': 0, 'weekly_avg': 0, 'completion_rate': 0}
+                },
+                'message': 'No tickets in selected queue'
+            })
         
         # Load ML models to check status
         models = load_ml_models()
@@ -213,6 +239,21 @@ def get_breach_forecast():
         queue_id = request.args.get('queue_id')
         
         tickets = get_queue_tickets(queue_id) if queue_id else get_all_active_tickets()
+        
+        # Return empty forecast if no tickets
+        if not tickets:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'forecast_window_hours': hours_ahead,
+                    'predicted_breaches': 0,
+                    'at_risk_tickets': [],
+                    'recommendations': ['No active tickets to forecast'],
+                    'confidence': 0
+                },
+                'message': 'No tickets to forecast'
+            })
+        
         models = load_ml_models()
         
         if not models.get('breach'):
