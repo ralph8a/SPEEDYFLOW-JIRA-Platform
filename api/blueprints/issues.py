@@ -51,8 +51,17 @@ def api_get_issues():
 @require_credentials
 def api_get_issues_by_queue(queue_id):
     desk_id = request.args.get('desk_id')
+    limit = request.args.get('limit', type=int, default=200)  # Default: 200 tickets max
+    offset = request.args.get('offset', type=int, default=0)  # Pagination offset
+    
     if not desk_id:
         raise ValueError('desk_id parameter is required')
+    
+    # Enforce reasonable limits to prevent timeout
+    if limit > 500:
+        limit = 500
+        logger.warning(f"Limit capped at 500 tickets (requested: {limit})")
+    
     df, error = load_queue_issues(desk_id, queue_id)
     # Gracefully handle empty/no-issue condition instead of 500
     if error and 'no issues' in str(error).lower():
