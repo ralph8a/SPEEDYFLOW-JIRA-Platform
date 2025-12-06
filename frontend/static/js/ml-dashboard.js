@@ -9,6 +9,7 @@ class MLDashboard {
         this.refreshInterval = null;
         this.autoRefresh = true;
         this.currentQueueId = null;
+        this.currentTheme = 'light';
     }
 
     /**
@@ -17,9 +18,43 @@ class MLDashboard {
     async init() {
         console.log('🎯 Initializing ML Predictive Dashboard...');
         this.loadDashboardPreferences();
+        this.setupThemeSupport();
         this.setupEventListeners();
         await this.loadDashboardData();
         this.startAutoRefresh();
+    }
+
+    /**
+     * Setup theme support - listen to ThemeManager changes
+     */
+    setupThemeSupport() {
+        // Get initial theme from ThemeManager
+        if (window.ThemeManager) {
+            this.currentTheme = window.ThemeManager.getTheme();
+            console.log(`🎨 ML Dashboard: Initial theme is ${this.currentTheme}`);
+        }
+        
+        // Listen to theme changes
+        document.addEventListener('themeChange', (event) => {
+            this.currentTheme = event.detail.theme;
+            console.log(`🎨 ML Dashboard: Theme changed to ${this.currentTheme}`);
+            this.applyThemeToModal();
+        });
+        
+        // Apply theme immediately
+        this.applyThemeToModal();
+    }
+
+    /**
+     * Apply theme to modal
+     */
+    applyThemeToModal() {
+        const modal = document.getElementById('ml-dashboard-modal');
+        if (modal) {
+            modal.classList.remove('theme-light', 'theme-dark');
+            modal.classList.add(`theme-${this.currentTheme}`);
+            modal.setAttribute('data-theme', this.currentTheme);
+        }
     }
 
     /**
@@ -768,34 +803,46 @@ class MLDashboard {
     }
 
     /**
-     * Get current queue ID from UI
+     * Get current queue ID from logged user's session
+     * Priority: window.state (user's session) > UI selectors
      */
     getCurrentQueueId() {
-        // Try to get from queue selector (filter bar)
-        const queueSelect = document.getElementById('queueSelectFilter');
-        if (queueSelect && queueSelect.value) {
-            return queueSelect.value;
-        }
-        
-        // Fallback: try alternative selectors
-        const altQueueSelect = document.getElementById('queue-select');
-        if (altQueueSelect && altQueueSelect.value) {
-            return altQueueSelect.value;
-        }
-        
-        // Last resort: check window.state if available
+        // Priority 1: User's logged session state
         if (window.state && window.state.currentQueue) {
+            console.log('🎯 Using logged user queue:', window.state.currentQueue);
             return window.state.currentQueue;
         }
         
+        // Fallback: UI selectors (filter bar)
+        const queueSelect = document.getElementById('queueSelectFilter');
+        if (queueSelect && queueSelect.value) {
+            console.log('🎯 Using filter queue:', queueSelect.value);
+            return queueSelect.value;
+        }
+        
+        // Last resort: alternative selectors
+        const altQueueSelect = document.getElementById('queue-select');
+        if (altQueueSelect && altQueueSelect.value) {
+            console.log('🎯 Using alt queue:', altQueueSelect.value);
+            return altQueueSelect.value;
+        }
+        
+        console.warn('⚠️ No queue detected - will use auto-detection');
         return null;
     }
 
     /**
-     * Get current desk ID from UI
+     * Get current desk ID from logged user's session
+     * Priority: window.state (user's session) > UI selectors
      */
     getCurrentDeskId() {
-        // Try to get from desk selector (filter bar)
+        // Priority 1: User's logged session state
+        if (window.state && window.state.currentDesk) {
+            console.log('🎯 Using logged user desk:', window.state.currentDesk);
+            return window.state.currentDesk;
+        }
+        
+        // Fallback: UI selector (filter bar)
         const deskSelect = document.getElementById('deskSelectFilter');
         if (deskSelect && deskSelect.value) {
             return deskSelect.value;

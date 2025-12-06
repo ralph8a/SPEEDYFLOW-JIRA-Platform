@@ -133,9 +133,10 @@ def get_default_queue(desk: Dict) -> Optional[Dict]:
         logger.error(f"Error finding default queue: {e}")
         return None
 
-def preload_ml_data_background():
+def preload_ml_data_background(desk_id=None, queue_id=None):
     """
     Background thread to preload ML data
+    Uses provided desk/queue from user session, or auto-detects if not provided
     """
     global preload_status
     
@@ -148,20 +149,45 @@ def preload_ml_data_background():
         
         logger.info("🚀 ML Preloader: Starting background preload")
         
-        # Step 1: Detect primary desk
+        # Step 1: Get desk (from session or auto-detect)
         preload_status['progress'] = 10
-        preload_status['message'] = 'Finding primary service desk...'
-        desk = get_user_primary_desk()
+        preload_status['message'] = 'Finding service desk...'
+        
+        if desk_id:
+            # Use provided desk from user session
+            logger.info(f"✅ Using logged user desk: {desk_id}")
+            from utils.api_migration import get_service_desks
+            desks = get_service_desks()
+            desk = next((d for d in desks if d.get('id') == desk_id), None)
+            if not desk:
+                logger.warning(f"⚠️ Desk {desk_id} not found, auto-detecting...")
+                desk = get_user_primary_desk()
+        else:
+            # Auto-detect
+            logger.info("🔍 Auto-detecting primary desk...")
+            desk = get_user_primary_desk()
         
         if not desk:
             raise ValueError("No service desk found")
         
         preload_status['desk_id'] = desk.get('id')
         
-        # Step 2: Find default queue
+        # Step 2: Get queue (from session or auto-detect)
         preload_status['progress'] = 20
-        preload_status['message'] = 'Finding default queue...'
-        queue = get_default_queue(desk)
+        preload_status['message'] = 'Finding queue...'
+        
+        if queue_id:
+            # Use provided queue from user session
+            logger.info(f"✅ Using logged user queue: {queue_id}")
+            queues = desk.get('queues', [])
+            queue = next((q for q in queues if q.get('id') == queue_id), None)
+            if not queue:
+                logger.warning(f"⚠️ Queue {queue_id} not found, auto-detecting...")
+                queue = get_default_queue(desk)
+        else:
+            # Auto-detect
+            logger.info("🔍 Auto-detecting default queue...")
+            queue = get_default_queue(desk)
         
         if not queue:
             raise ValueError(f"No queues found in desk {desk.get('name')}")
@@ -291,6 +317,8 @@ def trigger_preload():
     """
     Trigger ML data preload in background
     Returns immediately with status
+    Body (optional):
+        {"desk_id": "123", "queue_id": "456"} - Use user's logged session
     """
     global preload_status
     
@@ -301,13 +329,27 @@ def trigger_preload():
             'status': preload_status
         }), 409
     
+    # Get desk/queue from request (user session)
+    data = request.get_json() or {}
+    desk_id = data.get('desk_id')
+    queue_id = data.get('queue_id')
+    
+    if desk_id and queue_id:
+        logger.info(f"🎯 Starting preload with user session: desk={desk_id}, queue={queue_id}")
+    else:
+        logger.info("🔍 Starting preload with auto-detection")
+    
     # Start background thread
-    thread = threading.Thread(target=preload_ml_data_background, daemon=True)
+    thread = threading.Thread(
+        target=preload_ml_data_background,
+        args=(desk_id, queue_id),
+        daemon=True
+    )
     thread.start()
     
     return jsonify({
         'success': True,
-        'message': 'ML preload started in background',
+        'message': 'ML preload started with user context' if desk_id else 'ML preload started in background',
         'status': preload_status
     })
 
