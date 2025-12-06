@@ -1571,10 +1571,27 @@ function renderView() {
     }
   }
   
-  if (state.currentView === 'kanban') {
-    renderKanban();
+  // Control view container visibility
+  const kanbanView = document.getElementById('kanbanView');
+  const listView = document.getElementById('listView');
+  
+  if (kanbanView && listView) {
+    if (state.currentView === 'kanban') {
+      kanbanView.style.display = 'block';
+      listView.style.display = 'none';
+      renderKanban();
+    } else {
+      kanbanView.style.display = 'none';
+      listView.style.display = 'block';
+      renderList();
+    }
   } else {
-    renderList();
+    // Fallback if containers don't exist yet
+    if (state.currentView === 'kanban') {
+      renderKanban();
+    } else {
+      renderList();
+    }
   }
   
   // Hide loading dots after render
