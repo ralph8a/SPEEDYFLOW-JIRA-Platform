@@ -35,8 +35,19 @@ class MLPreloader {
         }
         
         console.log('⚙️ ML Preloader: No cache found, starting background preload...');
-        // Start background preload
-        await this.startPreload();
+        
+        // Get user's logged desk-queue from session
+        const deskId = window.state?.currentDesk || null;
+        const queueId = window.state?.currentQueue || null;
+        
+        if (deskId && queueId) {
+            console.log(`🎯 Using logged user context: desk=${deskId}, queue=${queueId}`);
+        } else {
+            console.log('🔍 No user context found, will auto-detect');
+        }
+        
+        // Start background preload with user context
+        await this.startPreload(deskId, queueId);
     }
 
     /**
@@ -122,17 +133,28 @@ class MLPreloader {
     }
 
     /**
-     * Start background preload
+     * Start preload with user context
      */
-    async startPreload() {
+    async startPreload(deskId = null, queueId = null) {
         try {
             console.log('📡 ML Preloader: Starting background preload...');
+            
+            const body = {};
+            if (deskId) body.desk_id = deskId;
+            if (queueId) body.queue_id = queueId;
+            
+            if (deskId && queueId) {
+                console.log(`🎯 Using logged user context: desk=${deskId}, queue=${queueId}`);
+            } else {
+                console.log('🔍 Will auto-detect desk and queue');
+            }
             
             const response = await fetch('/api/ml/preload', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify(body)
             });
             
             const result = await response.json();
