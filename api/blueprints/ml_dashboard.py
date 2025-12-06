@@ -14,7 +14,7 @@ from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
-ml_dashboard_bp = Blueprint('ml_predictive_dashboard', __name__)
+ml_dashboard_bp = Blueprint('ml_predictive_dashboard', __name__, url_prefix='/api')
 
 def load_ml_models():
     """Load trained ML models if available"""
@@ -85,7 +85,7 @@ def get_all_active_tickets() -> List[Dict]:
         logger.error(f"Error fetching all tickets: {e}")
         return []
 
-@ml_dashboard_bp.route('/api/ml/dashboard/overview', methods=['GET'])
+@ml_dashboard_bp.route('/ml/dashboard/overview', methods=['GET'])
 def get_dashboard_overview():
     """
     Get overall ML dashboard metrics
@@ -149,7 +149,7 @@ def get_dashboard_overview():
             'error': str(e)
         }), 500
 
-@ml_dashboard_bp.route('/api/ml/dashboard/predictions', methods=['GET'])
+@ml_dashboard_bp.route('/ml/dashboard/predictions', methods=['GET'])
 def get_predictions_analytics():
     """
     Get detailed prediction analytics
@@ -202,7 +202,7 @@ def get_predictions_analytics():
             'error': str(e)
         }), 500
 
-@ml_dashboard_bp.route('/api/ml/dashboard/breach-forecast', methods=['GET'])
+@ml_dashboard_bp.route('/ml/dashboard/breach-forecast', methods=['GET'])
 def get_breach_forecast():
     """
     Get SLA breach forecast for next 24-48 hours
@@ -270,7 +270,7 @@ def get_breach_forecast():
             'error': str(e)
         }), 500
 
-@ml_dashboard_bp.route('/api/ml/dashboard/performance-trends', methods=['GET'])
+@ml_dashboard_bp.route('/ml/dashboard/performance-trends', methods=['GET'])
 def get_performance_trends():
     """
     Get performance trends over time
@@ -334,7 +334,7 @@ def get_performance_trends():
             'error': str(e)
         }), 500
 
-@ml_dashboard_bp.route('/api/ml/dashboard/team-workload', methods=['GET'])
+@ml_dashboard_bp.route('/ml/dashboard/team-workload', methods=['GET'])
 def get_team_workload():
     """
     Get team workload distribution and capacity analysis
