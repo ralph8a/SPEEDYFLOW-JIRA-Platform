@@ -142,6 +142,31 @@ class MLDashboard {
      */
     async loadOverview() {
         try {
+            // Try to use preloaded data first (instant!)
+            if (window.mlPreloader && window.mlPreloader.isMLReady()) {
+                const preloadedData = window.mlPreloader.getData();
+                console.log('⚡ Using preloaded ML data (instant):', preloadedData);
+                
+                // Build overview from preloaded data
+                const overview = {
+                    overview: {
+                        total_tickets: preloadedData.total_tickets || 0,
+                        critical_tickets: this.countCriticalTickets(preloadedData.tickets || []),
+                        models_trained: false,
+                        predictions_available: false,
+                        last_updated: preloadedData.cached_at
+                    },
+                    sla: preloadedData.sla_metrics || {},
+                    breach_predictions: [],
+                    priority_distribution: preloadedData.priority_distribution || {},
+                    trends: preloadedData.trends || {}
+                };
+                
+                this.renderOverview(overview);
+                return;
+            }
+            
+            // Fallback to API if no preloaded data
             let url = '/api/ml/dashboard/overview';
             const params = new URLSearchParams();
             if (this.currentQueueId) params.append('queue_id', this.currentQueueId);
@@ -163,6 +188,16 @@ class MLDashboard {
         } catch (error) {
             console.error('❌ Error loading overview:', error);
         }
+    }
+    
+    /**
+     * Count critical tickets from list
+     */
+    countCriticalTickets(tickets) {
+        return tickets.filter(t => {
+            const priority = t.fields?.priority?.name || t.priority || '';
+            return priority.toLowerCase() === 'highest' || priority.toLowerCase() === 'critical';
+        }).length;
     }
 
     /**
