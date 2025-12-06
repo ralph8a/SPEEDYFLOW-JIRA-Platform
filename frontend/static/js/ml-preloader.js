@@ -8,6 +8,7 @@ class MLPreloader {
         this.statusCheckInterval = null;
         this.isReady = false;
         this.data = null;
+        this.cacheInfo = null;  // Lightweight cache indicator
     }
 
     /**
@@ -16,18 +17,68 @@ class MLPreloader {
     async init() {
         console.log('🚀 ML Preloader: Initializing...');
         
-        // Check if data is already cached
-        const cached = await this.checkCachedData();
-        if (cached) {
-            console.log('✅ ML Preloader: Data already cached, loading...');
-            this.data = cached;
-            this.isReady = true;
-            this.notifyReady();
-            return;
+        // First check cache info (lightweight)
+        await this.loadCacheInfo();
+        
+        if (this.cacheInfo && this.cacheInfo.has_cache) {
+            console.log(`✅ ML Preloader: Cache available - ${this.cacheInfo.total_tickets} tickets from ${this.cacheInfo.queue_name}`);
+            
+            // Load full data
+            const cached = await this.checkCachedData();
+            if (cached) {
+                this.data = cached;
+                this.isReady = true;
+                this.exposeCacheIndicator();  // Expose globally
+                this.notifyReady();
+                return;
+            }
         }
         
+        console.log('⚙️ ML Preloader: No cache found, starting background preload...');
         // Start background preload
         await this.startPreload();
+    }
+
+    /**
+     * Load cache info (lightweight metadata)
+     */
+    async loadCacheInfo() {
+        try {
+            const response = await fetch('/api/ml/preload/cache-info');
+            const result = await response.json();
+            
+            if (result.success && result.cache_info) {
+                this.cacheInfo = result.cache_info;
+                console.log('📋 Cache Info:', this.cacheInfo);
+            }
+        } catch (error) {
+            console.warn('⚠️ Could not load cache info:', error);
+        }
+    }
+
+    /**
+     * Expose cache indicator globally for other components
+     */
+    exposeCacheIndicator() {
+        // Store in window for easy access by any component
+        window.ML_CACHE_INDICATOR = {
+            has_cache: true,
+            total_tickets: this.cacheInfo.total_tickets,
+            desk_id: this.cacheInfo.desk_id,
+            desk_name: this.cacheInfo.desk_name,
+            queue_id: this.cacheInfo.queue_id,
+            queue_name: this.cacheInfo.queue_name,
+            cached_at: this.cacheInfo.cached_at,
+            
+            // Helper methods
+            getTickets: () => this.data?.tickets || [],
+            getMetrics: () => this.data?.sla_metrics || {},
+            getPriorities: () => this.data?.priority_distribution || {},
+            getTrends: () => this.data?.trends || {}
+        };
+        
+        console.log('🌍 ML_CACHE_INDICATOR exposed globally:', window.ML_CACHE_INDICATOR);
+        console.log('💡 Other components can now use: window.ML_CACHE_INDICATOR.getTickets()');
     }
 
     /**
@@ -105,11 +156,18 @@ class MLPreloader {
                 console.log('✅ ML Preloader: Completed!');
                 clearInterval(this.statusCheckInterval);
                 
+                // Reload cache info
+                await this.loadCacheInfo();
+                
                 // Load the data
                 const cached = await this.checkCachedData();
                 if (cached) {
                     this.data = cached;
                     this.isReady = true;
+                    
+                    // Expose globally
+                    this.exposeCacheIndicator();
+                    
                     this.notifyReady();
                 }
             }
@@ -196,6 +254,13 @@ class MLPreloader {
      */
     isMLReady() {
         return this.isReady;
+    }
+
+    /**
+     * Get cache info (for other components to check)
+     */
+    getCacheInfo() {
+        return this.cacheInfo;
     }
 }
 
