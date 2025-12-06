@@ -147,6 +147,15 @@ class MLDashboard {
                 const preloadedData = window.mlPreloader.getData();
                 console.log('⚡ Using preloaded ML data (instant):', preloadedData);
                 
+                // Update data source indicator
+                this.updateDataSourceIndicator({
+                    queue_name: preloadedData.queue_name,
+                    desk_name: preloadedData.desk_name,
+                    cached_at: preloadedData.cached_at,
+                    total_tickets: preloadedData.total_tickets,
+                    is_cached: true
+                });
+                
                 // Build overview from preloaded data
                 const overview = {
                     overview: {
@@ -848,12 +857,63 @@ class MLDashboard {
     }
 
     /**
+     * Update data source indicator
+     */
+    updateDataSourceIndicator(info) {
+        const indicator = document.getElementById('ml-data-source-indicator');
+        if (!indicator) return;
+        
+        const icon = indicator.querySelector('.data-source-icon');
+        const text = indicator.querySelector('.data-source-text');
+        
+        if (info.is_cached) {
+            // Cached data
+            indicator.className = 'ml-dashboard-data-source cached';
+            icon.textContent = '⚡';
+            
+            const cachedDate = new Date(info.cached_at);
+            const now = new Date();
+            const minutesAgo = Math.floor((now - cachedDate) / 60000);
+            
+            let timeText = minutesAgo < 1 ? 'just now' : 
+                          minutesAgo === 1 ? '1 minute ago' :
+                          minutesAgo < 60 ? `${minutesAgo} minutes ago` :
+                          'over an hour ago';
+            
+            text.innerHTML = `
+                <strong>${info.queue_name}</strong> 
+                (${info.total_tickets} tickets, cached ${timeText})
+            `;
+        } else {
+            // Live data
+            indicator.className = 'ml-dashboard-data-source';
+            icon.textContent = '📡';
+            text.innerHTML = `
+                <strong>${info.queue_name || 'Current Queue'}</strong> 
+                (live data)
+            `;
+        }
+        
+        console.log('📊 Data source indicator updated:', info);
+    }
+
+    /**
      * Show loading state
      */
     showLoading() {
         const loader = document.querySelector('.ml-dashboard-loader');
         if (loader) {
             loader.style.display = 'flex';
+        }
+        
+        // Update indicator to loading state
+        const indicator = document.getElementById('ml-data-source-indicator');
+        if (indicator) {
+            indicator.className = 'ml-dashboard-data-source loading';
+            const icon = indicator.querySelector('.data-source-icon');
+            const text = indicator.querySelector('.data-source-text');
+            if (icon) icon.textContent = '⏳';
+            if (text) text.textContent = 'Loading data...';
         }
     }
 

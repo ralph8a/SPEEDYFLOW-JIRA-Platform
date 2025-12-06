@@ -57,6 +57,11 @@ cache_indicator = {
     'metadata_file': 'data/cache/ml_cache_indicator.json'
 }
 
+# Background refresh configuration
+AUTO_REFRESH_INTERVAL = 300  # 5 minutes
+background_refresh_thread = None
+should_refresh = False
+
 def compress_data(data: Dict) -> bytes:
     """Compress JSON data with gzip"""
     json_str = json.dumps(data, ensure_ascii=False)
@@ -404,3 +409,103 @@ def get_cache_info():
             'success': False,
             'error': str(e)
         }), 500
+
+def background_refresh_worker():
+    """
+    Background worker that periodically refreshes the cache
+    Runs every AUTO_REFRESH_INTERVAL seconds when enabled
+    """
+    global should_refresh, cache_indicator
+    
+    logger.info(f"🔄 Background refresh worker started (interval: {AUTO_REFRESH_INTERVAL}s)")
+    
+    while should_refresh:
+        try:
+            # Wait for interval
+            time.sleep(AUTO_REFRESH_INTERVAL)
+            
+            if not should_refresh:
+                break
+            
+            # Check if cache exists and is being used
+            if cache_indicator.get('has_cache'):
+                logger.info("🔄 Auto-refreshing ML cache in background...")
+                
+                # Trigger preload (will update existing cache)
+                preload_ml_data_background()
+                
+                logger.info("✅ Background refresh completed")
+        except Exception as e:
+            logger.error(f"❌ Background refresh error: {e}")
+            time.sleep(60)  # Wait 1 minute before retry
+    
+    logger.info("🛑 Background refresh worker stopped")
+
+@ml_preloader_bp.route('/preload/auto-refresh', methods=['POST'])
+def enable_auto_refresh():
+    """
+    Enable background auto-refresh of cache
+    Cache will be refreshed every AUTO_REFRESH_INTERVAL seconds
+    """
+    global background_refresh_thread, should_refresh
+    
+    try:
+        # Check if already running
+        if should_refresh and background_refresh_thread and background_refresh_thread.is_alive():
+            return jsonify({
+                'success': False,
+                'message': 'Auto-refresh already enabled',
+                'interval_seconds': AUTO_REFRESH_INTERVAL
+            }), 409
+        
+        # Start background worker
+        should_refresh = True
+        background_refresh_thread = threading.Thread(target=background_refresh_worker, daemon=True)
+        background_refresh_thread.start()
+        
+        logger.info(f"✅ Auto-refresh enabled (every {AUTO_REFRESH_INTERVAL}s)")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Auto-refresh enabled',
+            'interval_seconds': AUTO_REFRESH_INTERVAL
+        })
+    except Exception as e:
+        logger.error(f"Error enabling auto-refresh: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@ml_preloader_bp.route('/preload/auto-refresh', methods=['DELETE'])
+def disable_auto_refresh():
+    """
+    Disable background auto-refresh
+    """
+    global should_refresh
+    
+    should_refresh = False
+    logger.info("🛑 Auto-refresh disabled")
+    
+    return jsonify({
+        'success': True,
+        'message': 'Auto-refresh disabled'
+    })
+
+@ml_preloader_bp.route('/preload/auto-refresh/status', methods=['GET'])
+def get_auto_refresh_status():
+    """
+    Get auto-refresh status
+    """
+    global should_refresh, background_refresh_thread
+    
+    is_running = should_refresh and background_refresh_thread and background_refresh_thread.is_alive()
+    
+    return jsonify({
+        'success': True,
+        'auto_refresh': {
+            'enabled': is_running,
+            'interval_seconds': AUTO_REFRESH_INTERVAL,
+            'next_refresh_in': AUTO_REFRESH_INTERVAL if is_running else None
+        }
+    })
