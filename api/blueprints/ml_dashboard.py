@@ -186,9 +186,20 @@ def get_predictions_analytics():
         
         if not models:
             return jsonify({
-                'success': False,
+                'success': True,
+                'data': {
+                    'total_predictions': 0,
+                    'accuracy': 0,
+                    'confidence_avg': 0,
+                    'model_performance': {
+                        'priority_classifier': {'trained': False, 'accuracy': 0},
+                        'breach_predictor': {'trained': False, 'accuracy': 0}
+                    },
+                    'prediction_stats': {},
+                    'confidence_distribution': {}
+                },
                 'message': 'ML models not trained yet'
-            }), 404
+            })
         
         # Load model metadata
         metadata_path = os.path.join(
@@ -258,9 +269,16 @@ def get_breach_forecast():
         
         if not models.get('breach'):
             return jsonify({
-                'success': False,
+                'success': True,
+                'data': {
+                    'forecast_window_hours': hours_ahead,
+                    'predicted_breaches': 0,
+                    'at_risk_tickets': [],
+                    'recommendations': ['ML breach prediction model not trained yet'],
+                    'confidence': 0
+                },
                 'message': 'Breach prediction model not trained'
-            }), 404
+            })
         
         # Predict breaches
         forecast = []
