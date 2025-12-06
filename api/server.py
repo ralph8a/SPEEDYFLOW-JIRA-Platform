@@ -46,6 +46,7 @@ from api.blueprints.reports import reports_bp  # noqa: E402
 from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
 from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
 from api.blueprints.ml_priority import ml_priority_bp  # noqa: E402
+from api.blueprints.ml_dashboard import ml_dashboard_bp  # noqa: E402
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -124,6 +125,7 @@ app.register_blueprint(reports_bp)
 app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & duplicates
 app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
 app.register_blueprint(ml_priority_bp)  # ML Priority Engine: Smart prioritization & breach prediction
+app.register_blueprint(ml_dashboard_bp)  # ML Predictive Dashboard: Real-time analytics & forecasting
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
