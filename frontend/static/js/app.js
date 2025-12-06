@@ -3207,34 +3207,62 @@ async function loadSLAForListView(issues) {
         
         const cycle = data.data.cycles[0];
         const isSecondary = data.data.is_secondary || false;
+        const slaName = cycle.name || 'SLA';
         
         let slaHtml = '';
+        let statusClass = '';
+        let statusIcon = '';
+        let statusLabel = '';
         
         if (cycle.breached) {
-          slaHtml = `<span class="sla-breached" title="SLA Breached">🔴 Breached</span>`;
+          statusClass = 'sla-badge-breached';
+          statusIcon = '🔴';
+          statusLabel = 'Breached';
         } else if (cycle.paused) {
-          slaHtml = `<span class="sla-paused" title="SLA Paused">⏸️ Paused</span>`;
+          statusClass = 'sla-badge-paused';
+          statusIcon = '🔵';
+          statusLabel = 'Paused';
         } else if (cycle.remaining_time) {
           const remaining = cycle.remaining_time;
-          let statusClass = 'sla-healthy';
-          let icon = '🟢';
           
           // Determine status based on remaining time
           if (remaining.includes('m') && !remaining.includes('h')) {
-            statusClass = 'sla-warning';
-            icon = '🟡';
+            // Less than an hour remaining
+            statusClass = 'sla-badge-warning';
+            statusIcon = '🟡';
+            statusLabel = remaining;
           } else if (remaining.includes('h')) {
             const hours = parseInt(remaining);
             if (hours < 2) {
-              statusClass = 'sla-warning';
-              icon = '🟡';
+              statusClass = 'sla-badge-warning';
+              statusIcon = '🟡';
+              statusLabel = remaining;
+            } else {
+              statusClass = 'sla-badge-healthy';
+              statusIcon = '🟢';
+              statusLabel = remaining;
             }
+          } else {
+            statusClass = 'sla-badge-healthy';
+            statusIcon = '🟢';
+            statusLabel = remaining;
           }
-          
-          slaHtml = `<span class="${statusClass}" title="Time remaining: ${remaining}">${icon} ${remaining}</span>`;
         } else {
-          slaHtml = '<span class="sla-none">-</span>';
+          slaElement.innerHTML = '<span class="sla-none">-</span>';
+          state.listView.slaLoadedKeys.add(issue.key);
+          return;
         }
+        
+        // Create SLA badge with name and status
+        slaHtml = `
+          <div class="sla-badge-container">
+            <div class="sla-badge ${statusClass}" title="${slaName} - ${statusLabel}">
+              <span class="sla-icon">${statusIcon}</span>
+              <span class="sla-name">${slaName}</span>
+            </div>
+            <div class="sla-time ${statusClass}">${statusLabel}</div>
+          </div>
+        `;
         
         slaElement.innerHTML = slaHtml;
         state.listView.slaLoadedKeys.add(issue.key);
