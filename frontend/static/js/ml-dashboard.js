@@ -119,6 +119,7 @@ class MLDashboard {
 
             // Get current queue if available
             this.currentQueueId = this.getCurrentQueueId();
+            console.log('🎯 ML Dashboard - Loading data for queue:', this.currentQueueId || 'ALL');
 
             // Load all sections
             await Promise.all([
@@ -141,14 +142,21 @@ class MLDashboard {
     async loadOverview() {
         try {
             const url = `/api/ml/dashboard/overview${this.currentQueueId ? `?queue_id=${this.currentQueueId}` : ''}`;
+            console.log('📊 Fetching overview from:', url);
             const response = await fetch(url);
             const result = await response.json();
 
+            console.log('📊 Overview response:', result);
+
             if (result.success) {
                 this.renderOverview(result.data);
+            } else {
+                console.warn('⚠️ Overview fetch failed:', result.message);
+                // Show empty state instead of error
+                this.renderEmptyOverview(result.message);
             }
         } catch (error) {
-            console.error('Error loading overview:', error);
+            console.error('❌ Error loading overview:', error);
         }
     }
 
@@ -170,6 +178,21 @@ class MLDashboard {
 
         // Update breach predictions list
         this.renderBreachPredictionsList(data.breach_predictions);
+    }
+
+    /**
+     * Render empty overview state
+     */
+    renderEmptyOverview(message) {
+        this.updateMetricCard('total-tickets', 0, 'tickets');
+        this.updateMetricCard('critical-tickets', 0, 'critical');
+        this.updateMetricCard('sla-compliance', '100%', 'SLA');
+        this.updateMetricCard('at-risk-tickets', 0, 'at risk');
+
+        const container = document.getElementById('breach-predictions-list');
+        if (container) {
+            container.innerHTML = `<div class="empty-state">📋 ${message || 'No tickets found. Select a queue to view data.'}</div>`;
+        }
     }
 
     /**
@@ -689,9 +712,24 @@ class MLDashboard {
      * Get current queue ID from UI
      */
     getCurrentQueueId() {
-        // Try to get from queue selector
-        const queueSelect = document.getElementById('queue-select');
-        return queueSelect ? queueSelect.value : null;
+        // Try to get from queue selector (filter bar)
+        const queueSelect = document.getElementById('queueSelectFilter');
+        if (queueSelect && queueSelect.value) {
+            return queueSelect.value;
+        }
+        
+        // Fallback: try alternative selectors
+        const altQueueSelect = document.getElementById('queue-select');
+        if (altQueueSelect && altQueueSelect.value) {
+            return altQueueSelect.value;
+        }
+        
+        // Last resort: check window.state if available
+        if (window.state && window.state.currentQueue) {
+            return window.state.currentQueue;
+        }
+        
+        return null;
     }
 
     /**
