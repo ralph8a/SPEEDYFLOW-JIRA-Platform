@@ -933,7 +933,6 @@ class MLDashboard {
             console.log('📋 Using session queue:', window.state.currentQueue);
             return window.state.currentQueue;
         }
-        }
         
         // Last resort: alternative selectors
         const altQueueSelect = document.getElementById('queue-select');
