@@ -232,6 +232,11 @@ class MLDashboard {
                 if (statusResult.success && statusResult.status) {
                     const status = statusResult.status;
 
+                    // Update progress bar and percentage
+                    const progress = status.progress || 0;
+                    const message = status.message || 'Processing...';
+                    this.updateLoadingProgress(progress, message);
+
                     if (!status.is_loading && status.progress === 100) {
                         // Refresh complete!
                         console.log('✅ Force refresh complete!');
@@ -1063,6 +1068,9 @@ class MLDashboard {
             loader.style.display = 'flex';
         }
         
+        // Reset progress bar
+        this.updateLoadingProgress(0, 'Initializing...');
+        
         // Update indicator to loading state
         const indicator = document.getElementById('ml-data-source-indicator');
         if (indicator) {
@@ -1071,6 +1079,27 @@ class MLDashboard {
             const text = indicator.querySelector('.data-source-text');
             if (icon) icon.textContent = '⏳';
             if (text) text.textContent = 'Loading data...';
+        }
+    }
+
+    /**
+     * Update loading progress bar and percentage
+     */
+    updateLoadingProgress(percentage, message) {
+        const progressBar = document.getElementById('ml-loader-progress-bar');
+        const percentageText = document.getElementById('ml-loader-percentage');
+        const loaderText = document.getElementById('ml-loader-text');
+        
+        if (progressBar) {
+            progressBar.style.width = `${percentage}%`;
+        }
+        
+        if (percentageText) {
+            percentageText.textContent = `${Math.round(percentage)}%`;
+        }
+        
+        if (loaderText && message) {
+            loaderText.textContent = message;
         }
     }
 
