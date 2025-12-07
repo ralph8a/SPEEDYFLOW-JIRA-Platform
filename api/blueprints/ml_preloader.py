@@ -98,40 +98,91 @@ def get_user_primary_desk():
         logger.error(f"Error detecting primary desk: {e}")
         return None
 
-def get_default_queue(desk: Dict) -> Optional[Dict]:
+def ensure_all_open_queue(desk: Dict) -> Dict:
     """
-    Find "All Open" queue or first non-empty queue
-    Priority:
-    1. Queue with "all open" in name (case-insensitive)
-    2. Queue with "open" in name
-    3. First queue
+    Ensure "All Open" queue exists or create a virtual one
+    
+    JIRA Service Desk queues use JQL to define which tickets to show.
+    This function GUARANTEES an "All Open" queue by:
+    1. Looking for existing "All Open" / "All Tickets" queue
+    2. Looking for any queue with "open" in name
+    3. Creating a VIRTUAL queue with JQL for all open tickets
+    
+    The virtual queue is not created in JIRA, but can be used to fetch
+    tickets using JQL through search_issues().
+    
+    Args:
+        desk: Service desk dictionary with queues
+    
+    Returns:
+        Queue dict with: id, name, jql, is_virtual flag
     """
     try:
         queues = desk.get('queues', [])
-        if not queues:
-            logger.warning(f"Desk {desk.get('id')} has no queues")
-            return None
+        desk_id = desk.get('id')
+        desk_name = desk.get('name', 'Unknown')
         
-        # Priority 1: "All Open"
+        # Priority 1: Existing "All Open" / "All Tickets" queue
         for queue in queues:
             name = queue.get('name', '').lower()
-            if 'all open' in name or 'all tickets' in name:
-                logger.info(f"✅ Found default queue: {queue.get('name')} ({queue.get('id')})")
+            if 'all open' in name or 'all tickets' in name or 'todos' in name:
+                logger.info(f"✅ Found All Open queue: '{queue.get('name')}' (ID: {queue.get('id')})")
+                queue['is_virtual'] = False
                 return queue
         
-        # Priority 2: "Open"
+        # Priority 2: Any queue with "open" (not "closed")
         for queue in queues:
             name = queue.get('name', '').lower()
             if 'open' in name and 'closed' not in name:
-                logger.info(f"✅ Found open queue: {queue.get('name')} ({queue.get('id')})")
+                logger.info(f"✅ Found Open queue: '{queue.get('name')}' (ID: {queue.get('id')})")
+                queue['is_virtual'] = False
                 return queue
         
-        # Fallback: first queue
-        logger.info(f"⚠️ Using first queue: {queues[0].get('name')} ({queues[0].get('id')})")
-        return queues[0]
+        # Priority 3: Create VIRTUAL queue with JQL for all open tickets
+        logger.warning(f"⚠️ No 'All Open' queue found in desk '{desk_name}'. Creating virtual queue...")
+        
+        # Get project key from desk (usually desk name or first part)
+        # Try to extract project key from existing queue JQLs
+        project_key = None
+        for queue in queues:
+            jql = queue.get('jql', '')
+            if 'project' in jql.lower():
+                # Extract: "project = KEY" or "project in (KEY)"
+                import re
+                match = re.search(r'project\s*(?:=|in)\s*(?:\()?["\']?([A-Z][A-Z0-9]+)["\']?(?:\))?', jql, re.IGNORECASE)
+                if match:
+                    project_key = match.group(1)
+                    break
+        
+        if not project_key:
+            # Fallback: use desk name as project key (common pattern)
+            project_key = desk_name.split()[0].upper()
+            logger.info(f"📋 Using desk name as project key: {project_key}")
+        
+        # Create virtual queue with JQL for all open tickets
+        virtual_queue = {
+            'id': f'virtual_{desk_id}_all_open',
+            'name': f'All Open Tickets ({desk_name})',
+            'jql': f'project = "{project_key}" AND status NOT IN (Done, Closed, Resolved, Cancelled)',
+            'is_virtual': True,
+            'fields': ['summary', 'status', 'assignee', 'priority', 'created', 'updated']
+        }
+        
+        logger.info(f"🔧 Created virtual queue: '{virtual_queue['name']}'")
+        logger.info(f"🔍 JQL: {virtual_queue['jql']}")
+        
+        return virtual_queue
+        
     except Exception as e:
-        logger.error(f"Error finding default queue: {e}")
-        return None
+        logger.error(f"❌ Error ensuring All Open queue: {e}")
+        # Emergency fallback: basic virtual queue
+        return {
+            'id': 'virtual_fallback',
+            'name': 'All Open Tickets',
+            'jql': 'status NOT IN (Done, Closed, Resolved)',
+            'is_virtual': True,
+            'fields': ['summary', 'status', 'assignee', 'priority']
+        }
 
 def preload_ml_data_background(desk_id=None, queue_id=None):
     """
@@ -179,29 +230,33 @@ def preload_ml_data_background(desk_id=None, queue_id=None):
         
         preload_status['desk_id'] = desk.get('id')
         
-        # Step 2: Get queue (from session or auto-detect)
+        # Step 2: Get queue (from session or ensure All Open exists)
         preload_status['progress'] = 20
-        preload_status['message'] = 'Finding queue...'
+        preload_status['message'] = 'Finding All Open queue...'
         
         if queue_id:
             # Use provided queue from user session
-            logger.info(f"✅ Using logged user queue: {queue_id}")
+            logger.info(f"✅ Using user-selected queue: {queue_id}")
             queues = desk.get('queues', [])
             queue = next((q for q in queues if q.get('id') == queue_id), None)
             if not queue:
-                logger.warning(f"⚠️ Queue {queue_id} not found, auto-detecting...")
-                queue = get_default_queue(desk)
+                logger.warning(f"⚠️ Queue {queue_id} not found, ensuring All Open queue...")
+                queue = ensure_all_open_queue(desk)
         else:
-            # Auto-detect
-            logger.info("🔍 Auto-detecting default queue...")
-            queue = get_default_queue(desk)
+            # Ensure All Open queue exists (or create virtual one)
+            logger.info("🔍 Ensuring All Open queue exists...")
+            queue = ensure_all_open_queue(desk)
         
         if not queue:
-            raise ValueError(f"No queues found in desk {desk.get('name')}")
+            raise ValueError(f"Could not ensure All Open queue for desk {desk.get('name')}")
         
         preload_status['queue_id'] = queue.get('id')
         
-        # Step 3: Fetch tickets
+        # Log if using virtual queue
+        if queue.get('is_virtual'):
+            logger.info(f"📋 Using VIRTUAL queue with JQL: {queue.get('jql')}")
+        
+        # Step 3: Fetch tickets (regular queue or virtual JQL)
         preload_status['progress'] = 30
         preload_status['message'] = f'Fetching tickets from {queue.get("name")}...'
         
@@ -209,9 +264,21 @@ def preload_ml_data_background(desk_id=None, queue_id=None):
         from api.sla_api import enrich_tickets_with_sla
         
         client = get_api_client()
-        logger.info(f"📥 Fetching tickets from queue {queue.get('id')} in desk {desk.get('id')}")
         
-        tickets = client.get_queue_issues(queue.get('id'), desk_id=desk.get('id'))
+        # Check if virtual queue (uses JQL search instead of queue API)
+        if queue.get('is_virtual'):
+            logger.info(f"📥 Fetching tickets using JQL: {queue.get('jql')}")
+            search_result = client.search_issues(
+                jql=queue.get('jql'),
+                fields=queue.get('fields', ['summary', 'status', 'assignee', 'priority', 'created', 'updated']),
+                max_results=1000
+            )
+            tickets = search_result.get('issues', [])
+            logger.info(f"✅ Found {len(tickets)} tickets via JQL")
+        else:
+            # Regular queue
+            logger.info(f"📥 Fetching tickets from queue {queue.get('id')} in desk {desk.get('id')}")
+            tickets = client.get_queue_issues(queue.get('id'), desk_id=desk.get('id'))
         
         if not tickets:
             logger.warning(f"⚠️ No tickets found in queue {queue.get('name')}")
@@ -476,6 +543,7 @@ def background_refresh_worker():
     """
     Background worker that periodically refreshes the cache
     Runs every AUTO_REFRESH_INTERVAL seconds when enabled
+    Always ensures All Open queue is available
     """
     global should_refresh, cache_indicator
     
@@ -493,10 +561,18 @@ def background_refresh_worker():
             if cache_indicator.get('has_cache'):
                 logger.info("🔄 Auto-refreshing ML cache in background...")
                 
-                # Trigger preload (will update existing cache)
-                preload_ml_data_background()
-                
-                logger.info("✅ Background refresh completed")
+                # Ensure All Open queue exists before refresh
+                desk = get_user_primary_desk()
+                if desk:
+                    queue = ensure_all_open_queue(desk)  # Guarantees queue or creates virtual
+                    if queue:
+                        # Trigger preload (will update existing cache)
+                        preload_ml_data_background()
+                        logger.info("✅ Background refresh completed")
+                    else:
+                        logger.warning("⚠️ Auto-refresh: Could not ensure All Open queue")
+                else:
+                    logger.warning("⚠️ Auto-refresh: No desk found")
         except Exception as e:
             logger.error(f"❌ Background refresh error: {e}")
             time.sleep(60)  # Wait 1 minute before retry
