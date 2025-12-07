@@ -921,23 +921,30 @@ class MLDashboard {
      * Priority: UI selectors (user's current selection) > window.state fallback
      */
     getCurrentQueueId() {
+        console.log('🔍 [ML Dashboard] Detecting queue...');
+        console.log('  - window.state exists:', !!window.state);
+        console.log('  - window.state.currentQueue:', window.state?.currentQueue);
+        
         // Priority 1: UI selectors (user's current queue selection)
         const queueSelect = document.getElementById('queueSelectFilter');
+        console.log('  - queueSelectFilter element:', !!queueSelect);
+        console.log('  - queueSelectFilter value:', queueSelect?.value);
+        
         if (queueSelect && queueSelect.value) {
-            console.log('📋 Using selected queue:', queueSelect.value);
+            console.log('✅ Using selected queue:', queueSelect.value);
             return queueSelect.value;
         }
         
         // Fallback: window.state (session state)
         if (window.state && window.state.currentQueue) {
-            console.log('📋 Using session queue:', window.state.currentQueue);
+            console.log('✅ Using session queue:', window.state.currentQueue);
             return window.state.currentQueue;
         }
         
         // Last resort: alternative selectors
         const altQueueSelect = document.getElementById('queue-select');
         if (altQueueSelect && altQueueSelect.value) {
-            console.log('🎯 Using alt queue:', altQueueSelect.value);
+            console.log('✅ Using alt queue:', altQueueSelect.value);
             return altQueueSelect.value;
         }
         
@@ -950,23 +957,34 @@ class MLDashboard {
      * Priority: window.state (user's fixed desk) > UI selectors
      */
     getCurrentDeskId() {
-        // Priority 1: User's logged desk (fixed, doesn't change)
-        if (window.state && window.state.currentDesk) {
-            console.log('🏢 Using logged user desk:', window.state.currentDesk);
-            return window.state.currentDesk;
-        }
+        console.log('🔍 [ML Dashboard] Detecting desk...');
+        console.log('  - window.state exists:', !!window.state);
+        console.log('  - window.state.currentDesk:', window.state?.currentDesk);
         
-        // Fallback: UI selector (filter bar) - rare case
-        const deskSelect = document.getElementById('deskSelectFilter');
+        // Priority 1: UI selector (filter bar) - most reliable
+        const deskSelect = document.getElementById('serviceDeskSelectFilter');
+        console.log('  - serviceDeskSelectFilter element:', !!deskSelect);
+        console.log('  - serviceDeskSelectFilter value:', deskSelect?.value);
+        
         if (deskSelect && deskSelect.value) {
+            console.log('✅ Using desk from selector:', deskSelect.value);
             return deskSelect.value;
         }
         
-        // Fallback: check window.state if available
+        // Priority 2: User's logged desk from window.state
         if (window.state && window.state.currentDesk) {
+            console.log('✅ Using logged user desk:', window.state.currentDesk);
             return window.state.currentDesk;
         }
         
+        // Fallback: alternative selector
+        const altDeskSelect = document.getElementById('deskSelectFilter');
+        if (altDeskSelect && altDeskSelect.value) {
+            console.log('✅ Using alt desk selector:', altDeskSelect.value);
+            return altDeskSelect.value;
+        }
+        
+        console.warn('⚠️ No desk detected');
         return null;
     }
 
