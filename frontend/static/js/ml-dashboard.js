@@ -105,10 +105,20 @@ class MLDashboard {
             });
         });
 
-        // Refresh button
+        // Refresh button - forces fresh data fetch
         const refreshBtn = document.querySelector('.ml-dashboard-refresh');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.loadDashboardData());
+            refreshBtn.addEventListener('click', async () => {
+                // Disable button during refresh
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = '⏳ Refreshing...';
+                
+                await this.forceRefresh();
+                
+                // Re-enable button
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '🔄 Refresh';
+            });
         }
 
         // Auto-refresh toggle
@@ -169,6 +179,105 @@ class MLDashboard {
         } catch (error) {
             console.error('Error loading dashboard data:', error);
             this.showError('Failed to load dashboard data');
+        }
+    }
+
+    /**
+     * Force refresh - bypasses cache and fetches fresh data from API
+     */
+    async forceRefresh() {
+        try {
+            console.log('🔄 Force refresh: Fetching fresh data from API...');
+            this.showLoading();
+
+            // Get current queue and desk
+            this.currentQueueId = this.getCurrentQueueId();
+            this.currentDeskId = this.getCurrentDeskId();
+
+            // Update indicator to loading state
+            this.updateDataSourceIndicator({
+                queue_name: 'Refreshing...',
+                desk_name: '',
+                cached_at: null,
+                total_tickets: 0,
+                is_cached: false
+            });
+
+            // Trigger backend preload with fresh data
+            const preloadBody = {};
+            if (this.currentDeskId) preloadBody.desk_id = this.currentDeskId;
+            if (this.currentQueueId) preloadBody.queue_id = this.currentQueueId;
+
+            console.log('🔄 Triggering backend preload with:', preloadBody);
+
+            const preloadResponse = await fetch('/api/ml/preload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(preloadBody)
+            });
+
+            const preloadResult = await preloadResponse.json();
+            console.log('🔄 Preload triggered:', preloadResult);
+
+            // Poll for completion (max 30 seconds)
+            let attempts = 0;
+            const maxAttempts = 15; // 15 attempts x 2 seconds = 30 seconds
+
+            const pollStatus = async () => {
+                const statusResponse = await fetch('/api/ml/preload/status');
+                const statusResult = await statusResponse.json();
+
+                if (statusResult.success && statusResult.status) {
+                    const status = statusResult.status;
+
+                    if (!status.is_loading && status.progress === 100) {
+                        // Refresh complete!
+                        console.log('✅ Force refresh complete!');
+
+                        // Reload ML Preloader cache
+                        if (window.mlPreloader) {
+                            await window.mlPreloader.loadCacheInfo();
+                            const cached = await window.mlPreloader.checkCachedData();
+                            if (cached) {
+                                window.mlPreloader.data = cached;
+                                window.mlPreloader.isReady = true;
+                                window.mlPreloader.exposeCacheIndicator();
+                            }
+                        }
+
+                        // Reload dashboard with fresh data
+                        await this.loadDashboardData();
+                        return true;
+                    } else if (status.error) {
+                        console.error('❌ Refresh failed:', status.error);
+                        this.showError('Refresh failed: ' + status.error);
+                        this.hideLoading();
+                        return true;
+                    }
+                }
+
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    console.warn('⚠️ Refresh timed out after 30 seconds');
+                    this.showError('Refresh timed out. Please try again.');
+                    this.hideLoading();
+                    return true;
+                }
+
+                // Continue polling
+                setTimeout(pollStatus, 2000);
+                return false;
+            };
+
+            // Start polling
+            await pollStatus();
+
+        } catch (error) {
+            console.error('❌ Force refresh error:', error);
+            this.showError('Failed to refresh data');
+            this.hideLoading();
         }
     }
 
