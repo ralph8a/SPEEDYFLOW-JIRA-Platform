@@ -606,10 +606,13 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .ml-dashboard-loader.active {
-    display: block;
+    display: flex;
 }
 
 .loader-spinner {
@@ -625,6 +628,33 @@
 .loader-text {
     color: #9ca3af;
     font-size: 14px;
+    margin-top: 20px;
+    font-weight: 500;
+}
+
+.loader-progress-container {
+    width: 300px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+.loader-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.loader-percentage {
+    margin-top: 8px;
+    color: #6366f1;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
 }
 
 /* Empty State */
