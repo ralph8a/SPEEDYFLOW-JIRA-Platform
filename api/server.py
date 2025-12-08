@@ -184,6 +184,11 @@ def root_index():
 def app_alias():
     return _render_index()
 
+@app.route('/icons')
+def icon_gallery():
+    """SVG Icons Gallery - Visual reference for all available icons"""
+    return send_from_directory(STATIC_FOLDER, 'icon-gallery.html')
+
 @app.before_request
 def _log_req():
     if not request.path.startswith('/static'):
