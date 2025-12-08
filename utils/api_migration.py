@@ -110,6 +110,7 @@ def get_queues(
         })
         if not response or "values" not in response:
             logger.warning(f"Queues empty or malformed. URL={url} desk={service_desk_id} start={start} limit={limit} raw={response}")
+            return {"values": [], "isLastPage": True, "start": start, "limit": limit}
         return {
             "values": response.get("values", []),
             "isLastPage": response.get("isLastPage", True),
