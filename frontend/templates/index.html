@@ -26,6 +26,9 @@
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
   <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
   
+  <!-- SVG ICONS STYLES: Centralized icon styling -->
+  <link rel="stylesheet" href="/static/css/utils/svg-icons.css?v={{ timestamp }}">
+  
   <!-- BOARD VIEW STYLING (Kanban) -->
   <link rel="stylesheet" href="/static/views/board/kanban.css?v={{ timestamp }}">
   
@@ -686,6 +689,9 @@
   <!-- ===== CORE APPLICATION SCRIPTS ===== -->
   <!-- Constants & Configuration (MUST load first) -->
   <script src="/static/js/constants/card-sizing.js"></script>
+  
+  <!-- SVG Icons Module - Centralized icon library -->
+  <script src="/static/js/utils/svg-icons.js?v={{ timestamp }}"></script>
   
   <!-- Theme Manager - Centralized theme control -->
   <script src="/static/js/theme-manager.js?v={{ timestamp }}"></script>

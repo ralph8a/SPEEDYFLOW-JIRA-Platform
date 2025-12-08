@@ -1,0 +1,231 @@
+/**
+ * SPEEDYFLOW - SVG Icons Styles
+ * Global styles for SVG icons across the application
+ */
+
+/* Base SVG Icon Styles */
+.svg-icon {
+    display: inline-block;
+    vertical-align: middle;
+    stroke: currentColor;
+    fill: none;
+    pointer-events: none; /* Prevent SVG from interfering with button clicks */
+    flex-shrink: 0; /* Prevent icon from shrinking in flex containers */
+}
+
+/* Icon Sizes */
+.svg-icon-xs {
+    width: 12px;
+    height: 12px;
+}
+
+.svg-icon-sm {
+    width: 14px;
+    height: 14px;
+}
+
+.svg-icon-md {
+    width: 16px;
+    height: 16px;
+}
+
+.svg-icon-lg {
+    width: 20px;
+    height: 20px;
+}
+
+.svg-icon-xl {
+    width: 24px;
+    height: 24px;
+}
+
+.svg-icon-2xl {
+    width: 32px;
+    height: 32px;
+}
+
+/* Button Icon Styles */
+button .svg-icon,
+.btn .svg-icon,
+a .svg-icon {
+    display: block;
+    margin: auto;
+}
+
+button:hover .svg-icon,
+.btn:hover .svg-icon,
+a:hover .svg-icon {
+    stroke: currentColor; /* Inherit hover color from parent */
+}
+
+/* Icon with text (inline with label) */
+.icon-with-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.icon-with-text .svg-icon {
+    margin-right: 6px;
+}
+
+/* Icon only buttons */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* Icon Colors */
+.svg-icon-primary {
+    stroke: #6366f1;
+}
+
+.svg-icon-secondary {
+    stroke: #64748b;
+}
+
+.svg-icon-success {
+    stroke: #22c55e;
+}
+
+.svg-icon-danger {
+    stroke: #ef4444;
+}
+
+.svg-icon-warning {
+    stroke: #f59e0b;
+}
+
+.svg-icon-info {
+    stroke: #3b82f6;
+}
+
+.svg-icon-muted {
+    stroke: #94a3b8;
+}
+
+/* Spinning animation (for refresh icons) */
+@keyframes svg-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.svg-icon-spin {
+    animation: svg-spin 1s linear infinite;
+}
+
+/* Pulse animation (for notifications) */
+@keyframes svg-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.svg-icon-pulse {
+    animation: svg-pulse 2s ease-in-out infinite;
+}
+
+/* Theme-specific styles */
+.theme-dark .svg-icon {
+    stroke: currentColor;
+    opacity: 0.9;
+}
+
+.theme-light .svg-icon {
+    stroke: currentColor;
+    opacity: 1;
+}
+
+/* Icon in disabled state */
+button:disabled .svg-icon,
+.btn:disabled .svg-icon,
+[disabled] .svg-icon {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Icon badge (for notifications count) */
+.icon-badge {
+    position: relative;
+    display: inline-block;
+}
+
+.icon-badge::after {
+    content: attr(data-badge);
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+}
+
+/* Loading state */
+.icon-loading {
+    opacity: 0.6;
+}
+
+.icon-loading .svg-icon {
+    animation: svg-spin 1s linear infinite;
+}
+
+/* Icon group (multiple icons together) */
+.icon-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Responsive icons (hide on mobile) */
+@media (max-width: 640px) {
+    .icon-hide-mobile {
+        display: none;
+    }
+    
+    .icon-with-text .svg-icon {
+        margin-right: 4px;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .svg-icon {
+        stroke-width: 2.5;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .svg-icon-spin,
+    .svg-icon-pulse,
+    .icon-loading .svg-icon {
+        animation: none;
+    }
+}
