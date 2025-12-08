@@ -697,11 +697,12 @@ SVGIcons.getAvailableIcons()
       document.getElementById('color-warning').innerHTML = SVGIcons.alert({ size: 20 });
       document.getElementById('color-info').innerHTML = SVGIcons.info({ size: 20 });
 
-      // Draw animation examples
+      // Assemble animation examples (only icons with multiple SVG elements)
+      // close: 2 lines, plus: 2 lines, clock: circle + polyline, download: path + polyline + line
       document.getElementById('draw-normal').innerHTML = SVGIcons.close({ size: 32 });
       document.getElementById('draw-fast').innerHTML = SVGIcons.plus({ size: 32 });
-      document.getElementById('draw-hover').innerHTML = SVGIcons.arrowRight({ size: 32 });
-      document.getElementById('draw-loop').innerHTML = SVGIcons.refresh({ size: 32 });
+      document.getElementById('draw-hover').innerHTML = SVGIcons.clock({ size: 32 });
+      document.getElementById('draw-loop').innerHTML = SVGIcons.download({ size: 32 });
 
       // Copy icon name
       function copyIconName(iconName) {
