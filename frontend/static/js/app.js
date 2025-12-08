@@ -1986,6 +1986,75 @@ async function getSLAStatusClass(issueKey) {
   }
 }
 
+/**
+ * Extract country code from JIRA customfield_10167
+ * Handles both object format {value: "Chile: +56"} and string format
+ * 
+ * @param {Object|string|null} fieldValue - The customfield_10167 value
+ * @returns {string} Country code with + (e.g., "+56") or empty string
+ */
+function extractCountryCode(fieldValue) {
+  if (!fieldValue) return '';
+  
+  // Extract value string from object or use directly
+  let valueStr = '';
+  if (typeof fieldValue === 'object' && fieldValue.value) {
+    valueStr = fieldValue.value;
+  } else if (typeof fieldValue === 'string') {
+    valueStr = fieldValue;
+  } else {
+    return '';
+  }
+  
+  // Match pattern "País: +XX" (e.g., "Chile: +56")
+  const match = valueStr.match(/:\s*(\+\d{1,4})/);
+  if (match) {
+    return match[1];
+  }
+  
+  // Fallback: find any +XX pattern
+  const fallbackMatch = valueStr.match(/\+\d{1,4}/);
+  if (fallbackMatch) {
+    return fallbackMatch[0];
+  }
+  
+  return '';
+}
+
+/**
+ * Format phone number with country code and 4-digit separators
+ * @param {string} phone - Phone number (raw)
+ * @param {string} countryCode - Country code (e.g., "+52", "52", "MX")
+ * @returns {string} - Formatted phone (e.g., "+52-5555-1234-5678")
+ */
+function formatPhoneNumber(phone, countryCode) {
+  if (!phone) return '';
+  
+  // Clean phone number (remove non-digits)
+  let cleaned = phone.replace(/\D/g, '');
+  
+  if (!cleaned) return '';
+  
+  // Handle country code
+  let prefix = '';
+  if (countryCode) {
+    // Clean country code (remove non-digits)
+    const cleanedCode = countryCode.replace(/\D/g, '');
+    if (cleanedCode) {
+      prefix = `+${cleanedCode}-`;
+    }
+  }
+  
+  // Split into 4-digit groups
+  let formatted = '';
+  for (let i = 0; i < cleaned.length; i += 4) {
+    if (i > 0) formatted += '-';
+    formatted += cleaned.substring(i, Math.min(i + 4, cleaned.length));
+  }
+  
+  return prefix + formatted;
+}
+
 async function renderKanban() {
   const kanbanView = document.getElementById('kanbanView');
   
@@ -2135,9 +2204,17 @@ async function renderKanban() {
         ? fullIssue.customfield_10141 
         : (fullIssue.customfield_10141?.value || '');
       
-      const reporterPhone = typeof fullIssue.customfield_10142 === 'string' 
+      let reporterPhone = typeof fullIssue.customfield_10142 === 'string' 
         ? fullIssue.customfield_10142 
         : (fullIssue.customfield_10142?.value || '');
+      
+      // Código de país (customfield_10167) - Usar extractCountryCode() para manejar formato "Chile: +56"
+      const countryCode = extractCountryCode(fullIssue.customfield_10167);
+      
+      // Formatear teléfono con código de país y separadores de 4 dígitos
+      if (reporterPhone) {
+        reporterPhone = formatPhoneNumber(reporterPhone, countryCode);
+      }
       
       const reporterCompany = typeof fullIssue.customfield_10143 === 'string' 
         ? fullIssue.customfield_10143 

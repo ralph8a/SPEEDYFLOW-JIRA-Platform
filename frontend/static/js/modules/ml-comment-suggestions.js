@@ -216,13 +216,31 @@ class CommentSuggestionsUI {
     } catch (error) {
       console.error('Error fetching suggestions:', error);
       this.isAnalyzing = false;
-      content.innerHTML = `
-        <div class="error-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>Error al analizar ticket</p>
-          <small>${error.message}</small>
-        </div>
-      `;
+      
+      // Si ya hay sugerencias en caché, mantenerlas y solo mostrar warning
+      if (this.suggestions && this.suggestions.length > 0) {
+        console.log('⚠️ Error al actualizar, manteniendo sugerencias anteriores');
+        this.renderSuggestions(this.suggestions, content);
+        
+        // Mostrar warning en lugar de error completo
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'suggestions-warning';
+        warningDiv.innerHTML = `
+          <i class="fas fa-exclamation-circle"></i>
+          <small>No se pudieron actualizar las sugerencias. Mostrando últimas disponibles.</small>
+        `;
+        content.insertBefore(warningDiv, content.firstChild);
+      } else {
+        // Solo mostrar error si no hay sugerencias previas
+        content.innerHTML = `
+          <div class="error-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Error al generar sugerencias</p>
+            <small>${error.message}</small>
+            <small style="display: block; margin-top: 8px; color: #f59e0b;">💡 Tip: Si ves mensaje de Ollama, verifica que esté ejecutándose: <code>ollama serve</code></small>
+          </div>
+        `;
+      }
     }
   }
 
