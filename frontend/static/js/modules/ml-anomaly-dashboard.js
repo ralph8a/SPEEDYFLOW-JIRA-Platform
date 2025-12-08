@@ -47,13 +47,21 @@ class AnomalyDashboard {
           </h2>
           <div class="header-actions">
             <button class="refresh-btn" title="Actualizar" aria-label="Refresh">
-              <i class="fas fa-sync-alt"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
             </button>
             <button class="auto-refresh-toggle" title="Auto-actualizar cada 2 minutos" aria-label="Toggle Auto-refresh">
-              <i class="fas fa-clock"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
             </button>
             <button class="close-btn" title="Cerrar" aria-label="Close">
-              <i class="fas fa-times"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -382,12 +390,21 @@ class AnomalyDashboard {
       details += `<div class="detail"><strong>Umbral:</strong> ${anomaly.threshold}</div>`;
     }
     
-    // Show detected tickets if available
+    // Show detected tickets if available (clickeable links to JIRA)
     if (anomaly.tickets && Array.isArray(anomaly.tickets) && anomaly.tickets.length > 0) {
+      const jiraBaseUrl = window.location.origin.includes('localhost') 
+        ? 'https://your-domain.atlassian.net/browse' 
+        : `${window.location.origin}/browse`;
+      
       const ticketsList = anomaly.tickets.slice(0, 10).map(key => 
-        `<span class="ticket-key">${key}</span>`
+        `<a href="${jiraBaseUrl}/${key}" target="_blank" class="ticket-key-link" title="Abrir ${key} en JIRA">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 4px;">
+            <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3m-2 16H5V5h7V3H5c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2v-7h-2v7z"/>
+          </svg>
+          ${key}
+        </a>`
       ).join(' ');
-      details += `<div class="detail tickets-list"><strong>Tickets detectados:</strong><br>${ticketsList}</div>`;
+      details += `<div class="detail tickets-list"><strong>Tickets detectados (click para abrir):</strong><br>${ticketsList}</div>`;
     }
 
     return details ? `<div class="anomaly-details">${details}</div>` : '';
