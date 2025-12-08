@@ -3383,14 +3383,9 @@ function showFirstTimeTooltip() {
     
     // Wait for page to settle
     setTimeout(() => {
-      const btnRect = saveBtn.getBoundingClientRect();
-      console.log('   Button rect:', btnRect);
-      
       const tooltip = document.createElement('div');
       tooltip.id = 'first-time-tooltip';
       tooltip.style.position = 'fixed';
-      tooltip.style.top = `${btnRect.bottom + 10}px`;
-      tooltip.style.left = `${btnRect.right - 360}px`;
       tooltip.style.zIndex = '999999';
       tooltip.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
       tooltip.style.color = 'white';
@@ -3401,6 +3396,7 @@ function showFirstTimeTooltip() {
       tooltip.style.fontSize = '14px';
       tooltip.style.lineHeight = '1.6';
       tooltip.style.display = 'block';
+      tooltip.style.transition = 'top 0.2s ease, left 0.2s ease';
       
       tooltip.innerHTML = `
         <div style="position: absolute; top: -8px; right: 20px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid #667eea;"></div>
@@ -3415,18 +3411,28 @@ function showFirstTimeTooltip() {
       `;
       
       document.body.appendChild(tooltip);
-      console.log('✅ Tooltip appended to body!');
-      console.log('   Element ID:', tooltip.id);
-      console.log('   Z-index:', tooltip.style.zIndex);
-      console.log('   Position:', tooltip.style.position);
-      console.log('   Top:', tooltip.style.top);
-      console.log('   Left:', tooltip.style.left);
-      console.log('   Width:', tooltip.style.width);
-      console.log('   Display:', tooltip.style.display);
+      
+      // Function to update tooltip position relative to button
+      const updateTooltipPosition = () => {
+        const btnRect = saveBtn.getBoundingClientRect();
+        tooltip.style.top = `${btnRect.bottom + 10}px`;
+        tooltip.style.left = `${btnRect.right - 360}px`;
+      };
+      
+      // Initial position
+      updateTooltipPosition();
+      console.log('✅ Tooltip positioned relative to button');
+      
+      // Update position on window resize or scroll
+      const repositionHandler = () => updateTooltipPosition();
+      window.addEventListener('resize', repositionHandler);
+      window.addEventListener('scroll', repositionHandler, true); // useCapture for all scrolls
       
       const closeBtn = document.getElementById('tooltip-close');
       const closeTooltip = () => {
         tooltip.remove();
+        window.removeEventListener('resize', repositionHandler);
+        window.removeEventListener('scroll', repositionHandler, true);
         sessionStorage.setItem('speedyflow_seen_save_tooltip', 'true');
       };
       
