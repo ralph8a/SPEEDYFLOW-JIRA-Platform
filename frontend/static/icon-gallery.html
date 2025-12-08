@@ -144,31 +144,31 @@
     }
 
     .icon-display.svg-icon-draw-loop svg > *:nth-child(1) {
-      animation: svg-assemble-loop-top 2.5s ease-in-out infinite;
+      animation: svg-assemble-loop-top 3.5s ease-in-out infinite;
       animation-delay: 0s;
     }
 
     .icon-display.svg-icon-draw-loop svg > *:nth-child(2) {
-      animation: svg-assemble-loop-right 2.5s ease-in-out infinite;
+      animation: svg-assemble-loop-right 3.5s ease-in-out infinite;
       animation-delay: 0.3s;
     }
 
     .icon-display.svg-icon-draw-loop svg > *:nth-child(3) {
-      animation: svg-assemble-loop-bottom 2.5s ease-in-out infinite;
+      animation: svg-assemble-loop-bottom 3.5s ease-in-out infinite;
       animation-delay: 0.6s;
     }
 
     .icon-display.svg-icon-draw-loop svg > *:nth-child(4) {
-      animation: svg-assemble-loop-left 2.5s ease-in-out infinite;
+      animation: svg-assemble-loop-left 3.5s ease-in-out infinite;
       animation-delay: 0.9s;
     }
 
     .icon-display.svg-icon-draw-loop svg > circle {
-      animation: svg-assemble-loop-top 3s ease-in-out infinite;
+      animation: svg-assemble-loop-top 4s ease-in-out infinite;
     }
 
     .icon-display.svg-icon-draw-loop svg > polyline {
-      animation: svg-assemble-loop-right 3s ease-in-out infinite;
+      animation: svg-assemble-loop-right 4s ease-in-out infinite;
       animation-delay: 0.3s;
     }
 
@@ -327,25 +327,25 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Assemble loop animations - parts appear and disappear infinitely */
+    /* Assemble loop animations - parts appear, pause, then disappear infinitely */
     @keyframes svg-assemble-loop-top {
       0%, 100% { opacity: 0; transform: translateY(-20px); }
-      50% { opacity: 1; transform: translateY(0); }
+      40%, 60% { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes svg-assemble-loop-bottom {
       0%, 100% { opacity: 0; transform: translateY(20px); }
-      50% { opacity: 1; transform: translateY(0); }
+      40%, 60% { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes svg-assemble-loop-left {
       0%, 100% { opacity: 0; transform: translateX(-20px); }
-      50% { opacity: 1; transform: translateX(0); }
+      40%, 60% { opacity: 1; transform: translateX(0); }
     }
 
     @keyframes svg-assemble-loop-right {
       0%, 100% { opacity: 0; transform: translateX(20px); }
-      50% { opacity: 1; transform: translateX(0); }
+      40%, 60% { opacity: 1; transform: translateX(0); }
     }
 
     @keyframes fadeInUp {
