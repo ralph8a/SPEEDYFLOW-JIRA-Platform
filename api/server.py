@@ -473,6 +473,12 @@ def api_get_desks_with_queues():
             q_name = next((qn for qn in q_name_candidates if isinstance(qn, str) and qn.strip()), None) or f"Queue {q_id}"
             q_jql = q.get('jql', '')
             queues.append({'id': str(q_id), 'name': q_name, 'jql': q_jql})
+        
+        # Skip desks with no accessible queues (permission issues)
+        if not queues:
+            logger.info(f"⚠️ Skipping desk '{display_name}' (ID: {desk_id}) - No accessible queues (likely permission restriction)")
+            continue
+        
         # Provide both name and displayName and flag if placeholder
         aggregated.append({'id': str(desk_id), 'name': display_name, 'displayName': display_name, 'placeholder': placeholder_used, 'queues': queues})
         if placeholder_used:
