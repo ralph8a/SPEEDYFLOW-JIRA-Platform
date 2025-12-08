@@ -293,12 +293,12 @@ const SVGIcons = {
   },
 
   /**
-   * Settings / Gear icon
+   * Settings / Gear icon (classic gear with 6 teeth)
    */
   settings(options = {}) {
     return this._createSVG(`
       <circle cx="12" cy="12" r="3"></circle>
-      <path d="M12 1l1.5 3.5 3.5 1L16 9l4 2-4 2 1 3.5-3.5 1L12 23l-1.5-3.5-3.5-1L8 15l-4-2 4-2-1-3.5 3.5-1L12 1z"></path>
+      <path d="M13.5 2h-3l-.5 2.5a8 8 0 0 0-2 .8L5.5 3.5l-2 2.5 1.8 2.5a8 8 0 0 0-.8 2L2 11v3l2.5.5a8 8 0 0 0 .8 2L3.5 19l2 2.5 2.5-1.8a8 8 0 0 0 2 .8L11 23h3l.5-2.5a8 8 0 0 0 2-.8l2.5 1.8 2-2.5-1.8-2.5a8 8 0 0 0 .8-2L22 14v-3l-2.5-.5a8 8 0 0 0-.8-2L20.5 6l-2-2.5-2.5 1.8a8 8 0 0 0-2-.8L13.5 2z"></path>
     `, options);
   },
 
