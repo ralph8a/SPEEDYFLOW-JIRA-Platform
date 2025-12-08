@@ -298,7 +298,7 @@ const SVGIcons = {
   settings(options = {}) {
     return this._createSVG(`
       <circle cx="12" cy="12" r="3"></circle>
-      <path d="M12 1v6m0 6v6m5.657-13.657l-4.243 4.243m-2.828 2.828l-4.243 4.243m16.97 1.414l-6-6m-6-6l-6 6"></path>
+      <path d="M12 1l1.5 3.5 3.5 1L16 9l4 2-4 2 1 3.5-3.5 1L12 23l-1.5-3.5-3.5-1L8 15l-4-2 4-2-1-3.5 3.5-1L12 1z"></path>
     `, options);
   },
 

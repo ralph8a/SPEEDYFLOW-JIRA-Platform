@@ -172,6 +172,66 @@
       animation-delay: 0.3s;
     }
 
+    /* Custom icon-specific animations */
+    
+    /* Download: all parts come from top */
+    .icon-download-custom svg > * {
+      animation: svg-assemble-loop-top 3.5s ease-in-out infinite !important;
+    }
+    .icon-download-custom svg > *:nth-child(2) { animation-delay: 0.2s !important; }
+    .icon-download-custom svg > *:nth-child(3) { animation-delay: 0.4s !important; }
+
+    /* Upload: all parts come from bottom */
+    .icon-upload-custom svg > * {
+      animation: svg-assemble-loop-bottom 3.5s ease-in-out infinite !important;
+    }
+    .icon-upload-custom svg > *:nth-child(2) { animation-delay: 0.2s !important; }
+    .icon-upload-custom svg > *:nth-child(3) { animation-delay: 0.4s !important; }
+
+    /* Arrow Right: all parts come from right */
+    .icon-arrow-right svg > * {
+      animation: svg-assemble-loop-right 3.5s ease-in-out infinite !important;
+    }
+    .icon-arrow-right svg > *:nth-child(2) { animation-delay: 0.2s !important; }
+
+    /* Arrow Left: all parts come from left */
+    .icon-arrow-left svg > * {
+      animation: svg-assemble-loop-left 3.5s ease-in-out infinite !important;
+    }
+    .icon-arrow-left svg > *:nth-child(2) { animation-delay: 0.2s !important; }
+
+    /* Arrow Up: all parts come from top */
+    .icon-arrow-up svg > * {
+      animation: svg-assemble-loop-top 3.5s ease-in-out infinite !important;
+    }
+    .icon-arrow-up svg > *:nth-child(2) { animation-delay: 0.2s !important; }
+
+    /* Arrow Down: all parts come from bottom */
+    .icon-arrow-down svg > * {
+      animation: svg-assemble-loop-bottom 3.5s ease-in-out infinite !important;
+    }
+    .icon-arrow-down svg > *:nth-child(2) { animation-delay: 0.2s !important; }
+
+    /* External Link: arrow from top-right diagonal */
+    @keyframes svg-assemble-diagonal-top-right {
+      0% { opacity: 1; transform: translate(0, 0); }
+      20% { opacity: 0; transform: translate(15px, -15px); }
+      60%, 80% { opacity: 1; transform: translate(0, 0); }
+      100% { opacity: 1; transform: translate(0, 0); }
+    }
+
+    .icon-external-link-custom svg > line {
+      animation: svg-assemble-diagonal-top-right 3.5s ease-in-out infinite !important;
+    }
+    .icon-external-link-custom svg > polyline {
+      animation: svg-assemble-loop-top 3.5s ease-in-out infinite !important;
+      animation-delay: 0.2s !important;
+    }
+    .icon-external-link-custom svg > path {
+      animation: svg-assemble-loop-left 3.5s ease-in-out infinite !important;
+      animation-delay: 0.4s !important;
+    }
+
     .icon-name {
       font-size: 13px;
       color: #64748b;
@@ -354,6 +414,39 @@
       20% { opacity: 0; transform: translateX(20px); }
       60%, 80% { opacity: 1; transform: translateX(0); }
       100% { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Custom icon animations */
+    
+    /* Refresh icon - simple spin */
+    @keyframes icon-spin-continuous {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Trash icon - lid opens */
+    @keyframes trash-lid-open {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-3px) rotate(-10deg); }
+    }
+
+    /* Bell icon - shake/ring */
+    @keyframes bell-ring {
+      0%, 100% { transform: rotate(0deg); }
+      10%, 30%, 50%, 70%, 90% { transform: rotate(-8deg); }
+      20%, 40%, 60%, 80% { transform: rotate(8deg); }
+    }
+
+    /* Pulse with fade trail for warning/danger */
+    @keyframes pulse-fade-trail {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+
+    @keyframes pulse-main {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
 
     @keyframes fadeInUp {
@@ -700,26 +793,63 @@ SVGIcons.getAvailableIcons()
       card.className = 'icon-card';
       card.onclick = () => copyIconName(iconName);
       
-      // Add assemble animation on hover for all icons
+      // Add custom animations on hover based on icon type
       card.addEventListener('mouseenter', () => {
         const svg = card.querySelector('svg');
-        if (!svg) return;
-        
-        // Add assemble-loop class for infinite assemble animation
         const iconDisplay = card.querySelector('.icon-display');
-        if (iconDisplay) {
+        if (!svg || !iconDisplay) return;
+        
+        // Custom animations for specific icons
+        if (iconName === 'refresh') {
+          // Refresh: just spin
+          svg.style.animation = 'icon-spin-continuous 1s linear infinite';
+        } else if (iconName === 'trash') {
+          // Trash: lid (polyline) opens
+          const polyline = svg.querySelector('polyline');
+          if (polyline) polyline.style.animation = 'trash-lid-open 0.6s ease-in-out infinite';
+        } else if (iconName === 'bell') {
+          // Bell: shake/ring
+          svg.style.animation = 'bell-ring 0.6s ease-in-out infinite';
+        } else if (iconName === 'alert' || iconName === 'error') {
+          // Warning/Danger: pulse with fade trail
+          svg.style.animation = 'pulse-main 1s ease-in-out infinite';
+          svg.style.filter = 'drop-shadow(0 0 8px currentColor)';
+        } else if (iconName === 'download') {
+          // Download: arrow assembles from top
+          iconDisplay.classList.add('icon-download-custom');
+        } else if (iconName === 'upload') {
+          // Upload: arrow assembles from bottom
+          iconDisplay.classList.add('icon-upload-custom');
+        } else if (iconName.startsWith('arrow')) {
+          // Arrows: assemble from their direction
+          iconDisplay.classList.add('icon-arrow-' + iconName.replace('arrow', '').toLowerCase());
+        } else if (iconName === 'externalLink') {
+          // External link: arrow from top-right corner
+          iconDisplay.classList.add('icon-external-link-custom');
+        } else if (iconName === 'settings') {
+          // Settings: rotate gently
+          svg.style.animation = 'icon-spin-continuous 3s linear infinite';
+        } else {
+          // Default: assemble loop
           iconDisplay.classList.add('svg-icon-draw-loop');
         }
       });
       
       card.addEventListener('mouseleave', () => {
         const svg = card.querySelector('svg');
-        if (svg) {
-          // Remove assemble-loop class to stop animation
-          const iconDisplay = card.querySelector('.icon-display');
-          if (iconDisplay) {
-            iconDisplay.classList.remove('svg-icon-draw-loop');
-          }
+        const iconDisplay = card.querySelector('.icon-display');
+        if (!svg) return;
+        
+        // Clear all animations and classes
+        svg.style.animation = '';
+        svg.style.filter = '';
+        const polyline = svg.querySelector('polyline');
+        if (polyline) polyline.style.animation = '';
+        
+        if (iconDisplay) {
+          iconDisplay.classList.remove('svg-icon-draw-loop', 'icon-download-custom', 
+            'icon-upload-custom', 'icon-arrow-right', 'icon-arrow-left', 
+            'icon-arrow-up', 'icon-arrow-down', 'icon-external-link-custom');
         }
       });
       
