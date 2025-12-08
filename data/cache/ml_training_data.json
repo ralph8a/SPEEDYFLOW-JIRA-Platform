@@ -464,12 +464,47 @@
         "suggestions_count": 3,
         "model": "ollama-llama3.2"
       }
+    },
+    {
+      "context_hash": "c0a4545c25e69a453b651c6d1c08bb09",
+      "ticket_key": "[BS]",
+      "timestamp": "2025-12-08T03:07:42.314235",
+      "input": {
+        "summary": "[BS] [AMAZON Bundle EC] falla en recepción de notificaciones",
+        "description": "",
+        "issue_type": "Unknown",
+        "status": "Dependencia de externos",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Revisar la configuración de notificaciones en el dispositivo para asegurarse de que estén activadas correctamente.",
+            "type": "action",
+            "confidence": 0.9
+          },
+          {
+            "text": "Probar la recepción de notificaciones desde otra aplicación o dispositivo para identificar si es un problema específico del bundle.",
+            "type": "action",
+            "confidence": 0.9
+          },
+          {
+            "text": "Verificar la versión del aplicativo y actualizar a la última disponible para garantizar la compatibilidad con las últimas actualizaciones.",
+            "type": "action",
+            "confidence": 0.9
+          }
+        ],
+        "suggestions_count": 3,
+        "model": "ollama-llama3.2"
+      }
     }
   ],
   "metadata": {
     "created": "2025-12-07T23:58:43.823087",
-    "last_modified": "2025-12-08T04:39:45.168530",
-    "total_samples": 14,
+    "last_modified": "2025-12-08T03:07:42.314235",
+    "total_samples": 15,
     "compressed": false,
     "version": "1.0"
   }
