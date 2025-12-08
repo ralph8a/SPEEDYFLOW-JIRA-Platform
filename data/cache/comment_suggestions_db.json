@@ -1,0 +1,18 @@
+{
+  "suggestions": [
+    {
+      "ticket_key": "MSM-7033",
+      "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+      "type": "diagnostic",
+      "action": "copied",
+      "timestamp": "2025-12-08T04:05:59.805248",
+      "date": "2025-12-08"
+    }
+  ],
+  "metadata": {
+    "created": "2025-12-08T04:05:59.805233",
+    "last_modified": "2025-12-08T04:05:59.805271",
+    "total_entries": 1,
+    "compressed": false
+  }
+}

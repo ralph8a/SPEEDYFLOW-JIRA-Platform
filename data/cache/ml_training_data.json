@@ -239,12 +239,62 @@
         "suggestions_count": 5,
         "model": "ollama-llama3.2"
       }
+    },
+    {
+      "context_hash": "bde0bccf7cc771e13e59fe453eff3b3c",
+      "ticket_key": "Posible",
+      "timestamp": "2025-12-08T04:20:14.792367",
+      "input": {
+        "summary": "Posible intermitencia en SSO – Retraso en correos de registro OIDRO",
+        "description": "",
+        "issue_type": "Unknown",
+        "status": "En espera de cliente",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+            "type": "diagnostic",
+            "confidence": 0.5
+          }
+        ],
+        "suggestions_count": 1,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "8a596e9659260b7e86187143606d4aaf",
+      "ticket_key": "[Salud]",
+      "timestamp": "2025-12-08T04:20:59.874369",
+      "input": {
+        "summary": "[Salud] Comentarios Mi Telcel | Comentario de falla en cambio de contraseña",
+        "description": "",
+        "issue_type": "Unknown",
+        "status": "Dependencia de externos",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+            "type": "diagnostic",
+            "confidence": 0.5
+          }
+        ],
+        "suggestions_count": 1,
+        "model": "ollama-llama3.2"
+      }
     }
   ],
   "metadata": {
     "created": "2025-12-07T23:58:43.823087",
-    "last_modified": "2025-12-08T04:02:22.704331",
-    "total_samples": 6,
+    "last_modified": "2025-12-08T04:20:59.874385",
+    "total_samples": 8,
     "compressed": false,
     "version": "1.0"
   }

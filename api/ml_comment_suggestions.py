@@ -346,18 +346,88 @@ class CommentSuggestionEngine:
         
         return final_suggestions
     
+    def _get_fallback_suggestions(self, ticket_text: str, status: str = "", comments_text: str = "", all_comments: List[str] = None) -> List[Dict[str, str]]:
+        """Generate pattern-based suggestions when Ollama is not available"""
+        suggestions = []
+        ticket_lower = ticket_text.lower()
+        
+        # Detectar si hay intención de cierre o falta de respuesta
+        closure_keywords = ['cierre', 'cerrar', 'close', 'resolver', 'resolved', 'completado', 'finished']
+        no_response_keywords = ['sin respuesta', 'no response', 'no contesta', 'no answer', 'sin reply']
+        
+        has_closure_intent = any(kw in comments_text for kw in closure_keywords)
+        has_no_response = any(kw in comments_text for kw in no_response_keywords)
+        
+        # Calcular días desde último comentario (si available)
+        days_since_last_comment = 0
+        if all_comments and len(all_comments) > 0:
+            # Estimación simple: si hay más de 3 comentarios y status no es resuelto
+            if len(all_comments) > 3 and status.lower() not in ['done', 'closed', 'resolved', 'cerrado']:
+                days_since_last_comment = 2  # Simulación, en producción calcular desde timestamp
+        
+        # SUGERENCIA PRIORITARIA: Llamar al informer si no hay respuesta
+        if (has_closure_intent or has_no_response) or days_since_last_comment >= 2:
+            suggestions.append({
+                "text": "📞 **Recomendación**: El informer no ha respondido. Considera llamarlo para verificar el estado del ticket. El número de teléfono se encuentra en la sección de información del ticket.",
+                "type": "action",
+                "confidence": 0.95
+            })
+        
+        # Sugerencias generales basadas en keywords
+        if 'error' in ticket_lower or 'exception' in ticket_lower:
+            suggestions.append({
+                "text": "Por favor adjunta los logs completos del error y el stacktrace para poder diagnosticar el problema.",
+                "type": "diagnostic",
+                "confidence": 0.90
+            })
+        
+        if 'login' in ticket_lower or 'autenticación' in ticket_lower:
+            suggestions.append({
+                "text": "He verificado las credenciales. ¿Puedes confirmar el usuario y método de autenticación que estás utilizando?",
+                "type": "diagnostic",
+                "confidence": 0.88
+            })
+        
+        if 'lento' in ticket_lower or 'performance' in ticket_lower or 'slow' in ticket_lower:
+            suggestions.append({
+                "text": "Estoy revisando las métricas de rendimiento. ¿Puedes especificar en qué momento del día ocurre la lentitud?",
+                "type": "diagnostic",
+                "confidence": 0.87
+            })
+        
+        if 'database' in ticket_lower or 'bd' in ticket_lower or 'query' in ticket_lower:
+            suggestions.append({
+                "text": "Revisaré los registros de la base de datos. ¿El error ocurre con todas las consultas o solo con una específica?",
+                "type": "diagnostic",
+                "confidence": 0.86
+            })
+        
+        # Sugerencia de cierre si parece resuelto
+        if 'funciona' in ticket_lower or 'resuelto' in ticket_lower or 'working' in ticket_lower:
+            suggestions.append({
+                "text": "Me alegra que el problema se haya resuelto. Procederé a cerrar este ticket. Si necesitas algo más, no dudes en contactarnos.",
+                "type": "resolution",
+                "confidence": 0.92
+            })
+        
+        # Si no hay sugerencias específicas, dar una genérica
+        if len(suggestions) == 0:
+            suggestions.append({
+                "text": "Gracias por reportar este inconveniente. Estoy revisando la información proporcionada y te contactaré con más detalles pronto.",
+                "type": "diagnostic",
+                "confidence": 0.75
+            })
+        
+        return suggestions[:5]  # Máximo 5 sugerencias
+    
     def _get_generic_suggestions(self, ticket_text: str, status: str = "", priority: str = "", comments_text: str = "", all_comments: List[str] = None) -> List[Dict[str, str]]:
-        """Get AI-powered suggestions using Ollama (eliminates all default/hardcoded suggestions)"""
+        """Get AI-powered suggestions using Ollama with fallback to pattern-based suggestions"""
         suggestions = []
         
         # Check if Ollama is available
         if not ollama_engine.is_available:
-            logger.warning("⚠️ Ollama not available - install from https://ollama.ai")
-            return [{
-                "text": "⚠️ Ollama AI no disponible. Instala Ollama para obtener sugerencias inteligentes: https://ollama.ai",
-                "type": "diagnostic",
-                "confidence": 0.5
-            }]
+            logger.warning("⚠️ Ollama not available - using pattern-based fallback")
+            return self._get_fallback_suggestions(ticket_text, status, comments_text, all_comments)
         
         # Prepare context for AI analysis
         comments_context = ""
