@@ -6,6 +6,34 @@ Main Flask application with modular Blueprint architecture.
 import sys
 import os
 import logging
+import warnings
+
+# Suppress Streamlit warnings before any imports
+warnings.filterwarnings('ignore', message='.*ScriptRunContext.*')
+warnings.filterwarnings('ignore', category=UserWarning, module='streamlit.*')
+
+# Configure logging early to filter Streamlit warnings
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+class StreamlitWarningFilter(logging.Filter):
+    """Filter to suppress Streamlit ScriptRunContext warnings (safe in bare mode)"""
+    def filter(self, record):
+        if 'ScriptRunContext' in record.getMessage():
+            return False
+        if 'No runtime found' in record.getMessage():
+            return False
+        return True
+
+# Apply filter to Streamlit loggers before importing
+for logger_name in ['streamlit', 'streamlit.runtime', 'streamlit.runtime.scriptrunner_utils', 
+                     'streamlit.runtime.caching', 'streamlit.runtime.caching.cache_data_api']:
+    streamlit_logger = logging.getLogger(logger_name)
+    streamlit_logger.addFilter(StreamlitWarningFilter())
+    streamlit_logger.setLevel(logging.ERROR)
+
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory, render_template
 from flask_cors import CORS
@@ -71,10 +99,6 @@ except ImportError:  # pragma: no cover
     list_available_queues = _stub('list_available_queues')
     list_available_projects = _stub('list_available_projects')
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_FOLDER = os.path.join(BASE_DIR, 'frontend', 'static')
