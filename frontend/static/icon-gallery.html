@@ -134,6 +134,36 @@
       color: #818cf8;
     }
 
+    /* Enable assemble loop animation on icon-display hover */
+    .icon-display.svg-icon-draw-loop svg > *:nth-child(1) {
+      animation: svg-assemble-loop-top 2.5s ease-in-out infinite;
+      animation-delay: 0s;
+    }
+
+    .icon-display.svg-icon-draw-loop svg > *:nth-child(2) {
+      animation: svg-assemble-loop-right 2.5s ease-in-out infinite;
+      animation-delay: 0.3s;
+    }
+
+    .icon-display.svg-icon-draw-loop svg > *:nth-child(3) {
+      animation: svg-assemble-loop-bottom 2.5s ease-in-out infinite;
+      animation-delay: 0.6s;
+    }
+
+    .icon-display.svg-icon-draw-loop svg > *:nth-child(4) {
+      animation: svg-assemble-loop-left 2.5s ease-in-out infinite;
+      animation-delay: 0.9s;
+    }
+
+    .icon-display.svg-icon-draw-loop svg > circle {
+      animation: svg-assemble-loop-top 3s ease-in-out infinite;
+    }
+
+    .icon-display.svg-icon-draw-loop svg > polyline {
+      animation: svg-assemble-loop-right 3s ease-in-out infinite;
+      animation-delay: 0.3s;
+    }
+
     .icon-name {
       font-size: 13px;
       color: #64748b;
@@ -289,6 +319,27 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* Assemble loop animations - parts appear and disappear infinitely */
+    @keyframes svg-assemble-loop-top {
+      0%, 100% { opacity: 0; transform: translateY(-20px); }
+      50% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes svg-assemble-loop-bottom {
+      0%, 100% { opacity: 0; transform: translateY(20px); }
+      50% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes svg-assemble-loop-left {
+      0%, 100% { opacity: 0; transform: translateX(-20px); }
+      50% { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes svg-assemble-loop-right {
+      0%, 100% { opacity: 0; transform: translateX(20px); }
+      50% { opacity: 1; transform: translateX(0); }
+    }
+
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -422,9 +473,7 @@
       transition: transform 0.3s ease;
     }
 
-    .color-item:hover svg {
-      animation: iconRotate 0.5s ease-in-out;
-    }
+    /* Removed iconRotate - using assemble animation instead */
 
     /* Floating animation for header */
     h1::before {
@@ -635,29 +684,26 @@ SVGIcons.getAvailableIcons()
       card.className = 'icon-card';
       card.onclick = () => copyIconName(iconName);
       
-      // Add special animations for certain icon types
+      // Add assemble animation on hover for all icons
       card.addEventListener('mouseenter', () => {
         const svg = card.querySelector('svg');
         if (!svg) return;
         
-        // Add specific animations based on icon type
-        if (iconName.includes('refresh') || iconName.includes('clock')) {
-          svg.style.animation = 'svg-spin 1s ease-in-out';
-        } else if (iconName.includes('bell') || iconName.includes('alert')) {
-          svg.style.animation = 'svg-shake 0.5s ease-in-out';
-        } else if (iconName.includes('star') || iconName.includes('success')) {
-          svg.style.animation = 'svg-tada 0.8s ease-in-out';
-        } else if (iconName.includes('heart') || iconName.includes('message')) {
-          svg.style.animation = 'svg-heartbeat 1s ease-in-out';
-        } else {
-          svg.style.animation = 'svg-bounce 0.6s ease-in-out';
+        // Add assemble-loop class for infinite assemble animation
+        const iconDisplay = card.querySelector('.icon-display');
+        if (iconDisplay) {
+          iconDisplay.classList.add('svg-icon-draw-loop');
         }
       });
       
       card.addEventListener('mouseleave', () => {
         const svg = card.querySelector('svg');
         if (svg) {
-          svg.style.animation = '';
+          // Remove assemble-loop class to stop animation
+          const iconDisplay = card.querySelector('.icon-display');
+          if (iconDisplay) {
+            iconDisplay.classList.remove('svg-icon-draw-loop');
+          }
         }
       });
       
