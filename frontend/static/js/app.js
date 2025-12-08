@@ -188,6 +188,9 @@ async function initApp() {
   // No need to apply theme here - ThemeManager handles it from the start
   console.log('✨ Theme managed by ThemeManager');
   
+  // Warm up Ollama in background (non-blocking) for faster comment suggestions
+  warmupOllama();
+  
   // Initialize background manager (AI backgrounds) - non-blocking
   if (typeof backgroundManager !== 'undefined' && backgroundManager.init) {
     console.log('📸 Initializing background manager...');
@@ -3899,6 +3902,29 @@ async function loadSLAForListView(issues) {
 
 // Export openIssueDetails to global scope for onclick handlers
 window.openIssueDetails = openIssueDetails;
+
+/**
+ * Warm up Ollama model in background for faster suggestions
+ * First call always takes longer, this preloads the model
+ */
+async function warmupOllama() {
+  try {
+    console.log('🔥 Warming up Ollama model in background...');
+    const response = await fetch('/api/ml/comments/warmup', {
+      method: 'GET'
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Ollama warmed up:', data.message);
+    } else {
+      console.warn('⚠️ Ollama warmup failed (not critical)');
+    }
+  } catch (error) {
+    // Non-blocking: if warmup fails, suggestions will just take longer on first call
+    console.warn('⚠️ Ollama warmup error (not critical):', error.message);
+  }
+}
 
 /**
  * Show notification toast
