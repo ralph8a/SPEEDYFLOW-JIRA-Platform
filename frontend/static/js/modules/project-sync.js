@@ -127,7 +127,10 @@ class ProjectSync {
       );
       
       // Update button
-      btn.innerHTML = '<span class="icon">✅</span><span class="label">Sync Tickets</span>';
+      const successIcon = typeof SVGIcons !== 'undefined' 
+        ? SVGIcons.success({ size: 16, className: 'inline-icon' })
+        : '✅';
+      btn.innerHTML = `<span class="icon">${successIcon}</span><span class="label">Sync Tickets</span>`;
       
       setTimeout(() => {
         btn.innerHTML = originalHTML;

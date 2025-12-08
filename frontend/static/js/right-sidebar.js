@@ -270,7 +270,10 @@ function fetchServiceDeskRequestDetails(issueKey) {
       } else {
         const activeTab = document.querySelector('.fields-tab-content.active');
         if (activeTab) {
-          activeTab.innerHTML = '<p style="text-align: center; padding: 20px; color: #f00;">⚠️ Error loading fields</p>';
+          const errorIcon = typeof SVGIcons !== 'undefined' 
+            ? SVGIcons.alert({ size: 16, className: 'inline-icon' })
+            : '⚠️';
+          activeTab.innerHTML = `<p style="text-align: center; padding: 20px; color: #f00;">${errorIcon} Error loading fields</p>`;
         }
       }
     });

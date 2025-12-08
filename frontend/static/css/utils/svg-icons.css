@@ -69,6 +69,19 @@ a:hover .svg-icon {
     margin-right: 6px;
 }
 
+/* Inline icons (for dynamic content like error messages) */
+.inline-icon,
+.inline-icon svg {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.inline-icon svg {
+    width: 1em;
+    height: 1em;
+}
+
 /* Icon only buttons */
 .icon-btn {
     display: inline-flex;
