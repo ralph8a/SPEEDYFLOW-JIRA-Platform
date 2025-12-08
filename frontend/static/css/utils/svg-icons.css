@@ -470,9 +470,6 @@ button:disabled .svg-icon,
 
 /* Draw animation - animates stroke-dashoffset to create drawing effect */
 @keyframes svg-draw {
-    from {
-        stroke-dashoffset: 1000;
-    }
     to {
         stroke-dashoffset: 0;
     }
@@ -481,12 +478,16 @@ button:disabled .svg-icon,
 /* Apply draw animation to paths/lines */
 .svg-icon-draw path,
 .svg-icon-draw line,
-.svg-icon-draw polyline,
-.svg-icon-draw circle,
-.svg-icon-draw rect {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: svg-draw 1s ease-in-out forwards;
+.svg-icon-draw polyline {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: svg-draw 0.8s ease-out forwards;
+}
+
+.svg-icon-draw circle {
+    stroke-dasharray: 150;
+    stroke-dashoffset: 150;
+    animation: svg-draw 1s ease-out forwards;
 }
 
 /* Stagger animation for multiple elements */
@@ -497,58 +498,102 @@ button:disabled .svg-icon,
 
 .svg-icon-draw path:nth-child(2),
 .svg-icon-draw line:nth-child(2) {
-    animation-delay: 0.2s;
+    animation-delay: 0.3s;
 }
 
 .svg-icon-draw path:nth-child(3),
 .svg-icon-draw line:nth-child(3) {
-    animation-delay: 0.4s;
+    animation-delay: 0.6s;
 }
 
 .svg-icon-draw path:nth-child(4),
 .svg-icon-draw line:nth-child(4) {
-    animation-delay: 0.6s;
+    animation-delay: 0.9s;
 }
 
 /* Faster draw animation */
 .svg-icon-draw-fast path,
 .svg-icon-draw-fast line,
-.svg-icon-draw-fast polyline,
-.svg-icon-draw-fast circle,
-.svg-icon-draw-fast rect {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
+.svg-icon-draw-fast polyline {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: svg-draw 0.4s ease-out forwards;
+}
+
+.svg-icon-draw-fast circle {
+    stroke-dasharray: 150;
+    stroke-dashoffset: 150;
     animation: svg-draw 0.5s ease-out forwards;
 }
 
+.svg-icon-draw-fast path:nth-child(2),
+.svg-icon-draw-fast line:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.svg-icon-draw-fast path:nth-child(3),
+.svg-icon-draw-fast line:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
 /* Draw on hover */
+.svg-icon-draw-hover path,
+.svg-icon-draw-hover line,
+.svg-icon-draw-hover polyline {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+}
+
+.svg-icon-draw-hover circle {
+    stroke-dasharray: 150;
+    stroke-dashoffset: 150;
+}
+
 .svg-icon-draw-hover:hover path,
 .svg-icon-draw-hover:hover line,
 .svg-icon-draw-hover:hover polyline,
 .svg-icon-draw-hover:hover circle {
-    stroke-dasharray: 1000;
-    animation: svg-draw 0.6s ease-in-out forwards;
+    animation: svg-draw 0.6s ease-out forwards;
+}
+
+.svg-icon-draw-hover:hover path:nth-child(2),
+.svg-icon-draw-hover:hover line:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.svg-icon-draw-hover:hover path:nth-child(3),
+.svg-icon-draw-hover:hover line:nth-child(3) {
+    animation-delay: 0.4s;
 }
 
 /* Draw loop (continuous drawing) */
 @keyframes svg-draw-loop {
-    0% {
-        stroke-dashoffset: 1000;
-        opacity: 0;
+    0%, 100% {
+        stroke-dashoffset: 100;
     }
     50% {
         stroke-dashoffset: 0;
-        opacity: 1;
-    }
-    100% {
-        stroke-dashoffset: -1000;
-        opacity: 0;
     }
 }
 
 .svg-icon-draw-loop path,
 .svg-icon-draw-loop line,
 .svg-icon-draw-loop polyline {
-    stroke-dasharray: 1000;
-    animation: svg-draw-loop 3s ease-in-out infinite;
+    stroke-dasharray: 100;
+    animation: svg-draw-loop 2s ease-in-out infinite;
+}
+
+.svg-icon-draw-loop circle {
+    stroke-dasharray: 150;
+    animation: svg-draw-loop 2.5s ease-in-out infinite;
+}
+
+.svg-icon-draw-loop path:nth-child(2),
+.svg-icon-draw-loop line:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.svg-icon-draw-loop path:nth-child(3),
+.svg-icon-draw-loop line:nth-child(3) {
+    animation-delay: 0.6s;
 }
