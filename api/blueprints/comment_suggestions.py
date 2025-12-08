@@ -297,47 +297,6 @@ def get_suggestion_stats():
         return jsonify({"error": str(e)}), 500
 
 
-@comment_suggestions_bp.route('/cache/stats', methods=['GET'])
-def get_cache_stats():
-    """Get suggestion cache statistics"""
-    try:
-        engine = get_suggestion_engine()
-        stats = engine.get_cache_stats()
-        
-        return jsonify({
-            "success": True,
-            "cache_stats": stats
-        })
-        
-    except Exception as e:
-        logger.error(f"Error getting cache stats: {e}", exc_info=True)
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
-@comment_suggestions_bp.route('/cache/clear', methods=['POST'])
-def clear_suggestion_cache():
-    """Clear all cached suggestions"""
-    try:
-        engine = get_suggestion_engine()
-        cleared_count = engine.clear_cache()
-        
-        return jsonify({
-            "success": True,
-            "message": f"Cleared {cleared_count} cached entries",
-            "cleared_count": cleared_count
-        })
-        
-    except Exception as e:
-        logger.error(f"Error clearing cache: {e}", exc_info=True)
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
 @comment_suggestions_bp.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
