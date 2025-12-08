@@ -353,7 +353,10 @@ class BackgroundSelectorUI {
         .catch(err => {
           console.error('❌ Background generation failed:', err);
           if (this.isOpen && grid) {
-            grid.innerHTML = '<div style="text-align: center; padding: 30px; color: #ef4444;">❌ Error generating backgrounds</div>';
+            const errorIcon = typeof SVGIcons !== 'undefined' 
+              ? SVGIcons.error({ size: 20, className: 'inline-icon' })
+              : '❌';
+            grid.innerHTML = `<div style="text-align: center; padding: 30px; color: #ef4444;">${errorIcon} Error generating backgrounds</div>`;
           }
         });
     }
@@ -466,7 +469,10 @@ class BackgroundSelectorUI {
       } else {
         console.warn(`⚠️ No image for background ${idx}`, bg);
         item.style.background = 'linear-gradient(135deg, #1e293b, #0f172a)';
-        item.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px;">🖼️</div>';
+        const placeholderIcon = typeof SVGIcons !== 'undefined' 
+          ? SVGIcons.image({ size: 32, className: 'placeholder-icon' })
+          : '🖼️';
+        item.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px;">${placeholderIcon}</div>`;
       }
       
       // Add active state if current

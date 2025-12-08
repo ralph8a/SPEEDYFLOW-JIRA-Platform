@@ -295,7 +295,10 @@
               
               // Show success feedback
               setTimeout(() => {
-                this.innerHTML = '✅ Assigned';
+                const successIcon = typeof SVGIcons !== 'undefined' 
+                  ? SVGIcons.success({ size: 16, className: 'inline-icon' })
+                  : '✅';
+                this.innerHTML = `${successIcon} Assigned`;
                 this.style.background = '#059669';
                 
                 // Reload content after short delay
@@ -305,7 +308,10 @@
               }, 300);
             } else {
               console.error('❌ quickTriage.assignToMe not available');
-              this.innerHTML = '❌ Error';
+              const errorIcon = typeof SVGIcons !== 'undefined' 
+                ? SVGIcons.error({ size: 16, className: 'inline-icon' })
+                : '❌';
+              this.innerHTML = `${errorIcon} Error`;
               this.style.background = '#dc2626';
               setTimeout(() => {
                 this.innerHTML = originalText;
@@ -333,7 +339,10 @@
               }, 300);
             } else {
               console.error('❌ quickTriage.snoozeTicket not available');
-              this.innerHTML = '❌ Error';
+              const errorIcon = typeof SVGIcons !== 'undefined' 
+                ? SVGIcons.error({ size: 16, className: 'inline-icon' })
+                : '❌';
+              this.innerHTML = `${errorIcon} Error`;
               this.style.background = '#dc2626';
               setTimeout(() => {
                 this.innerHTML = originalText;

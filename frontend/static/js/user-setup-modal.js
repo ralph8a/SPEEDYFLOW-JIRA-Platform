@@ -255,11 +255,17 @@ class UserSetupModal {
 
             if (result.data && result.data.success) {
                 // Success!
-                saveBtn.innerHTML = '✅ Credenciales Guardadas';
+                const successIcon = typeof SVGIcons !== 'undefined' 
+                  ? SVGIcons.success({ size: 16, className: 'inline-icon' })
+                  : '✅';
+                saveBtn.innerHTML = `${successIcon} Credenciales Guardadas`;
                 saveBtn.classList.add('success');
                 
                 // Show success message
-                this.showSuccess('✅ Configuración guardada. Inicializando SpeedyFlow...');
+                const successIcon = typeof SVGIcons !== 'undefined' 
+                  ? SVGIcons.success({ size: 16, className: 'inline-icon' })
+                  : '✅';
+                this.showSuccess(`${successIcon} Configuración guardada. Inicializando SpeedyFlow...`);
                 
                 // Reload and trigger initial filters
                 setTimeout(() => {

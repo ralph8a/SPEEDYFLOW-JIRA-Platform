@@ -116,6 +116,94 @@
   <script>
     console.log('🔍 DEBUG: Initializing sidebar action button...');
     document.addEventListener('DOMContentLoaded', function() {
+      // Inject SVG icons into sidebar menu
+      if (typeof SVGIcons !== 'undefined') {
+        // Main navigation icons (16px for sidebar)
+        const iconMappings = {
+          'icon-new-ticket': SVGIcons.plus({ size: 16 }),
+          'icon-my-tickets': SVGIcons.folder({ size: 16 }),
+          'icon-all-tickets': SVGIcons.clipboard({ size: 16 }),
+          'icon-starred': SVGIcons.star({ size: 16 }),
+          // Utilities icons
+          'icon-search': SVGIcons.search({ size: 16 }),
+          'icon-reports': SVGIcons.chart({ size: 16 }),
+          'icon-notifications': SVGIcons.bell({ size: 16 }),
+          'icon-refresh': SVGIcons.refresh({ size: 16 }),
+          'icon-clear-cache': SVGIcons.trash({ size: 16 })
+        };
+        
+        Object.keys(iconMappings).forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.innerHTML = iconMappings[id];
+          }
+        });
+        
+        // Header icons (18px for header)
+        const headerIconMappings = {
+          'icon-header-help': SVGIcons.help({ size: 18 }),
+          'icon-header-settings': SVGIcons.settings({ size: 18 }),
+          'icon-header-user': SVGIcons.user({ size: 18 })
+        };
+        
+        Object.keys(headerIconMappings).forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.innerHTML = headerIconMappings[id];
+          }
+        });
+        
+        // ML Dashboard tab icons (20px for tabs)
+        const mlIconMappings = {
+          'icon-ml-overview': SVGIcons.chart({ size: 20 }),
+          'icon-ml-forecast': SVGIcons.alert({ size: 20 }),
+          'icon-ml-trends': SVGIcons.trendUp({ size: 20 }),
+          'icon-ml-team': SVGIcons.users({ size: 20 })
+        };
+        
+        Object.keys(mlIconMappings).forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.innerHTML = mlIconMappings[id];
+          }
+        });
+        
+        // Filter bar icons (16px for filter labels)
+        const filterIconMappings = {
+          'icon-filter-desk': SVGIcons.building({ size: 16 }), // Organization/building icon
+          'icon-filter-queue': SVGIcons.clipboard({ size: 16 }),
+          'icon-filter-view': SVGIcons.eye({ size: 16 }),
+          'icon-view-board': SVGIcons.chart({ size: 18 }),
+          'icon-view-list': SVGIcons.list({ size: 18 }) // Proper list icon
+        };
+        
+        Object.keys(filterIconMappings).forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.innerHTML = filterIconMappings[id];
+          }
+        });
+        
+        // Right sidebar detail icons (16px)
+        const sidebarDetailIconMappings = {
+          'icon-ticket-info': SVGIcons.clipboard({ size: 16 }),
+          'icon-tab-essential': SVGIcons.star({ size: 16 }),
+          'icon-tab-details': SVGIcons.clipboard({ size: 16 }),
+          'icon-tab-technical': SVGIcons.settings({ size: 16 })
+        };
+        
+        Object.keys(sidebarDetailIconMappings).forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.innerHTML = sidebarDetailIconMappings[id];
+          }
+        });
+        
+        console.log('✅ All SVG icons injected (sidebar, header, ML dashboard, filter bar, right sidebar)');
+      } else {
+        console.warn('⚠️ SVGIcons not loaded, sidebar icons will not render');
+      }
+      
       setTimeout(function() {
         const sidebarContent = document.querySelector('.sidebar-content-component');
         const actionComponent = document.querySelector('.sidebar-action-component');
@@ -188,25 +276,25 @@
         <section class="sidebar-section" aria-label="Navigation">
           <span class="sidebar-section-label">Navigation</span>
           <nav class="sidebar-menu" aria-label="Main">
-            <button type="button" id="newTicketBtn" class="sidebar-menu-item" aria-label="Create Ticket" data-tooltip="Create Ticket"><span class="icon">✚</span><span class="label">Create Ticket</span></button>
-            <a href="#" class="sidebar-menu-item active" aria-current="page" data-tooltip="My Tickets"><span class="icon">🗂️</span><span class="label">My Tickets</span></a>
-            <a href="#" class="sidebar-menu-item" data-tooltip="All Tickets"><span class="icon">📋</span><span class="label">All Tickets</span></a>
-            <a href="#" class="sidebar-menu-item" data-tooltip="Starred"><span class="icon">⭐</span><span class="label">Starred</span></a>
+            <button type="button" id="newTicketBtn" class="sidebar-menu-item" aria-label="Create Ticket" data-tooltip="Create Ticket"><span class="icon" id="icon-new-ticket"></span><span class="label">Create Ticket</span></button>
+            <a href="#" class="sidebar-menu-item active" aria-current="page" data-tooltip="My Tickets"><span class="icon" id="icon-my-tickets"></span><span class="label">My Tickets</span></a>
+            <a href="#" class="sidebar-menu-item" data-tooltip="All Tickets"><span class="icon" id="icon-all-tickets"></span><span class="label">All Tickets</span></a>
+            <a href="#" class="sidebar-menu-item" data-tooltip="Starred"><span class="icon" id="icon-starred"></span><span class="label">Starred</span></a>
           </nav>
         </section>
         <div class="sidebar-divider" aria-hidden="true"></div>
         <section class="sidebar-section" aria-label="Utilities">
           <span class="sidebar-section-label">Utilities</span>
           <nav class="sidebar-menu" aria-label="Utilities">
-            <a href="#" class="sidebar-menu-item" data-tooltip="Search"><span class="icon">🔍</span><span class="label">Search</span></a>
-            <a href="#" class="sidebar-menu-item" data-tooltip="Reports"><span class="icon">📊</span><span class="label">Reports</span></a>
+            <a href="#" class="sidebar-menu-item" data-tooltip="Search"><span class="icon" id="icon-search"></span><span class="label">Search</span></a>
+            <a href="#" class="sidebar-menu-item" data-tooltip="Reports"><span class="icon" id="icon-reports"></span><span class="label">Reports</span></a>
             <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications" data-tooltip="Notifications">
-              <span class="icon">🔔</span>
+              <span class="icon" id="icon-notifications"></span>
               <span class="label">Notifications</span>
               <span class="notification-badge" style="display: none;">0</span>
             </button>
-            <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh" data-tooltip="Refresh"><span class="icon">🔄</span><span class="label">Refresh</span></button>
-            <button type="button" class="sidebar-menu-item" id="clearCacheBtn" aria-label="Clear Cache" title="Clear local cache to force refresh" data-tooltip="Clear Cache"><span class="icon">🗑️</span><span class="label">Clear Cache</span></button>
+            <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh" data-tooltip="Refresh"><span class="icon" id="icon-refresh"></span><span class="label">Refresh</span></button>
+            <button type="button" class="sidebar-menu-item" id="clearCacheBtn" aria-label="Clear Cache" title="Clear local cache to force refresh" data-tooltip="Clear Cache"><span class="icon" id="icon-clear-cache"></span><span class="label">Clear Cache</span></button>
           </nav>
         </section>
         <div class="sidebar-divider" aria-hidden="true"></div>
@@ -244,13 +332,13 @@
           <div class="header-divider-vertical"></div>
           <div class="header-account-actions">
             <button class="header-icon-btn" id="headerHelpBtn" title="Help Center" aria-label="Help Center">
-              <span class="icon">❔</span>
+              <span class="icon" id="icon-header-help"></span>
             </button>
             <button class="header-icon-btn" id="headerSettingsBtn" title="Settings" aria-label="Settings">
-              <span class="icon">⚙️</span>
+              <span class="icon" id="icon-header-settings"></span>
             </button>
             <button class="header-icon-btn" id="headerUserMenuBtn" title="Profile" aria-label="Profile">
-              <span class="icon">👤</span>
+              <span class="icon" id="icon-header-user"></span>
             </button>
           </div>
         </div>
@@ -261,7 +349,7 @@
         <div class="filter-section filter-primary">
             <div class="filter-group">
               <label for="serviceDeskSelectFilter" class="filter-label">
-                <span class="filter-icon">🏢</span>
+                <span class="filter-icon" id="icon-filter-desk"></span>
                 <span class="filter-text">Service Desk</span>
               </label>
               <div class="filter-input-wrapper">
@@ -274,7 +362,7 @@
             
             <div class="filter-group">
               <label for="queueSelectFilter" class="filter-label">
-                <span class="filter-icon">📋</span>
+                <span class="filter-icon" id="icon-filter-queue"></span>
                 <span class="filter-text">Queue</span>
               </label>
               <div class="filter-input-wrapper filter-with-action">
@@ -298,16 +386,16 @@
           <div class="filter-section filter-controls">
             <div class="filter-group">
               <label class="filter-label">
-                <span class="filter-icon">👁️</span>
+                <span class="filter-icon" id="icon-filter-view"></span>
                 <span class="filter-text">View Mode</span>
               </label>
               <div class="view-toggle-enhanced" role="tablist">
                 <button class="view-btn active" data-view="kanban" aria-selected="true" role="tab">
-                  <span class="view-icon">📊</span>
+                  <span class="view-icon" id="icon-view-board"></span>
                   <span class="view-text">Board</span>
                 </button>
                 <button class="view-btn" data-view="list" role="tab">
-                  <span class="view-icon">📝</span>
+                  <span class="view-icon" id="icon-view-list"></span>
                   <span class="view-text">List</span>
                 </button>
               </div>
@@ -370,19 +458,19 @@
             <!-- ALL FIELDS (Organized in tabs by importance) -->
             <div class="detail-group detail-group-all-fields">
               <div class="detail-label">
-                <span>📋 Ticket Information</span>
+                <span><span id="icon-ticket-info"></span> Ticket Information</span>
               </div>
               
               <!-- TABS NAVIGATION -->
               <div class="fields-tabs">
                 <button class="fields-tab active" data-tab="essential">
-                  ⭐ Essential
+                  <span id="icon-tab-essential"></span> Essential
                 </button>
                 <button class="fields-tab" data-tab="details">
-                  📋 Details
+                  <span id="icon-tab-details"></span> Details
                 </button>
                 <button class="fields-tab" data-tab="technical">
-                  ⚙️ Technical
+                  <span id="icon-tab-technical"></span> Technical
                 </button>
               </div>
               
@@ -579,10 +667,10 @@
 
       <!-- Tab Navigation -->
       <div class="ml-dashboard-tabs">
-        <button class="ml-dashboard-tab active" data-tab="overview">📊 Overview</button>
-        <button class="ml-dashboard-tab" data-tab="forecast">⚠️ Breach Forecast</button>
-        <button class="ml-dashboard-tab" data-tab="trends">📈 Performance</button>
-        <button class="ml-dashboard-tab" data-tab="team">👥 Team Workload</button>
+        <button class="ml-dashboard-tab active" data-tab="overview"><span class="ml-tab-icon" id="icon-ml-overview"></span> Overview</button>
+        <button class="ml-dashboard-tab" data-tab="forecast"><span class="ml-tab-icon" id="icon-ml-forecast"></span> Breach Forecast</button>
+        <button class="ml-dashboard-tab" data-tab="trends"><span class="ml-tab-icon" id="icon-ml-trends"></span> Performance</button>
+        <button class="ml-dashboard-tab" data-tab="team"><span class="ml-tab-icon" id="icon-ml-team"></span> Team Workload</button>
       </div>
 
       <!-- Content -->

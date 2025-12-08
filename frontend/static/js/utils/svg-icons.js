@@ -461,6 +461,295 @@ const SVGIcons = {
   },
 
   // ==========================================
+  // ADDITIONAL ICONS (High Priority)
+  // ==========================================
+
+  /**
+   * Folder icon
+   */
+  folder(options = {}) {
+    return this._createSVG(`
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+    `, options);
+  },
+
+  /**
+   * Clipboard icon
+   */
+  clipboard(options = {}) {
+    return this._createSVG(`
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+    `, options);
+  },
+
+  /**
+   * Help / Question icon
+   */
+  help(options = {}) {
+    return this._createSVG(`
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    `, options);
+  },
+
+  /**
+   * Trend Up icon (Analytics up)
+   */
+  trendUp(options = {}) {
+    return this._createSVG(`
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+      <polyline points="17 6 23 6 23 12"></polyline>
+    `, options);
+  },
+
+  /**
+   * Trend Down icon (Analytics down)
+   */
+  trendDown(options = {}) {
+    return this._createSVG(`
+      <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+      <polyline points="17 18 23 18 23 12"></polyline>
+    `, options);
+  },
+
+  /**
+   * Image icon
+   */
+  image(options = {}) {
+    return this._createSVG(`
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+      <polyline points="21 15 16 10 5 21"></polyline>
+    `, options);
+  },
+
+  // ==========================================
+  // PLACEHOLDER REPLACEMENTS (High Priority)
+  // ==========================================
+
+  /**
+   * Building / Organization icon (replaces user placeholder for Service Desk)
+   */
+  building(options = {}) {
+    return this._createSVG(`
+      <rect x="4" y="2" width="16" height="20" rx="1" ry="1"></rect>
+      <line x1="9" y1="22" x2="9" y2="18"></line>
+      <line x1="15" y1="22" x2="15" y2="18"></line>
+      <line x1="9" y1="6" x2="9" y2="6"></line>
+      <line x1="15" y1="6" x2="15" y2="6"></line>
+      <line x1="9" y1="10" x2="9" y2="10"></line>
+      <line x1="15" y1="10" x2="15" y2="10"></line>
+      <line x1="9" y1="14" x2="9" y2="14"></line>
+      <line x1="15" y1="14" x2="15" y2="14"></line>
+    `, options);
+  },
+
+  /**
+   * List / Menu Lines icon (replaces clipboard placeholder for List View)
+   */
+  list(options = {}) {
+    return this._createSVG(`
+      <line x1="8" y1="6" x2="21" y2="6"></line>
+      <line x1="8" y1="12" x2="21" y2="12"></line>
+      <line x1="8" y1="18" x2="21" y2="18"></line>
+      <line x1="3" y1="6" x2="3.01" y2="6"></line>
+      <line x1="3" y1="12" x2="3.01" y2="12"></line>
+      <line x1="3" y1="18" x2="3.01" y2="18"></line>
+    `, options);
+  },
+
+  // ==========================================
+  // MEDIUM PRIORITY ICONS
+  // ==========================================
+
+  /**
+   * Check Circle icon (better success states)
+   */
+  checkCircle(options = {}) {
+    return this._createSVG(`
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    `, options);
+  },
+
+  /**
+   * X Circle icon (better error states)
+   */
+  xCircle(options = {}) {
+    return this._createSVG(`
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="15" y1="9" x2="9" y2="15"></line>
+      <line x1="9" y1="9" x2="15" y2="15"></line>
+    `, options);
+  },
+
+  /**
+   * Sync / Refresh Alt icon (dedicated sync icon)
+   */
+  sync(options = {}) {
+    return this._createSVG(`
+      <polyline points="23 4 23 10 17 10"></polyline>
+      <polyline points="1 20 1 14 7 14"></polyline>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+    `, options);
+  },
+
+  /**
+   * Zap / Bolt icon (speed/fast actions)
+   */
+  zap(options = {}) {
+    return this._createSVG(`
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+    `, options);
+  },
+
+  /**
+   * Target / Bullseye icon (goal/objective)
+   */
+  target(options = {}) {
+    return this._createSVG(`
+      <circle cx="12" cy="12" r="10"></circle>
+      <circle cx="12" cy="12" r="6"></circle>
+      <circle cx="12" cy="12" r="2"></circle>
+    `, options);
+  },
+
+  /**
+   * File / Document icon
+   */
+  file(options = {}) {
+    return this._createSVG(`
+      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+      <polyline points="13 2 13 9 20 9"></polyline>
+    `, options);
+  },
+
+  /**
+   * Paperclip / Attachment icon
+   */
+  paperclip(options = {}) {
+    return this._createSVG(`
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+    `, options);
+  },
+
+  /**
+   * Send / Submit icon
+   */
+  send(options = {}) {
+    return this._createSVG(`
+      <line x1="22" y1="2" x2="11" y2="13"></line>
+      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+    `, options);
+  },
+
+  /**
+   * Folder Open icon (folder open state)
+   */
+  folderOpen(options = {}) {
+    return this._createSVG(`
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+      <polyline points="2 11 4 11 22 11 20 19 4 19 2 11"></polyline>
+    `, options);
+  },
+
+  // ==========================================
+  // LOW PRIORITY ICONS
+  // ==========================================
+
+  /**
+   * Grid icon (grid view)
+   */
+  grid(options = {}) {
+    return this._createSVG(`
+      <rect x="3" y="3" width="7" height="7"></rect>
+      <rect x="14" y="3" width="7" height="7"></rect>
+      <rect x="14" y="14" width="7" height="7"></rect>
+      <rect x="3" y="14" width="7" height="7"></rect>
+    `, options);
+  },
+
+  /**
+   * Columns icon (layout switching)
+   */
+  columns(options = {}) {
+    return this._createSVG(`
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="12" y1="3" x2="12" y2="21"></line>
+    `, options);
+  },
+
+  /**
+   * Maximize icon (expand)
+   */
+  maximize(options = {}) {
+    return this._createSVG(`
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+    `, options);
+  },
+
+  /**
+   * Minimize icon (collapse)
+   */
+  minimize(options = {}) {
+    return this._createSVG(`
+      <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+    `, options);
+  },
+
+  /**
+   * Lock icon (locked state)
+   */
+  lock(options = {}) {
+    return this._createSVG(`
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    `, options);
+  },
+
+  /**
+   * Unlock icon (unlocked state)
+   */
+  unlock(options = {}) {
+    return this._createSVG(`
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+    `, options);
+  },
+
+  /**
+   * Mail / Email icon
+   */
+  mail(options = {}) {
+    return this._createSVG(`
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    `, options);
+  },
+
+  /**
+   * Phone icon (contact)
+   */
+  phone(options = {}) {
+    return this._createSVG(`
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+    `, options);
+  },
+
+  /**
+   * Globe / Web icon (external/web)
+   */
+  globe(options = {}) {
+    return this._createSVG(`
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="2" y1="12" x2="22" y2="12"></line>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+    `, options);
+  },
+
+  // ==========================================
   // HELPER METHODS
   // ==========================================
 

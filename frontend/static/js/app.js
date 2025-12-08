@@ -3802,7 +3802,10 @@ async function loadSLAForListView(issues) {
         console.error(`❌ Error loading SLA for ${issue.key}:`, error);
         const slaElement = document.getElementById(`sla-${issue.key}`);
         if (slaElement) {
-          slaElement.innerHTML = '<span class="sla-error" title="Error loading SLA">⚠️</span>';
+          const errorIcon = typeof SVGIcons !== 'undefined' 
+            ? SVGIcons.alert({ size: 14, className: 'inline-icon' })
+            : '⚠️';
+          slaElement.innerHTML = `<span class="sla-error" title="Error loading SLA">${errorIcon}</span>`;
         }
         state.listView.slaLoadedKeys.add(issue.key);
       }
