@@ -167,7 +167,59 @@ The module includes pre-defined CSS classes for common scenarios:
 <span class="svg-icon-pulse">
   ${SVGIcons.bell()}
 </span>
+
+<!-- Bouncing (for emphasis) -->
+<span class="svg-icon-bounce">
+  ${SVGIcons.arrowDown()}
+</span>
+
+<!-- Shaking (for alerts) -->
+<span class="svg-icon-shake">
+  ${SVGIcons.alert()}
+</span>
+
+<!-- Heartbeat (for favorites/likes) -->
+<span class="svg-icon-heartbeat">
+  ${SVGIcons.star()}
+</span>
+
+<!-- Tada (attention grabber) -->
+<span class="svg-icon-tada">
+  ${SVGIcons.success()}
+</span>
+
+<!-- Float (subtle movement) -->
+<span class="svg-icon-float">
+  ${SVGIcons.bell()}
+</span>
+
+<!-- Glow (emphasis with light effect) -->
+<span class="svg-icon-glow">
+  ${SVGIcons.lightning()}
+</span>
+
+<!-- Wiggle (playful movement) -->
+<span class="svg-icon-wiggle">
+  ${SVGIcons.bell()}
+</span>
 ```
+
+#### Available Animation Classes:
+- `svg-icon-spin` - Continuous 360° rotation (loading states)
+- `svg-icon-pulse` - Opacity pulse (notifications)
+- `svg-icon-bounce` - Vertical bounce (emphasis)
+- `svg-icon-shake` - Horizontal shake (alerts, errors)
+- `svg-icon-swing` - Pendulum swing (playful)
+- `svg-icon-tada` - Scale + rotate combo (celebration)
+- `svg-icon-heartbeat` - Scale pulse (favorites)
+- `svg-icon-fade-in` - Fade in entrance
+- `svg-icon-scale-in` - Scale up entrance
+- `svg-icon-rotate-in` - Rotate entrance
+- `svg-icon-float` - Gentle float (ambient)
+- `svg-icon-glow` - Glow effect (highlight)
+- `svg-icon-flip` - 3D flip (transition)
+- `svg-icon-wiggle` - Subtle wiggle (attention)
+- `svg-icon-jello` - Jello wobble (playful)
 
 ### Button Classes
 ```html

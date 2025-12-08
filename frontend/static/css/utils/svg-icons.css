@@ -131,6 +131,7 @@ a:hover .svg-icon {
 
 .svg-icon-spin {
     animation: svg-spin 1s linear infinite;
+    transform-origin: center;
 }
 
 /* Pulse animation (for notifications) */
@@ -145,6 +146,239 @@ a:hover .svg-icon {
 
 .svg-icon-pulse {
     animation: svg-pulse 2s ease-in-out infinite;
+}
+
+/* Bounce animation */
+@keyframes svg-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.svg-icon-bounce {
+    animation: svg-bounce 1s ease-in-out infinite;
+}
+
+/* Shake animation (for alerts) */
+@keyframes svg-shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+.svg-icon-shake {
+    animation: svg-shake 0.5s ease-in-out;
+}
+
+/* Swing animation */
+@keyframes svg-swing {
+    20% {
+        transform: rotate(15deg);
+    }
+    40% {
+        transform: rotate(-10deg);
+    }
+    60% {
+        transform: rotate(5deg);
+    }
+    80% {
+        transform: rotate(-5deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.svg-icon-swing {
+    animation: svg-swing 1s ease-in-out;
+    transform-origin: top center;
+}
+
+/* Tada animation (attention grabber) */
+@keyframes svg-tada {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    10%, 20% {
+        transform: scale(0.9) rotate(-3deg);
+    }
+    30%, 50%, 70%, 90% {
+        transform: scale(1.1) rotate(3deg);
+    }
+    40%, 60%, 80% {
+        transform: scale(1.1) rotate(-3deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.svg-icon-tada {
+    animation: svg-tada 1s ease-in-out;
+}
+
+/* Heartbeat animation */
+@keyframes svg-heartbeat {
+    0%, 100% {
+        transform: scale(1);
+    }
+    10%, 30% {
+        transform: scale(1.1);
+    }
+    20%, 40% {
+        transform: scale(0.9);
+    }
+}
+
+.svg-icon-heartbeat {
+    animation: svg-heartbeat 1.3s ease-in-out infinite;
+}
+
+/* Fade in animation */
+@keyframes svg-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.svg-icon-fade-in {
+    animation: svg-fade-in 0.5s ease-in;
+}
+
+/* Scale in animation */
+@keyframes svg-scale-in {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.svg-icon-scale-in {
+    animation: svg-scale-in 0.3s ease-out;
+}
+
+/* Rotate in animation */
+@keyframes svg-rotate-in {
+    from {
+        transform: rotate(-180deg);
+        opacity: 0;
+    }
+    to {
+        transform: rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.svg-icon-rotate-in {
+    animation: svg-rotate-in 0.5s ease-out;
+}
+
+/* Float animation */
+@keyframes svg-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.svg-icon-float {
+    animation: svg-float 2s ease-in-out infinite;
+}
+
+/* Glow animation */
+@keyframes svg-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 2px currentColor);
+    }
+    50% {
+        filter: drop-shadow(0 0 8px currentColor);
+    }
+}
+
+.svg-icon-glow {
+    animation: svg-glow 2s ease-in-out infinite;
+}
+
+/* Flip animation */
+@keyframes svg-flip {
+    0% {
+        transform: perspective(400px) rotateY(0);
+    }
+    100% {
+        transform: perspective(400px) rotateY(360deg);
+    }
+}
+
+.svg-icon-flip {
+    animation: svg-flip 1s ease-in-out;
+}
+
+/* Wiggle animation */
+@keyframes svg-wiggle {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-5deg);
+    }
+    75% {
+        transform: rotate(5deg);
+    }
+}
+
+.svg-icon-wiggle {
+    animation: svg-wiggle 0.5s ease-in-out infinite;
+}
+
+/* Jello animation */
+@keyframes svg-jello {
+    0%, 11.1%, 100% {
+        transform: none;
+    }
+    22.2% {
+        transform: skewX(-12.5deg) skewY(-12.5deg);
+    }
+    33.3% {
+        transform: skewX(6.25deg) skewY(6.25deg);
+    }
+    44.4% {
+        transform: skewX(-3.125deg) skewY(-3.125deg);
+    }
+    55.5% {
+        transform: skewX(1.5625deg) skewY(1.5625deg);
+    }
+    66.6% {
+        transform: skewX(-0.78125deg) skewY(-0.78125deg);
+    }
+    77.7% {
+        transform: skewX(0.390625deg) skewY(0.390625deg);
+    }
+    88.8% {
+        transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
+    }
+}
+
+.svg-icon-jello {
+    animation: svg-jello 1s ease-in-out;
+    transform-origin: center;
 }
 
 /* Theme-specific styles */
