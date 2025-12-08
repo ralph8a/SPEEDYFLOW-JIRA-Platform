@@ -327,25 +327,33 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Assemble loop animations - parts appear, pause, then disappear infinitely */
+    /* Assemble loop animations - start assembled, disassemble, reassemble, pause */
     @keyframes svg-assemble-loop-top {
-      0%, 100% { opacity: 0; transform: translateY(-20px); }
-      40%, 60% { opacity: 1; transform: translateY(0); }
+      0% { opacity: 1; transform: translateY(0); }
+      20% { opacity: 0; transform: translateY(-20px); }
+      60%, 80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes svg-assemble-loop-bottom {
-      0%, 100% { opacity: 0; transform: translateY(20px); }
-      40%, 60% { opacity: 1; transform: translateY(0); }
+      0% { opacity: 1; transform: translateY(0); }
+      20% { opacity: 0; transform: translateY(20px); }
+      60%, 80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes svg-assemble-loop-left {
-      0%, 100% { opacity: 0; transform: translateX(-20px); }
-      40%, 60% { opacity: 1; transform: translateX(0); }
+      0% { opacity: 1; transform: translateX(0); }
+      20% { opacity: 0; transform: translateX(-20px); }
+      60%, 80% { opacity: 1; transform: translateX(0); }
+      100% { opacity: 1; transform: translateX(0); }
     }
 
     @keyframes svg-assemble-loop-right {
-      0%, 100% { opacity: 0; transform: translateX(20px); }
-      40%, 60% { opacity: 1; transform: translateX(0); }
+      0% { opacity: 1; transform: translateX(0); }
+      20% { opacity: 0; transform: translateX(20px); }
+      60%, 80% { opacity: 1; transform: translateX(0); }
+      100% { opacity: 1; transform: translateX(0); }
     }
 
     @keyframes fadeInUp {
