@@ -432,48 +432,45 @@ class CommentSuggestionEngine:
         # Prepare context for AI analysis
         comments_context = ""
         if all_comments and len(all_comments) > 0:
-            comments_context = "\n\nCOMENTARIOS EXISTENTES:\n" + "\n".join([f"- {c}" for c in all_comments[-10:]])  # Last 10 comments
+            comments_context = "\n\nComentarios: " + "; ".join([c[:50] for c in all_comments[-3:]])  # Last 3, truncated
         
-        # Create prompt for Ollama
-        prompt = f"""Eres un asistente de soporte técnico experto. Analiza este ticket de JIRA y genera 5 sugerencias de respuesta profesionales, contextuales y útiles.
+        # Create simple TXT prompt (faster than JSON parsing)
+        prompt = f"""Ticket: {ticket_text[:150]}
+Estado: {status}{comments_context}
 
-TICKET: {ticket_text}
-ESTADO: {status}
-PRIORIDAD: {priority}{comments_context}
-
-Genera 5 sugerencias de respuesta en formato JSON estricto:
-[
-  {{"text": "Respuesta sugerida aquí", "type": "diagnostic|action|resolution", "confidence": 0.95}},
-  ...
-]
-
-REQUISITOS:
-- Respuestas en español profesional
-- Contextuales al problema descrito
-- Tipos: "diagnostic" (pedir info), "action" (acción inmediata), "resolution" (cerrar/resolver)
-- Confidence entre 0.85-0.98
-- Si detectas intención de cierre en comentarios, prioriza "resolution"
-- Solo JSON válido, sin texto adicional"""
+Genera 3 respuestas cortas de soporte (una por línea):
+1.
+2.
+3."""
         
         try:
-            logger.info("🤖 Generating AI suggestions with Ollama...")
-            response = ollama_engine._call_ollama(prompt, max_tokens=800)
+            logger.info("🤖 Generating AI suggestions with Ollama (timeout: 20s, TXT format)...")
+            response = ollama_engine._call_ollama(prompt, max_tokens=200, timeout=20)
             
             if response:
-                # Try to parse JSON response
+                # Parse TXT response (faster than JSON)
                 try:
-                    # Extract JSON from response (sometimes Ollama adds extra text)
-                    json_start = response.find('[')
-                    json_end = response.rfind(']') + 1
-                    if json_start != -1 and json_end > json_start:
-                        json_str = response[json_start:json_end]
-                        suggestions = json.loads(json_str)
-                        logger.info(f"✅ Generated {len(suggestions)} AI suggestions")
+                    # Split by lines and extract suggestions
+                    lines = [line.strip() for line in response.split('\n') if line.strip()]
+                    for line in lines:
+                        # Remove numbering (1., 2., 3., -, *, etc.)
+                        clean_line = line.lstrip('123456789.-* ').strip()
+                        if len(clean_line) > 20:  # Min length for valid suggestion
+                            suggestions.append({
+                                "text": clean_line,
+                                "type": "action",
+                                "confidence": 0.90
+                            })
+                            if len(suggestions) >= 3:
+                                break
+                    
+                    if suggestions:
+                        logger.info(f"✅ Generated {len(suggestions)} AI suggestions (TXT format)")
                         return suggestions
                     else:
-                        logger.error("No JSON array found in Ollama response")
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse Ollama JSON: {e}")
+                        logger.warning("No valid suggestions extracted from response")
+                except Exception as e:
+                    logger.error(f"Failed to parse Ollama TXT response: {e}")
                     logger.debug(f"Raw response: {response[:200]}")
         
         except Exception as e:

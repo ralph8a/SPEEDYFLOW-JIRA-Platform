@@ -295,28 +295,44 @@ class CommentSuggestionsUI {
     // Get ALL comments to provide full context
     const allComments = this.getAllComments();
 
-    const response = await fetch('/api/ml/comments/suggestions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        summary: summary,
-        description: description,
-        issue_type: issueType,
-        status: status,
-        priority: priority,
-        all_comments: allComments, // TODOS los comentarios para análisis completo
-        max_suggestions: 5
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // Add timeout to prevent hanging (25s max to match backend 20s + margin)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    
+    try {
+      const response = await fetch('/api/ml/comments/suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          summary: summary,
+          description: description,
+          issue_type: issueType,
+          status: status,
+          priority: priority,
+          all_comments: allComments, // TODOS los comentarios para análisis completo
+          max_suggestions: 3  // Reducido de 5 a 3 para respuestas más rápidas
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data.suggestions || [];
+      
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('La generación de sugerencias tardó demasiado (>25s). Ollama puede estar sobrecargado.');
+      }
+      throw error;
     }
-
-    const data = await response.json();
-    return data.suggestions || [];
   }
 
   /**

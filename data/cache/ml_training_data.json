@@ -289,12 +289,187 @@
         "suggestions_count": 1,
         "model": "ollama-llama3.2"
       }
+    },
+    {
+      "context_hash": "1ed38661eefec6421bbe39fd3fe02d7b",
+      "ticket_key": "Test",
+      "timestamp": "2025-12-08T04:31:56.621385",
+      "input": {
+        "summary": "Test de conexión",
+        "description": "Verificando que el sistema funcione",
+        "issue_type": "Unknown",
+        "status": "Open",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "¿Puedes proporcionarme más información sobre el error que estás experimentando? (e.g. mensaje de error, fecha y hora del problema). Esto me ayudará a diagnosticar la situación.",
+            "type": "diagnostic",
+            "confidence": 0.92
+          }
+        ],
+        "suggestions_count": 1,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "7cb5a8c1e332f69e052c774d105e9c0c",
+      "ticket_key": "Error",
+      "timestamp": "2025-12-08T04:33:24.548440",
+      "input": {
+        "summary": "Error en login",
+        "description": "Usuario no puede iniciar sesión",
+        "issue_type": "Unknown",
+        "status": "Open",
+        "priority": "High",
+        "comments": [
+          "Verificando datos del usuario",
+          "Usuario reporta que aún no funciona"
+        ],
+        "comments_count": 2
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "He verificado los datos del usuario y parece que hay un error en la base de datos. Estoy trabajando en corregir el problema para que puedas iniciar sesión correctamente. Gracias por tu paciencia.",
+            "type": "diagnostic|resolution",
+            "confidence": 0.96
+          },
+          {
+            "text": "Estoy trabajando en resolver este problema. Por favor, espera un momento y trataré de restablecer la conexión de red. Si el problema persiste, por favor intenta iniciar sesión nuevamente en unos minutos.",
+            "type": "action",
+            "confidence": 0.94
+          },
+          {
+            "text": "¿Estás seguro de que has ingresado los datos correctos? Por favor, verifica que la contraseña y el usuario sean exactamente como los registrados. Si aún no funciona, por favor proporciona más información sobre el error.",
+            "type": "diagnostic",
+            "confidence": 0.92
+          }
+        ],
+        "suggestions_count": 3,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "ece7166ce88729c4fcd34fb32696740e",
+      "ticket_key": "Error",
+      "timestamp": "2025-12-08T04:34:30.498521",
+      "input": {
+        "summary": "Error en login",
+        "description": "Usuario no puede iniciar sesión",
+        "issue_type": "Unknown",
+        "status": "Open",
+        "priority": "High",
+        "comments": [
+          "Verificando datos del usuario"
+        ],
+        "comments_count": 1
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+            "type": "diagnostic",
+            "confidence": 0.5
+          }
+        ],
+        "suggestions_count": 1,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "3700916b2c86db23387f720bcf464cb7",
+      "ticket_key": "Test",
+      "timestamp": "2025-12-08T04:34:55.582353",
+      "input": {
+        "summary": "Test",
+        "description": "Testing",
+        "issue_type": "Unknown",
+        "status": "Open",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+            "type": "diagnostic",
+            "confidence": 0.5
+          }
+        ],
+        "suggestions_count": 1,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "9b03d0041437f16bc6b7de995b2986eb",
+      "ticket_key": "Error",
+      "timestamp": "2025-12-08T04:36:28.202081",
+      "input": {
+        "summary": "Error en login",
+        "description": "Usuario no puede iniciar sesión",
+        "issue_type": "Unknown",
+        "status": "Open",
+        "priority": "High",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+            "type": "diagnostic",
+            "confidence": 0.5
+          }
+        ],
+        "suggestions_count": 1,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "8aec5646f88d23415282b2ee80dc0307",
+      "ticket_key": "Error",
+      "timestamp": "2025-12-08T04:39:45.168513",
+      "input": {
+        "summary": "Error al iniciar sesión",
+        "description": "El usuario no puede acceder al sistema",
+        "issue_type": "Unknown",
+        "status": "Open",
+        "priority": "High",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "¡Claro! Aquí te dejo tres opciones de respuestas cortas de soporte:",
+            "type": "action",
+            "confidence": 0.9
+          },
+          {
+            "text": "\"Verifique su conexión a Internet y reintenta el acceso al sistema. Si persiste, contacta con nuestro equipo de soporte técnico para ayuda adicional.\"",
+            "type": "action",
+            "confidence": 0.9
+          },
+          {
+            "text": "\"El error puede estar relacionado con la configuración del usuario o con un problema en nuestros servidores. Por favor, intenta actualizar su contraseña y réintenta el acceso.\"",
+            "type": "action",
+            "confidence": 0.9
+          }
+        ],
+        "suggestions_count": 3,
+        "model": "ollama-llama3.2"
+      }
     }
   ],
   "metadata": {
     "created": "2025-12-07T23:58:43.823087",
-    "last_modified": "2025-12-08T04:20:59.874385",
-    "total_samples": 8,
+    "last_modified": "2025-12-08T04:39:45.168530",
+    "total_samples": 14,
     "compressed": false,
     "version": "1.0"
   }
