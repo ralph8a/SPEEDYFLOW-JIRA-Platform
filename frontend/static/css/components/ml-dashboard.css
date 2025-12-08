@@ -177,6 +177,13 @@
     transform: translateY(0);
 }
 
+.header-actions button svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    stroke: currentColor;
+}
+
 .header-actions .close-btn {
     background: rgba(239, 68, 68, 0.15);
     border-color: rgba(239, 68, 68, 0.3);
@@ -261,6 +268,10 @@
 
 .theme-light .header-actions .close-btn:hover {
     background: rgba(239, 68, 68, 0.2);
+}
+
+.theme-light .header-actions button svg {
+    stroke: currentColor;
 }
 
 .ml-dashboard-controls {
