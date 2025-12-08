@@ -237,16 +237,30 @@ class AnomalyDetectionEngine:
         """Detect when one assignee has too many active tickets"""
         anomalies = []
         
-        # Count active tickets per assignee
+        # Count active tickets per assignee (ONLY RECENT OPEN TICKETS)
         active_assignees = defaultdict(int)
         unassigned_count = 0
+        unassigned_tickets = []
+        now = datetime.now()
         
         for ticket in tickets:
             try:
                 fields = ticket.get('fields', {})
                 status = fields.get('status', {}).get('name', '')
+                created = fields.get('created', '')
                 
-                # Only count active tickets
+                # Skip if no creation date
+                if not created:
+                    continue
+                
+                # Only count tickets from last 30 days (not historical)
+                created_dt = datetime.fromisoformat(created.replace('Z', '+00:00'))
+                days_old = (now - created_dt).total_seconds() / 86400
+                
+                if days_old > 30:
+                    continue  # Skip old tickets
+                
+                # Only count OPEN/ACTIVE tickets
                 if status not in ['Done', 'Resolved', 'Closed', 'Cerrado', 'Resuelto']:
                     assignee = fields.get('assignee', {})
                     if assignee and isinstance(assignee, dict):
@@ -254,7 +268,9 @@ class AnomalyDetectionEngine:
                         active_assignees[name] += 1
                     else:
                         unassigned_count += 1
-            except Exception:
+                        unassigned_tickets.append(ticket.get('key', 'UNKNOWN'))
+            except Exception as e:
+                logger.debug(f"Error processing ticket for assignment balance: {e}")
                 continue
         
         # Check for overload (2x average)
@@ -288,14 +304,16 @@ class AnomalyDetectionEngine:
                     "tickets": tickets_list[:10]  # Show up to 10 tickets
                 })
         
-        # Check for too many unassigned
-        if unassigned_count > avg_load * 2:
+        # Check for too many unassigned (only if > 50 active unassigned tickets)
+        unassigned_threshold = max(50, avg_load * 3)  # At least 50 tickets or 3x average
+        if unassigned_count > unassigned_threshold:
             anomalies.append({
                 "type": "unassigned_tickets",
                 "severity": "medium",
-                "message": f"⚠️ {unassigned_count} tickets sin asignar",
+                "message": f"⚠️ {unassigned_count} tickets activos sin asignar (últimos 30 días)",
                 "value": unassigned_count,
-                "threshold": avg_load * 2
+                "threshold": unassigned_threshold,
+                "tickets": unassigned_tickets[:10]  # Show first 10
             })
         
         return anomalies

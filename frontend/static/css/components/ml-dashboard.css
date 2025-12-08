@@ -145,6 +145,81 @@
     color: #fbbf24;
 }
 
+/* Header Action Buttons */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-actions button {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #818cf8;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.header-actions button:hover {
+    background: rgba(99, 102, 241, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.header-actions button:active {
+    transform: translateY(0);
+}
+
+.header-actions .close-btn {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
+.header-actions .close-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.header-actions .auto-refresh-toggle.active {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+}
+
+.header-actions .auto-refresh-toggle.active:hover {
+    background: rgba(34, 197, 94, 0.25);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* Light theme overrides for header actions */
+.theme-light .header-actions button {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.2);
+    color: #4f46e5;
+}
+
+.theme-light .header-actions button:hover {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+.theme-light .header-actions .close-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #dc2626;
+}
+
+.theme-light .header-actions .close-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
 .ml-dashboard-controls {
     display: flex;
     align-items: center;
