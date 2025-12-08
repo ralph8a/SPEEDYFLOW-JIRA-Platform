@@ -1,0 +1,78 @@
+{
+  "training_samples": [
+    {
+      "context_hash": "5dbfa45509bab983e2ecfe5aa3da248b",
+      "ticket_key": "Error",
+      "timestamp": "2025-12-07T23:58:43.823145",
+      "input": {
+        "summary": "Error 404 en página principal",
+        "description": "Los usuarios reportan error 404 al acceder",
+        "issue_type": "Bug",
+        "status": "Open",
+        "priority": "Critical",
+        "comments": [
+          "Iniciando investigación",
+          "Revisar configuración del servidor"
+        ],
+        "comments_count": 2
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "La página principal se encuentra en estado de mantenimiento temporal por razones técnicas. Si deseas acceder, por favor revisa nuestra página de noticias para obtener más información sobre el cierre.",
+            "type": "resolution",
+            "confidence": 0.98
+          },
+          {
+            "text": "Estoy revisando la configuración del servidor para determinar si hay algún problema con el hosting o la conexión a Internet.",
+            "type": "action",
+            "confidence": 0.95
+          },
+          {
+            "text": "Necesito más información para ayudarte. ¿Podrías proporcionarme el mensaje exacto que aparece al intentar acceder a la página principal? Además, ¿estás utilizando un navegador específico o una versión particular del mismo?",
+            "type": "diagnostic",
+            "confidence": 0.92
+          }
+        ],
+        "suggestions_count": 3,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "e1e38dc53ac0fc0b037ad1340a933799",
+      "ticket_key": "Sistema",
+      "timestamp": "2025-12-08T00:00:29.542100",
+      "input": {
+        "summary": "Sistema lento desde actualización",
+        "description": "Performance degradado después de última actualización",
+        "issue_type": "Performance",
+        "status": "In Progress",
+        "priority": "High",
+        "comments": [
+          "Revisando métricas",
+          "CPU al 80%",
+          "Usuarios reportan lentitud"
+        ],
+        "comments_count": 3
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+            "type": "diagnostic",
+            "confidence": 0.5
+          }
+        ],
+        "suggestions_count": 1,
+        "model": "ollama-llama3.2"
+      }
+    }
+  ],
+  "metadata": {
+    "created": "2025-12-07T23:58:43.823087",
+    "last_modified": "2025-12-08T00:00:29.542115",
+    "total_samples": 2,
+    "compressed": false,
+    "version": "1.0"
+  }
+}

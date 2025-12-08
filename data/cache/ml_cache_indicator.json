@@ -1,0 +1,14 @@
+{
+  "has_cache": true,
+  "total_tickets": 135,
+  "desk_id": "4",
+  "desk_name": "Desk 4",
+  "queue_id": "27",
+  "queue_name": "All open",
+  "queue_jql": "project = MSM AND \"Tipo de Solicitud[Dropdown]\" != \"Soporte Jira\" AND status not in (Cancelado, Cerrado, Cerrado.) ORDER BY \"Time to resolution\" ASC",
+  "cached_at": "2025-12-07T04:32:59.665772",
+  "cache_file": "data/cache/ml_preload_cache.json.gz",
+  "metadata_file": "data/cache/ml_cache_indicator.json",
+  "file_size_bytes": 5258,
+  "compression_ratio_percent": 96.6
+}

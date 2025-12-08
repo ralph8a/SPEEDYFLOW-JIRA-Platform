@@ -442,7 +442,7 @@ body.theme-dark .visibility-label {
   width: 250px;
   max-height: 250px;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 999999;
   display: none;
   flex-direction: column;
   top: -270px;

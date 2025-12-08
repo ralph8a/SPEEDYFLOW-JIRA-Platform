@@ -19,6 +19,15 @@ sla_bp = Blueprint('sla', __name__, url_prefix='/api')
 SLA_BY_SERVICE_DESK = {}
 SLA_SUMMARY = {'total_slas_found': 0}
 
+def enrich_tickets_with_sla(tickets):
+    """
+    Enrich tickets with SLA data.
+    For ML Preloader, this is a no-op since SLA data is fetched on-demand.
+    Returns tickets unchanged.
+    """
+    logger.info(f"⚡ Skipping SLA enrichment for {len(tickets)} tickets (fetched on-demand)")
+    return tickets
+
 def load_sla_cache():
     """Load pre-calculated SLA data from JSON file"""
     global SLA_BY_SERVICE_DESK, SLA_SUMMARY

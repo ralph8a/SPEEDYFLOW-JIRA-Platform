@@ -128,10 +128,24 @@
 .ml-priority-toggle {
   display: inline-flex;
   align-items: center;
-  padding: 8px 12px;
-  background: rgba(99, 102, 241, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.ml-priority-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(99, 102, 241, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .ml-toggle-label {
@@ -144,15 +158,42 @@
 }
 
 .ml-toggle-text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  color: #4f46e5;
+  color: rgba(0, 0, 0, 0.75);
+  white-space: nowrap;
+  line-height: 1;
 }
 
 #mlPriorityToggle {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   cursor: pointer;
+  accent-color: #4f46e5;
+}
+
+/* ML Dashboard Button dentro del toggle */
+.ml-dashboard-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.ml-dashboard-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 /* Tooltip styling (enhanced) */
@@ -172,7 +213,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  z-index: 1000;
+  z-index: 999999;
   max-width: 300px;
   line-height: 1.5;
 }
@@ -210,9 +251,34 @@ body.theme-dark .ml-toggle-text {
   color: #818cf8;
 }
 
-body.theme-dark .ml-priority-toggle {
-  background: rgba(99, 102, 241, 0.2);
+[data-theme="dark"] .ml-priority-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .ml-priority-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 
+    0 4px 12px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .ml-toggle-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="dark"] .ml-dashboard-btn {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+[data-theme="dark"] .ml-dashboard-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(139, 92, 246, 0.35));
+  border-color: rgba(99, 102, 241, 0.5);
 }
 
 /* Responsive */

@@ -41,14 +41,24 @@ JIRA_SITE, JIRA_EMAIL, JIRA_API_TOKEN = load_env_config()
 @dataclass
 class JiraConfig:
     """JIRA API configuration"""
-    site: str = JIRA_SITE
-    email: str = JIRA_EMAIL
-    api_token: str = JIRA_API_TOKEN
+    site: str = JIRA_SITE or ""
+    email: str = JIRA_EMAIL or ""
+    api_token: str = JIRA_API_TOKEN or ""
     request_timeout: int = 30
     max_retries: int = 3
     retry_backoff: list[int] = (1, 2, 4)
     default_page_size: int = 50
     max_page_size: int = 100
+
+@dataclass
+class UserConfig:
+    """User-specific configuration"""
+    project_key: Optional[str] = None  # User's primary project/desk (e.g., "MSM")
+    desk_id: Optional[str] = None      # User's primary service desk ID
+    queue_id: Optional[str] = None     # User's preferred queue ID
+    jira_site: Optional[str] = None    # User's JIRA site URL
+    jira_email: Optional[str] = None   # User's JIRA email
+    jira_token: Optional[str] = None   # User's JIRA API token
 
 @dataclass
 class CacheConfig:
@@ -71,6 +81,7 @@ class AppConfig:
     jira: JiraConfig
     cache: CacheConfig
     logging: LoggingConfig
+    user: UserConfig
     env_label: str = "PROD"
     env_color: str = "#2e7d32"
 
@@ -99,6 +110,14 @@ class AppConfig:
                 max_size=int(os.getenv("LOG_MAX_SIZE", "10485760")),
                 backup_count=int(os.getenv("LOG_BACKUP_COUNT", "5"))
             ),
+            user=UserConfig(
+                project_key=os.getenv("USER_PROJECT_KEY"),
+                desk_id=os.getenv("USER_DESK_ID"),
+                queue_id=os.getenv("USER_QUEUE_ID"),
+                jira_site=os.getenv("JIRA_CLOUD_SITE"),
+                jira_email=os.getenv("JIRA_EMAIL"),
+                jira_token=os.getenv("JIRA_API_TOKEN")
+            ),
             env_label=os.getenv("ENV_LABEL", "PROD"),
             env_color=os.getenv("ENV_COLOR", "#2e7d32")
         )
@@ -113,6 +132,139 @@ class AppConfig:
         if not self.jira.api_token:
             errors.append("No API token found (JIRA_API_TOKEN or ATLASSIAN_API_TOKEN)")
         return errors
+    
+    def needs_login(self) -> bool:
+        """Check if login credentials are needed"""
+        return not all([
+            self.jira.site,
+            self.jira.email,
+            self.jira.api_token
+        ])
+    
+    def needs_user_setup(self) -> bool:
+        """Check if user configuration is needed"""
+        return not self.user.project_key
+
+def save_user_credentials(jira_site: str, jira_email: str, jira_token: str, project_key: str = None, desk_id: str = None) -> bool:
+    """
+    Save user credentials and configuration to .env file and user documents
+    
+    Args:
+        jira_site: JIRA site URL (e.g., "https://speedymovil.atlassian.net")
+        jira_email: User's JIRA email
+        jira_token: User's JIRA API token
+        project_key: Optional user's primary project key (e.g., "MSM")
+        desk_id: Optional service desk ID
+    
+    Returns:
+        bool: True if saved successfully
+    """
+    try:
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+        
+        # Read existing .env
+        if os.path.exists(env_path):
+            with open(env_path, 'r') as f:
+                env_lines = f.readlines()
+        else:
+            env_lines = ['# SpeedyFlow Configuration\n\n']
+        
+        # Update or add credentials
+        credentials = {
+            'JIRA_CLOUD_SITE': jira_site,
+            'JIRA_EMAIL': jira_email,
+            'JIRA_API_TOKEN': jira_token,
+        }
+        
+        if project_key:
+            credentials['USER_PROJECT_KEY'] = project_key
+        if desk_id:
+            credentials['USER_DESK_ID'] = desk_id
+        
+        # Update existing lines or mark as not found
+        for key, value in credentials.items():
+            found = False
+            for i, line in enumerate(env_lines):
+                if line.startswith(f'{key}='):
+                    env_lines[i] = f'{key}={value}\n'
+                    found = True
+                    break
+            if not found:
+                env_lines.append(f'{key}={value}\n')
+        
+        # Write back to .env
+        with open(env_path, 'w') as f:
+            f.writelines(env_lines)
+        
+        # Also save to user documents for backup
+        try:
+            user_home = os.path.expanduser('~')
+            speedyflow_dir = os.path.join(user_home, 'Documents', 'SpeedyFlow')
+            os.makedirs(speedyflow_dir, exist_ok=True)
+            
+            config_file = os.path.join(speedyflow_dir, 'credentials.env')
+            with open(config_file, 'w') as f:
+                f.write('# SpeedyFlow JIRA Credentials\n')
+                f.write('# Este archivo es un respaldo de tus credenciales\n\n')
+                for key, value in credentials.items():
+                    f.write(f'{key}={value}\n')
+            
+            logger.info(f"✅ Credentials also saved to: {config_file}")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not save backup to Documents: {e}")
+        
+        logger.info(f"✅ User credentials saved: SITE={jira_site}, EMAIL={jira_email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to save user credentials: {e}")
+        return False
+
+def save_user_config(project_key: str, desk_id: str = None, queue_id: str = None) -> bool:
+    """Save user configuration to .env file"""
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    
+    try:
+        # Read existing .env content
+        env_lines = []
+        if os.path.exists(env_path):
+            with open(env_path, 'r') as f:
+                env_lines = f.readlines()
+        
+        # Update or add USER_PROJECT_KEY, USER_DESK_ID, and USER_QUEUE_ID
+        updated = False
+        desk_updated = False
+        queue_updated = False
+        
+        for i, line in enumerate(env_lines):
+            if line.startswith('USER_PROJECT_KEY='):
+                env_lines[i] = f'USER_PROJECT_KEY={project_key}\n'
+                updated = True
+            elif line.startswith('USER_DESK_ID=') and desk_id:
+                env_lines[i] = f'USER_DESK_ID={desk_id}\n'
+                desk_updated = True
+            elif line.startswith('USER_QUEUE_ID=') and queue_id:
+                env_lines[i] = f'USER_QUEUE_ID={queue_id}\n'
+                queue_updated = True
+        
+        # Add if not found
+        if not updated:
+            env_lines.append(f'\n# User Configuration\nUSER_PROJECT_KEY={project_key}\n')
+        if desk_id and not desk_updated:
+            env_lines.append(f'USER_DESK_ID={desk_id}\n')
+        if queue_id and not queue_updated:
+            env_lines.append(f'USER_QUEUE_ID={queue_id}\n')
+        
+        # Write back to .env
+        with open(env_path, 'w') as f:
+            f.writelines(env_lines)
+        
+        logger.info(f"✅ User configuration saved: PROJECT_KEY={project_key}, DESK_ID={desk_id}, QUEUE_ID={queue_id}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to save user configuration: {e}")
+        return False
 
 # Global configuration instance
 config = AppConfig.from_env()

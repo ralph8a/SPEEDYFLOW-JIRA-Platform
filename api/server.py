@@ -45,9 +45,8 @@ from api.blueprints.copilot import copilot_bp  # noqa: E402
 from api.blueprints.reports import reports_bp  # noqa: E402
 from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
 from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
-from api.blueprints.ml_priority import ml_priority_bp  # noqa: E402
-from api.blueprints.ml_dashboard import ml_dashboard_bp  # noqa: E402
-from api.blueprints.ml_preloader import ml_preloader_bp  # noqa: E402
+from api.blueprints.comment_suggestions import comment_suggestions_bp  # noqa: E402
+from api.blueprints.anomaly_detection import anomaly_detection_bp  # noqa: E402
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -125,9 +124,8 @@ app.register_blueprint(copilot_bp)
 app.register_blueprint(reports_bp)
 app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & duplicates
 app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
-app.register_blueprint(ml_priority_bp)  # ML Priority Engine: Smart prioritization & breach prediction
-app.register_blueprint(ml_dashboard_bp)  # ML Predictive Dashboard: Real-time analytics & forecasting
-app.register_blueprint(ml_preloader_bp)  # ML Preloader: Background data loading with compression
+app.register_blueprint(comment_suggestions_bp)  # ML: Smart comment suggestions
+app.register_blueprint(anomaly_detection_bp)  # ML: Anomaly detection dashboard
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
@@ -196,6 +194,192 @@ def api_dashboard_summary():
     }
 
 # Queues / Desks ------------------------------------------------------
+@app.route('/api/user/login-status', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+def api_check_login_status():
+    """Check if login credentials are needed"""
+    return {
+        'needs_login': config.needs_login(),
+        'has_site': bool(config.jira.site),
+        'has_email': bool(config.jira.email),
+        'has_token': bool(config.jira.api_token),
+        'project_key': config.user.project_key,
+        'desk_id': config.user.desk_id,
+        'queue_id': config.user.queue_id
+    }
+
+@app.route('/api/user/login', methods=['POST'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+def api_save_user_login():
+    """Save user credentials and configuration"""
+    from utils.config import save_user_credentials
+    
+    data = request.get_json() or {}
+    jira_site = data.get('jira_site', '').strip().rstrip('/')
+    jira_email = data.get('jira_email', '').strip()
+    jira_token = data.get('jira_token', '').strip()
+    project_key = data.get('project_key', '').strip().upper() if data.get('project_key') else None
+    desk_id = data.get('desk_id', '').strip() if data.get('desk_id') else None
+    
+    # Validate required fields
+    if not jira_site:
+        return {'success': False, 'error': 'JIRA site URL is required'}, 400
+    if not jira_email:
+        return {'success': False, 'error': 'Email is required'}, 400
+    if not jira_token:
+        return {'success': False, 'error': 'API token is required'}, 400
+    
+    # Validate URL format
+    if not jira_site.startswith('https://'):
+        return {'success': False, 'error': 'JIRA site must start with https://'}, 400
+    
+    # Validate email format
+    if '@' not in jira_email:
+        return {'success': False, 'error': 'Invalid email format'}, 400
+    
+    # Save to .env and Documents
+    success = save_user_credentials(jira_site, jira_email, jira_token, project_key, desk_id)
+    
+    if success:
+        # Reload config
+        from utils import config as config_module
+        config_module.config = config_module.AppConfig.from_env()
+        
+        return {
+            'success': True,
+            'message': 'Credentials saved successfully',
+            'saved_to': ['.env', '~/Documents/SpeedyFlow/credentials.env'],
+            'reload_required': True
+        }
+    else:
+        return {'success': False, 'error': 'Failed to save credentials'}, 500
+
+@app.route('/api/user/setup', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+def api_check_user_setup():
+    """Check if user configuration is needed"""
+    return {
+        'needs_setup': config.needs_user_setup(),
+        'project_key': config.user.project_key,
+        'desk_id': config.user.desk_id
+    }
+
+@app.route('/api/user/setup', methods=['POST'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def api_save_user_setup():
+    """Save user configuration"""
+    from utils.config import save_user_config
+    
+    data = request.get_json() or {}
+    project_key = data.get('project_key', '').strip().upper()
+    desk_id = data.get('desk_id', '').strip()
+    queue_id = data.get('queue_id', '').strip()
+    
+    if not project_key:
+        return {'success': False, 'error': 'project_key is required'}, 400
+    
+    # Save to .env
+    success = save_user_config(project_key, desk_id, queue_id)
+    
+    if success:
+        # Reload config
+        from utils import config as config_module
+        config_module.config = config_module.AppConfig.from_env()
+        
+        return {
+            'success': True,
+            'message': 'Configuration saved successfully',
+            'project_key': project_key,
+            'desk_id': desk_id,
+            'queue_id': queue_id,
+            'reload_required': False
+        }
+    else:
+        return {'success': False, 'error': 'Failed to save configuration'}, 500
+
+@app.route('/api/user/desk-context', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def api_get_user_desk_context():
+    """Get user's desk context from configuration or detect automatically.
+    
+    Priority:
+    1. USER_PROJECT_KEY from .env (configured by user)
+    2. Auto-detection from user's tickets
+    3. First available desk as fallback
+    """
+    try:
+        # Priority 1: Use configured project key
+        if config.user.project_key:
+            logging.info(f"✅ Using configured project key: {config.user.project_key}")
+            
+            # Find desk by project key
+            desks_response = get_service_desks()
+            desks = desks_response.get('values', []) if isinstance(desks_response, dict) else []
+            
+            for desk in desks:
+                if desk.get('projectKey') == config.user.project_key:
+                    logging.info(f"✅ Found configured desk: {desk.get('id')} - {desk.get('projectName')}")
+                    return {
+                        'desk_id': desk.get('id'),
+                        'desk_name': desk.get('projectName'),
+                        'project_key': config.user.project_key,
+                        'ticket_count': 0,
+                        'source': 'user_config'
+                    }
+            
+            logging.warning(f"⚠️ Configured project {config.user.project_key} not found in desks")
+        
+        # Fallback: Use first available desk
+        desks_response = get_service_desks()
+        desks = desks_response.get('values', []) if isinstance(desks_response, dict) else []
+        
+        if not desks:
+            logging.warning("No service desks found")
+            return {
+                'desk_id': None,
+                'desk_name': None,
+                'project_key': None,
+                'ticket_count': 0,
+                'source': 'none',
+                'needs_setup': True
+            }
+        
+        first_desk = desks[0]
+        logging.info(f"⚠️ Using fallback desk: {first_desk.get('id')} - {first_desk.get('projectName')} ({first_desk.get('projectKey')})")
+        
+        return {
+            'desk_id': first_desk.get('id'),
+            'desk_name': first_desk.get('projectName'),
+            'project_key': first_desk.get('projectKey'),
+            'ticket_count': 0,
+            'source': 'first_available',
+            'all_desks_count': len(desks),
+            'needs_setup': not config.user.project_key
+        }
+        
+    except Exception as e:
+        logging.error(f"Error getting user desk context: {e}", exc_info=True)
+        return {
+            'desk_id': None,
+            'desk_name': None,
+            'project_key': None,
+            'ticket_count': 0,
+            'source': 'error',
+            'error': str(e)
+        }
+
 @app.route('/api/queues', methods=['GET'])
 @handle_api_error
 @json_response
@@ -263,7 +447,8 @@ def api_get_desks_with_queues():
                 continue
             q_name_candidates = [q.get('name'), q.get('queueName'), q.get('nombre'), q.get('title')]
             q_name = next((qn for qn in q_name_candidates if isinstance(qn, str) and qn.strip()), None) or f"Queue {q_id}"
-            queues.append({'id': str(q_id), 'name': q_name})
+            q_jql = q.get('jql', '')
+            queues.append({'id': str(q_id), 'name': q_name, 'jql': q_jql})
         # Provide both name and displayName and flag if placeholder
         aggregated.append({'id': str(desk_id), 'name': display_name, 'displayName': display_name, 'placeholder': placeholder_used, 'queues': queues})
         if placeholder_used:
@@ -845,6 +1030,38 @@ def api_docs():
     'pending_restoration': []
     })
 
+@app.route('/test-login', methods=['GET'])
+def test_login_flow():
+    """Test endpoint to simulate login flow"""
+    html = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Testing Login Flow</title>
+    </head>
+    <body>
+        <h1>🔐 Simulating Login...</h1>
+        <p>Setting sessionStorage flags and redirecting...</p>
+        <script>
+            // Set login flags
+            sessionStorage.setItem('speedyflow_just_logged_in', 'true');
+            sessionStorage.setItem('speedyflow_initial_project', 'MSM');
+            
+            console.log('✅ Login flags set:', {
+                just_logged_in: sessionStorage.getItem('speedyflow_just_logged_in'),
+                initial_project: sessionStorage.getItem('speedyflow_initial_project')
+            });
+            
+            // Redirect to main app
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        </script>
+    </body>
+    </html>
+    '''
+    return html
+
 @app.errorhandler(404)
 def not_found(error): return jsonify({'success': False, 'error': 'Endpoint not found', 'path': request.path}), 404
 
@@ -853,7 +1070,65 @@ def internal_error(error):
     logger.error(f"Internal error: {error}")
     return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
+def start_ollama_service():
+    """Start Ollama service if not already running"""
+    import subprocess
+    import time
+    import requests
+    
+    # Check if Ollama is already running
+    try:
+        response = requests.get('http://localhost:11434/api/tags', timeout=2)
+        if response.status_code == 200:
+            logger.info('✅ Ollama already running')
+            return True
+    except:
+        pass
+    
+    # Try to start Ollama
+    logger.info('🤖 Starting Ollama service...')
+    try:
+        # Start Ollama in background
+        if sys.platform == 'win32':
+            # Windows
+            subprocess.Popen(['ollama', 'serve'], 
+                           creationflags=subprocess.CREATE_NO_WINDOW,
+                           stdout=subprocess.DEVNULL, 
+                           stderr=subprocess.DEVNULL)
+        else:
+            # Linux/Mac
+            subprocess.Popen(['ollama', 'serve'],
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL,
+                           start_new_session=True)
+        
+        # Wait for Ollama to start (max 5 seconds)
+        for i in range(10):
+            time.sleep(0.5)
+            try:
+                response = requests.get('http://localhost:11434/api/tags', timeout=1)
+                if response.status_code == 200:
+                    logger.info('✅ Ollama service started successfully')
+                    return True
+            except:
+                continue
+        
+        logger.warning('⚠️ Ollama started but not responding yet (may need more time)')
+        return False
+        
+    except FileNotFoundError:
+        logger.warning('⚠️ Ollama not installed. Install from: https://ollama.ai')
+        logger.warning('   Comment Suggestions will show installation prompt')
+        return False
+    except Exception as e:
+        logger.error(f'❌ Error starting Ollama: {e}')
+        return False
+
 if __name__ == '__main__':
     PORT = 5005
+    
+    # Try to start Ollama service
+    start_ollama_service()
+    
     logger.info(f"🚀 Starting Stable API Server on {PORT}")
     app.run(host='127.0.0.1', port=PORT, debug=False, threaded=True, use_reloader=False)

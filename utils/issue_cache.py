@@ -15,6 +15,7 @@ DESVENTAJAS:
 - Lectura completa cada vez
 """
 import json
+import gzip
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -32,28 +33,71 @@ class IssueCacheManager:
     def __init__(self, cache_dir: str = "data/cache"):
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.issues_file = self.cache_dir / "msm_issues.json"
+        # Use .json.gz for compressed storage
+        self.issues_file = self.cache_dir / "msm_issues.json.gz"
         self.patterns_file = self.cache_dir / "patterns.json"
         self.metadata_file = self.cache_dir / "sync_metadata.json"
-        logger.info(f"Cache manager initialized: {self.cache_dir}")
+        self.use_compression = True  # Enable gzip compression for large files
+        logger.info(f"Cache manager initialized: {self.cache_dir} (compression: {self.use_compression})")
     
     def _load_json(self, file_path: Path, default=None):
-        """Load JSON file or return default"""
-        if not file_path.exists():
-            return default if default is not None else {}
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading {file_path}: {e}")
-            return default if default is not None else {}
+        """Load JSON file or return default (supports .gz compression)"""
+        # Try compressed version first (.json.gz)
+        gz_path = file_path.with_suffix(file_path.suffix + '.gz') if not str(file_path).endswith('.gz') else file_path
+        
+        if gz_path.exists():
+            try:
+                with gzip.open(gz_path, 'rt', encoding='utf-8') as f:
+                    data = json.load(f)
+                logger.info(f"✓ Loaded compressed JSON: {gz_path.name}")
+                return data
+            except Exception as e:
+                logger.error(f"Error loading compressed {gz_path}: {e}")
+        
+        # Fallback to uncompressed version
+        if file_path.exists() and not str(file_path).endswith('.gz'):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                logger.info(f"✓ Loaded uncompressed JSON: {file_path.name}")
+                return data
+            except Exception as e:
+                logger.error(f"Error loading {file_path}: {e}")
+        
+        return default if default is not None else {}
     
     def _save_json(self, file_path: Path, data):
-        """Save data to JSON file"""
+        """Save data to JSON file (with optional gzip compression)"""
         try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-            logger.info(f"Saved data to {file_path}")
+            # Determine if we should compress (for large files like issues cache)
+            should_compress = self.use_compression and file_path == self.issues_file
+            
+            if should_compress:
+                # Save as compressed .json.gz
+                json_str = json.dumps(data, indent=2, ensure_ascii=False)
+                uncompressed_size = len(json_str.encode('utf-8'))
+                
+                with gzip.open(file_path, 'wt', encoding='utf-8', compresslevel=6) as f:
+                    f.write(json_str)
+                
+                compressed_size = file_path.stat().st_size
+                ratio = (1 - compressed_size / uncompressed_size) * 100
+                
+                logger.info(f"✓ Saved compressed JSON: {file_path.name} "
+                           f"({uncompressed_size / 1024 / 1024:.1f} MB → {compressed_size / 1024 / 1024:.1f} MB, "
+                           f"{ratio:.1f}% reduction)")
+                print(f"💾 Compression: {uncompressed_size / 1024 / 1024:.1f} MB → {compressed_size / 1024 / 1024:.1f} MB ({ratio:.1f}% saved)")
+                
+                # Delete old uncompressed version if exists
+                old_uncompressed = file_path.with_suffix('')
+                if old_uncompressed.exists() and old_uncompressed != file_path:
+                    old_uncompressed.unlink()
+                    logger.info(f"🗑️  Deleted old uncompressed file: {old_uncompressed.name}")
+            else:
+                # Save as regular JSON (for small files like patterns, metadata)
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                logger.info(f"✓ Saved uncompressed JSON: {file_path.name}")
         except Exception as e:
             logger.error(f"Error saving {file_path}: {e}")
             raise

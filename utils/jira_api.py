@@ -285,7 +285,7 @@ class JiraAPI:
         validate_query: bool = True
     ) -> Dict[str, Any]:
         """
-        Search for issues using JQL
+        Search for issues using JQL (GET method with API v2)
         
         Args:
             jql: JQL search string
@@ -297,7 +297,7 @@ class JiraAPI:
         Returns:
             Search results with issues and metadata
         """
-        url = f"{self.site}/rest/api/2/search"
+        url = f"{self.site}/rest/api/2/search"  # API v2 (v3 returns 410 Gone)
         params = {
             "jql": jql,
             "startAt": start_at,
@@ -305,8 +305,9 @@ class JiraAPI:
             "validateQuery": validate_query
         }
         if fields:
-            params["fields"] = fields
+            params["fields"] = ",".join(fields)  # Comma-separated string for GET
             
+        # Use GET with API v2 (stable and widely supported)
         return _make_request("GET", url, self.headers, params=params)
 
     @retry_on_error()

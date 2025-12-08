@@ -54,12 +54,8 @@ class ViewToggleFilters {
       });
     }
 
-    const mlAnalyzeBtn = document.getElementById('mlAnalyzeBtn');
-    if (mlAnalyzeBtn) {
-      mlAnalyzeBtn.addEventListener('click', () => {
-        this.triggerAiAnalysis();
-      });
-    }
+    // NOTE: ML Dashboard button (mlDashboardBtn) is handled in app.js setupEventListeners()
+    // No need to attach listener here - avoid duplicate handlers
 
     // Close dropdowns on outside click
     document.addEventListener('click', (e) => {
@@ -382,22 +378,30 @@ class ViewToggleFilters {
     }
   }
 
+  // NOTE: This method is no longer used - ML Dashboard button is handled in app.js
+  // Kept for backward compatibility in case other code references it
   triggerAiAnalysis() {
+    console.log('⚠️ triggerAiAnalysis called from view-toggle-filters (deprecated)');
+    console.log('✅ Use app.js mlDashboardBtn listener instead');
+    
+    // Delegate to the correct handler
+    if (window.mlDashboard) {
+      window.mlDashboard.show();
+    }
+  }
+
+  triggerAiQueueAnalyzer() {
     const mlBtn = document.getElementById('mlAnalyzeBtn');
     if (!mlBtn) {
-      console.error('❌ ML Analyze button not found');
       return;
     }
 
-    // Get current desk and queue from window.state (app.js sets these)
+    // Get current desk and queue from window.state
     const currentDesk = window.state?.currentDesk;
     const currentQueue = window.state?.currentQueue;
     
-    console.log('🧠 ML Analysis triggered:', { desk: currentDesk, queue: currentQueue });
-
     if (!currentDesk || !currentQueue) {
       alert('Por favor selecciona Service Desk y Queue primero');
-      console.warn('⚠️ Missing desk or queue:', { desk: currentDesk, queue: currentQueue });
       return;
     }
 

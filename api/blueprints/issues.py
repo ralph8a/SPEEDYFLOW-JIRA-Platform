@@ -440,3 +440,60 @@ def api_update_issue(issue_key):
     except Exception as e:
         logger.error(f"Error updating issue {issue_key}: {e}")
         return {'error': str(e), 'issue_key': issue_key}, 500
+
+
+@issues_bp.route('/api/search/issues', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@rate_limited(max_calls=20, period=60)
+@require_credentials
+def api_search_issues():
+    """
+    Search issues using JQL query
+    
+    GET /api/search/issues?jql=assignee=currentUser()&maxResults=5
+    
+    Returns:
+        {
+            'issues': [...],
+            'total': int,
+            'maxResults': int,
+            'startAt': int
+        }
+    """
+    from utils.api_migration import get_api_client
+    
+    jql = request.args.get('jql', '')
+    max_results = request.args.get('maxResults', type=int, default=50)
+    start_at = request.args.get('startAt', type=int, default=0)
+    
+    if not jql:
+        raise ValueError('jql parameter is required')
+    
+    # Limit maxResults to prevent abuse
+    max_results = min(max_results, 100)
+    
+    try:
+        client = get_api_client()
+        
+        # Search using JIRA API (uses /rest/api/2/search)
+        response = client.search_issues(
+            jql=jql,
+            fields=['key', 'summary', 'status', 'assignee', 'reporter', 'created', 'updated', 'priority', 'issuetype'],
+            max_results=max_results,
+            start_at=start_at
+        )
+        
+        logger.info(f"🔍 JQL search: '{jql}' returned {len(response.get('issues', []))} results")
+        
+        return {
+            'issues': response.get('issues', []),
+            'total': response.get('total', 0),
+            'maxResults': response.get('maxResults', max_results),
+            'startAt': response.get('startAt', start_at)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error searching issues with JQL '{jql}': {e}")
+        return {'error': str(e), 'jql': jql}, 500
