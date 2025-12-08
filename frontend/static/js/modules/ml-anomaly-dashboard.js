@@ -181,8 +181,29 @@ class AnomalyDashboard {
    * Show the dashboard
    */
   async show() {
+    console.log('🔍 show() called');
+    console.log('   this.modal exists:', !!this.modal);
+    console.log('   this.modal in DOM:', this.modal && document.body.contains(this.modal));
+    
+    if (!this.modal) {
+      console.error('❌ Modal element not found! Recreating...');
+      this.createModal();
+    }
+    
+    if (!document.body.contains(this.modal)) {
+      console.warn('⚠️ Modal not in DOM! Re-appending...');
+      document.body.appendChild(this.modal);
+    }
+    
+    console.log('   Setting display to flex...');
     this.modal.style.display = 'flex';
-    setTimeout(() => this.modal.classList.add('active'), 10);
+    console.log('   Display after set:', this.modal.style.display);
+    
+    setTimeout(() => {
+      console.log('   Adding active class...');
+      this.modal.classList.add('active');
+      console.log('   Modal classes:', this.modal.className);
+    }, 10);
 
     // Load data
     await this.loadDashboardData();
@@ -198,6 +219,8 @@ class AnomalyDashboard {
     if (this.autoRefreshEnabled) {
       this.startAutoRefresh();
     }
+    
+    console.log('✅ show() completed');
   }
 
   /**

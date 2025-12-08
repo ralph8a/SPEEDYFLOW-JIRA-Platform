@@ -104,12 +104,102 @@
         "suggestions_count": 3,
         "model": "ollama-llama3.2"
       }
+    },
+    {
+      "context_hash": "4fa9ff1744f911707d994675aad2293f",
+      "ticket_key": "Validacion",
+      "timestamp": "2025-12-08T00:30:11.791617",
+      "input": {
+        "summary": "Validacion conectividad SMT - PortalOptIn - Ticket#NCL- 5875- 05/12/2025",
+        "description": "",
+        "issue_type": "Unknown",
+        "status": "En espera de cliente",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Para que podamos ayudarte de manera más efectiva, necesito saber si ha realizado algún cambio reciente en su entorno o configuración. La validación de conectividad SMT - portalOptin es un componente crítico para nuestra plataforma y estamos tomando medidas para solucionar este problema.",
+            "type": "action",
+            "confidence": 0.97
+          },
+          {
+            "text": "Entendemos que la validación de conectividad es crucial para nuestra plataforma. Estamos investigando el problema y verificamos que la conexión con el portalOptin esté funcionando correctamente. Te informaremos sobre nuestros progresos lo antes posible.",
+            "type": "action",
+            "confidence": 0.96
+          },
+          {
+            "text": "Nuestra tecnología actualmente está experimentando un problema con la validación de conectividad SMT - portalOptin. Hacemos todo lo posible para solucionar este problema lo antes posible y te mantendremos informado sobre nuestros progresos.",
+            "type": "resolution",
+            "confidence": 0.95
+          },
+          {
+            "text": "Hola, gracias por notificarnos sobre el problema con la validación de conectividad SMT - portalOptin. Para ayudarte mejor, necesito saber si ha experimentado algún error específico o si solo está notando una falta de conectividad. ¿Podrías proporcionarme más detalles sobre el problema que está experimentando?",
+            "type": "diagnostic",
+            "confidence": 0.92
+          },
+          {
+            "text": "¿Alguna vez ha notado algún problema con la conexión a nuestro servicio? La validación de conectividad SMT - portalOptin es importante para nuestra plataforma, pero no siempre está disponible debido a problemas técnicos. Estamos trabajando en mejorar nuestra disponibilidad.",
+            "type": "diagnostic",
+            "confidence": 0.91
+          }
+        ],
+        "suggestions_count": 5,
+        "model": "ollama-llama3.2"
+      }
+    },
+    {
+      "context_hash": "06e31eba201e36275305d79b3c031d1c",
+      "ticket_key": "caída",
+      "timestamp": "2025-12-08T00:33:30.484017",
+      "input": {
+        "summary": "caída portal customer care del SMT",
+        "description": "",
+        "issue_type": "Unknown",
+        "status": "En Progreso",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "La solución del problema está funcionando correctamente. Verifiquemos que todo esté en orden antes de considerar el problema cerrado.",
+            "type": "resolution",
+            "confidence": 0.96
+          },
+          {
+            "text": "Intentemos resolver el problema de inmediato. Estoy trabajando en el portal y verificaré que todo esté funcionando correctamente.",
+            "type": "action",
+            "confidence": 0.95
+          },
+          {
+            "text": "Estoy trabajando en la solución del problema. ¿Puedes verificar si el problema se repite al intentar acceder a otro área del portal?",
+            "type": "action",
+            "confidence": 0.93
+          },
+          {
+            "text": "¿Puedes proporcionar más información sobre la caída del portal customer care del SMT?",
+            "type": "diagnostic",
+            "confidence": 0.92
+          },
+          {
+            "text": "El problema del portal customer care del SMT parece ser un problema técnico más profundo. Vamos a buscar respuestas en nuestros logs y archivos de configuración para encontrar la causa raíz.",
+            "type": "diagnostic",
+            "confidence": 0.87
+          }
+        ],
+        "suggestions_count": 5,
+        "model": "ollama-llama3.2"
+      }
     }
   ],
   "metadata": {
     "created": "2025-12-07T23:58:43.823087",
-    "last_modified": "2025-12-08T00:14:03.134679",
-    "total_samples": 3,
+    "last_modified": "2025-12-08T00:33:30.484035",
+    "total_samples": 5,
     "compressed": false,
     "version": "1.0"
   }
