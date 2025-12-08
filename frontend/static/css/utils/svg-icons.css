@@ -490,78 +490,56 @@ button:disabled .svg-icon,
 }
 
 /* Apply assemble animation - parts come from different directions */
-.svg-icon-draw path:nth-child(1),
-.svg-icon-draw line:nth-child(1),
-.svg-icon-draw svg path:nth-child(1),
-.svg-icon-draw svg line:nth-child(1) {
+/* Use nth-of-type to target specific element types (line, path, etc) */
+.svg-icon-draw svg > *:nth-child(1) {
     opacity: 0;
     animation: svg-assemble-from-top 0.6s ease-out forwards;
     animation-delay: 0s;
 }
 
-.svg-icon-draw path:nth-child(2),
-.svg-icon-draw line:nth-child(2),
-.svg-icon-draw svg path:nth-child(2),
-.svg-icon-draw svg line:nth-child(2) {
+.svg-icon-draw svg > *:nth-child(2) {
     opacity: 0;
     animation: svg-assemble-from-right 0.6s ease-out forwards;
     animation-delay: 0.2s;
 }
 
-.svg-icon-draw path:nth-child(3),
-.svg-icon-draw line:nth-child(3),
-.svg-icon-draw svg path:nth-child(3),
-.svg-icon-draw svg line:nth-child(3) {
+.svg-icon-draw svg > *:nth-child(3) {
     opacity: 0;
     animation: svg-assemble-from-bottom 0.6s ease-out forwards;
     animation-delay: 0.4s;
 }
 
-.svg-icon-draw path:nth-child(4),
-.svg-icon-draw line:nth-child(4),
-.svg-icon-draw svg path:nth-child(4),
-.svg-icon-draw svg line:nth-child(4) {
+.svg-icon-draw svg > *:nth-child(4) {
     opacity: 0;
     animation: svg-assemble-from-left 0.6s ease-out forwards;
     animation-delay: 0.6s;
 }
 
-.svg-icon-draw circle,
-.svg-icon-draw svg circle {
+.svg-icon-draw svg > circle {
     opacity: 0;
     animation: svg-assemble-from-top 0.8s ease-out forwards;
 }
 
 /* Faster assemble animation */
-.svg-icon-draw-fast path:nth-child(1),
-.svg-icon-draw-fast line:nth-child(1),
-.svg-icon-draw-fast svg path:nth-child(1),
-.svg-icon-draw-fast svg line:nth-child(1) {
+.svg-icon-draw-fast svg > *:nth-child(1) {
     opacity: 0;
     animation: svg-assemble-from-top 0.3s ease-out forwards;
     animation-delay: 0s;
 }
 
-.svg-icon-draw-fast path:nth-child(2),
-.svg-icon-draw-fast line:nth-child(2),
-.svg-icon-draw-fast svg path:nth-child(2),
-.svg-icon-draw-fast svg line:nth-child(2) {
+.svg-icon-draw-fast svg > *:nth-child(2) {
     opacity: 0;
     animation: svg-assemble-from-right 0.3s ease-out forwards;
     animation-delay: 0.1s;
 }
 
-.svg-icon-draw-fast path:nth-child(3),
-.svg-icon-draw-fast line:nth-child(3),
-.svg-icon-draw-fast svg path:nth-child(3),
-.svg-icon-draw-fast svg line:nth-child(3) {
+.svg-icon-draw-fast svg > *:nth-child(3) {
     opacity: 0;
     animation: svg-assemble-from-bottom 0.3s ease-out forwards;
     animation-delay: 0.2s;
 }
 
-.svg-icon-draw-fast circle,
-.svg-icon-draw-fast svg circle {
+.svg-icon-draw-fast svg > circle {
     opacity: 0;
     animation: svg-assemble-from-top 0.4s ease-out forwards;
 }
@@ -573,37 +551,21 @@ button:disabled .svg-icon,
     75% { transform: translate(2px, -2px); }
 }
 
-.svg-icon-draw-hover path,
-.svg-icon-draw-hover line,
-.svg-icon-draw-hover polyline,
-.svg-icon-draw-hover circle,
-.svg-icon-draw-hover svg path,
-.svg-icon-draw-hover svg line,
-.svg-icon-draw-hover svg polyline,
-.svg-icon-draw-hover svg circle {
+.svg-icon-draw-hover svg > * {
     opacity: 1;
 }
 
-.svg-icon-draw-hover:hover path:nth-child(1),
-.svg-icon-draw-hover:hover line:nth-child(1),
-.svg-icon-draw-hover:hover svg path:nth-child(1),
-.svg-icon-draw-hover:hover svg line:nth-child(1) {
+.svg-icon-draw-hover:hover svg > *:nth-child(1) {
     animation: svg-assemble-hover-shake 0.5s ease-in-out;
     animation-delay: 0s;
 }
 
-.svg-icon-draw-hover:hover path:nth-child(2),
-.svg-icon-draw-hover:hover line:nth-child(2),
-.svg-icon-draw-hover:hover svg path:nth-child(2),
-.svg-icon-draw-hover:hover svg line:nth-child(2) {
+.svg-icon-draw-hover:hover svg > *:nth-child(2) {
     animation: svg-assemble-hover-shake 0.5s ease-in-out;
     animation-delay: 0.1s;
 }
 
-.svg-icon-draw-hover:hover path:nth-child(3),
-.svg-icon-draw-hover:hover line:nth-child(3),
-.svg-icon-draw-hover:hover svg path:nth-child(3),
-.svg-icon-draw-hover:hover svg line:nth-child(3) {
+.svg-icon-draw-hover:hover svg > *:nth-child(3) {
     animation: svg-assemble-hover-shake 0.5s ease-in-out;
     animation-delay: 0.2s;
 }
@@ -624,31 +586,21 @@ button:disabled .svg-icon,
     50% { opacity: 1; transform: translateY(0); }
 }
 
-.svg-icon-draw-loop path:nth-child(1),
-.svg-icon-draw-loop line:nth-child(1),
-.svg-icon-draw-loop svg path:nth-child(1),
-.svg-icon-draw-loop svg line:nth-child(1) {
+.svg-icon-draw-loop svg > *:nth-child(1) {
     animation: svg-assemble-loop-top 2.5s ease-in-out infinite;
     animation-delay: 0s;
 }
 
-.svg-icon-draw-loop path:nth-child(2),
-.svg-icon-draw-loop line:nth-child(2),
-.svg-icon-draw-loop svg path:nth-child(2),
-.svg-icon-draw-loop svg line:nth-child(2) {
+.svg-icon-draw-loop svg > *:nth-child(2) {
     animation: svg-assemble-loop-right 2.5s ease-in-out infinite;
     animation-delay: 0.3s;
 }
 
-.svg-icon-draw-loop path:nth-child(3),
-.svg-icon-draw-loop line:nth-child(3),
-.svg-icon-draw-loop svg path:nth-child(3),
-.svg-icon-draw-loop svg line:nth-child(3) {
+.svg-icon-draw-loop svg > *:nth-child(3) {
     animation: svg-assemble-loop-bottom 2.5s ease-in-out infinite;
     animation-delay: 0.6s;
 }
 
-.svg-icon-draw-loop circle,
-.svg-icon-draw-loop svg circle {
+.svg-icon-draw-loop svg > circle {
     animation: svg-assemble-loop-top 3s ease-in-out infinite;
 }
