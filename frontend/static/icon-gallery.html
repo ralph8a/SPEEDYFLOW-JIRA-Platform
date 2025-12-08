@@ -549,6 +549,29 @@
       </div>
     </div>
 
+    <!-- Draw Animation Examples -->
+    <div class="section">
+      <h2 class="section-title">✏️ Draw Animations (Firefox Style)</h2>
+      <div class="color-demo">
+        <div class="color-item">
+          <span class="svg-icon-draw" id="draw-normal"></span>
+          <span>Draw (1s)</span>
+        </div>
+        <div class="color-item">
+          <span class="svg-icon-draw-fast" id="draw-fast"></span>
+          <span>Draw Fast (0.5s)</span>
+        </div>
+        <div class="color-item">
+          <span class="svg-icon-draw-hover" id="draw-hover"></span>
+          <span>Draw on Hover</span>
+        </div>
+        <div class="color-item">
+          <span class="svg-icon-draw-loop" id="draw-loop"></span>
+          <span>Draw Loop</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Usage Example -->
     <div class="section">
       <h2 class="section-title">💻 Usage Examples</h2>
@@ -558,6 +581,15 @@ SVGIcons.refresh()<br>
 <br>
 // With custom size and color<br>
 SVGIcons.user({ size: 24, color: '#6366f1' })<br>
+<br>
+// With draw animation (Firefox style)<br>
+SVGIcons.close({ className: 'svg-icon-draw' })<br>
+<br>
+// Draw on hover<br>
+SVGIcons.plus({ className: 'svg-icon-draw-hover' })<br>
+<br>
+// Draw loop (continuous)<br>
+SVGIcons.refresh({ className: 'svg-icon-draw-loop' })<br>
 <br>
 // Dynamic rendering<br>
 SVGIcons.render('bell', { className: 'notification-icon' })<br>
@@ -574,20 +606,31 @@ SVGIcons.getAvailableIcons()
 
   <script src="/static/js/utils/svg-icons.js"></script>
   <script>
-    const iconCategories = {
-      action: ['refresh', 'close', 'clock', 'plus', 'edit', 'trash', 'save', 'download', 'upload', 'copy'],
-      navigation: ['arrowRight', 'arrowLeft', 'arrowUp', 'arrowDown', 'chevronRight', 'chevronLeft', 'externalLink'],
-      status: ['info', 'alert', 'error', 'success'],
-      ui: ['search', 'filter', 'settings', 'menu', 'moreVertical', 'moreHorizontal', 'eye', 'eyeOff'],
-      business: ['user', 'users', 'tag', 'calendar', 'message', 'bell', 'chart', 'shield', 'lightning', 'star']
-    };
+    // Wait for DOM and SVGIcons to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Verify SVGIcons is loaded
+      if (typeof SVGIcons === 'undefined') {
+        console.error('❌ SVGIcons module not loaded');
+        document.getElementById('icon-count').textContent = 'ERROR';
+        return;
+      }
 
-    // Count total icons
-    const totalIcons = Object.values(iconCategories).flat().length;
-    document.getElementById('icon-count').textContent = totalIcons;
+      console.log('✅ Icon gallery initialized with SVGIcons module');
 
-    // Render icon cards
-    function renderIconCard(iconName, containerId) {
+      const iconCategories = {
+        action: ['refresh', 'close', 'clock', 'plus', 'edit', 'trash', 'save', 'download', 'upload', 'copy'],
+        navigation: ['arrowRight', 'arrowLeft', 'arrowUp', 'arrowDown', 'chevronRight', 'chevronLeft', 'externalLink'],
+        status: ['info', 'alert', 'error', 'success'],
+        ui: ['search', 'filter', 'settings', 'menu', 'moreVertical', 'moreHorizontal', 'eye', 'eyeOff'],
+        business: ['user', 'users', 'tag', 'calendar', 'message', 'bell', 'chart', 'shield', 'lightning', 'star']
+      };
+
+      // Count total icons
+      const totalIcons = Object.values(iconCategories).flat().length;
+      document.getElementById('icon-count').textContent = totalIcons;
+
+      // Render icon cards
+      function renderIconCard(iconName, containerId) {
       const card = document.createElement('div');
       card.className = 'icon-card';
       card.onclick = () => copyIconName(iconName);
@@ -629,43 +672,82 @@ SVGIcons.getAvailableIcons()
       card.appendChild(display);
       card.appendChild(name);
       
-      document.getElementById(containerId).appendChild(card);
-    }
+        document.getElementById(containerId).appendChild(card);
+      }
 
-    // Render all icons
-    iconCategories.action.forEach(icon => renderIconCard(icon, 'action-icons'));
-    iconCategories.navigation.forEach(icon => renderIconCard(icon, 'navigation-icons'));
-    iconCategories.status.forEach(icon => renderIconCard(icon, 'status-icons'));
-    iconCategories.ui.forEach(icon => renderIconCard(icon, 'ui-icons'));
-    iconCategories.business.forEach(icon => renderIconCard(icon, 'business-icons'));
+      // Render all icons
+      iconCategories.action.forEach(icon => renderIconCard(icon, 'action-icons'));
+      iconCategories.navigation.forEach(icon => renderIconCard(icon, 'navigation-icons'));
+      iconCategories.status.forEach(icon => renderIconCard(icon, 'status-icons'));
+      iconCategories.ui.forEach(icon => renderIconCard(icon, 'ui-icons'));
+      iconCategories.business.forEach(icon => renderIconCard(icon, 'business-icons'));
 
-    // Size examples
-    document.getElementById('size-xs').innerHTML = SVGIcons.star({ size: 12 });
-    document.getElementById('size-sm').innerHTML = SVGIcons.star({ size: 14 });
-    document.getElementById('size-md').innerHTML = SVGIcons.star({ size: 16 });
-    document.getElementById('size-lg').innerHTML = SVGIcons.star({ size: 20 });
-    document.getElementById('size-xl').innerHTML = SVGIcons.star({ size: 24 });
-    document.getElementById('size-2xl').innerHTML = SVGIcons.star({ size: 32 });
+      // Size examples
+      document.getElementById('size-xs').innerHTML = SVGIcons.star({ size: 12 });
+      document.getElementById('size-sm').innerHTML = SVGIcons.star({ size: 14 });
+      document.getElementById('size-md').innerHTML = SVGIcons.star({ size: 16 });
+      document.getElementById('size-lg').innerHTML = SVGIcons.star({ size: 20 });
+      document.getElementById('size-xl').innerHTML = SVGIcons.star({ size: 24 });
+      document.getElementById('size-2xl').innerHTML = SVGIcons.star({ size: 32 });
 
-    // Color examples
-    document.getElementById('color-primary').innerHTML = SVGIcons.star({ size: 20 });
-    document.getElementById('color-success').innerHTML = SVGIcons.save({ size: 20 });
-    document.getElementById('color-danger').innerHTML = SVGIcons.alert({ size: 20 });
-    document.getElementById('color-warning').innerHTML = SVGIcons.alert({ size: 20 });
-    document.getElementById('color-info').innerHTML = SVGIcons.info({ size: 20 });
+      // Color examples
+      document.getElementById('color-primary').innerHTML = SVGIcons.star({ size: 20 });
+      document.getElementById('color-success').innerHTML = SVGIcons.save({ size: 20 });
+      document.getElementById('color-danger').innerHTML = SVGIcons.alert({ size: 20 });
+      document.getElementById('color-warning').innerHTML = SVGIcons.alert({ size: 20 });
+      document.getElementById('color-info').innerHTML = SVGIcons.info({ size: 20 });
 
-    // Copy icon name
-    function copyIconName(iconName) {
-      const text = `SVGIcons.${iconName}()`;
-      navigator.clipboard.writeText(text).then(() => {
-        const notification = document.getElementById('copy-notification');
-        notification.textContent = `✅ Copied: ${text}`;
-        notification.classList.add('show');
-        
-        // Add success animation
-        notification.style.animation = 'svg-scale-in 0.3s ease-out';
-        
-        setTimeout(() => {
+      // Draw animation examples
+      document.getElementById('draw-normal').innerHTML = SVGIcons.close({ size: 32 });
+      document.getElementById('draw-fast').innerHTML = SVGIcons.plus({ size: 32 });
+      document.getElementById('draw-hover').innerHTML = SVGIcons.arrowRight({ size: 32 });
+      document.getElementById('draw-loop').innerHTML = SVGIcons.refresh({ size: 32 });
+
+      // Copy icon name
+      function copyIconName(iconName) {
+        const text = `SVGIcons.${iconName}()`;
+        navigator.clipboard.writeText(text).then(() => {
+          const notification = document.getElementById('copy-notification');
+          notification.textContent = `✅ Copied: ${text}`;
+          notification.classList.add('show');
+          
+          // Add success animation
+          notification.style.animation = 'svg-scale-in 0.3s ease-out';
+          
+          setTimeout(() => {
+            notification.classList.remove('show');
+            notification.style.animation = '';
+          }, 2000);
+        });
+      }
+
+      // Add interactive stat counter animation
+      function animateCounter(element, target) {
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+          current += increment;
+          if (current >= target) {
+            element.textContent = target;
+            clearInterval(timer);
+          } else {
+            element.textContent = Math.floor(current);
+          }
+        }, 20);
+      }
+      
+      // Animate stat numbers on load
+      setTimeout(() => {
+        const iconCount = document.getElementById('icon-count');
+        animateCounter(iconCount, totalIcons);
+      }, 300);
+
+      // Make functions available globally for onclick attributes
+      window.copyIconName = copyIconName;
+      window.toggleTheme = toggleTheme;
+
+    }); // End DOMContentLoaded
+
     // Theme toggle with animation
     function toggleTheme() {
       const body = document.body;
@@ -693,30 +775,6 @@ SVGIcons.getAvailableIcons()
       });
     }
     
-    // Add interactive stat counter animation
-    function animateCounter(element, target) {
-      let current = 0;
-      const increment = target / 50;
-      const timer = setInterval(() => {
-        current += increment;
-        if (current >= target) {
-          element.textContent = target;
-          clearInterval(timer);
-        } else {
-          element.textContent = Math.floor(current);
-        }
-      }, 20);
-    }
-    
-    // Animate stat numbers on load
-    setTimeout(() => {
-      const iconCount = document.getElementById('icon-count');
-      animateCounter(iconCount, totalIcons);
-    }, 1000);     }, 300);
-        }, 2000);
-      });
-    }
-    
     // Add fade out animation
     const style = document.createElement('style');
     style.textContent = `
@@ -726,13 +784,6 @@ SVGIcons.getAvailableIcons()
       }
     `;
     document.head.appendChild(style);
-
-    // Theme toggle
-    function toggleTheme() {
-      document.body.classList.toggle('theme-dark');
-    }
-
-    console.log('✅ Icon Gallery loaded -', totalIcons, 'icons available');
   </script>
 </body>
 </html>
