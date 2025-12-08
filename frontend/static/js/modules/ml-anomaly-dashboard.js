@@ -3,6 +3,9 @@
  * Monitors operational anomalies in ticket patterns
  */
 
+// Import SVG Icons (if available, fallback to inline SVG)
+const Icons = window.SVGIcons || null;
+
 class AnomalyDashboard {
   constructor() {
     this.modal = null;
@@ -47,21 +50,13 @@ class AnomalyDashboard {
           </h2>
           <div class="header-actions">
             <button class="refresh-btn" title="Actualizar" aria-label="Refresh">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
-              </svg>
+              ${Icons ? Icons.refresh() : this._fallbackRefreshIcon()}
             </button>
             <button class="auto-refresh-toggle" title="Auto-actualizar cada 2 minutos" aria-label="Toggle Auto-refresh">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
+              ${Icons ? Icons.clock() : this._fallbackClockIcon()}
             </button>
             <button class="close-btn" title="Cerrar" aria-label="Close">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              ${Icons ? Icons.close() : this._fallbackCloseIcon()}
             </button>
           </div>
         </div>
@@ -396,11 +391,16 @@ class AnomalyDashboard {
         ? 'https://your-domain.atlassian.net/browse' 
         : `${window.location.origin}/browse`;
       
+      const externalIcon = Icons ? Icons.externalLink({ size: 12, className: 'ticket-external-icon' }) : 
+        `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>`;
+      
       const ticketsList = anomaly.tickets.slice(0, 10).map(key => 
         `<a href="${jiraBaseUrl}/${key}" target="_blank" class="ticket-key-link" title="Abrir ${key} en JIRA">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 4px;">
-            <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3m-2 16H5V5h7V3H5c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2v-7h-2v7z"/>
-          </svg>
+          ${externalIcon}
           ${key}
         </a>`
       ).join(' ');
@@ -541,6 +541,29 @@ class AnomalyDashboard {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
     }, 10000);
+  }
+
+  /**
+   * Fallback icons if SVGIcons module not loaded
+   */
+  _fallbackRefreshIcon() {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+    </svg>`;
+  }
+
+  _fallbackClockIcon() {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>`;
+  }
+
+  _fallbackCloseIcon() {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>`;
   }
 }
 
