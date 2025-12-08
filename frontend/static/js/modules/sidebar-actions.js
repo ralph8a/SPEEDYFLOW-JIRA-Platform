@@ -372,242 +372,189 @@ class SidebarActions {
   }
 
   /**
-   * Auto-select the user's desk and "assigned to me" queue
-   * Uses multiple strategies: user groups, project keys from tickets, and queue analysis
+   * Auto-select the user's desk and queue from .env configuration
+   * Uses USER_DESK_ID and USER_QUEUE_ID from backend, searches queue by JQL
    */
   async autoSelectUserDeskAndQueue(currentUser) {
     try {
       console.log('🔍 Auto-selecting desk and queue for:', currentUser);
+
+      // Get desk context from backend (.env configuration)
+      const contextResponse = await fetch('/api/user/desk-context');
+      if (!contextResponse.ok) {
+        throw new Error(`Failed to fetch desk context: ${contextResponse.status}`);
+      }
+
+      const contextData = await contextResponse.json();
+      console.log('📋 Desk context from backend:', contextData);
       
-      // Get user profile with groups
+      const { desk_id, queue_id, source } = contextData;
+      
+      // Check if we have valid configuration
+      if (!desk_id) {
+        console.warn('⚠️ No desk configured in .env (USER_DESK_ID)');
+        return false;
+      }
+
+      // Get user profile for accountId
       const userResponse = await fetch('/api/user');
       if (!userResponse.ok) {
         throw new Error(`Failed to fetch user profile: ${userResponse.status}`);
       }
-      
+
       const userData = await userResponse.json();
       const userProfile = userData.user || userData;
-      const userGroups = userProfile.groups || [];
       const userAccountId = userProfile.accountId;
-      
-      console.log('👤 User profile:', {
-        name: userProfile.displayName,
-        accountId: userAccountId,
-        groups: userGroups.map(g => g.name || g)
-      });
-      
-      // Get available desks
+
+      console.log(`✅ User accountId: ${userAccountId}, config source: ${source}`);
+
+      // Get available desks to validate desk_id
       let desks = this.getCachedServiceDesks();
-      
       if (!desks || desks.length === 0) {
         console.log('⚠️ Fetching desks from API...');
         const desksResponse = await fetch('/api/desks');
         if (!desksResponse.ok) {
           throw new Error(`Failed to fetch desks: ${desksResponse.status}`);
         }
-        
+
         const desksData = await desksResponse.json();
         desks = desksData.data || desksData.desks || desksData;
-        
+
         if (!Array.isArray(desks)) {
           console.error('❌ Desks response is not an array:', desksData);
           desks = [];
         }
-        
-        console.log(`✅ Fetched ${desks.length} desks from API`);
-      } else {
-        console.log(`💾 Using cached ${desks.length} desk(s)`);
       }
+
+      // Find the configured desk
+      const userDesk = desks.find(d => String(d.id) === String(desk_id));
       
-      if (desks.length === 0) {
-        console.warn('⚠️ No desks available');
+      if (!userDesk) {
+        console.error(`❌ Configured desk_id ${desk_id} not found in available desks`);
         return false;
       }
 
-      console.log('📋 Available desks:', desks.map(d => ({ 
-        id: d.id, 
-        name: d.name || d.displayName,
-        projectKey: d.projectKey || d.key
-      })));
+      console.log(`📂 Using configured desk: ${userDesk.name || userDesk.displayName} (ID: ${desk_id})`);
 
-      // Strategy 1: Match project key from existing tickets
-      let userDesk = null;
-      let assignedQueue = null;
-      
-      // Check if there are any loaded tickets to extract project key
-      const existingIssues = window.state?.issues || [];
-      if (existingIssues.length > 0) {
-        // Get project keys from tickets assigned to this user
-        const userTickets = existingIssues.filter(issue => {
-          const assignee = issue.assignee || issue.asignado_a || issue.fields?.assignee;
-          const assigneeId = assignee?.accountId;
-          const assigneeName = assignee?.displayName || assignee?.name || assignee;
-          
-          return (userAccountId && assigneeId === userAccountId) ||
-                 (assigneeName && assigneeName.toLowerCase().includes(currentUser.toLowerCase()));
+      // Find the queue - either from config or search by JQL
+      let targetQueue = null;
+      const queues = userDesk.queues || [];
+
+      if (queue_id) {
+        // Use configured queue_id
+        targetQueue = queues.find(q => String(q.id) === String(queue_id));
+        
+        if (targetQueue) {
+          console.log(`📋 Using configured queue: ${targetQueue.name} (ID: ${queue_id})`);
+          console.log(`📝 Queue JQL: ${targetQueue.jql || 'N/A'}`);
+        } else {
+          console.warn(`⚠️ Configured queue_id ${queue_id} not found in desk`);
+        }
+      }
+
+      // If no queue configured or not found, search by JQL for user's tickets
+      if (!targetQueue) {
+        console.log('🔍 Searching for queue with JQL that includes user tickets (assignee OR reporter)...');
+        
+        // Priority 1: Look for queue with JQL that includes both assignee and reporter
+        targetQueue = queues.find(q => {
+          const jql = (q.jql || '').toLowerCase();
+          // Check if JQL contains patterns for both assignee and reporter
+          const hasAssignee = jql.includes('assignee') || jql.includes('assigned');
+          const hasReporter = jql.includes('reporter') || jql.includes('creator');
+          return hasAssignee && hasReporter;
         });
-        
-        if (userTickets.length > 0) {
-          // Extract project key from ticket key (e.g., "MSM-123" -> "MSM")
-          const firstTicket = userTickets[0];
-          const ticketKey = firstTicket.key || firstTicket.id || '';
-          const projectKey = ticketKey.split('-')[0];
-          
-          console.log(`🎫 Found user ticket: ${ticketKey}, project key: ${projectKey}`);
-          
-          // Find desk matching this project key
-          userDesk = desks.find(desk => {
-            const deskKey = desk.projectKey || desk.key || '';
-            const deskName = (desk.name || desk.displayName || '').toUpperCase();
-            return deskKey === projectKey || deskName.includes(projectKey);
+
+        if (targetQueue) {
+          console.log(`✅ Found queue with assignee AND reporter JQL: ${targetQueue.name}`);
+        }
+
+        // Priority 2: Look for "My Tickets" or similar named queues
+        if (!targetQueue) {
+          targetQueue = queues.find(q => {
+            const queueName = (q.name || '').toLowerCase();
+            return queueName.includes('my tickets') ||
+                   queueName.includes('mis tickets') ||
+                   queueName.includes('my issues') ||
+                   queueName.includes('mis incidencias');
           });
-          
-          if (userDesk) {
-            console.log(`✅ Found desk matching project key "${projectKey}": ${userDesk.name || userDesk.displayName}`);
+
+          if (targetQueue) {
+            console.log(`✅ Found queue by name pattern: ${targetQueue.name}`);
           }
         }
-      }
 
-      // Strategy 2: Match desk name with user groups
-      if (!userDesk) {
-        console.log('🔍 Strategy 2: Matching desk with user groups...');
-        
-        for (const group of userGroups) {
-          const groupName = (group.name || group).toLowerCase();
-          
-          const matchingDesk = desks.find(desk => {
-            const deskName = (desk.name || desk.displayName || '').toLowerCase();
-            // Match if desk name contains group name or vice versa
-            return deskName.includes(groupName) || groupName.includes(deskName);
-          });
-          
-          if (matchingDesk) {
-            userDesk = matchingDesk;
-            console.log(`✅ Found desk matching user group "${group.name || group}": ${userDesk.name || userDesk.displayName}`);
-            break;
-          }
-        }
-      }
-
-      // Strategy 3: Check each desk's "Assigned to me" queue for user tickets
-      if (!userDesk) {
-        console.log('🔍 Strategy 3: Checking desks for user tickets...');
-        
-        for (const desk of desks) {
-          const queues = desk.queues || [];
-          
-          const foundQueue = queues.find(queue => {
-            const queueName = (queue.name || '').toLowerCase();
-            return queueName.includes('assigned to me') ||
+        // Priority 3: Look for "assigned to me" queue
+        if (!targetQueue) {
+          targetQueue = queues.find(q => {
+            const queueName = (q.name || '').toLowerCase();
+            const jql = (q.jql || '').toLowerCase();
+            return queueName.includes('assigned to me') || 
                    queueName.includes('asignado a mí') ||
                    queueName.includes('asignado a mi') ||
-                   queueName.includes('mis tickets') ||
-                   queueName.includes('my tickets');
+                   jql.includes('assignee = currentuser()') ||
+                   jql.includes('assignee=currentuser()');
           });
 
-          if (foundQueue) {
-            // Quick check: fetch a few issues from this queue
-            try {
-              const issuesResponse = await fetch(`/api/issues?desk_id=${desk.id}&queue_id=${foundQueue.id}&maxResults=10`);
-              if (issuesResponse.ok) {
-                const issuesData = await issuesResponse.json();
-                const issues = issuesData.data || issuesData.issues || issuesData || [];
-                
-                // Check if any tickets are assigned to this user
-                const hasUserTickets = issues.some(issue => {
-                  const assignee = issue.assignee || issue.asignado_a || issue.fields?.assignee;
-                  const assigneeId = assignee?.accountId;
-                  return userAccountId && assigneeId === userAccountId;
-                });
-                
-                if (hasUserTickets) {
-                  userDesk = desk;
-                  assignedQueue = foundQueue;
-                  console.log(`✅ Found desk with user tickets: ${desk.name || desk.displayName}`);
-                  break;
-                }
-              }
-            } catch (error) {
-              console.log(`⚠️ Could not check queue ${foundQueue.name}:`, error.message);
-            }
+          if (targetQueue) {
+            console.log(`✅ Found "assigned to me" queue: ${targetQueue.name}`);
           }
         }
-      }
 
-      // Find "Assigned to me" queue in selected desk
-      if (userDesk && !assignedQueue) {
-        const queues = userDesk.queues || [];
-        assignedQueue = queues.find(queue => {
-          const queueName = (queue.name || '').toLowerCase();
-          return queueName.includes('assigned to me') ||
-                 queueName.includes('asignado a mí') ||
-                 queueName.includes('asignado a mi') ||
-                 queueName.includes('mis tickets') ||
-                 queueName.includes('my tickets');
-        });
-        
-        // Fallback to first queue if no "Assigned to me" found
-        if (!assignedQueue && queues.length > 0) {
-          assignedQueue = queues[0];
-          console.log(`⚠️ No "Assigned to me" queue found, using first queue: ${assignedQueue.name}`);
+        // Last resort: use first queue
+        if (!targetQueue && queues.length > 0) {
+          targetQueue = queues[0];
+          console.log(`⚠️ No matching queue found, using first available: ${targetQueue.name}`);
         }
       }
 
-      // Last resort: use first desk
-      if (!userDesk) {
-        userDesk = desks[0];
-        const queues = userDesk.queues || [];
-        assignedQueue = queues[0];
-        console.log(`⚠️ Using first available desk: ${userDesk.name || userDesk.displayName}`);
-      }
-
-      if (!assignedQueue) {
-        console.warn('⚠️ No queues found');
+      if (!targetQueue) {
+        console.error('❌ No queue available in desk');
         return false;
       }
 
-      console.log(`📂 Final selection - Desk: ${userDesk.name || userDesk.displayName} (${userDesk.id})`);
-      console.log(`📋 Final selection - Queue: ${assignedQueue.name} (${assignedQueue.id})`);
+      console.log(`📋 Final queue: ${targetQueue.name} (ID: ${targetQueue.id})`);
+      console.log(`📝 Queue JQL: ${targetQueue.jql || 'N/A'}`);
 
       // Update UI selects
       const deskSelect = document.getElementById('serviceDeskSelectFilter');
       const queueSelect = document.getElementById('queueSelectFilter');
-      
+
       if (deskSelect) {
-        deskSelect.value = userDesk.id;
+        deskSelect.value = desk_id;
         const changeEvent = new Event('change', { bubbles: true });
         deskSelect.dispatchEvent(changeEvent);
-        
+
         if (window.state) {
-          window.state.currentDesk = userDesk.id;
+          window.state.currentDesk = desk_id;
         }
-        
-        console.log('✅ Updated desk select to:', userDesk.id);
+
+        console.log('✅ Updated desk select to:', desk_id);
       }
-      
+
       // Wait for queue dropdown to populate
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       if (queueSelect) {
-        queueSelect.value = assignedQueue.id;
+        queueSelect.value = targetQueue.id;
         const changeEvent = new Event('change', { bubbles: true });
         queueSelect.dispatchEvent(changeEvent);
-        
+
         if (window.state) {
-          window.state.currentQueue = assignedQueue.id;
+          window.state.currentQueue = targetQueue.id;
         }
-        
-        console.log('✅ Updated queue select to:', assignedQueue.id);
+
+        console.log('✅ Updated queue select to:', targetQueue.id);
       }
-      
+
       return true;
-      
+
     } catch (error) {
-      console.error('❌ Error auto-selecting desk and queue:', error);
-      console.error('Stack trace:', error.stack);
+      console.error('❌ Error in autoSelectUserDeskAndQueue:', error);
       return false;
     }
   }
+
 
   /**
    * Select desk in UI
