@@ -76,8 +76,11 @@ class OllamaAIEngine:
         # Default fallback
         return "llama2"
     
-    def _call_ollama(self, prompt: str, max_tokens: int = 500) -> Optional[str]:
+    def _call_ollama(self, prompt: str, max_tokens: int = 500, timeout: int = 20) -> Optional[str]:
         """Call Ollama API with prompt"""
+        import time
+        start_time = time.time()
+        
         try:
             response = requests.post(
                 f"{self.base_url}/api/generate",
@@ -88,8 +91,11 @@ class OllamaAIEngine:
                     "num_predict": max_tokens,
                     "temperature": 0.7,
                 },
-                timeout=60
+                timeout=timeout
             )
+            
+            elapsed = time.time() - start_time
+            logger.info(f"⏱️ Ollama response in {elapsed:.2f}s")
             
             if response.status_code == 200:
                 data = response.json()

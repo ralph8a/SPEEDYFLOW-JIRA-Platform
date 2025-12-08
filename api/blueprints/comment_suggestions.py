@@ -17,6 +17,31 @@ logger = logging.getLogger(__name__)
 comment_suggestions_bp = Blueprint('comment_suggestions', __name__, url_prefix='/api/ml/comments')
 
 
+@comment_suggestions_bp.route('/warmup', methods=['GET'])
+def warmup_ollama():
+    """
+    Warm up Ollama model with a simple request to load it into memory.
+    First request always takes longer, subsequent ones are faster.
+    """
+    try:
+        from api.ai_ollama import ollama_engine
+        
+        if not ollama_engine.is_available:
+            return jsonify({"success": False, "message": "Ollama not available"}), 503
+        
+        # Simple warmup prompt
+        response = ollama_engine._call_ollama("Responde solo: OK", max_tokens=5, timeout=10)
+        
+        return jsonify({
+            "success": True,
+            "message": "Ollama warmed up",
+            "response": response
+        })
+    except Exception as e:
+        logger.error(f"Warmup error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @comment_suggestions_bp.route('/suggestions', methods=['POST'])
 def get_suggestions():
     """
