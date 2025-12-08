@@ -471,19 +471,23 @@ button:disabled .svg-icon,
 /* Draw animation - animates stroke-dashoffset to create drawing effect */
 @keyframes svg-draw {
     from {
-        stroke-dashoffset: 100;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
     to {
         stroke-dashoffset: 0;
+        opacity: 1;
     }
 }
 
 @keyframes svg-draw-circle {
     from {
-        stroke-dashoffset: 150;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
     to {
         stroke-dashoffset: 0;
+        opacity: 1;
     }
 }
 
@@ -494,15 +498,17 @@ button:disabled .svg-icon,
 .svg-icon-draw svg path,
 .svg-icon-draw svg line,
 .svg-icon-draw svg polyline {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
     animation: svg-draw 1.5s ease-out forwards;
 }
 
 .svg-icon-draw circle,
 .svg-icon-draw svg circle {
-    stroke-dasharray: 150;
-    stroke-dashoffset: 150;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
     animation: svg-draw-circle 2s ease-out forwards;
 }
 
@@ -538,10 +544,12 @@ button:disabled .svg-icon,
 /* Faster draw animation */
 @keyframes svg-draw-fast {
     from {
-        stroke-dashoffset: 100;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
     to {
         stroke-dashoffset: 0;
+        opacity: 1;
     }
 }
 
@@ -551,16 +559,18 @@ button:disabled .svg-icon,
 .svg-icon-draw-fast svg path,
 .svg-icon-draw-fast svg line,
 .svg-icon-draw-fast svg polyline {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
     animation: svg-draw-fast 0.8s ease-out forwards;
 }
 
 .svg-icon-draw-fast circle,
 .svg-icon-draw-fast svg circle {
-    stroke-dasharray: 150;
-    stroke-dashoffset: 150;
-    animation: svg-draw-circle 1s ease-out forwards;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
+    animation: svg-draw-fast 1s ease-out forwards;
 }
 
 .svg-icon-draw-fast path:nth-child(2),
@@ -580,10 +590,12 @@ button:disabled .svg-icon,
 /* Draw on hover */
 @keyframes svg-draw-hover-anim {
     from {
-        stroke-dashoffset: 100;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
     to {
         stroke-dashoffset: 0;
+        opacity: 1;
     }
 }
 
@@ -598,6 +610,7 @@ button:disabled .svg-icon,
 .svg-icon-draw-hover svg circle {
     stroke-dasharray: none;
     stroke-dashoffset: 0;
+    opacity: 1;
 }
 
 /* On hover: set dasharray and animate */
@@ -607,16 +620,18 @@ button:disabled .svg-icon,
 .svg-icon-draw-hover:hover svg path,
 .svg-icon-draw-hover:hover svg line,
 .svg-icon-draw-hover:hover svg polyline {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
     animation: svg-draw-hover-anim 1.2s ease-out forwards;
 }
 
 .svg-icon-draw-hover:hover circle,
 .svg-icon-draw-hover:hover svg circle {
-    stroke-dasharray: 150;
-    stroke-dashoffset: 150;
-    animation: svg-draw-circle 1.5s ease-out forwards;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
+    animation: svg-draw-hover-anim 1.5s ease-out forwards;
 }
 
 .svg-icon-draw-hover:hover path:nth-child(2),
@@ -636,25 +651,31 @@ button:disabled .svg-icon,
 /* Draw loop (continuous drawing) */
 @keyframes svg-draw-loop {
     0% {
-        stroke-dashoffset: 100;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
     50% {
         stroke-dashoffset: 0;
+        opacity: 1;
     }
     100% {
-        stroke-dashoffset: 100;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
 }
 
 @keyframes svg-draw-loop-circle {
     0% {
-        stroke-dashoffset: 150;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
     50% {
         stroke-dashoffset: 0;
+        opacity: 1;
     }
     100% {
-        stroke-dashoffset: 150;
+        stroke-dashoffset: 1;
+        opacity: 0;
     }
 }
 
@@ -664,15 +685,17 @@ button:disabled .svg-icon,
 .svg-icon-draw-loop svg path,
 .svg-icon-draw-loop svg line,
 .svg-icon-draw-loop svg polyline {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
     animation: svg-draw-loop 4s ease-in-out infinite;
 }
 
 .svg-icon-draw-loop circle,
 .svg-icon-draw-loop svg circle {
-    stroke-dasharray: 150;
-    stroke-dashoffset: 150;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
     animation: svg-draw-loop-circle 5s ease-in-out infinite;
 }
 
