@@ -432,43 +432,69 @@ class CommentSuggestionEngine:
         # Prepare context for AI analysis
         comments_context = ""
         if all_comments and len(all_comments) > 0:
-            comments_context = "\n\nComentarios: " + "; ".join([c[:50] for c in all_comments[-3:]])  # Last 3, truncated
+            # Use last 3-5 comments with more context
+            recent_comments = all_comments[-5:] if len(all_comments) > 5 else all_comments
+            comments_context = "\n\nHistorial de comentarios:\n" + "\n".join([f"- {c[:150]}" for c in recent_comments])
         
-        # Create simple TXT prompt (faster than JSON parsing)
-        prompt = f"""Ticket: {ticket_text[:150]}
-Estado: {status}{comments_context}
+        # Create improved prompt for more detailed and contextual suggestions
+        prompt = f"""Eres un agente de soporte técnico experto. Analiza este ticket y genera 3 sugerencias de comentarios profesionales y detallados basados en el contexto.
 
-Genera 3 respuestas cortas de soporte (una por línea):
-1.
-2.
-3."""
+Ticket: {ticket_text[:300]}
+Estado actual: {status}
+Prioridad: {priority}{comments_context}
+
+Genera SOLAMENTE 3 comentarios de seguimiento profesionales. Cada comentario debe:
+- Ser específico al problema descrito
+- Incluir acciones concretas o diagnóstico
+- Tener entre 50-150 caracteres
+- NO incluir texto introductorio
+
+Formato (una sugerencia por línea):
+1. [comentario profesional y específico]
+2. [comentario profesional y específico]
+3. [comentario profesional y específico]"""
         
         try:
-            logger.info("🤖 Generating AI suggestions with Ollama (timeout: 20s, TXT format)...")
-            response = ollama_engine._call_ollama(prompt, max_tokens=200, timeout=20)
+            logger.info("🤖 Generating AI suggestions with Ollama (timeout: 30s, TXT format)...")
+            response = ollama_engine._call_ollama(prompt, max_tokens=400, timeout=30)
             
             if response:
                 # Parse TXT response (faster than JSON)
                 try:
                     # Split by lines and extract suggestions
                     lines = [line.strip() for line in response.split('\n') if line.strip()]
+                    
+                    # Filter: only keep lines that start with numbering (1., 2., 3., 1), etc.)
+                    import re
                     for line in lines:
-                        # Remove numbering (1., 2., 3., -, *, etc.)
-                        clean_line = line.lstrip('123456789.-* ').strip()
-                        if len(clean_line) > 20:  # Min length for valid suggestion
-                            suggestions.append({
-                                "text": clean_line,
-                                "type": "action",
-                                "confidence": 0.90
-                            })
-                            if len(suggestions) >= 3:
-                                break
+                        # Match lines that start with: 1., 2., 3., or "1)", or "- ", or "* "
+                        if re.match(r'^[\d\-\*]+[\.\)]\s+', line):
+                            # Remove numbering (1., 2., 3., -, *, etc.)
+                            clean_line = re.sub(r'^[\d\-\*]+[\.\)]\s+', '', line).strip()
+                            
+                            # Remove quotes if present
+                            clean_line = clean_line.strip('"').strip("'")
+                            
+                            # Validate: must be at least 30 chars and not be intro text
+                            if len(clean_line) > 30 and not any(intro in clean_line.lower() for intro in [
+                                'aquí te dejo', 'aqui te dejo', 'te dejo tres', 'tres respuestas',
+                                'opciones de respuesta', 'respuestas cortas', 'claro,', 'entendido'
+                            ]):
+                                suggestions.append({
+                                    "text": clean_line,
+                                    "type": "action",
+                                    "confidence": 0.90
+                                })
+                                logger.debug(f"✅ Extracted suggestion: {clean_line[:60]}...")
+                                
+                                if len(suggestions) >= 3:
+                                    break
                     
                     if suggestions:
                         logger.info(f"✅ Generated {len(suggestions)} AI suggestions (TXT format)")
                         return suggestions
                     else:
-                        logger.warning("No valid suggestions extracted from response")
+                        logger.warning(f"No valid suggestions extracted from response. Raw: {response[:150]}")
                 except Exception as e:
                     logger.error(f"Failed to parse Ollama TXT response: {e}")
                     logger.debug(f"Raw response: {response[:200]}")

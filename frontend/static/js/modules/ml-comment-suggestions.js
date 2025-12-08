@@ -61,6 +61,8 @@ class CommentSuggestionsUI {
    * Inject the suggestions panel into the right sidebar
    */
   injectSuggestionsPanel(sidebar) {
+    console.log('🔨 injectSuggestionsPanel called');
+    
     // Create suggestions container
     this.container = document.createElement('div');
     this.container.className = 'ml-comment-suggestions';
@@ -86,25 +88,31 @@ class CommentSuggestionsUI {
     const attachmentsSection = sidebar.querySelector('#attachmentsSection');
     if (attachmentsSection) {
       // Insert after attachments section in left column
+      console.log('✅ Found attachmentsSection, inserting after it');
       attachmentsSection.parentNode.insertBefore(this.container, attachmentsSection.nextSibling);
     } else {
       // Fallback: find detail-group-all-fields and insert after
       const ticketInfoSection = sidebar.querySelector('.detail-group-all-fields');
       if (ticketInfoSection) {
+        console.log('✅ Found detail-group-all-fields, inserting after it');
         ticketInfoSection.parentNode.insertBefore(this.container, ticketInfoSection.nextSibling);
       } else {
-        console.warn('Could not find proper injection point for suggestions');
+        console.warn('❌ Could not find proper injection point for suggestions');
+        return;
       }
     }
 
     // Add event listeners
     const refreshBtn = this.container.querySelector('.refresh-btn');
-    refreshBtn.addEventListener('click', () => this.refreshSuggestions());
+    refreshBtn.addEventListener('click', () => {
+      console.log('🔄 Refresh button clicked');
+      this.refreshSuggestions();
+    });
 
     // Register with ThemeManager for automatic theme updates
     this.registerWithThemeManager();
 
-    console.log('✅ Comment Suggestions panel injected into right sidebar after ticket info');
+    console.log('✅ Comment Suggestions panel injected successfully');
   }
 
   /**
@@ -146,13 +154,22 @@ class CommentSuggestionsUI {
    */
   async showSuggestionsForTicket(ticket) {
     if (!this.container) {
-      console.warn('Suggestions container not initialized');
+      console.warn('🚨 Suggestions container not initialized');
+      return;
+    }
+
+    const ticketKey = ticket.key || ticket.fields?.key || 'unknown';
+    
+    // Prevent concurrent calls for the same ticket
+    if (this.isAnalyzing && this.currentTicket?.key === ticketKey) {
+      console.log(`⏭️  Already analyzing ${ticketKey}, skipping duplicate call`);
       return;
     }
 
     this.currentTicket = ticket;
     const content = this.container.querySelector('.suggestions-content');
-    const ticketKey = ticket.key || ticket.fields?.key || 'unknown';
+    
+    console.log(`🎯 showSuggestionsForTicket called for: ${ticketKey}`);
 
     // Check cache first (with TTL validation)
     const cached = this.cachedSuggestions[ticketKey];
@@ -169,26 +186,59 @@ class CommentSuggestionsUI {
         return;
       } else {
         console.log(`⏰ Cache expired for ${ticketKey}, re-analyzing...`);
-        delete this.cachedSuggestions[ticketKey];
+        // NO BORRAR el caché todavía - lo usaremos como respaldo si falla
+        // delete this.cachedSuggestions[ticketKey];
       }
     }
 
-    // Show analyzing state
+    // Show analyzing state (pero solo si NO hay sugerencias previas que mostrar)
     this.isAnalyzing = true;
-    content.innerHTML = `
-      <div class="analyzing-state">
-        <i class="fas fa-brain"></i>
-        <p><strong>Analizando ticket con IA...</strong></p>
-        <small>Estamos procesando la información del ticket para generar sugerencias relevantes.</small>
-        <div class="analyzing-loader">
-          <div class="loader-bar"></div>
+    
+    // Verificar si tenemos sugerencias previas (caché válido, expirado, o en this.suggestions)
+    const hasOldSuggestions = (cached?.suggestions?.length > 0) || (this.suggestions?.length > 0);
+    console.log(`📦 hasOldSuggestions: ${hasOldSuggestions}, cached: ${cached?.suggestions?.length || 0}, this.suggestions: ${this.suggestions?.length || 0}`);
+    
+    if (!hasOldSuggestions) {
+      // No hay sugerencias anteriores - mostrar estado de análisis limpio
+      content.innerHTML = `
+        <div class="analyzing-state">
+          <i class="fas fa-brain"></i>
+          <p><strong>Analizando ticket con IA...</strong></p>
+          <small>Estamos procesando la información del ticket para generar sugerencias relevantes.</small>
+          <div class="analyzing-loader">
+            <div class="loader-bar"></div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else {
+      // Hay sugerencias anteriores - mantenerlas y solo mostrar indicador de actualización
+      const suggestionsToKeep = cached?.suggestions || this.suggestions;
+      this.renderSuggestions(suggestionsToKeep, content);
+      
+      const refreshIndicator = document.createElement('div');
+      refreshIndicator.className = 'refresh-indicator';
+      refreshIndicator.innerHTML = `
+        <i class="fas fa-sync-alt fa-spin"></i>
+        <span>Actualizando...</span>
+      `;
+      
+      const header = this.container.querySelector('.suggestions-header');
+      if (header) {
+        header.style.position = 'relative';
+        header.appendChild(refreshIndicator);
+      }
+      
+      // Remover indicador después de completar
+      setTimeout(() => {
+        if (refreshIndicator.parentNode) refreshIndicator.remove();
+      }, 30000); // Timeout de 30s
+    }
 
     try {
       // Get suggestions from API (with AI analysis)
+      console.log(`🔄 Fetching suggestions from API...`);
       const suggestions = await this.fetchSuggestionsWithAI(ticket);
+      console.log(`✅ Got ${suggestions.length} suggestions from API`);
       this.suggestions = suggestions;
 
       // Cache the suggestions
@@ -198,6 +248,12 @@ class CommentSuggestionsUI {
       };
 
       this.isAnalyzing = false;
+
+      // Limpiar indicador de actualización si existe
+      const refreshIndicator = this.container?.querySelector('.refresh-indicator');
+      if (refreshIndicator) {
+        refreshIndicator.remove();
+      }
 
       if (suggestions.length === 0) {
         content.innerHTML = `
@@ -217,27 +273,48 @@ class CommentSuggestionsUI {
       console.error('Error fetching suggestions:', error);
       this.isAnalyzing = false;
       
-      // Si ya hay sugerencias en caché, mantenerlas y solo mostrar warning
-      if (this.suggestions && this.suggestions.length > 0) {
+      // Limpiar indicador de actualización si existe
+      const refreshIndicator = this.container?.querySelector('.refresh-indicator');
+      if (refreshIndicator) {
+        refreshIndicator.remove();
+      }
+      
+      // Intentar usar caché expirado como respaldo
+      const expiredCache = this.cachedSuggestions[ticketKey];
+      const hasCachedSuggestions = expiredCache && expiredCache.suggestions && expiredCache.suggestions.length > 0;
+      
+      // Si hay sugerencias en caché (incluso expiradas), mantenerlas
+      if (hasCachedSuggestions || (this.suggestions && this.suggestions.length > 0)) {
+        const suggestionsToShow = hasCachedSuggestions ? expiredCache.suggestions : this.suggestions;
         console.log('⚠️ Error al actualizar, manteniendo sugerencias anteriores');
-        this.renderSuggestions(this.suggestions, content);
+        this.suggestions = suggestionsToShow;
+        this.renderSuggestions(suggestionsToShow, content);
         
-        // Mostrar warning en lugar de error completo
+        // Mostrar warning arriba de las sugerencias
         const warningDiv = document.createElement('div');
         warningDiv.className = 'suggestions-warning';
         warningDiv.innerHTML = `
           <i class="fas fa-exclamation-circle"></i>
-          <small>No se pudieron actualizar las sugerencias. Mostrando últimas disponibles.</small>
+          <small>No se pudieron actualizar. Mostrando sugerencias anteriores.</small>
         `;
         content.insertBefore(warningDiv, content.firstChild);
+        
+        // Auto-ocultar warning después de 5 segundos
+        setTimeout(() => {
+          if (warningDiv.parentNode) {
+            warningDiv.style.transition = 'opacity 0.3s';
+            warningDiv.style.opacity = '0';
+            setTimeout(() => warningDiv.remove(), 300);
+          }
+        }, 5000);
       } else {
-        // Solo mostrar error si no hay sugerencias previas
+        // Solo mostrar error si NO hay sugerencias previas de ningún tipo
         content.innerHTML = `
           <div class="error-state">
             <i class="fas fa-exclamation-triangle"></i>
             <p>Error al generar sugerencias</p>
             <small>${error.message}</small>
-            <small style="display: block; margin-top: 8px; color: #f59e0b;">💡 Tip: Si ves mensaje de Ollama, verifica que esté ejecutándose: <code>ollama serve</code></small>
+            <small>💡 Tip: Verifica que Ollama esté ejecutándose: <code>ollama serve</code></small>
           </div>
         `;
       }
@@ -295,9 +372,9 @@ class CommentSuggestionsUI {
     // Get ALL comments to provide full context
     const allComments = this.getAllComments();
 
-    // Add timeout to prevent hanging (25s max to match backend 20s + margin)
+    // Add timeout to prevent hanging (35s max to match backend 30s + margin)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
     
     try {
       const response = await fetch('/api/ml/comments/suggestions', {
@@ -329,7 +406,7 @@ class CommentSuggestionsUI {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
-        throw new Error('La generación de sugerencias tardó demasiado (>25s). Ollama puede estar sobrecargado.');
+        throw new Error('La generación de sugerencias tardó demasiado (>35s). Ollama puede estar sobrecargado.');
       }
       throw error;
     }
@@ -559,10 +636,38 @@ if (document.readyState === 'loading') {
   window.commentSuggestionsUI.init();
 }
 
-// Hook into ticket selection
+// Hook into ticket selection (with debouncing to prevent multiple calls)
+let ticketSelectedDebounce = null;
+let lastProcessedTicket = null;
+
 document.addEventListener('ticketSelected', (event) => {
   const ticket = event.detail?.ticket;
-  if (ticket && window.commentSuggestionsUI) {
-    window.commentSuggestionsUI.showSuggestionsForTicket(ticket);
+  const ticketKey = ticket?.key || ticket?.fields?.key;
+  
+  if (!ticket || !window.commentSuggestionsUI) {
+    console.log('🚫 ticketSelected event ignored - no ticket or UI not ready');
+    return;
   }
+  
+  console.log(`📨 ticketSelected event received for: ${ticketKey}`);
+  
+  // Prevent processing same ticket multiple times in quick succession
+  if (lastProcessedTicket === ticketKey && ticketSelectedDebounce) {
+    console.log(`⏭️  Skipping duplicate ticketSelected for ${ticketKey}`);
+    clearTimeout(ticketSelectedDebounce);
+  }
+  
+  // Debounce to prevent rapid-fire calls
+  ticketSelectedDebounce = setTimeout(() => {
+    console.log(`✅ Processing ticketSelected for ${ticketKey}`);
+    lastProcessedTicket = ticketKey;
+    window.commentSuggestionsUI.showSuggestionsForTicket(ticket);
+    
+    // Clear last processed after 2 seconds (allow re-fetch if user closes and reopens same ticket)
+    setTimeout(() => {
+      if (lastProcessedTicket === ticketKey) {
+        lastProcessedTicket = null;
+      }
+    }, 2000);
+  }, 300); // 300ms debounce
 });
