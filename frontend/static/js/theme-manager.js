@@ -114,6 +114,14 @@ const ThemeManager = {
       detail: { theme, timestamp: Date.now(), source: 'ThemeManager' }
     }));
     
+    // Dispatch legacy themeChanged event for compatibility
+    document.dispatchEvent(new CustomEvent('themeChanged', {
+      detail: { theme, timestamp: Date.now() }
+    }));
+    
+    // Notify all registered components
+    this.notifyComponents(theme);
+    
     console.log(`✅ Theme applied: ${theme}`);
   },
   
@@ -177,23 +185,46 @@ const ThemeManager = {
    */
   isLight() {
     return this.currentTheme === 'light';
+  },
+  
+  /**
+   * Register a component for automatic theme updates
+   * Components should have an applyTheme(theme) method
+   */
+  registeredComponents: [],
+  
+  registerComponent(component, name = 'Unknown') {
+    if (!component || typeof component.applyTheme !== 'function') {
+      console.warn(`⚠️ Cannot register ${name}: missing applyTheme() method`);
+      return;
+    }
+    
+    this.registeredComponents.push({ component, name });
+    console.log(`✅ Registered component: ${name}`);
+    
+    // Apply current theme immediately
+    component.applyTheme(this.currentTheme);
+  },
+  
+  /**
+   * Notify all registered components of theme change
+   */
+  notifyComponents(theme) {
+    this.registeredComponents.forEach(({ component, name }) => {
+      try {
+        component.applyTheme(theme);
+        console.log(`🎨 Theme applied to ${name}: ${theme}`);
+      } catch (error) {
+        console.error(`❌ Error applying theme to ${name}:`, error);
+      }
+    });
   }
 };
 
 // Export globally
 window.ThemeManager = ThemeManager;
 
-// Auto-initialize when DOM is ready
-if (document.readyState === 'loading') {
-  // DOMContentLoaded listener disabled - visual only mode
-  setTimeout(() => {
-    ThemeManager.init();
-  }, 0);
-} else {
-  // DOM already ready
-  setTimeout(() => {
-    ThemeManager.init();
-  }, 0);
-}
+// Initialize immediately - synchronous to ensure it's ready for other components
+ThemeManager.init();
 
-console.log('✅ ThemeManager script loaded');
+console.log('✅ ThemeManager script loaded and initialized');

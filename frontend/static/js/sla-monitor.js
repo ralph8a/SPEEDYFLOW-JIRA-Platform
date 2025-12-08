@@ -180,12 +180,12 @@ class SLAMonitor {
       clearInterval(this.refreshInterval);
     }
     
-    // Refresh every 30 seconds
+    // Refresh every 10 minutes
     this.refreshInterval = setInterval(() => {
       if (this.currentIssue) {
         this.refreshSLAData(this.currentIssue);
       }
-    }, 30000);
+    }, 600000); // 10 minutes = 600,000 ms
   }
 
   /**

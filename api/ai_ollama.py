@@ -23,10 +23,12 @@ class OllamaAIEngine:
     
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
-        self.model = "llama2"
+        self.model = None
         self.is_available = self._check_availability()
         
         if self.is_available:
+            # Auto-detect available model
+            self.model = self._get_available_model()
             logger.info(f"✅ Ollama AI Engine initialized - Model: {self.model}")
         else:
             logger.warning("⚠️ Ollama not available. Install: ollama.ai")
@@ -41,6 +43,38 @@ class OllamaAIEngine:
             return response.status_code == 200
         except:
             return False
+    
+    def _get_available_model(self) -> str:
+        """Get the first available model from Ollama"""
+        try:
+            response = requests.get(
+                f"{self.base_url}/api/tags",
+                timeout=2
+            )
+            if response.status_code == 200:
+                data = response.json()
+                models = data.get('models', [])
+                if models:
+                    # Priority: llama3.2 > llama2 > first available
+                    for model in models:
+                        model_name = model.get('name', '')
+                        if 'llama3.2' in model_name:
+                            logger.info(f"🤖 Selected model: {model_name}")
+                            return model_name
+                    for model in models:
+                        model_name = model.get('name', '')
+                        if 'llama' in model_name.lower():
+                            logger.info(f"🤖 Selected model: {model_name}")
+                            return model_name
+                    # Fallback to first available
+                    first_model = models[0].get('name', 'llama2')
+                    logger.info(f"🤖 Selected model: {first_model}")
+                    return first_model
+        except Exception as e:
+            logger.error(f"Error detecting Ollama model: {e}")
+        
+        # Default fallback
+        return "llama2"
     
     def _call_ollama(self, prompt: str, max_tokens: int = 500) -> Optional[str]:
         """Call Ollama API with prompt"""

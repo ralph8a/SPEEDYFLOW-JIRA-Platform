@@ -1244,6 +1244,7 @@ body.theme-dark .sidebar-menu-item:hover {
 .sidebar-content-component.collapsed .sidebar-menu-item[data-tooltip]:hover::after {
   content: attr(data-tooltip) !important;
   position: fixed !important;
+  display: block !important;
   left: 90px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
@@ -1256,11 +1257,22 @@ body.theme-dark .sidebar-menu-item:hover {
   font-size: 12px !important;
   font-weight: 600 !important;
   white-space: nowrap !important;
-  z-index: 99999 !important;
+  z-index: 999999 !important;
   border: var(--glass-border-light) !important;
   box-shadow: var(--glass-shadow-heavy) !important;
   pointer-events: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
   animation: fadeInTooltip 0.2s ease !important;
+}
+
+/* Dark theme tooltips for collapsed sidebar */
+[data-theme="dark"] .sidebar-content-component.collapsed .sidebar-menu-item[data-tooltip]:hover::after,
+body.theme-dark .sidebar-content-component.collapsed .sidebar-menu-item[data-tooltip]:hover::after {
+  background: rgba(0, 0, 0, 0.95) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
 }
 
 @keyframes fadeInTooltip {

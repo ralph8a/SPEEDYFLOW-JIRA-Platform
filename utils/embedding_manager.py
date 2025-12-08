@@ -4,6 +4,7 @@ Cachea embeddings de tickets y proporciona búsqueda por similitud
 """
 
 import json
+import gzip
 import logging
 import os
 from typing import List, Dict, Optional, Tuple
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # Ruta al cache de embeddings
 EMBEDDINGS_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "embeddings.json"
-ISSUES_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "msm_issues.json"
+ISSUES_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "msm_issues.json.gz"  # Compressed cache
 
 
 class EmbeddingManager:
@@ -148,19 +149,32 @@ class EmbeddingManager:
         Returns:
             Datos del issue o None
         """
-        if not ISSUES_CACHE_PATH.exists():
-            return None
+        # Try compressed version first
+        if ISSUES_CACHE_PATH.exists():
+            try:
+                with gzip.open(ISSUES_CACHE_PATH, 'rt', encoding='utf-8') as f:
+                    data = json.load(f)
+                    issues = data.get('issues', [])
+                    
+                    for issue in issues:
+                        if issue.get('key') == issue_key:
+                            return issue
+            except Exception as e:
+                logger.error(f"Error reading compressed issues cache: {e}")
         
-        try:
-            with open(ISSUES_CACHE_PATH, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                issues = data.get('issues', [])
-                
-                for issue in issues:
-                    if issue.get('key') == issue_key:
-                        return issue
-        except Exception as e:
-            logger.error(f"Error reading issues cache: {e}")
+        # Fallback to uncompressed version
+        uncompressed_path = ISSUES_CACHE_PATH.with_suffix('')
+        if uncompressed_path.exists():
+            try:
+                with open(uncompressed_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    issues = data.get('issues', [])
+                    
+                    for issue in issues:
+                        if issue.get('key') == issue_key:
+                            return issue
+            except Exception as e:
+                logger.error(f"Error reading uncompressed issues cache: {e}")
         
         return None
     

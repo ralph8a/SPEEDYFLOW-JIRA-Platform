@@ -719,7 +719,7 @@
   border: var(--border-width) solid #d0d7de;
   border-radius: var(--border-radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  z-index: 1000;
+  z-index: 999999;
   max-height: 250px;
   overflow-y: auto;
   animation: slideDown var(--transition-base) ease-out;

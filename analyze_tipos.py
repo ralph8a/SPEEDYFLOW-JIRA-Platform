@@ -1,9 +1,23 @@
 import json
+import gzip
 from collections import Counter
+from pathlib import Path
 
-# Cargar cache
-with open('data/cache/msm_issues.json', encoding='utf-8') as f:
-    data = json.load(f)
+# Cargar cache (try compressed first)
+cache_path_gz = Path('data/cache/msm_issues.json.gz')
+cache_path = Path('data/cache/msm_issues.json')
+
+if cache_path_gz.exists():
+    print("📦 Loading compressed cache...")
+    with gzip.open(cache_path_gz, 'rt', encoding='utf-8') as f:
+        data = json.load(f)
+elif cache_path.exists():
+    print("📄 Loading uncompressed cache...")
+    with open(cache_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+else:
+    print("❌ No cache file found!")
+    exit(1)
 
 # Extraer todos los tipos de solicitud
 tipos = []

@@ -43,6 +43,9 @@
   <!-- AUTO-SWITCH NOTIFICATION STYLING -->
   <link rel="stylesheet" href="/static/css/components/auto-switch-notification.css?v={{ timestamp }}">
   
+  <!-- ML FEATURES STYLING -->
+  <link rel="stylesheet" href="/static/css/ml-features.css?v={{ timestamp }}">
+  
   <!-- FLOWING MVP STYLING -->
   <link rel="stylesheet" href="/static/flowing-mvp/css/footer.css?v={{ timestamp }}">
   <link rel="stylesheet" href="/static/flowing-mvp/css/flowing-context-aware.css?v={{ timestamp }}">
@@ -150,6 +153,9 @@
   <!-- Chart.js for interactive charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   
+  <!-- USER SETUP MODAL (First-time configuration) -->
+  <link rel="stylesheet" href="/static/css/user-setup-modal.css?v={{ timestamp }}">
+  
 </head>
 <body class="theme-light">
   <script>
@@ -179,25 +185,25 @@
         <section class="sidebar-section" aria-label="Navigation">
           <span class="sidebar-section-label">Navigation</span>
           <nav class="sidebar-menu" aria-label="Main">
-            <button type="button" id="newTicketBtn" class="sidebar-menu-item" aria-label="Create Ticket"><span class="icon">✚</span><span class="label">Create Ticket</span></button>
-            <a href="#" class="sidebar-menu-item active" aria-current="page"><span class="icon">🗂️</span><span class="label">My Tickets</span></a>
-            <a href="#" class="sidebar-menu-item"><span class="icon">📋</span><span class="label">All Tickets</span></a>
-            <a href="#" class="sidebar-menu-item"><span class="icon">⭐</span><span class="label">Starred</span></a>
+            <button type="button" id="newTicketBtn" class="sidebar-menu-item" aria-label="Create Ticket" data-tooltip="Create Ticket"><span class="icon">✚</span><span class="label">Create Ticket</span></button>
+            <a href="#" class="sidebar-menu-item active" aria-current="page" data-tooltip="My Tickets"><span class="icon">🗂️</span><span class="label">My Tickets</span></a>
+            <a href="#" class="sidebar-menu-item" data-tooltip="All Tickets"><span class="icon">📋</span><span class="label">All Tickets</span></a>
+            <a href="#" class="sidebar-menu-item" data-tooltip="Starred"><span class="icon">⭐</span><span class="label">Starred</span></a>
           </nav>
         </section>
         <div class="sidebar-divider" aria-hidden="true"></div>
         <section class="sidebar-section" aria-label="Utilities">
           <span class="sidebar-section-label">Utilities</span>
           <nav class="sidebar-menu" aria-label="Utilities">
-            <a href="#" class="sidebar-menu-item"><span class="icon">🔍</span><span class="label">Search</span></a>
-            <a href="#" class="sidebar-menu-item"><span class="icon">📊</span><span class="label">Reports</span></a>
-            <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications">
+            <a href="#" class="sidebar-menu-item" data-tooltip="Search"><span class="icon">🔍</span><span class="label">Search</span></a>
+            <a href="#" class="sidebar-menu-item" data-tooltip="Reports"><span class="icon">📊</span><span class="label">Reports</span></a>
+            <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications" data-tooltip="Notifications">
               <span class="icon">🔔</span>
               <span class="label">Notifications</span>
               <span class="notification-badge" style="display: none;">0</span>
             </button>
-            <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh"><span class="icon">🔄</span><span class="label">Refresh</span></button>
-            <button type="button" class="sidebar-menu-item" id="clearCacheBtn" aria-label="Clear Cache" title="Clear local cache to force refresh"><span class="icon">🗑️</span><span class="label">Clear Cache</span></button>
+            <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh" data-tooltip="Refresh"><span class="icon">🔄</span><span class="label">Refresh</span></button>
+            <button type="button" class="sidebar-menu-item" id="clearCacheBtn" aria-label="Clear Cache" title="Clear local cache to force refresh" data-tooltip="Clear Cache"><span class="icon">🗑️</span><span class="label">Clear Cache</span></button>
           </nav>
         </section>
         <div class="sidebar-divider" aria-hidden="true"></div>
@@ -234,9 +240,6 @@
           </div>
           <div class="header-divider-vertical"></div>
           <div class="header-account-actions">
-            <button class="header-icon-btn" id="mlDashboardBtn" title="ML Predictive Dashboard" aria-label="ML Dashboard" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2)); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8;">
-              <span class="icon">🎯</span>
-            </button>
             <button class="header-icon-btn" id="headerHelpBtn" title="Help Center" aria-label="Help Center">
               <span class="icon">❔</span>
             </button>
@@ -714,12 +717,8 @@
   <script src="/static/js/modules/view-toggle-filters.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/ai-field-suggestions.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
-  <script src="/static/js/ml-priority-badges.js?v={{ timestamp }}"></script>
-  
-  <!-- Chart.js for ML Dashboard -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="/static/js/ml-preloader.js?v={{ timestamp }}"></script>
-  <script src="/static/js/ml-dashboard.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/ml-comment-suggestions.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/ml-anomaly-dashboard.js?v={{ timestamp }}"></script>
 
   <!-- ===== DRAG & DROP TRANSITIONS ===== -->
   <script src="/static/views/board/drag-transition-vertical.js?v={{ timestamp }}"></script>
@@ -765,5 +764,8 @@
       }, 500);
     });
   </script>
+
+  <!-- User Setup Modal -->
+  <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
 </body>
 </html>

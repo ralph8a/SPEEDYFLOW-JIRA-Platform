@@ -85,6 +85,11 @@ function openIssueDetails(issueKey) {
   // Reset to details panel
   switchPanel('detailsPanel');
 
+  // Dispatch ticketSelected event for ML features
+  document.dispatchEvent(new CustomEvent('ticketSelected', {
+    detail: { ticket: issue, issueKey: issueKey }
+  }));
+
   // NOW setup mention and attachment systems (after sidebar is visible)
   console.log('🔧 [Right Sidebar] Setting up interaction systems after open...');
   
@@ -595,6 +600,11 @@ function postComment(issueKey) {
 function closeSidebar() {
   const rightSidebar = document.getElementById('rightSidebar');
   const mainWrapper = document.querySelector('.main-wrapper');
+
+  // Notify ML features about ticket leave (for cache save)
+  if (window.commentSuggestionsUI && sidebarState.currentIssue) {
+    window.commentSuggestionsUI.onTicketLeave();
+  }
 
   // Add closing animation
   rightSidebar.classList.add('closing');

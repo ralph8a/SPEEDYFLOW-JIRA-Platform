@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="speedyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Lightning bolt icon -->
+  <path d="M20 10 L35 30 L27 30 L30 50 L15 28 L23 28 Z" fill="url(#speedyGradient)" stroke="white" stroke-width="1.5"/>
+  
+  <!-- Text "SPEEDY" -->
+  <text x="45" y="28" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">SPEEDY</text>
+  
+  <!-- Text "FLOW" -->
+  <text x="140" y="28" font-family="Arial, sans-serif" font-size="24" font-weight="300" fill="white">FLOW</text>
+  
+  <!-- Tagline -->
+  <text x="45" y="45" font-family="Arial, sans-serif" font-size="10" font-weight="300" fill="rgba(255,255,255,0.8)">JIRA Service Desk Platform</text>
+</svg>

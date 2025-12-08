@@ -70,7 +70,8 @@ const state = {
   filteredIssues: [],
   filterMode: 'all', // 'all' or 'myTickets'
   severityValues: null, // Cache for severity values from JIRA
-  severityMapping: null // Mapping for severity classification
+  severityMapping: null, // Mapping for severity classification
+  userProjectKey: null // User's configured project key from backend
 };
 
 // Make state globally accessible IMMEDIATELY to prevent "undefined" errors
@@ -229,19 +230,181 @@ async function initApp() {
   // NOTE: Auto-selection is now handled by loadIssues() function
   // which intelligently selects view based on ticket count (20 ticket threshold)
   
+  // 🔐 Check if user just logged in and trigger initial filters
+  checkAndApplyInitialFilters();
+  
   console.log('✅ SpeedyFlow ready');
 }
 
-function setupEventListeners() {
-  // ML Dashboard Button
-  const mlDashboardBtn = document.getElementById('mlDashboardBtn');
-  if (mlDashboardBtn) {
-    mlDashboardBtn.addEventListener('click', () => {
-      if (window.mlDashboard) {
-        window.mlDashboard.show();
+/**
+ * Check if user just logged in and apply initial filters
+ */
+let isApplyingInitialFilters = false; // Prevent multiple executions
+
+async function checkAndApplyInitialFilters() {
+  const justLoggedIn = sessionStorage.getItem('speedyflow_just_logged_in');
+  const initialProject = sessionStorage.getItem('speedyflow_initial_project');
+  
+  if (justLoggedIn === 'true' && !isApplyingInitialFilters) {
+    isApplyingInitialFilters = true;
+    console.log('🔐 User just logged in - waiting for desks to load...');
+    console.log(`   Initial project: ${initialProject}`);
+    
+    // Clear flags
+    sessionStorage.removeItem('speedyflow_just_logged_in');
+    sessionStorage.removeItem('speedyflow_initial_project');
+    
+    // Wait for desks to be loaded using event listener
+    await new Promise((resolve) => {
+      const handleDesksLoaded = (event) => {
+        console.log('✅ Desks loaded event received:', event.detail.desks.length, 'desks');
+        window.removeEventListener('desksLoaded', handleDesksLoaded);
+        resolve();
+      };
+      
+      // If desks already loaded, resolve immediately
+      if (state.desks.length > 0) {
+        console.log('✅ Desks already loaded:', state.desks.length);
+        resolve();
+      } else {
+        window.addEventListener('desksLoaded', handleDesksLoaded);
       }
     });
+    
+    // Find desk by project key (extracted from JQL) or by name
+    let targetDesk = null;
+    if (initialProject && state.desks.length > 0) {
+      // Try to find by project key in queue JQL
+      targetDesk = state.desks.find(d => {
+        if (d.queues && d.queues.length > 0) {
+          // Check all queues for project match
+          return d.queues.some(queue => {
+            const jql = queue.jql || '';
+            const projectMatch = jql.match(/project\s*=\s*([A-Z]+)/i);
+            return projectMatch && projectMatch[1].toUpperCase() === initialProject.toUpperCase();
+          });
+        }
+        // Fallback: check if name contains project key
+        return d.name?.toUpperCase().includes(initialProject.toUpperCase());
+      });
+      
+      if (targetDesk) {
+        console.log(`✅ Found desk for project "${initialProject}": ${targetDesk.name} (ID: ${targetDesk.id})`);
+      } else {
+        console.log(`⚠️ No desk found for project "${initialProject}"`);
+      }
+    }
+    
+    if (!targetDesk && state.desks.length > 0) {
+      targetDesk = state.desks[0];
+      console.log(`⚠️ Using fallback (first desk): ${targetDesk.name}`);
+    }
+    
+    if (targetDesk) {
+      console.log(`📍 Setting desk: ${targetDesk.name} (ID: ${targetDesk.id})`);
+      
+      // Set desk in filter
+      const deskSelect = document.getElementById('serviceDeskSelectFilter');
+      if (deskSelect) {
+        deskSelect.value = targetDesk.id;
+        deskSelect.dispatchEvent(new Event('change'));
+      }
+      
+      // Wait for queues to load
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Try to find "Assigned to me" queue using JQL first, then name
+      const queueSelect = document.getElementById('queueSelectFilter');
+      if (queueSelect && targetDesk.queues && targetDesk.queues.length > 0) {
+        let targetQueue = null;
+        
+        // Priority 1: Find by JQL pattern (assignee = currentUser())
+        targetQueue = targetDesk.queues.find(q => 
+          q.jql && /assignee\s*=\s*currentUser\(\)/i.test(q.jql)
+        );
+        
+        // Priority 2: Find by name patterns
+        if (!targetQueue) {
+          const myTicketsPatterns = [
+            /assigned.*to.*me/i,
+            /asignado.*a.*mi/i,
+            /mis.*ticket/i,
+            /my.*ticket/i
+          ];
+          
+          targetQueue = targetDesk.queues.find(q => 
+            myTicketsPatterns.some(pattern => pattern.test(q.name))
+          );
+        }
+        
+        // Fallback: Use first queue
+        if (!targetQueue && targetDesk.queues.length > 0) {
+          targetQueue = targetDesk.queues[0];
+        }
+        
+        if (targetQueue) {
+          console.log(`✅ Auto-selecting queue: ${targetQueue.name} (ID: ${targetQueue.id})`);
+          if (targetQueue.jql && /assignee\s*=\s*currentUser\(\)/i.test(targetQueue.jql)) {
+            console.log(`   Matched by JQL: assignee = currentUser()`);
+          }
+          
+          // Verify the select has this option before setting
+          const optionExists = Array.from(queueSelect.options).some(opt => opt.value === targetQueue.id);
+          console.log(`   Queue option exists in select: ${optionExists}`);
+          
+          if (optionExists) {
+            queueSelect.value = targetQueue.id;
+            console.log(`   Select value set to: ${queueSelect.value}`);
+            queueSelect.dispatchEvent(new Event('change'));
+            
+            // 💾 Save as default configuration
+            console.log('💾 Saving defaults to backend...');
+            fetch('/api/user/setup', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                project_key: initialProject,
+                desk_id: targetDesk.id,
+                queue_id: targetQueue.id
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                console.log('✅ Defaults saved successfully:', data);
+              } else {
+                console.warn('⚠️ Failed to save defaults:', data.error);
+              }
+            })
+            .catch(error => {
+              console.error('❌ Error saving defaults:', error);
+            });
+          } else {
+            console.error(`   ❌ Queue ${targetQueue.id} not found in select options!`);
+            console.log(`   Available options:`, Array.from(queueSelect.options).map(o => `${o.value}:${o.text}`));
+          }
+        }
+      }
+      
+      // Show success notification
+      if (window.notificationPanel && window.notificationPanel.show) {
+        window.notificationPanel.show(
+          `🎯 Filtros iniciales aplicados: ${targetDesk.name}`,
+          'success'
+        );
+      }
+    }
+    
+    isApplyingInitialFilters = false; // Reset flag
   }
+}
+
+function setupEventListeners() {
+  // 💡 Show first-time tooltip for save button
+  showFirstTimeTooltip();
+  
+  // NOTE: ML Dashboard Button listener is now in ml-priority-badges.js
+  // (registered when the button is created dynamically)
 
   // NEW FILTER SELECTORS (from header-menu-controller.js)
   const serviceDeskFilterSelect = document.getElementById('serviceDeskSelectFilter');
@@ -501,7 +664,8 @@ async function loadServiceDesks() {
           const qid = q.id || q.queueId || q.ID;
           const qNameCandidates = [q.name, q.queueName, q.nombre, q.title];
           const qname = qNameCandidates.find(n => typeof n === 'string' && n.trim()) || `Queue ${qid}`;
-          return { id: qid, name: qname };
+          const qjql = q.jql || '';
+          return { id: qid, name: qname, jql: qjql };
         }) : [];
         console.log(`📂 Desk: ${name} (ID: ${id}) - ${queues.length} queues:`, queues);
         return { id, name, displayName: name, queues, placeholder: d.placeholder || false };
@@ -509,6 +673,9 @@ async function loadServiceDesks() {
     }
     console.log('✅ Desks loaded:', state.desks.length);
     console.log('📋 All desks with queues:', state.desks);
+    
+    // 🎯 Dispatch event when desks are fully loaded
+    window.dispatchEvent(new CustomEvent('desksLoaded', { detail: { desks: state.desks } }));
     
   const filterSelect = document.getElementById('serviceDeskSelectFilter');    if (!state.desks.length) {
       const statusEl = document.getElementById('filterStatus');
@@ -530,19 +697,50 @@ async function loadServiceDesks() {
         if (desk.placeholder) option.classList.add('desk-placeholder');
         filterSelect.appendChild(option);
       });
-    }    if (filterSelect) {
-      filterSelect.innerHTML = '<option value="">Select Service Desk...</option>';
-      state.desks.forEach(desk => {
-        const option = document.createElement('option');
-        option.value = desk.id;
-        option.textContent = desk.name || desk.displayName || `Desk ${desk.id}`;
-        if (desk.placeholder) option.classList.add('desk-placeholder');
-        filterSelect.appendChild(option);
-      });
       
-      // NOTE: Auto-selection DISABLED
-      // User must manually select desk - prevents confusion when switching
-      // previousCode was auto-selecting first desk, now users have control
+      // 🎯 Load user defaults from backend and apply them
+      try {
+        console.log('🔍 Fetching user defaults...');
+        const configResponse = await fetch('/api/user/login-status');
+        const configData = await configResponse.json();
+        
+        if (configData.success && configData.data) {
+          const { desk_id, queue_id, project_key } = configData.data;
+          console.log(`📌 User defaults: project_key=${project_key}, desk_id=${desk_id}, queue_id=${queue_id}`);
+          
+          // Store project_key in state for later use
+          if (project_key) {
+            state.userProjectKey = project_key;
+            console.log(`✅ User project key stored in state: ${project_key}`);
+          }
+          
+          if (desk_id) {
+            const deskExists = Array.from(filterSelect.options).some(opt => opt.value === desk_id);
+            if (deskExists) {
+              console.log(`✅ Setting default desk: ${desk_id}`);
+              filterSelect.value = desk_id;
+              filterSelect.dispatchEvent(new Event('change'));
+              
+              // Wait for queues to load, then set default queue
+              if (queue_id) {
+                setTimeout(() => {
+                  const queueSelect = document.getElementById('queueSelectFilter');
+                  if (queueSelect) {
+                    const queueExists = Array.from(queueSelect.options).some(opt => opt.value === queue_id);
+                    if (queueExists) {
+                      console.log(`✅ Setting default queue: ${queue_id}`);
+                      queueSelect.value = queue_id;
+                      queueSelect.dispatchEvent(new Event('change'));
+                    }
+                  }
+                }, 1500);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not load user defaults:', error);
+      }
     }
     // Update status to ready after desks loaded
     const statusReady = document.getElementById('filterStatus');
@@ -3168,6 +3366,77 @@ function formatMs(ms) {
 }
 
 /**
+ * Show tooltip on first load to guide user about save button
+ */
+function showFirstTimeTooltip() {
+  console.log('🔍 showFirstTimeTooltip called');
+  const hasSeenTooltip = sessionStorage.getItem('speedyflow_seen_save_tooltip');
+  console.log('   hasSeenTooltip:', hasSeenTooltip);
+  
+  if (!hasSeenTooltip) {
+    const saveBtn = document.getElementById('saveFiltersBtn');
+    console.log('   saveBtn found:', !!saveBtn);
+    if (!saveBtn) {
+      console.warn('⚠️ Save button not found!');
+      return;
+    }
+    
+    // Wait for page to settle
+    setTimeout(() => {
+      const btnRect = saveBtn.getBoundingClientRect();
+      console.log('   Button rect:', btnRect);
+      
+      const tooltip = document.createElement('div');
+      tooltip.id = 'first-time-tooltip';
+      tooltip.style.position = 'fixed';
+      tooltip.style.top = `${btnRect.bottom + 10}px`;
+      tooltip.style.left = `${btnRect.right - 360}px`;
+      tooltip.style.zIndex = '999999';
+      tooltip.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      tooltip.style.color = 'white';
+      tooltip.style.padding = '16px 20px';
+      tooltip.style.borderRadius = '12px';
+      tooltip.style.boxShadow = '0 8px 32px rgba(102, 126, 234, 0.5)';
+      tooltip.style.width = '360px';
+      tooltip.style.fontSize = '14px';
+      tooltip.style.lineHeight = '1.6';
+      tooltip.style.display = 'block';
+      
+      tooltip.innerHTML = `
+        <div style="position: absolute; top: -8px; right: 20px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 10px solid #667eea;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+          <strong style="font-size: 15px;">💡 Consejo Útil</strong>
+          <button id="tooltip-close" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 18px; line-height: 1; padding: 0;">×</button>
+        </div>
+        <p style="margin: 0;">Si los filtros predeterminados no son correctos, <strong>escoge tus filtros preferidos</strong> y presiona este botón para guardarlos como tus valores por defecto.</p>
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
+          <small>✨ Esto actualiza tu configuración en el servidor</small>
+        </div>
+      `;
+      
+      document.body.appendChild(tooltip);
+      console.log('✅ Tooltip appended to body!');
+      console.log('   Element ID:', tooltip.id);
+      console.log('   Z-index:', tooltip.style.zIndex);
+      console.log('   Position:', tooltip.style.position);
+      console.log('   Top:', tooltip.style.top);
+      console.log('   Left:', tooltip.style.left);
+      console.log('   Width:', tooltip.style.width);
+      console.log('   Display:', tooltip.style.display);
+      
+      const closeBtn = document.getElementById('tooltip-close');
+      const closeTooltip = () => {
+        tooltip.remove();
+        sessionStorage.setItem('speedyflow_seen_save_tooltip', 'true');
+      };
+      
+      closeBtn.addEventListener('click', closeTooltip);
+      setTimeout(closeTooltip, 15000);
+    }, 2000);
+  }
+}
+
+/**
  * Guardar filtros seleccionados en localStorage
  */
 function saveCurrentFilters() {
@@ -3219,6 +3488,55 @@ function saveCurrentFilters() {
   
   // Also save to session for persistence during session
   sessionStorage.setItem('currentFilters', JSON.stringify(filters));
+  
+  // 🔄 Save to backend as user defaults
+  // Extract project_key from current desk's queues JQL
+  let projectKey = state.userProjectKey;
+  
+  if (!projectKey && state.desks && deskId) {
+    const currentDesk = state.desks.find(d => d.id === deskId);
+    if (currentDesk && currentDesk.queues && currentDesk.queues.length > 0) {
+      // Try to find project key in any queue's JQL
+      for (const queue of currentDesk.queues) {
+        if (queue.jql) {
+          const match = queue.jql.match(/project\s*=\s*([A-Z]+)/i);
+          if (match) {
+            projectKey = match[1];
+            console.log(`✅ Extracted project key from JQL: ${projectKey}`);
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  // Fallback to MSM if still not found
+  if (!projectKey) {
+    projectKey = 'MSM';
+    console.warn('⚠️ Using fallback project key: MSM');
+  }
+  
+  console.log('💾 Saving to backend as defaults...', { projectKey, deskId, queueId });
+  fetch('/api/user/setup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      project_key: projectKey,
+      desk_id: deskId,
+      queue_id: queueId
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('✅ Backend defaults updated successfully');
+    } else {
+      console.warn('⚠️ Failed to update backend defaults:', data.error);
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error updating backend defaults:', error);
+  });
   
   // Visual feedback
   const btn = document.getElementById('saveFiltersBtn');

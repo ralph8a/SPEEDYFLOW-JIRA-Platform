@@ -16,11 +16,44 @@
     z-index: 10000;
     align-items: center;
     justify-content: center;
-    animation: fadeIn 0.3s ease;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 #ml-dashboard-modal.active {
-    display: flex;
+    opacity: 1;
+}
+
+/* Light theme override */
+#ml-dashboard-modal.theme-light {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+#ml-dashboard-modal.theme-light .ml-dashboard-container {
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.98));
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+#ml-dashboard-modal.theme-light .ml-dashboard-title h2,
+#ml-dashboard-modal.theme-light .metric-value {
+    color: #1e293b;
+}
+
+#ml-dashboard-modal.theme-light .ml-dashboard-subtitle,
+#ml-dashboard-modal.theme-light .metric-label {
+    color: #64748b;
+}
+
+#ml-dashboard-modal.theme-light .ml-dashboard-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+#ml-dashboard-modal.theme-light .ml-dashboard-tab {
+    color: #64748b;
+}
+
+#ml-dashboard-modal.theme-light .ml-dashboard-tab.active {
+    color: #4f46e5;
 }
 
 /* Dashboard Container */
