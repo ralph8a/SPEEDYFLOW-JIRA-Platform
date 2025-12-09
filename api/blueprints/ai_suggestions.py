@@ -486,33 +486,46 @@ def _analyze_and_suggest(
                 tipo_sugerido = ml_result.get('value')
                 confidence = ml_result.get('confidence', 0.0)
                 reason = f'ML: {ml_result.get("similar_count", 0)} similares'
+                logger.info(f"📊 {issue_key}: ML suggested '{tipo_sugerido}' (conf={confidence:.2f})")
             
             # Fallback: patrones de frecuencia del caché
             if not tipo_sugerido or confidence < 0.60:
-                pattern_result = cache.get_suggestion_from_patterns(text, 'tipo_solicitud')
-                if pattern_result and pattern_result.get('confidence', 0) >= 0.60:
-                    tipo_sugerido = pattern_result.get('value')
-                    confidence = pattern_result.get('confidence', 0.0)
-                    reason = 'Patrón aprendido'
+                try:
+                    pattern_result = cache.get_suggestion_from_patterns(text, 'tipo_solicitud')
+                    if pattern_result and pattern_result.get('confidence', 0) >= 0.60:
+                        tipo_sugerido = pattern_result.get('value')
+                        confidence = pattern_result.get('confidence', 0.0)
+                        reason = 'Patrón aprendido del caché'
+                        logger.info(f"📚 {issue_key}: Pattern suggested '{tipo_sugerido}' (conf={confidence:.2f})")
+                except Exception as e:
+                    logger.warning(f"⚠️ {issue_key}: Pattern suggestion failed - {e}")
             
-            # Fallback final: Keywords basados en contenido (umbral más bajo pero útil)
-            if not tipo_sugerido or confidence < 0.60:
+            # Fallback final: Keywords basados en contenido (BAJO umbral para no bloquear patrones)
+            if not tipo_sugerido or confidence < 0.50:
                 # Detectar tipo basado en palabras clave comunes
+                keyword_detected = False
                 if any(kw in text for kw in ['incidente', 'caída', 'down', 'error', 'falla', 'problema']):
                     tipo_sugerido = 'Soporte HUB'
-                    confidence = 0.65
-                    reason = 'Detectado como incidente/problema'
+                    confidence = 0.50  # Reducido de 0.65
+                    reason = 'Keyword: incidente/problema'
+                    keyword_detected = True
                 elif any(kw in text for kw in ['solicitud', 'requerimiento', 'necesito', 'favor']):
                     tipo_sugerido = 'Requerimiento'
-                    confidence = 0.60
-                    reason = 'Detectado como solicitud/requerimiento'
+                    confidence = 0.50  # Reducido de 0.60
+                    reason = 'Keyword: solicitud/requerimiento'
+                    keyword_detected = True
                 elif any(kw in text for kw in ['consulta', 'pregunta', 'duda', 'información']):
                     tipo_sugerido = 'Consulta'
-                    confidence = 0.60
-                    reason = 'Detectado como consulta'
+                    confidence = 0.50  # Reducido de 0.60
+                    reason = 'Keyword: consulta'
+                    keyword_detected = True
+                
+                if keyword_detected:
+                    logger.debug(f"{issue_key}: Tipo detected via keywords ({tipo_sugerido}, conf={confidence})")
             
-            # CASO 1: Campo vacío - sugerir si hay confianza (umbral reducido a 0.60)
-            if not tipo_value and tipo_sugerido and confidence >= 0.60:
+            # CASO 1: Campo vacío - sugerir si hay confianza (umbral 0.50 para incluir keywords)
+            if not tipo_value and tipo_sugerido and confidence >= 0.50:
+                logger.info(f"🎯 {issue_key}: Tipo sugerido '{tipo_sugerido}' (conf={confidence:.2f}, {reason})")
                 suggestions.append({
                     'field': 'customfield_10156',
                     'field_name': 'tipo_solicitud',
@@ -524,7 +537,7 @@ def _analyze_and_suggest(
                 })
             
             # CASO 2: Campo lleno pero parece incorrecto (umbral alto para evitar cambios incorrectos)
-            elif tipo_value and tipo_sugerido and tipo_sugerido != tipo_value and confidence >= 0.80:
+            elif tipo_value and tipo_sugerido and tipo_sugerido != tipo_value and confidence >= 0.75:
                 suggestions.append({
                     'field': 'customfield_10156',
                     'field_name': 'tipo_solicitud',
@@ -565,8 +578,9 @@ def _analyze_and_suggest(
             confidence = 0.65
             reason = 'Detectado como problema de accesos/seguridad'
         
-        # CASO 1: Campo vacío
-        if not area_value and area_sugerida and confidence >= 0.60:
+        # CASO 1: Campo vacío (umbral 0.50 para keywords)
+        if not area_value and area_sugerida and confidence >= 0.50:
+            logger.info(f"🎯 {issue_key}: Área sugerida '{area_sugerida}' (conf={confidence:.2f})")
             suggestions.append({
                 'field': 'customfield_10168',
                 'field_name': 'area',
@@ -616,8 +630,9 @@ def _analyze_and_suggest(
             confidence = 0.65
             reason = 'Detectado como problema de plataforma web'
         
-        # CASO 1: Campo vacío
-        if not plat_value and plat_sugerida and confidence >= 0.60:
+        # CASO 1: Campo vacío (umbral 0.50 para keywords)
+        if not plat_value and plat_sugerida and confidence >= 0.50:
+            logger.info(f"🎯 {issue_key}: Plataforma sugerida '{plat_sugerida}' (conf={confidence:.2f})")
             suggestions.append({
                 'field': 'customfield_10169',
                 'field_name': 'plataforma',
