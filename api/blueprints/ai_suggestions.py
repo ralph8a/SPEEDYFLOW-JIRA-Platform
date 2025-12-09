@@ -86,11 +86,19 @@ def api_analyze_queue():
             cached_data = json.loads(cached[0])
             generated_at = cached[1]
             logger.info(f"✅ Using cached ML analysis from {generated_at} (desk={desk_id}, queue={queue_id})")
-            return {
-                **cached_data,
+            
+            # Ensure all required fields exist in cached response
+            response = {
+                'analyzed_count': cached_data.get('analyzed_count', 0),
+                'issues_with_suggestions': cached_data.get('issues_with_suggestions', 0),
+                'suggestions': cached_data.get('suggestions', []),
+                'cache_size': cached_data.get('cache_size', 0),
+                'desk_id': desk_id,
+                'queue_id': queue_id,
                 'cached': True,
                 'generated_at': generated_at
             }
+            return response
     except Exception as e:
         logger.warning(f"⚠️ Failed to check ML analysis cache: {e}")
     
