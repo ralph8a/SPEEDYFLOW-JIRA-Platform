@@ -201,13 +201,16 @@ def api_analyze_queue():
                     )
                     
                     if isinstance(suggestions, list) and suggestions:
+                        logger.info(f"🎯 {issue_key}: Found {len(suggestions)} suggestions")
                         results.append({
                             'issue_key': issue_key,
                             'issue_summary': fields.get('summary', ''),
                             'suggestions': suggestions
                         })
-                except Exception:
-                    pass
+                    else:
+                        logger.debug(f"✓ {issue_key}: No changes needed (all fields correct)")
+                except Exception as e:
+                    logger.warning(f"⚠️ {issue_key}: Analysis error - {e}")
                     
             except Exception:
                 continue
@@ -527,85 +530,106 @@ def _analyze_and_suggest(
         except Exception as e:
             logger.warning(f"Error suggesting tipo_solicitud: {e}")
     
-    # ÁREA (customfield_10168) - Sugerir si falta
+    # ÁREA (customfield_10168) - Sugerir si falta O si parece incorrecto
     if 'customfield_10168' in fields_to_analyze:
         current_area = fields.get('customfield_10168')
         area_value = current_area.get('value') if isinstance(current_area, dict) else current_area
         
-        if not area_value:
-            # Detectar área basada en palabras clave (mejorado con más patrones)
-            area_sugerida = None
-            confidence = 0.0
-            text = summary + ' ' + description
-            
-            if any(word in text for word in ['aplicacion', 'app', 'software', 'código', 'sistema', 'plataforma', 'web']):
-                area_sugerida = 'Aplicaciones'
-                confidence = 0.70
-                reason = 'Detectado como problema de aplicaciones/software'
-            elif any(word in text for word in ['red', 'conexión', 'vpn', 'firewall', 'internet', 'wifi', 'network']):
-                area_sugerida = 'Redes'
-                confidence = 0.70
-                reason = 'Detectado como problema de redes/conectividad'
-            elif any(word in text for word in ['servidor', 'base de datos', 'storage', 'disco', 'memoria', 'cpu']):
-                area_sugerida = 'Infraestructura'
-                confidence = 0.70
-                reason = 'Detectado como problema de infraestructura'
-            elif any(word in text for word in ['usuario', 'cuenta', 'contraseña', 'acceso', 'permiso']):
-                area_sugerida = 'Seguridad'
-                confidence = 0.65
-                reason = 'Detectado como problema de accesos/seguridad'
-            
-            if area_sugerida and confidence >= 0.60:
-                suggestions.append({
-                    'field': 'customfield_10168',
-                    'field_name': 'area',
-                    'field_label': 'Área',
-                    'current_value': area_value,
-                    'suggested_value': {"value": area_sugerida},
-                    'confidence': confidence,
-                    'reason': reason
-                })
+        # Detectar área basada en palabras clave (mejorado con más patrones)
+        area_sugerida = None
+        confidence = 0.0
+        text = summary + ' ' + description
+        
+        if any(word in text for word in ['aplicacion', 'app', 'software', 'código', 'sistema', 'plataforma', 'web']):
+            area_sugerida = 'Aplicaciones'
+            confidence = 0.70
+            reason = 'Detectado como problema de aplicaciones/software'
+        elif any(word in text for word in ['red', 'conexión', 'vpn', 'firewall', 'internet', 'wifi', 'network']):
+            area_sugerida = 'Redes'
+            confidence = 0.70
+            reason = 'Detectado como problema de redes/conectividad'
+        elif any(word in text for word in ['servidor', 'base de datos', 'storage', 'disco', 'memoria', 'cpu']):
+            area_sugerida = 'Infraestructura'
+            confidence = 0.70
+            reason = 'Detectado como problema de infraestructura'
+        elif any(word in text for word in ['usuario', 'cuenta', 'contraseña', 'acceso', 'permiso']):
+            area_sugerida = 'Seguridad'
+            confidence = 0.65
+            reason = 'Detectado como problema de accesos/seguridad'
+        
+        # CASO 1: Campo vacío
+        if not area_value and area_sugerida and confidence >= 0.60:
+            suggestions.append({
+                'field': 'customfield_10168',
+                'field_name': 'area',
+                'field_label': 'Área',
+                'current_value': area_value,
+                'suggested_value': {"value": area_sugerida},
+                'confidence': confidence,
+                'reason': reason
+            })
+        # CASO 2: Campo lleno pero parece incorrecto (umbral alto)
+        elif area_value and area_sugerida and area_sugerida != area_value and confidence >= 0.75:
+            suggestions.append({
+                'field': 'customfield_10168',
+                'field_name': 'area',
+                'field_label': 'Área',
+                'current_value': area_value,
+                'suggested_value': {"value": area_sugerida},
+                'confidence': confidence,
+                'reason': f'{reason}. Actual "{area_value}" podría ser incorrecto'
+            })
     
-    # PLATAFORMA (customfield_10169) - Sugerir si falta y hay evidencia
+    # PLATAFORMA (customfield_10169) - Sugerir si falta O si parece incorrecto
     if 'customfield_10169' in fields_to_analyze:
         current_plat = fields.get('customfield_10169')
         plat_value = current_plat.get('value') if isinstance(current_plat, dict) else current_plat
         
-        if not plat_value:
-            plat_sugerida = None
-            confidence = 0.0
-            reason = ''
-            text = summary + ' ' + description
-            
-            # Detectar menciones explícitas de plataforma (ampliado)
-            if any(kw in text for kw in ['smt', 'streaming', 'stream']):
-                plat_sugerida = 'SMT'
-                confidence = 0.80
-                reason = 'El ticket menciona SMT/Streaming'
-            elif any(kw in text for kw in ['hub', 'soporte hub']):
-                plat_sugerida = 'HUB'
-                confidence = 0.75
-                reason = 'El ticket menciona HUB'
-            elif any(kw in text for kw in ['móvil', 'celular', 'app móvil', 'android', 'ios']):
-                plat_sugerida = 'Móvil'
-                confidence = 0.70
-                reason = 'Detectado como problema de aplicación móvil'
-            elif any(kw in text for kw in ['web', 'portal', 'sitio', 'navegador']):
-                plat_sugerida = 'Web'
-                confidence = 0.65
-                reason = 'Detectado como problema de plataforma web'
-            
-            # Sugerir si hay confianza razonable
-            if plat_sugerida and confidence >= 0.60:
-                suggestions.append({
-                    'field': 'customfield_10169',
-                    'field_name': 'plataforma',
-                    'field_label': 'Plataforma',
-                    'current_value': plat_value,
-                    'suggested_value': {"value": plat_sugerida},
-                    'confidence': confidence,
-                    'reason': reason
-                })
+        plat_sugerida = None
+        confidence = 0.0
+        reason = ''
+        text = summary + ' ' + description
+        
+        # Detectar menciones explícitas de plataforma (ampliado)
+        if any(kw in text for kw in ['smt', 'streaming', 'stream']):
+            plat_sugerida = 'SMT'
+            confidence = 0.80
+            reason = 'El ticket menciona SMT/Streaming'
+        elif any(kw in text for kw in ['hub', 'soporte hub']):
+            plat_sugerida = 'HUB'
+            confidence = 0.75
+            reason = 'El ticket menciona HUB'
+        elif any(kw in text for kw in ['móvil', 'celular', 'app móvil', 'android', 'ios']):
+            plat_sugerida = 'Móvil'
+            confidence = 0.70
+            reason = 'Detectado como problema de aplicación móvil'
+        elif any(kw in text for kw in ['web', 'portal', 'sitio', 'navegador']):
+            plat_sugerida = 'Web'
+            confidence = 0.65
+            reason = 'Detectado como problema de plataforma web'
+        
+        # CASO 1: Campo vacío
+        if not plat_value and plat_sugerida and confidence >= 0.60:
+            suggestions.append({
+                'field': 'customfield_10169',
+                'field_name': 'plataforma',
+                'field_label': 'Plataforma',
+                'current_value': plat_value,
+                'suggested_value': {"value": plat_sugerida},
+                'confidence': confidence,
+                'reason': reason
+            })
+        # CASO 2: Campo lleno pero parece incorrecto (umbral alto)
+        elif plat_value and plat_sugerida and plat_sugerida != plat_value and confidence >= 0.75:
+            suggestions.append({
+                'field': 'customfield_10169',
+                'field_name': 'plataforma',
+                'field_label': 'Plataforma',
+                'current_value': plat_value,
+                'suggested_value': {"value": plat_sugerida},
+                'confidence': confidence,
+                'reason': f'{reason}. Actual "{plat_value}" podría ser incorrecto'
+            })
     
     # PAÍS (customfield_10165) - Sugerir si falta y hay evidencia
     if 'customfield_10165' in fields_to_analyze:
