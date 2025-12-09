@@ -563,19 +563,19 @@ def _analyze_and_suggest(
         
         if any(word in text for word in ['aplicacion', 'app', 'software', 'código', 'sistema', 'plataforma', 'web']):
             area_sugerida = 'Aplicaciones'
-            confidence = 0.70
+            confidence = 0.65
             reason = 'Detectado como problema de aplicaciones/software'
         elif any(word in text for word in ['red', 'conexión', 'vpn', 'firewall', 'internet', 'wifi', 'network']):
             area_sugerida = 'Redes'
-            confidence = 0.70
+            confidence = 0.65
             reason = 'Detectado como problema de redes/conectividad'
         elif any(word in text for word in ['servidor', 'base de datos', 'storage', 'disco', 'memoria', 'cpu']):
             area_sugerida = 'Infraestructura'
-            confidence = 0.70
+            confidence = 0.65
             reason = 'Detectado como problema de infraestructura'
         elif any(word in text for word in ['usuario', 'cuenta', 'contraseña', 'acceso', 'permiso']):
             area_sugerida = 'Seguridad'
-            confidence = 0.65
+            confidence = 0.60
             reason = 'Detectado como problema de accesos/seguridad'
         
         # CASO 1: Campo vacío (umbral 0.50 para keywords)
@@ -590,8 +590,8 @@ def _analyze_and_suggest(
                 'confidence': confidence,
                 'reason': reason
             })
-        # CASO 2: Campo lleno pero parece incorrecto (umbral alto)
-        elif area_value and area_sugerida and area_sugerida != area_value and confidence >= 0.75:
+        # CASO 2: Campo lleno pero parece incorrecto (umbral MUY alto 0.85)
+        elif area_value and area_sugerida and area_sugerida != area_value and confidence >= 0.85:
             suggestions.append({
                 'field': 'customfield_10168',
                 'field_name': 'area',
@@ -615,19 +615,19 @@ def _analyze_and_suggest(
         # Detectar menciones explícitas de plataforma (ampliado)
         if any(kw in text for kw in ['smt', 'streaming', 'stream']):
             plat_sugerida = 'SMT'
-            confidence = 0.80
+            confidence = 0.75
             reason = 'El ticket menciona SMT/Streaming'
         elif any(kw in text for kw in ['hub', 'soporte hub']):
             plat_sugerida = 'HUB'
-            confidence = 0.75
+            confidence = 0.70
             reason = 'El ticket menciona HUB'
         elif any(kw in text for kw in ['móvil', 'celular', 'app móvil', 'android', 'ios']):
             plat_sugerida = 'Móvil'
-            confidence = 0.70
+            confidence = 0.65
             reason = 'Detectado como problema de aplicación móvil'
         elif any(kw in text for kw in ['web', 'portal', 'sitio', 'navegador']):
             plat_sugerida = 'Web'
-            confidence = 0.65
+            confidence = 0.60
             reason = 'Detectado como problema de plataforma web'
         
         # CASO 1: Campo vacío (umbral 0.50 para keywords)
@@ -642,8 +642,8 @@ def _analyze_and_suggest(
                 'confidence': confidence,
                 'reason': reason
             })
-        # CASO 2: Campo lleno pero parece incorrecto (umbral alto)
-        elif plat_value and plat_sugerida and plat_sugerida != plat_value and confidence >= 0.75:
+        # CASO 2: Campo lleno pero parece incorrecto (umbral MUY alto 0.85)
+        elif plat_value and plat_sugerida and plat_sugerida != plat_value and confidence >= 0.85:
             suggestions.append({
                 'field': 'customfield_10169',
                 'field_name': 'plataforma',
@@ -687,8 +687,8 @@ def _analyze_and_suggest(
                 confidence = 0.85
                 reason = 'El ticket menciona Chile'
             
-            # Sugerir solo con alta confianza para país
-            if pais_sugerido and confidence >= 0.80:
+            # Sugerir con alta confianza para país (0.75 para menciones explícitas)
+            if pais_sugerido and confidence >= 0.75:
                 suggestions.append({
                     'field': 'customfield_10165',
                     'field_name': 'pais',
