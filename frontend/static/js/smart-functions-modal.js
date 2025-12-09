@@ -721,17 +721,34 @@
    * Render ML suggestions results with checkboxes for bulk updates
    */
   function renderMLSuggestionsResults(container, data) {
-    const { analyzed_count, issues_with_suggestions, suggestions } = data;
+    const { analyzed_count, issues_with_suggestions, suggestions, cache_size } = data;
     
     if (!suggestions || suggestions.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
           <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
-          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">
-            All tickets are correct
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #cbd5e1;">
+            No improvements detected
           </div>
-          <div style="font-size: 13px;">
-            Analyzed ${analyzed_count} tickets - no field updates needed
+          <div style="font-size: 13px; margin-bottom: 16px;">
+            Analyzed <strong style="color: #10b981;">${analyzed_count}</strong> tickets from this queue
+          </div>
+          <div style="background: rgba(30,41,59,0.5); padding: 16px; border-radius: 12px; max-width: 450px; margin: 0 auto; text-align: left;">
+            <div style="font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 10px;">📊 Analysis Details:</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+              <div>
+                <span style="color: #64748b;">Fields Analyzed:</span>
+                <div style="color: #cbd5e1; font-weight: 600; margin-top: 2px;">Criticidad, Tipo, Área, Plataforma, País, Priority</div>
+              </div>
+              <div>
+                <span style="color: #64748b;">Learning Context:</span>
+                <div style="color: #cbd5e1; font-weight: 600; margin-top: 2px;">${cache_size || 'N/A'} historical tickets</div>
+              </div>
+            </div>
+            <div style="margin-top: 12px; padding: 10px; background: rgba(16,185,129,0.1); border-radius: 8px; font-size: 11px; color: #6ee7b7;">
+              💡 <strong>Why no suggestions?</strong><br/>
+              All fields have values and match expected patterns. ML only suggests changes when fields are empty or clearly incorrect (confidence ≥75%).
+            </div>
           </div>
         </div>
       `;
