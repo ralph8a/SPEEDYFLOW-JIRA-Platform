@@ -678,7 +678,7 @@
       const mlAnalysisBtn = container.querySelector('#runMLAnalysisBtn');
       if (mlAnalysisBtn) {
         mlAnalysisBtn.addEventListener('click', async function() {
-          console.log('🤖 Running full ML analysis...');
+          console.log('🤖 Running full ML field suggestions analysis...');
           
           // Validate state
           if (!window.state || !window.state.currentDesk || !window.state.currentQueue) {
@@ -696,25 +696,282 @@
             return;
           }
           
-          if (window.aiQueueAnalyzer) {
-            try {
-              await window.aiQueueAnalyzer.analyze();
-              
-              // Close modal
-              const modal = getSmartModal();
-              if (modal) {
-                modal.remove();
-              }
-            } catch (error) {
-              console.error('❌ Error running ML analysis:', error);
-              alert('Error al ejecutar el análisis ML. Por favor intenta de nuevo.');
+          // Show loading in the same container
+          container.innerHTML = `
+            <div class="loading-state" style="text-align: center; padding: 60px 20px;">
+              <div class="spinner" style="width: 48px; height: 48px; margin: 0 auto 16px;"></div>
+              <div style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">
+                🤖 Analyzing tickets with ML...
+              </div>
+              <div style="font-size: 13px; color: #64748b;">
+                Using global patterns from ${window.state.issues.length} tickets
+              </div>
+            </div>
+          `;
+          
+          try {
+            // Call ML analysis API
+            const response = await fetch('/api/ai/analyze-queue', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                desk_id: window.state.currentDesk,
+                queue_id: window.state.currentQueue
+              })
+            });
+            
+            if (!response.ok) {
+              throw new Error(`API returned ${response.status}`);
             }
-          } else {
-            console.error('❌ aiQueueAnalyzer not available');
-            alert('El analizador ML no está disponible. Recarga la página.');
+            
+            const data = await response.json();
+            console.log('✅ ML analysis complete:', data);
+            
+            // Render results directly in the tab
+            renderMLSuggestionsResults(container, data);
+            
+          } catch (error) {
+            console.error('❌ Error running ML analysis:', error);
+            container.innerHTML = `
+              <div class="error-state" style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+                <div style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">
+                  Error al analizar
+                </div>
+                <div style="font-size: 13px; color: #64748b;">
+                  ${error.message || 'Error desconocido'}
+                </div>
+                <button class="bg-modal-primary-btn" onclick="location.reload()" style="margin-top: 16px;">
+                  Reintentar
+                </button>
+              </div>
+            `;
           }
         });
       }
+    }
+  }
+
+  /**
+   * Render ML suggestions results with checkboxes for bulk updates
+   */
+  function renderMLSuggestionsResults(container, data) {
+    const { analyzed_count, issues_with_suggestions, suggestions } = data;
+    
+    if (!suggestions || suggestions.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
+          <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">
+            All tickets are correct
+          </div>
+          <div style="font-size: 13px;">
+            Analyzed ${analyzed_count} tickets - no field updates needed
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    // Group suggestions by field type for stats
+    const fieldCounts = {};
+    suggestions.forEach(issue => {
+      issue.suggestions.forEach(sug => {
+        const label = sug.field_label || sug.field_name || sug.field;
+        fieldCounts[label] = (fieldCounts[label] || 0) + 1;
+      });
+    });
+    
+    const topFields = Object.entries(fieldCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    
+    container.innerHTML = `
+      <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1)); border-radius: 12px; border-left: 4px solid #10b981;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="color: #cbd5e1; font-weight: 700; font-size: 15px;">
+            🤖 ML Field Suggestions
+          </div>
+          <div style="background: rgba(16,185,129,0.2); padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; color: #10b981;">
+            ${issues_with_suggestions} tickets
+          </div>
+        </div>
+        
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 12px;">
+          ${issues_with_suggestions} of ${analyzed_count} tickets have suggested improvements
+        </div>
+        
+        ${topFields.length > 0 ? `
+          <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px;">
+            <div style="font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">
+              🎯 Most Suggested Fields:
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${topFields.map(([field, count]) => `
+                <span style="background: rgba(16,185,129,0.2); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;">
+                  ${field}: ${count}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+      
+      <div class="ml-suggestions-scrollable" style="max-height: 450px; overflow-y: auto; padding-right: 8px;">
+        ${suggestions.map(issue => `
+          <div class="ml-issue-suggestion-card" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(71,85,105,0.5); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <span style="background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700;">
+                  ${issue.issue_key}
+                </span>
+                <div style="color: #cbd5e1; font-size: 13px; margin-top: 4px;">
+                  ${issue.issue_summary || 'No summary'}
+                </div>
+              </div>
+            </div>
+            
+            <div class="suggestions-list">
+              ${issue.suggestions.map((sug, idx) => {
+                const confidenceColor = sug.confidence >= 0.8 ? '#10b981' : sug.confidence >= 0.6 ? '#f59e0b' : '#ef4444';
+                const confidenceText = (sug.confidence * 100).toFixed(0) + '%';
+                
+                return `
+                  <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                      <input 
+                        type="checkbox" 
+                        id="sug_${issue.issue_key}_${idx}"
+                        data-issue-key="${issue.issue_key}"
+                        data-field="${sug.field}"
+                        data-value='${JSON.stringify(sug.suggested_value)}'
+                        style="width: 18px; height: 18px; cursor: pointer;"
+                        checked
+                      />
+                      <label for="sug_${issue.issue_key}_${idx}" style="flex: 1; cursor: pointer;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                          <span style="color: #cbd5e1; font-weight: 600; font-size: 13px;">
+                            ${sug.field_label || sug.field_name || sug.field}
+                          </span>
+                          <span style="background: ${confidenceColor}33; color: ${confidenceColor}; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                            ${confidenceText}
+                          </span>
+                        </div>
+                        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">
+                          ${sug.current_value ? `<span style="text-decoration: line-through;">${sug.current_value}</span> → ` : ''}
+                          <span style="color: #10b981; font-weight: 600;">
+                            ${typeof sug.suggested_value === 'object' ? (sug.suggested_value.value || sug.suggested_value.name || JSON.stringify(sug.suggested_value)) : sug.suggested_value}
+                          </span>
+                        </div>
+                        ${sug.reason ? `
+                          <div style="color: #94a3b8; font-size: 11px; margin-top: 4px; font-style: italic;">
+                            💡 ${sug.reason}
+                          </div>
+                        ` : ''}
+                      </label>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div style="margin-top: 16px; display: flex; gap: 8px;">
+        <button class="bg-modal-secondary-btn" onclick="document.querySelectorAll('.ml-issue-suggestion-card input[type=checkbox]').forEach(cb => cb.checked = true)">
+          ✅ Select All
+        </button>
+        <button class="bg-modal-secondary-btn" onclick="document.querySelectorAll('.ml-issue-suggestion-card input[type=checkbox]').forEach(cb => cb.checked = false)">
+          ❌ Deselect All
+        </button>
+        <button class="bg-modal-primary-btn" id="applyMLSuggestionsBtn" style="flex: 1;">
+          🚀 Apply Selected Changes
+        </button>
+      </div>
+    `;
+    
+    // Handle apply button
+    const applyBtn = container.querySelector('#applyMLSuggestionsBtn');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', async function() {
+        const selectedSuggestions = [];
+        const checkboxes = container.querySelectorAll('input[type=checkbox]:checked');
+        
+        checkboxes.forEach(cb => {
+          const issueKey = cb.dataset.issueKey;
+          const field = cb.dataset.field;
+          const value = JSON.parse(cb.dataset.value);
+          
+          // Group by issue
+          let issueGroup = selectedSuggestions.find(s => s.issue_key === issueKey);
+          if (!issueGroup) {
+            issueGroup = { issue_key: issueKey, updates: {} };
+            selectedSuggestions.push(issueGroup);
+          }
+          
+          issueGroup.updates[field] = value;
+        });
+        
+        if (selectedSuggestions.length === 0) {
+          alert('Please select at least one suggestion to apply');
+          return;
+        }
+        
+        console.log('🚀 Applying ML suggestions:', selectedSuggestions);
+        
+        // Show progress
+        applyBtn.disabled = true;
+        applyBtn.textContent = '⏳ Applying changes...';
+        
+        try {
+          let successCount = 0;
+          let errorCount = 0;
+          
+          for (const suggestion of selectedSuggestions) {
+            try {
+              const response = await fetch(`/api/issues/${suggestion.issue_key}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: suggestion.updates })
+              });
+              
+              if (response.ok) {
+                successCount++;
+                console.log(`✅ Updated ${suggestion.issue_key}`);
+              } else {
+                errorCount++;
+                console.error(`❌ Failed to update ${suggestion.issue_key}:`, await response.text());
+              }
+            } catch (error) {
+              errorCount++;
+              console.error(`❌ Error updating ${suggestion.issue_key}:`, error);
+            }
+          }
+          
+          // Show result
+          const resultMsg = `✅ Successfully updated ${successCount} ticket${successCount !== 1 ? 's' : ''}` +
+                           (errorCount > 0 ? `\n⚠️ ${errorCount} failed` : '');
+          alert(resultMsg);
+          
+          // Reload issues
+          if (window.app && window.app.loadCurrentQueue) {
+            await window.app.loadCurrentQueue();
+          }
+          
+          // Close modal
+          const modal = getSmartModal();
+          if (modal) {
+            modal.remove();
+          }
+          
+        } catch (error) {
+          console.error('❌ Error applying suggestions:', error);
+          alert('Error applying changes. Please try again.');
+          applyBtn.disabled = false;
+          applyBtn.textContent = '🚀 Apply Selected Changes';
+        }
+      });
     }
   }
 
