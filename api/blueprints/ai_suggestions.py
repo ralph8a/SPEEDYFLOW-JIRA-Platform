@@ -477,18 +477,31 @@ def _analyze_and_suggest(
                 reason = f'ML: {ml_result.get("similar_count", 0)} similares'
             
             # Fallback: patrones de frecuencia del caché
-            if not tipo_sugerido or confidence < 0.70:
+            if not tipo_sugerido or confidence < 0.60:
                 pattern_result = cache.get_suggestion_from_patterns(text, 'tipo_solicitud')
-                if pattern_result and pattern_result.get('confidence', 0) >= 0.70:
+                if pattern_result and pattern_result.get('confidence', 0) >= 0.60:
                     tipo_sugerido = pattern_result.get('value')
                     confidence = pattern_result.get('confidence', 0.0)
                     reason = 'Patrón aprendido'
             
-            # NO HAY FALLBACK - Si no hay ML o patrones, no sugerir nada
-            # Es mejor no sugerir que sugerir incorrectamente
+            # Fallback final: Keywords basados en contenido (umbral más bajo pero útil)
+            if not tipo_sugerido or confidence < 0.60:
+                # Detectar tipo basado en palabras clave comunes
+                if any(kw in text for kw in ['incidente', 'caída', 'down', 'error', 'falla', 'problema']):
+                    tipo_sugerido = 'Soporte HUB'
+                    confidence = 0.65
+                    reason = 'Detectado como incidente/problema'
+                elif any(kw in text for kw in ['solicitud', 'requerimiento', 'necesito', 'favor']):
+                    tipo_sugerido = 'Requerimiento'
+                    confidence = 0.60
+                    reason = 'Detectado como solicitud/requerimiento'
+                elif any(kw in text for kw in ['consulta', 'pregunta', 'duda', 'información']):
+                    tipo_sugerido = 'Consulta'
+                    confidence = 0.60
+                    reason = 'Detectado como consulta'
             
-            # CASO 1: Campo vacío - sugerir SOLO si hay confianza desde ML/patrones
-            if not tipo_value and tipo_sugerido and confidence >= 0.70:
+            # CASO 1: Campo vacío - sugerir si hay confianza (umbral reducido a 0.60)
+            if not tipo_value and tipo_sugerido and confidence >= 0.60:
                 suggestions.append({
                     'field': 'customfield_10156',
                     'field_name': 'tipo_solicitud',
@@ -499,8 +512,8 @@ def _analyze_and_suggest(
                     'reason': reason
                 })
             
-            # CASO 2: Campo lleno pero parece incorrecto
-            elif tipo_value and tipo_sugerido and tipo_sugerido != tipo_value and confidence >= 0.75:
+            # CASO 2: Campo lleno pero parece incorrecto (umbral alto para evitar cambios incorrectos)
+            elif tipo_value and tipo_sugerido and tipo_sugerido != tipo_value and confidence >= 0.80:
                 suggestions.append({
                     'field': 'customfield_10156',
                     'field_name': 'tipo_solicitud',
@@ -520,19 +533,29 @@ def _analyze_and_suggest(
         area_value = current_area.get('value') if isinstance(current_area, dict) else current_area
         
         if not area_value:
-            # Detectar área basada en palabras clave
+            # Detectar área basada en palabras clave (mejorado con más patrones)
             area_sugerida = None
-            if any(word in summary + ' ' + description for word in ['aplicacion', 'app', 'software', 'código']):
-                area_sugerida = 'Aplicaciones'
-                confidence = 0.75
-            elif any(word in summary + ' ' + description for word in ['red', 'conexión', 'vpn', 'firewall']):
-                area_sugerida = 'Redes'
-                confidence = 0.75
-            elif any(word in summary + ' ' + description for word in ['servidor', 'base de datos', 'storage']):
-                area_sugerida = 'Infraestructura'
-                confidence = 0.75
+            confidence = 0.0
+            text = summary + ' ' + description
             
-            if area_sugerida:
+            if any(word in text for word in ['aplicacion', 'app', 'software', 'código', 'sistema', 'plataforma', 'web']):
+                area_sugerida = 'Aplicaciones'
+                confidence = 0.70
+                reason = 'Detectado como problema de aplicaciones/software'
+            elif any(word in text for word in ['red', 'conexión', 'vpn', 'firewall', 'internet', 'wifi', 'network']):
+                area_sugerida = 'Redes'
+                confidence = 0.70
+                reason = 'Detectado como problema de redes/conectividad'
+            elif any(word in text for word in ['servidor', 'base de datos', 'storage', 'disco', 'memoria', 'cpu']):
+                area_sugerida = 'Infraestructura'
+                confidence = 0.70
+                reason = 'Detectado como problema de infraestructura'
+            elif any(word in text for word in ['usuario', 'cuenta', 'contraseña', 'acceso', 'permiso']):
+                area_sugerida = 'Seguridad'
+                confidence = 0.65
+                reason = 'Detectado como problema de accesos/seguridad'
+            
+            if area_sugerida and confidence >= 0.60:
                 suggestions.append({
                     'field': 'customfield_10168',
                     'field_name': 'area',
@@ -540,46 +563,91 @@ def _analyze_and_suggest(
                     'current_value': area_value,
                     'suggested_value': {"value": area_sugerida},
                     'confidence': confidence,
-                    'reason': f'El contenido sugiere el área de {area_sugerida}'
+                    'reason': reason
                 })
     
-    # PLATAFORMA (customfield_10169) - Solo sugerir si tiene sentido con el Tipo de Solicitud
+    # PLATAFORMA (customfield_10169) - Sugerir si falta y hay evidencia
     if 'customfield_10169' in fields_to_analyze:
         current_plat = fields.get('customfield_10169')
         plat_value = current_plat.get('value') if isinstance(current_plat, dict) else current_plat
         
-        # Solo sugerir plataforma si:
-        # 1. El campo está vacío
-        # 2. Ya tiene "Tipo de Solicitud" = "Soporte HUB" (que requiere plataforma)
-        # 3. Hay evidencia clara en el contenido
-        current_tipo = fields.get('customfield_10156', {})
-        tipo_value = current_tipo.get('value') if isinstance(current_tipo, dict) else current_tipo
-        
-        # Solo analizar si es "Soporte HUB" o si menciona plataformas específicas
-        if not plat_value and (tipo_value == 'Soporte HUB' or 
-                               any(kw in summary + ' ' + description for kw in ['smt', 'streaming', 'hub'])):
+        if not plat_value:
             plat_sugerida = None
             confidence = 0.0
+            reason = ''
             text = summary + ' ' + description
             
-            # Detectar menciones explícitas de plataforma
-            if 'smt' in text or 'streaming' in text:
+            # Detectar menciones explícitas de plataforma (ampliado)
+            if any(kw in text for kw in ['smt', 'streaming', 'stream']):
                 plat_sugerida = 'SMT'
-                confidence = 0.85
+                confidence = 0.80
                 reason = 'El ticket menciona SMT/Streaming'
-            elif 'hub' in text and tipo_value == 'Soporte HUB':
+            elif any(kw in text for kw in ['hub', 'soporte hub']):
                 plat_sugerida = 'HUB'
                 confidence = 0.75
-                reason = 'Tipo de solicitud es Soporte HUB'
+                reason = 'El ticket menciona HUB'
+            elif any(kw in text for kw in ['móvil', 'celular', 'app móvil', 'android', 'ios']):
+                plat_sugerida = 'Móvil'
+                confidence = 0.70
+                reason = 'Detectado como problema de aplicación móvil'
+            elif any(kw in text for kw in ['web', 'portal', 'sitio', 'navegador']):
+                plat_sugerida = 'Web'
+                confidence = 0.65
+                reason = 'Detectado como problema de plataforma web'
             
-            # Solo sugerir con alta confianza
-            if plat_sugerida and confidence >= 0.75:
+            # Sugerir si hay confianza razonable
+            if plat_sugerida and confidence >= 0.60:
                 suggestions.append({
                     'field': 'customfield_10169',
                     'field_name': 'plataforma',
                     'field_label': 'Plataforma',
                     'current_value': plat_value,
                     'suggested_value': {"value": plat_sugerida},
+                    'confidence': confidence,
+                    'reason': reason
+                })
+    
+    # PAÍS (customfield_10165) - Sugerir si falta y hay evidencia
+    if 'customfield_10165' in fields_to_analyze:
+        current_pais = fields.get('customfield_10165')
+        pais_value = current_pais.get('value') if isinstance(current_pais, dict) else current_pais
+        
+        if not pais_value:
+            pais_sugerido = None
+            confidence = 0.0
+            reason = ''
+            text = summary + ' ' + description
+            
+            # Detectar menciones de países
+            if any(kw in text for kw in ['ecuador', 'ec', 'quito', 'guayaquil']):
+                pais_sugerido = 'Ecuador'
+                confidence = 0.85
+                reason = 'El ticket menciona Ecuador'
+            elif any(kw in text for kw in ['méxico', 'mexico', 'mx', 'cdmx']):
+                pais_sugerido = 'México'
+                confidence = 0.85
+                reason = 'El ticket menciona México'
+            elif any(kw in text for kw in ['colombia', 'co', 'bogotá']):
+                pais_sugerido = 'Colombia'
+                confidence = 0.85
+                reason = 'El ticket menciona Colombia'
+            elif any(kw in text for kw in ['perú', 'peru', 'pe', 'lima']):
+                pais_sugerido = 'Perú'
+                confidence = 0.85
+                reason = 'El ticket menciona Perú'
+            elif any(kw in text for kw in ['chile', 'cl', 'santiago']):
+                pais_sugerido = 'Chile'
+                confidence = 0.85
+                reason = 'El ticket menciona Chile'
+            
+            # Sugerir solo con alta confianza para país
+            if pais_sugerido and confidence >= 0.80:
+                suggestions.append({
+                    'field': 'customfield_10165',
+                    'field_name': 'pais',
+                    'field_label': 'País',
+                    'current_value': pais_value,
+                    'suggested_value': {"value": pais_sugerido},
                     'confidence': confidence,
                     'reason': reason
                 })
