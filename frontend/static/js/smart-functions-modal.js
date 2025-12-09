@@ -501,9 +501,8 @@
     const container = document.getElementById('mlTabContent');
     if (!container) return;
     
-    const allIssues = Array.from(window.app.issuesCache.values());
-    let missingFields = [];
-    const fieldStats = {}; // Track which fields are missing most
+    // Automatically run ML analysis when tab opens
+    runMLAnalysis(container);
     
     allIssues.forEach(issue => {
       const missing = [];
@@ -625,130 +624,96 @@
         ` : ''}
       </div>
       
-      ${missingFields.length > 0 ? `
-        <div class="ml-suggestions-list">
-          ${missingFields.slice(0, 10).map(({issue, missing}) => `
-            <div class="ml-suggestion-card" data-key="${issue.key}" style="cursor: pointer;">
-              <div class="triage-ticket-header">
-                <span class="triage-ticket-key">${issue.key}</span>
-                <span class="ml-missing-count">${missing.length} missing</span>
-              </div>
-              <div class="triage-ticket-summary">${issue.summary || 'No summary'}</div>
-              <div class="ml-missing-fields">
-                Missing: ${missing.join(', ')}
-              </div>
-            </div>
-          `).join('')}
+    `;
+  }
+  
+  /**
+   * Run ML analysis automatically
+   */
+  async function runMLAnalysis(container) {
+    console.log('🤖 Running ML field suggestions analysis...');
+    
+    // Validate state
+    if (!window.state || !window.state.currentDesk || !window.state.currentQueue) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
+          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">
+            No Queue Selected
+          </div>
+          <div style="font-size: 13px;">
+            Please select a Service Desk and Queue first
+          </div>
         </div>
-        <button class="bg-modal-primary-btn" id="runMLAnalysisBtn" style="width: 100%; margin-top: 16px;">
-          🤖 Run Full ML Analysis
-        </button>
-      ` : `
-        <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
-          <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
-          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">Great Job!</div>
-          <div style="font-size: 13px;">All tickets have complete field data</div>
+      `;
+      return;
+    }
+    
+    if (!window.state.issues || window.state.issues.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">
+            No Tickets
+          </div>
+          <div style="font-size: 13px;">
+            The current queue has no tickets to analyze
+          </div>
         </div>
-      `}
+      `;
+      return;
+    }
+    
+    // Show loading
+    container.innerHTML = `
+      <div class="loading-state" style="text-align: center; padding: 60px 20px;">
+        <div class="spinner" style="width: 48px; height: 48px; margin: 0 auto 16px;"></div>
+        <div style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">
+          🤖 Analyzing tickets with ML...
+        </div>
+        <div style="font-size: 13px; color: #64748b;">
+          Using global patterns from ${window.state.issues.length} tickets
+        </div>
+      </div>
     `;
     
-    // Add click handlers for ML suggestion cards
-    if (missingFields.length > 0) {
-      const mlCards = container.querySelectorAll('.ml-suggestion-card');
-      mlCards.forEach(card => {
-        const issueKey = card.getAttribute('data-key');
-        
-        card.addEventListener('click', function() {
-          console.log('🤖 Opening ticket with missing fields:', issueKey);
-          
-          // Close the modal
-          const modal = getSmartModal();
-          if (modal) {
-            modal.remove();
-          }
-          
-          // Open the right sidebar with ticket details
-          if (window.app && window.app.loadIssueDetails) {
-            window.app.loadIssueDetails(issueKey);
-          }
-        });
+    try {
+      // Call ML analysis API
+      const response = await fetch('/api/ai/analyze-queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          desk_id: window.state.currentDesk,
+          queue_id: window.state.currentQueue
+        })
       });
       
-      // Handle ML Analysis button
-      const mlAnalysisBtn = container.querySelector('#runMLAnalysisBtn');
-      if (mlAnalysisBtn) {
-        mlAnalysisBtn.addEventListener('click', async function() {
-          console.log('🤖 Running full ML field suggestions analysis...');
-          
-          // Validate state
-          if (!window.state || !window.state.currentDesk || !window.state.currentQueue) {
-            alert('Por favor selecciona un Service Desk y una Cola primero');
-            console.error('❌ Missing desk or queue:', { 
-              desk: window.state?.currentDesk, 
-              queue: window.state?.currentQueue 
-            });
-            return;
-          }
-          
-          if (!window.state.issues || window.state.issues.length === 0) {
-            alert('No hay tickets en la cola actual para analizar');
-            console.error('❌ No issues in current queue');
-            return;
-          }
-          
-          // Show loading in the same container
-          container.innerHTML = `
-            <div class="loading-state" style="text-align: center; padding: 60px 20px;">
-              <div class="spinner" style="width: 48px; height: 48px; margin: 0 auto 16px;"></div>
-              <div style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">
-                🤖 Analyzing tickets with ML...
-              </div>
-              <div style="font-size: 13px; color: #64748b;">
-                Using global patterns from ${window.state.issues.length} tickets
-              </div>
-            </div>
-          `;
-          
-          try {
-            // Call ML analysis API
-            const response = await fetch('/api/ai/analyze-queue', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                desk_id: window.state.currentDesk,
-                queue_id: window.state.currentQueue
-              })
-            });
-            
-            if (!response.ok) {
-              throw new Error(`API returned ${response.status}`);
-            }
-            
-            const data = await response.json();
-            console.log('✅ ML analysis complete:', data);
-            
-            // Render results directly in the tab
-            renderMLSuggestionsResults(container, data);
-            
-          } catch (error) {
-            console.error('❌ Error running ML analysis:', error);
-            container.innerHTML = `
-              <div class="error-state" style="text-align: center; padding: 60px 20px;">
-                <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                <div style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">
-                  Error al analizar
-                </div>
-                <div style="font-size: 13px; color: #64748b;">
-                  ${error.message || 'Error desconocido'}
-                </div>
-                <button class="bg-modal-primary-btn" onclick="location.reload()" style="margin-top: 16px;">
-                  Reintentar
-                </button>
-              </div>
-            `;
-          }
-        });
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
       }
+      
+      const data = await response.json();
+      console.log('✅ ML analysis complete:', data);
+      
+      // Render results directly in the tab
+      renderMLSuggestionsResults(container, data);
+      
+    } catch (error) {
+      console.error('❌ Error running ML analysis:', error);
+      container.innerHTML = `
+        <div class="error-state" style="text-align: center; padding: 60px 20px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+          <div style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">
+            Error al analizar
+          </div>
+          <div style="font-size: 13px; color: #64748b;">
+            ${error.message || 'Error desconocido'}
+          </div>
+          <button class="bg-modal-primary-btn" onclick="location.reload()" style="margin-top: 16px;">
+            Reintentar
+          </button>
+        </div>
+      `;
     }
   }
 
