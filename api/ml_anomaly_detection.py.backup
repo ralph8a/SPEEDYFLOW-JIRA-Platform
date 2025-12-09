@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 ML Anomaly Detection Engine
 Detects operational anomalies in ticket patterns, assignment distribution, and timing.
@@ -18,9 +18,6 @@ from sklearn.ensemble import IsolationForest
 
 logger = logging.getLogger(__name__)
 
-# Default cache path - absolute path from project root
-DEFAULT_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "msm_issues.json.gz"
-
 
 class AnomalyDetectionEngine:
     """
@@ -31,12 +28,7 @@ class AnomalyDetectionEngine:
     - Unusual resolution patterns
     """
     
-    def __init__(self, cache_path: Optional[str] = None):
-        if cache_path is None:
-            self.cache_path = str(DEFAULT_CACHE_PATH)
-        else:
-            self.cache_path = cache_path
-        logger.info(f"🎯 AnomalyDetectionEngine initialized with cache path: {self.cache_path}")
+    def __init__(self, cache_path: Optional[str] = None):`n        if cache_path is None:`n            self.cache_path = str(DEFAULT_CACHE_PATH)`n        else:`n            self.cache_path = cache_path`n        logger.info(f" AnomalyDetectionEngine initialized with cache path: {self.cache_path}")
         self.isolation_forest = IsolationForest(
             contamination=0.1,  # 10% expected anomalies
             random_state=42
@@ -54,7 +46,7 @@ class AnomalyDetectionEngine:
             with gzip.open(self.cache_path, 'rt', encoding='utf-8') as f:
                 data = json.load(f)
                 tickets = data.get('issues', [])
-                logger.info(f"✅ Loaded {len(tickets)} tickets from cache")
+                logger.info(f"âœ… Loaded {len(tickets)} tickets from cache")
                 return tickets
         except Exception as e:
             logger.error(f"Error loading tickets: {e}")
@@ -232,7 +224,7 @@ class AnomalyDetectionEngine:
                 anomalies.append({
                     "type": "creation_spike",
                     "severity": "high" if count > avg_hourly * 5 else "medium",
-                    "message": f"⚠️ Pico inusual: {count} tickets creados hace {hour}h (promedio: {avg_hourly:.1f}/h)",
+                    "message": f"âš ï¸ Pico inusual: {count} tickets creados hace {hour}h (promedio: {avg_hourly:.1f}/h)",
                     "value": count,
                     "threshold": threshold,
                     "timestamp": (now - timedelta(hours=hour)).isoformat(),
@@ -305,7 +297,7 @@ class AnomalyDetectionEngine:
                 anomalies.append({
                     "type": "assignment_overload",
                     "severity": "high" if count > avg_load * 3 else "medium",
-                    "message": f"⚠️ {assignee} tiene {count} tickets activos (promedio: {avg_load:.1f})",
+                    "message": f"âš ï¸ {assignee} tiene {count} tickets activos (promedio: {avg_load:.1f})",
                     "assignee": assignee,
                     "value": count,
                     "threshold": threshold,
@@ -318,7 +310,7 @@ class AnomalyDetectionEngine:
             anomalies.append({
                 "type": "unassigned_tickets",
                 "severity": "medium",
-                "message": f"⚠️ {unassigned_count} tickets activos sin asignar (últimos 30 días)",
+                "message": f"âš ï¸ {unassigned_count} tickets activos sin asignar (Ãºltimos 30 dÃ­as)",
                 "value": unassigned_count,
                 "threshold": unassigned_threshold,
                 "tickets": unassigned_tickets[:10]  # Show first 10
@@ -352,7 +344,7 @@ class AnomalyDetectionEngine:
                     anomalies.append({
                         "type": "stalled_ticket",
                         "severity": "high" if hours_stalled > avg_duration * 4 else "medium",
-                        "message": f"⚠️ {key} estancado en '{status}' por {hours_stalled:.1f}h (promedio: {avg_duration:.1f}h)",
+                        "message": f"âš ï¸ {key} estancado en '{status}' por {hours_stalled:.1f}h (promedio: {avg_duration:.1f}h)",
                         "ticket_key": key,
                         "status": status,
                         "hours_stalled": round(hours_stalled, 1),
@@ -404,7 +396,7 @@ class AnomalyDetectionEngine:
                 anomalies.append({
                     "type": "issue_type_spike",
                     "severity": "medium",
-                    "message": f"⚠️ Pico de tickets tipo '{issue_type}': {count} en 7 días (esperado: {expected:.1f})",
+                    "message": f"âš ï¸ Pico de tickets tipo '{issue_type}': {count} en 7 dÃ­as (esperado: {expected:.1f})",
                     "issue_type": issue_type,
                     "value": count,
                     "expected": round(expected, 1)
@@ -414,7 +406,7 @@ class AnomalyDetectionEngine:
     
     def train(self) -> Dict[str, any]:
         """Calculate baseline statistics for anomaly detection"""
-        logger.info("🚀 Training Anomaly Detection Engine...")
+        logger.info("ðŸš€ Training Anomaly Detection Engine...")
         start_time = datetime.now()
         
         # Load tickets
@@ -442,9 +434,9 @@ class AnomalyDetectionEngine:
             "timestamp": datetime.now().isoformat()
         }
         
-        logger.info(f"✅ Training complete in {duration:.2f}s")
-        logger.info(f"   - Baseline: {stats['avg_daily_tickets']:.1f} tickets/día")
-        logger.info(f"   - {stats['anomalies_detected']} anomalías detectadas")
+        logger.info(f"âœ… Training complete in {duration:.2f}s")
+        logger.info(f"   - Baseline: {stats['avg_daily_tickets']:.1f} tickets/dÃ­a")
+        logger.info(f"   - {stats['anomalies_detected']} anomalÃ­as detectadas")
         
         return stats
     
@@ -522,3 +514,4 @@ def get_anomaly_dashboard() -> Dict:
         train_anomaly_engine()
     
     return engine.get_dashboard_data()
+
