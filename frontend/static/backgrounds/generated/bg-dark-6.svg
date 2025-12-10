@@ -1,0 +1,70 @@
+<svg width="1920" height="1080" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" class="bg-svg">
+  <defs>
+    <!-- Enhanced Glow effects - Bright and vibrant without blur -->
+    <radialGradient id="glow0">
+      <stop offset="0%" style="stop-color:#9400d3;stop-opacity:1.0" />
+      <stop offset="20%" style="stop-color:#9400d3;stop-opacity:0.95" />
+      <stop offset="60%" style="stop-color:#9400d3;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#9400d3;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow1">
+      <stop offset="0%" style="stop-color:#40ff00;stop-opacity:1.0" />
+      <stop offset="15%" style="stop-color:#40ff00;stop-opacity:0.98" />
+      <stop offset="50%" style="stop-color:#40ff00;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:#40ff00;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow2">
+      <stop offset="0%" style="stop-color:#00ffff;stop-opacity:1.0" />
+      <stop offset="10%" style="stop-color:#00ffff;stop-opacity:0.95" />
+      <stop offset="40%" style="stop-color:#00ffff;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#00ffff;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow3">
+      <stop offset="0%" style="stop-color:#ffd60a;stop-opacity:1.0" />
+      <stop offset="12%" style="stop-color:#ffd60a;stop-opacity:0.92" />
+      <stop offset="45%" style="stop-color:#ffd60a;stop-opacity:0.75" />
+      <stop offset="100%" style="stop-color:#ffd60a;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Base gradient -->
+    <linearGradient id="baseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a1e;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- No filters - crisp and vibrant graphics -->
+  </defs>
+  
+  <!-- Base background -->
+  <rect width="1920" height="1080" fill="url(#baseGrad)" />
+  
+  <!-- Art style elements -->
+<!-- ECOSISTEMA: BOSQUE MÍSTICO -->
+  <rect x="0" y="900" width="1920" height="180" fill="#0a0a0a" opacity="0.9"/>
+  <rect x="200" y="400" width="80" height="500" fill="#ffd60a" opacity="0.85" rx="10"/>
+  <ellipse cx="240" cy="380" rx="150" ry="180" fill="#00ffff" opacity="0.7"/>
+  <ellipse cx="230" cy="320" rx="120" ry="140" fill="#00ffff" opacity="0.8"/>
+  <rect x="600" y="350" width="90" height="550" fill="#ffd60a" opacity="0.87" rx="10"/>
+  <ellipse cx="645" cy="330" rx="170" ry="200" fill="#40ff00" opacity="0.72"/>
+  <ellipse cx="640" cy="260" rx="140" ry="160" fill="#40ff00" opacity="0.82"/>
+  <rect x="1100" y="380" width="85" height="520" fill="#ffd60a" opacity="0.86" rx="10"/>
+  <ellipse cx="1142" cy="360" rx="160" ry="190" fill="#00ffff" opacity="0.75"/>
+  <ellipse cx="1145" cy="290" rx="130" ry="150" fill="#00ffff" opacity="0.83"/>
+  <rect x="1550" y="420" width="75" height="480" fill="#ffd60a" opacity="0.84" rx="10"/>
+  <ellipse cx="1587" cy="400" rx="140" ry="170" fill="#40ff00" opacity="0.73"/>
+  <ellipse cx="1590" cy="340" rx="110" ry="130" fill="#40ff00" opacity="0.81"/>
+  <ellipse cx="100" cy="880" rx="120" ry="60" fill="#00ffff" opacity="0.65"/>
+  <ellipse cx="450" cy="890" rx="140" ry="70" fill="#40ff00" opacity="0.68"/>
+  <ellipse cx="850" cy="885" rx="110" ry="55" fill="#00ffff" opacity="0.66"/>
+  <ellipse cx="1300" cy="895" rx="130" ry="65" fill="#40ff00" opacity="0.67"/>
+  <ellipse cx="1700" cy="890" rx="100" ry="50" fill="#00ffff" opacity="0.64"/>
+  <polygon points="300,0 350,0 420,1080 350,1080" fill="#9400d3" opacity="0.2"/>
+  <polygon points="750,0 800,0 900,1080 800,1080" fill="#9400d3" opacity="0.18"/>
+  <polygon points="1300,0 1350,0 1450,1080 1350,1080" fill="#9400d3" opacity="0.19"/>
+  <path d="M 400,250 Q 380,240 360,250" stroke="#ffd60a" stroke-width="3" fill="none" opacity="0.7"/>
+  <path d="M 370,250 Q 390,240 410,250" stroke="#ffd60a" stroke-width="3" fill="none" opacity="0.7"/>
+  <path d="M 1000,180 Q 980,170 960,180" stroke="#ffd60a" stroke-width="3" fill="none" opacity="0.75"/>
+  <path d="M 970,180 Q 990,170 1010,180" stroke="#ffd60a" stroke-width="3" fill="none" opacity="0.75"/>
+  <ellipse cx="960" cy="500" rx="800" ry="200" fill="#9400d3" opacity="0.1"/>
+  <ellipse cx="960" cy="700" rx="900" ry="150" fill="#0d0d0f" opacity="0.12"/>
+</svg>

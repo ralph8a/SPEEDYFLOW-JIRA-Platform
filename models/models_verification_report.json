@@ -1,0 +1,79 @@
+{
+  "total_expected": 14,
+  "total_found": 10,
+  "completion_percentage": 71.42857142857143,
+  "results": {
+    "Modelos Base": [
+      {
+        "found": true,
+        "file": "duplicate_detector.keras",
+        "size": 0.5652713775634766
+      },
+      {
+        "found": true,
+        "file": "priority_classifier.keras",
+        "size": 0.567509651184082
+      },
+      {
+        "found": true,
+        "file": "breach_predictor.keras",
+        "size": 0.5929374694824219
+      }
+    ],
+    "ML Suggester": [
+      {
+        "found": true,
+        "file": "assignee_suggester.keras",
+        "size": 1.4209957122802734
+      },
+      {
+        "found": true,
+        "file": "labels_suggester.keras",
+        "size": 1.3176040649414062
+      },
+      {
+        "found": false,
+        "file": "issuetype_suggester.keras"
+      },
+      {
+        "found": true,
+        "file": "status_suggester.keras",
+        "size": 0.5689888000488281
+      },
+      {
+        "found": false,
+        "file": "project_classifier.keras"
+      }
+    ],
+    "Encoders": [
+      {
+        "found": true,
+        "file": "label_encoders.pkl",
+        "size": 0.004178047180175781
+      },
+      {
+        "found": true,
+        "file": "assignee_encoder.pkl",
+        "size": 0.005892753601074219
+      },
+      {
+        "found": true,
+        "file": "labels_binarizer.pkl",
+        "size": 0.0007162094116210938
+      },
+      {
+        "found": false,
+        "file": "issuetype_encoder.pkl"
+      },
+      {
+        "found": true,
+        "file": "status_encoder.pkl",
+        "size": 0.0008420944213867188
+      },
+      {
+        "found": false,
+        "file": "project_encoder.pkl"
+      }
+    ]
+  }
+}

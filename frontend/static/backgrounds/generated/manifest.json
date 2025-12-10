@@ -1,0 +1,186 @@
+{
+  "generated_at": "2025-12-09T01:08:40.064344Z",
+  "count": 20,
+  "variants": [
+    {
+      "id": "dark-0-0",
+      "style": "0",
+      "filename": "bg-dark-0.svg",
+      "url": "/static/backgrounds/generated/bg-dark-0.svg",
+      "description": "0 - Generated 0",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.012633Z"
+    },
+    {
+      "id": "dark-1-1",
+      "style": "1",
+      "filename": "bg-dark-1.svg",
+      "url": "/static/backgrounds/generated/bg-dark-1.svg",
+      "description": "1 - Generated 1",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.012633Z"
+    },
+    {
+      "id": "dark-2-2",
+      "style": "2",
+      "filename": "bg-dark-2.svg",
+      "url": "/static/backgrounds/generated/bg-dark-2.svg",
+      "description": "2 - Generated 2",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.013632Z"
+    },
+    {
+      "id": "dark-3-3",
+      "style": "3",
+      "filename": "bg-dark-3.svg",
+      "url": "/static/backgrounds/generated/bg-dark-3.svg",
+      "description": "3 - Generated 3",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.013632Z"
+    },
+    {
+      "id": "dark-4-4",
+      "style": "4",
+      "filename": "bg-dark-4.svg",
+      "url": "/static/backgrounds/generated/bg-dark-4.svg",
+      "description": "4 - Generated 4",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.014631Z"
+    },
+    {
+      "id": "dark-5-5",
+      "style": "5",
+      "filename": "bg-dark-5.svg",
+      "url": "/static/backgrounds/generated/bg-dark-5.svg",
+      "description": "5 - Generated 5",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.014631Z"
+    },
+    {
+      "id": "dark-6-6",
+      "style": "6",
+      "filename": "bg-dark-6.svg",
+      "url": "/static/backgrounds/generated/bg-dark-6.svg",
+      "description": "6 - Generated 6",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.014631Z"
+    },
+    {
+      "id": "dark-7-7",
+      "style": "7",
+      "filename": "bg-dark-7.svg",
+      "url": "/static/backgrounds/generated/bg-dark-7.svg",
+      "description": "7 - Generated 7",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.015630Z"
+    },
+    {
+      "id": "dark-8-8",
+      "style": "8",
+      "filename": "bg-dark-8.svg",
+      "url": "/static/backgrounds/generated/bg-dark-8.svg",
+      "description": "8 - Generated 8",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.016393Z"
+    },
+    {
+      "id": "dark-9-9",
+      "style": "9",
+      "filename": "bg-dark-9.svg",
+      "url": "/static/backgrounds/generated/bg-dark-9.svg",
+      "description": "9 - Generated 9",
+      "theme": "dark",
+      "timestamp": "2025-12-09T01:08:40.016393Z"
+    },
+    {
+      "id": "light-0-0",
+      "style": "0",
+      "filename": "bg-light-0.svg",
+      "url": "/static/backgrounds/generated/bg-light-0.svg",
+      "description": "0 - Generated 0",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.160363Z"
+    },
+    {
+      "id": "light-1-1",
+      "style": "1",
+      "filename": "bg-light-1.svg",
+      "url": "/static/backgrounds/generated/bg-light-1.svg",
+      "description": "1 - Generated 1",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.160363Z"
+    },
+    {
+      "id": "light-2-2",
+      "style": "2",
+      "filename": "bg-light-2.svg",
+      "url": "/static/backgrounds/generated/bg-light-2.svg",
+      "description": "2 - Generated 2",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.160363Z"
+    },
+    {
+      "id": "light-3-3",
+      "style": "3",
+      "filename": "bg-light-3.svg",
+      "url": "/static/backgrounds/generated/bg-light-3.svg",
+      "description": "3 - Generated 3",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.160363Z"
+    },
+    {
+      "id": "light-4-4",
+      "style": "4",
+      "filename": "bg-light-4.svg",
+      "url": "/static/backgrounds/generated/bg-light-4.svg",
+      "description": "4 - Generated 4",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.160363Z"
+    },
+    {
+      "id": "light-5-5",
+      "style": "5",
+      "filename": "bg-light-5.svg",
+      "url": "/static/backgrounds/generated/bg-light-5.svg",
+      "description": "5 - Generated 5",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.171241Z"
+    },
+    {
+      "id": "light-6-6",
+      "style": "6",
+      "filename": "bg-light-6.svg",
+      "url": "/static/backgrounds/generated/bg-light-6.svg",
+      "description": "6 - Generated 6",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.171241Z"
+    },
+    {
+      "id": "light-7-7",
+      "style": "7",
+      "filename": "bg-light-7.svg",
+      "url": "/static/backgrounds/generated/bg-light-7.svg",
+      "description": "7 - Generated 7",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.171241Z"
+    },
+    {
+      "id": "light-8-8",
+      "style": "8",
+      "filename": "bg-light-8.svg",
+      "url": "/static/backgrounds/generated/bg-light-8.svg",
+      "description": "8 - Generated 8",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.171241Z"
+    },
+    {
+      "id": "light-9-9",
+      "style": "9",
+      "filename": "bg-light-9.svg",
+      "url": "/static/backgrounds/generated/bg-light-9.svg",
+      "description": "9 - Generated 9",
+      "theme": "light",
+      "timestamp": "2025-12-09T01:07:18.171241Z"
+    }
+  ]
+}

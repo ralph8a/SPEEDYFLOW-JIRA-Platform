@@ -1,218 +1,324 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
-ML Model Training Script for SpeedyFlow
-========================================
-
-Trains the ML Priority Engine with historical JIRA data.
-
-Usage:
-    python scripts/train_ml_models.py
-    python scripts/train_ml_models.py --queue-id 123 --desk-id 456
-    python scripts/train_ml_models.py --project PROJ --days 90
+Pipeline ML Completo con spaCy + Keras
+Dataset limpio y normalizado
 """
-
-import sys
-import os
-import logging
-import argparse
-from datetime import datetime, timedelta
+import gzip
+import json
+import numpy as np
 from pathlib import Path
+from collections import Counter
+import warnings
+warnings.filterwarnings('ignore')
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+print("="*70)
+print("🚀 PIPELINE ML - spaCy + Keras")
+print("="*70 + "\n")
 
-from api.ml_priority_engine import ml_engine
-from utils.api_migration import get_api_client
-from api.blueprints.sla import get_sla_for_issue
+# Verificar/instalar dependencias
+print("📦 Verificando dependencias...\n")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+try:
+    import spacy
+    print("✅ spaCy instalado")
+except ImportError:
+    print("⏳ Instalando spaCy...")
+    import subprocess
+    subprocess.check_call(["pip", "install", "spacy", "-q"])
+    import spacy
+    print("✅ spaCy instalado")
+
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers
+    print(f"✅ TensorFlow {tf.__version__}")
+except ImportError:
+    print("⏳ Instalando TensorFlow...")
+    import subprocess
+    subprocess.check_call(["pip", "install", "tensorflow", "-q"])
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers
+    print(f"✅ TensorFlow instalado")
+
+try:
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.metrics import classification_report, confusion_matrix
+    print("✅ scikit-learn instalado")
+except ImportError:
+    print("⏳ Instalando scikit-learn...")
+    import subprocess
+    subprocess.check_call(["pip", "install", "scikit-learn", "-q"])
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.metrics import classification_report, confusion_matrix
+    print("✅ scikit-learn instalado")
+
+# Directorios
+cache_dir = Path("C:/Users/rafae/SPEEDYFLOW-JIRA-Platform/data/cache")
+models_dir = Path("C:/Users/rafae/SPEEDYFLOW-JIRA-Platform/models")
+models_dir.mkdir(exist_ok=True)
+
+# Cargar modelo spaCy
+print("\n📥 Cargando modelo spaCy español...\n")
+try:
+    nlp = spacy.load("es_core_news_md")
+    print(f"✅ Modelo 'es_core_news_md' cargado")
+except OSError:
+    print("⏳ Descargando modelo 'es_core_news_md'...")
+    import subprocess
+    subprocess.check_call(["python", "-m", "spacy", "download", "es_core_news_md", "-q"])
+    nlp = spacy.load("es_core_news_md")
+    print("✅ Modelo descargado")
+
+EMBEDDING_DIM = nlp.vocab.vectors.shape[1]
+print(f"📊 Dimensión embeddings: {EMBEDDING_DIM}D\n")
+
+# Cargar dataset limpio
+print("="*70)
+print("📂 CARGANDO DATASET LIMPIO")
+print("="*70 + "\n")
+
+dataset_file = cache_dir / "cleaned_ml_dataset.json.gz"
+with gzip.open(dataset_file, "rt", encoding="utf-8") as f:
+    tickets = json.load(f)
+
+print(f"✅ {len(tickets):,} tickets cargados\n")
+
+# Función para generar embeddings
+def get_embedding(text, nlp, max_length=512):
+    """Generar embedding con spaCy"""
+    if not text or text == "":
+        return np.zeros(EMBEDDING_DIM)
+    
+    doc = nlp(text[:max_length])
+    return doc.vector
+
+# Preparar datos
+print("="*70)
+print("🔄 GENERANDO EMBEDDINGS")
+print("="*70 + "\n")
+
+embeddings = []
+categories = []
+priorities = []
+statuses = []
+projects = []
+breaches = []
+
+for i, ticket in enumerate(tickets):
+    if (i + 1) % 500 == 0:
+        print(f"  ✓ {i + 1:,}/{len(tickets):,}")
+    
+    fields = ticket.get("fields", {})
+    
+    # Texto: summary + description
+    summary = fields.get("summary", "")
+    description = fields.get("description", "")
+    text = f"{summary}. {description}" if description else summary
+    
+    # Generar embedding
+    emb = get_embedding(text, nlp)
+    embeddings.append(emb)
+    
+    # Etiquetas
+    categories.append(ticket.get("_ml_category", "active"))
+    priorities.append(fields.get("priority", "Unknown"))
+    statuses.append(fields.get("status", "Unknown"))
+    projects.append(ticket.get("_ml_project", "UNKNOWN"))
+    breaches.append(ticket.get("sla", {}).get("breached", False))
+
+print(f"\n✅ {len(embeddings):,} embeddings generados\n")
+
+# Convertir a numpy
+X = np.array(embeddings)
+print(f"📊 Shape: {X.shape}\n")
+
+# Encoders
+print("🔧 Codificando etiquetas...\n")
+
+le_category = LabelEncoder()
+le_priority = LabelEncoder()
+le_status = LabelEncoder()
+le_project = LabelEncoder()
+
+y_category = le_category.fit_transform(categories)
+y_priority = le_priority.fit_transform(priorities)
+y_status = le_status.fit_transform(statuses)
+y_project = le_project.fit_transform(projects)
+y_breach = np.array(breaches, dtype=int)
+
+print(f"📋 Clases:")
+print(f"  • Categorías: {len(le_category.classes_)} - {list(le_category.classes_)}")
+print(f"  • Prioridades: {len(le_priority.classes_)} - {list(le_priority.classes_)[:5]}...")
+print(f"  • Estados: {len(le_status.classes_)} - {list(le_status.classes_)[:5]}...")
+print(f"  • Proyectos: {len(le_project.classes_)}")
+print(f"  • Breaches: {sum(breaches)} positivos / {len(breaches) - sum(breaches)} negativos\n")
+
+# Guardar encoders
+import pickle
+with open(models_dir / "label_encoders.pkl", "wb") as f:
+    pickle.dump({
+        "category": le_category,
+        "priority": le_priority,
+        "status": le_status,
+        "project": le_project
+    }, f)
+print(f"💾 Encoders guardados\n")
+
+# Split
+print("="*70)
+print("✂️ DIVIDIENDO DATOS (80/20)")
+print("="*70 + "\n")
+
+X_train, X_test, \
+y_cat_train, y_cat_test, \
+y_pri_train, y_pri_test, \
+y_bre_train, y_bre_test = train_test_split(
+    X, y_category, y_priority, y_breach,
+    test_size=0.2,
+    random_state=42,
+    stratify=y_category
 )
-logger = logging.getLogger(__name__)
 
+print(f"Train: {len(X_train):,}")
+print(f"Test:  {len(X_test):,}\n")
 
-def fetch_training_data(queue_id=None, desk_id=None, project_key=None, days=30):
-    """
-    Fetch historical tickets for training.
-    
-    Args:
-        queue_id: Specific queue ID
-        desk_id: Service desk ID (required if queue_id provided)
-        project_key: Project key (e.g., 'PROJ')
-        days: Number of days of history to fetch
-    
-    Returns:
-        List of ticket dictionaries with SLA data
-    """
-    logger.info("📊 Fetching training data...")
-    
-    client = get_api_client()
-    tickets = []
-    
-    try:
-        if queue_id and desk_id:
-            # Fetch from specific queue
-            logger.info(f"Fetching tickets from queue {queue_id}...")
-            tickets = client.get_queue_issues(desk_id, queue_id)
-        
-        elif project_key:
-            # Fetch from project
-            logger.info(f"Fetching tickets from project {project_key}...")
-            project = client.get_project(project_key)
-            
-            if project:
-                # Use JQL to fetch issues from last N days
-                jql = f"project = {project_key} AND created >= -{days}d ORDER BY created DESC"
-                response = client.session.get(
-                    f"{client.base_url}/rest/api/3/search",
-                    params={'jql': jql, 'maxResults': 500},
-                    headers=client.headers
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    tickets = data.get('issues', [])
-        
-        else:
-            # Fetch from all available queues (first desk)
-            logger.info("Fetching tickets from all available queues...")
-            desks = client.get_service_desks()
-            
-            if desks and len(desks) > 0:
-                desk = desks[0]
-                desk_id = desk.get('id')
-                
-                queues = client.get_queues(desk_id)
-                
-                for queue in queues[:3]:  # Limit to first 3 queues
-                    queue_id = queue.get('id')
-                    queue_tickets = client.get_queue_issues(desk_id, queue_id)
-                    
-                    if queue_tickets:
-                        tickets.extend(queue_tickets)
-                    
-                    if len(tickets) >= 200:
-                        break
-        
-        logger.info(f"✅ Fetched {len(tickets)} tickets")
-        
-        # Enrich with SLA data
-        logger.info("🔄 Enriching tickets with SLA data...")
-        enriched_tickets = []
-        
-        for i, ticket in enumerate(tickets):
-            if i % 50 == 0 and i > 0:
-                logger.info(f"  Processed {i}/{len(tickets)} tickets...")
-            
-            try:
-                # Get issue key
-                key = ticket.get('key')
-                
-                if not key:
-                    continue
-                
-                # Get SLA data
-                sla_data = get_sla_for_issue(key)
-                
-                if sla_data:
-                    ticket['sla'] = sla_data
-                
-                # Count comments
-                fields = ticket.get('fields', {})
-                comments = fields.get('comment', {}).get('comments', [])
-                ticket['comment_count'] = len(comments)
-                
-                enriched_tickets.append(ticket)
-            
-            except Exception as e:
-                logger.warning(f"⚠️ Error enriching ticket {key}: {e}")
-                continue
-        
-        logger.info(f"✅ Enriched {len(enriched_tickets)} tickets with SLA data")
-        
-        return enriched_tickets
-    
-    except Exception as e:
-        logger.error(f"❌ Error fetching training data: {e}")
-        return []
+# MODELO 1: Detector Duplicados/Cancelados
+print("="*70)
+print("🤖 MODELO 1: Detector de Duplicados/Cancelados")
+print("="*70 + "\n")
 
+model_dup = keras.Sequential([
+    layers.Input(shape=(EMBEDDING_DIM,)),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.3),
+    layers.Dense(64, activation='relu'),
+    layers.Dropout(0.2),
+    layers.Dense(len(le_category.classes_), activation='softmax')
+], name="duplicate_detector")
 
-def train_models(tickets):
-    """Train ML models with fetched tickets."""
-    if len(tickets) < 50:
-        logger.error(f"❌ Insufficient training data: {len(tickets)} tickets (need at least 50)")
-        return False
-    
-    logger.info(f"🎓 Training ML models with {len(tickets)} tickets...")
-    
-    success = ml_engine.train_model(tickets)
-    
-    if success:
-        logger.info("✅ ML models trained successfully!")
-        
-        # Load and display metadata
-        metadata_path = Path(__file__).parent.parent / 'data' / 'ml_models' / 'metadata.json'
-        
-        if metadata_path.exists():
-            import json
-            with open(metadata_path) as f:
-                metadata = json.load(f)
-            
-            logger.info("\n📊 Training Results:")
-            logger.info(f"  Tickets used: {metadata.get('num_tickets')}")
-            logger.info(f"  Priority accuracy: {metadata.get('priority_accuracy', 0):.2%}")
-            logger.info(f"  Breach MAE: {metadata.get('breach_mae', 0):.2f} hours")
-            logger.info(f"  Trained at: {metadata.get('trained_at')}")
-        
-        return True
-    else:
-        logger.error("❌ Training failed")
-        return False
+model_dup.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
 
+print("🏋️ Entrenando...\n")
+hist_dup = model_dup.fit(
+    X_train, y_cat_train,
+    validation_split=0.2,
+    epochs=15,
+    batch_size=32,
+    verbose=2
+)
 
-def main():
-    parser = argparse.ArgumentParser(description='Train SpeedyFlow ML models')
-    parser.add_argument('--queue-id', help='Specific queue ID to train from')
-    parser.add_argument('--desk-id', help='Service desk ID (required with --queue-id)')
-    parser.add_argument('--project', help='Project key to train from (e.g., PROJ)')
-    parser.add_argument('--days', type=int, default=30, help='Days of history to fetch (default: 30)')
-    
-    args = parser.parse_args()
-    
-    logger.info("🤖 SpeedyFlow ML Model Training")
-    logger.info("================================\n")
-    
-    # Validate arguments
-    if args.queue_id and not args.desk_id:
-        logger.error("❌ --desk-id required when using --queue-id")
-        return 1
-    
-    # Fetch training data
-    tickets = fetch_training_data(
-        queue_id=args.queue_id,
-        desk_id=args.desk_id,
-        project_key=args.project,
-        days=args.days
-    )
-    
-    if not tickets:
-        logger.error("❌ No training data fetched")
-        return 1
-    
-    # Train models
-    success = train_models(tickets)
-    
-    if success:
-        logger.info("\n✅ Training complete! ML Priority Engine is ready to use.")
-        logger.info("\nNext steps:")
-        logger.info("  1. Restart the server: python api/server.py")
-        logger.info("  2. Check model status: GET /api/ml/model-status")
-        logger.info("  3. Get predictions: GET /api/ml/priority/<issue-key>")
-        return 0
-    else:
-        return 1
+loss_dup, acc_dup = model_dup.evaluate(X_test, y_cat_test, verbose=0)
+print(f"\n✅ Test Accuracy: {acc_dup:.4f}\n")
 
+# Clasificación detallada
+y_pred_dup = model_dup.predict(X_test, verbose=0).argmax(axis=1)
+print("📊 Classification Report:")
+print(classification_report(y_cat_test, y_pred_dup, target_names=le_category.classes_))
 
-if __name__ == '__main__':
-    sys.exit(main())
+model_dup.save(models_dir / "duplicate_detector.keras")
+print(f"💾 Guardado: duplicate_detector.keras\n")
+
+# MODELO 2: Clasificador de Prioridad  
+print("="*70)
+print("🤖 MODELO 2: Clasificador de Prioridad")
+print("="*70 + "\n")
+
+model_pri = keras.Sequential([
+    layers.Input(shape=(EMBEDDING_DIM,)),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.3),
+    layers.Dense(64, activation='relu'),
+    layers.Dropout(0.2),
+    layers.Dense(len(le_priority.classes_), activation='softmax')
+], name="priority_classifier")
+
+model_pri.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+print("🏋️ Entrenando...\n")
+hist_pri = model_pri.fit(
+    X_train, y_pri_train,
+    validation_split=0.2,
+    epochs=15,
+    batch_size=32,
+    verbose=2
+)
+
+loss_pri, acc_pri = model_pri.evaluate(X_test, y_pri_test, verbose=0)
+print(f"\n✅ Test Accuracy: {acc_pri:.4f}\n")
+
+model_pri.save(models_dir / "priority_classifier.keras")
+print(f"💾 Guardado: priority_classifier.keras\n")
+
+# MODELO 3: Predictor SLA Breach
+print("="*70)
+print("🤖 MODELO 3: Predictor de Violación de SLA")
+print("="*70 + "\n")
+
+model_breach = keras.Sequential([
+    layers.Input(shape=(EMBEDDING_DIM,)),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.4),
+    layers.Dense(64, activation='relu'),
+    layers.Dropout(0.3),
+    layers.Dense(32, activation='relu'),
+    layers.Dense(1, activation='sigmoid')
+], name="breach_predictor")
+
+model_breach.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy', keras.metrics.Precision(), keras.metrics.Recall()]
+)
+
+print("🏋️ Entrenando...\n")
+hist_breach = model_breach.fit(
+    X_train, y_bre_train,
+    validation_split=0.2,
+    epochs=20,
+    batch_size=32,
+    verbose=2,
+    class_weight={0: 1., 1: 3.}
+)
+
+metrics_breach = model_breach.evaluate(X_test, y_bre_test, verbose=0)
+print(f"\n✅ Test Metrics:")
+print(f"  Loss:      {metrics_breach[0]:.4f}")
+print(f"  Accuracy:  {metrics_breach[1]:.4f}")
+print(f"  Precision: {metrics_breach[2]:.4f}")
+print(f"  Recall:    {metrics_breach[3]:.4f}\n")
+
+model_breach.save(models_dir / "breach_predictor.keras")
+print(f"💾 Guardado: breach_predictor.keras\n")
+
+# Resumen final
+print("="*70)
+print("🎉 ENTRENAMIENTO COMPLETADO")
+print("="*70 + "\n")
+
+print(f"📊 Resultados:")
+print(f"  1️⃣  Detector Duplicados:    {acc_dup:.2%}")
+print(f"  2️⃣  Clasificador Prioridad: {acc_pri:.2%}")
+print(f"  3️⃣  Predictor SLA Breach:   {metrics_breach[1]:.2%} (P:{metrics_breach[2]:.2%} R:{metrics_breach[3]:.2%})")
+
+print(f"\n💾 Modelos en: {models_dir.absolute()}")
+print(f"  • duplicate_detector.keras")
+print(f"  • priority_classifier.keras")
+print(f"  • breach_predictor.keras")
+print(f"  • label_encoders.pkl")
+
+print("\n" + "="*70)
+print("✅ Pipeline ML completo")
+print("="*70)
