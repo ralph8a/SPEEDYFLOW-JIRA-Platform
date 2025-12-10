@@ -1,0 +1,12 @@
+{
+  "project_key": "MSM",
+  "total": 2,
+  "active": 2,
+  "discarded": 0,
+  "downloaded_at": "2025-12-09T20:32:35.179636",
+  "source": "servicedeskapi",
+  "files": {
+    "active": "MSM_active_tickets.json.gz",
+    "discarded": null
+  }
+}

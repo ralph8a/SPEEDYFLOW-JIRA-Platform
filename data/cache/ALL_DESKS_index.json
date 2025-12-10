@@ -1,0 +1,12 @@
+{
+  "project_key": "ALL_DESKS",
+  "total": 6,
+  "active": 6,
+  "discarded": 0,
+  "downloaded_at": "2025-12-09T20:34:00.794368",
+  "source": "servicedeskapi",
+  "files": {
+    "active": "ALL_DESKS_active_tickets.json.gz",
+    "discarded": null
+  }
+}

@@ -1,0 +1,78 @@
+<svg width="1920" height="1080" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" class="bg-svg">
+  <defs>
+    <!-- Enhanced Glow effects - Bright and vibrant without blur -->
+    <radialGradient id="glow0">
+      <stop offset="0%" style="stop-color:#0088cc;stop-opacity:1.0" />
+      <stop offset="20%" style="stop-color:#0088cc;stop-opacity:0.95" />
+      <stop offset="60%" style="stop-color:#0088cc;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#0088cc;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow1">
+      <stop offset="0%" style="stop-color:#33ff66;stop-opacity:1.0" />
+      <stop offset="15%" style="stop-color:#33ff66;stop-opacity:0.98" />
+      <stop offset="50%" style="stop-color:#33ff66;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:#33ff66;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow2">
+      <stop offset="0%" style="stop-color:#ff0066;stop-opacity:1.0" />
+      <stop offset="10%" style="stop-color:#ff0066;stop-opacity:0.95" />
+      <stop offset="40%" style="stop-color:#ff0066;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ff0066;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow3">
+      <stop offset="0%" style="stop-color:#00a8e6;stop-opacity:1.0" />
+      <stop offset="12%" style="stop-color:#00a8e6;stop-opacity:0.92" />
+      <stop offset="45%" style="stop-color:#00a8e6;stop-opacity:0.75" />
+      <stop offset="100%" style="stop-color:#00a8e6;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Base gradient -->
+    <linearGradient id="baseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fafafa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- No filters - crisp and vibrant graphics -->
+  </defs>
+  
+  <!-- Base background -->
+  <rect width="1920" height="1080" fill="url(#baseGrad)" />
+  
+  <!-- Art style elements -->
+<!-- ECOSISTEMA: DESIERTO ALIENÍGENA -->
+  <rect x="0" y="0" width="1920" height="600" fill="url(#alien_sky)"/>
+  <ellipse cx="500" cy="750" rx="600" ry="150" fill="#fafafa" opacity="0.7"/>
+  <ellipse cx="1400" cy="780" rx="700" ry="180" fill="#f8f9fa" opacity="0.65"/>
+  <ellipse cx="300" cy="850" rx="500" ry="170" fill="#00a8e6" opacity="0.5"/>
+  <ellipse cx="1200" cy="870" rx="650" ry="190" fill="#00a8e6" opacity="0.48"/>
+  <ellipse cx="700" cy="950" rx="800" ry="200" fill="#fafafa" opacity="0.75"/>
+  <ellipse cx="1600" cy="970" rx="550" ry="160" fill="#f8f9fa" opacity="0.72"/>
+  <polygon points="250,900 280,750 310,900" fill="#ff0066" opacity="0.8"/>
+  <polygon points="280,750 310,900 340,850" fill="#ff0066" opacity="0.7"/>
+  <polygon points="600,920 640,800 680,920" fill="#33ff66" opacity="0.85"/>
+  <polygon points="640,800 680,920 720,880" fill="#33ff66" opacity="0.75"/>
+  <polygon points="1100,940 1130,830 1160,940" fill="#0088cc" opacity="0.82"/>
+  <polygon points="1130,830 1160,940 1190,900" fill="#0088cc" opacity="0.72"/>
+  <polygon points="1450,960 1480,860 1510,960" fill="#00a8e6" opacity="0.8"/>
+  <polygon points="1480,860 1510,960 1540,920" fill="#00a8e6" opacity="0.7"/>
+  <path d="M 400,1080 Q 390,950 400,850 Q 410,750 420,650" stroke="#ff0066" stroke-width="12" fill="none" opacity="0.75"/>
+  <circle cx="420" cy="650" r="25" fill="#ff0066" opacity="0.8"/>
+  <circle cx="405" cy="800" r="18" fill="#ff0066" opacity="0.7"/>
+  <circle cx="415" cy="920" r="20" fill="#ff0066" opacity="0.72"/>
+  <ellipse cx="900" cy="980" rx="30" ry="120" fill="#33ff66" opacity="0.8"/>
+  <ellipse cx="870" cy="940" rx="20" ry="60" fill="#33ff66" opacity="0.75"/>
+  <ellipse cx="930" cy="950" rx="20" ry="70" fill="#33ff66" opacity="0.77"/>
+  <circle cx="900" cy="870" r="15" fill="#0088cc" opacity="0.9"/>
+  <rect x="1294" y="940" width="12" height="80" fill="#00a8e6" opacity="0.75"/>
+  <ellipse cx="1300" cy="930" rx="50" ry="30" fill="#00a8e6" opacity="0.85"/>
+  <circle cx="1280" cy="920" r="8" fill="#0088cc" opacity="0.8"/>
+  <circle cx="1320" cy="925" r="8" fill="#0088cc" opacity="0.8"/>
+  <circle cx="300" cy="200" r="80" fill="#ff0066" opacity="0.7"/>
+  <circle cx="300" cy="200" r="100" fill="#ff0066" opacity="0.3"/>
+  <circle cx="1600" cy="250" r="60" fill="#33ff66" opacity="0.65"/>
+  <circle cx="1600" cy="250" r="80" fill="#33ff66" opacity="0.25"/>
+  <circle cx="500" cy="600" r="3" fill="#0088cc" opacity="0.5"/>
+  <circle cx="800" cy="550" r="4" fill="#0088cc" opacity="0.55"/>
+  <circle cx="1200" cy="620" r="3" fill="#0088cc" opacity="0.52"/>
+  <circle cx="1500" cy="580" r="4" fill="#0088cc" opacity="0.54"/>
+</svg>

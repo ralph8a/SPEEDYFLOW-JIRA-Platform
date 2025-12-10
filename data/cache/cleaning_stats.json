@@ -1,0 +1,94 @@
+{
+  "original_count": 9818,
+  "null_fields": {
+    "description": 667,
+    "resolutiondate": 240
+  },
+  "empty_fields": {
+    "labels": 7680,
+    "components": 9818
+  },
+  "cleaned_count": 9818,
+  "removed_count": 0,
+  "field_stats": {},
+  "field_availability": {
+    "summary": {
+      "available": 9818,
+      "percentage": 100.0
+    },
+    "description": {
+      "available": 9151,
+      "percentage": 93.2063556732532
+    },
+    "status": {
+      "available": 9818,
+      "percentage": 100.0
+    },
+    "priority": {
+      "available": 9818,
+      "percentage": 100.0
+    },
+    "issuetype": {
+      "available": 9818,
+      "percentage": 100.0
+    },
+    "assignee": {
+      "available": 8907,
+      "percentage": 90.72112446526788
+    },
+    "reporter": {
+      "available": 9817,
+      "percentage": 99.98981462619679
+    },
+    "created": {
+      "available": 9818,
+      "percentage": 100.0
+    },
+    "updated": {
+      "available": 9818,
+      "percentage": 100.0
+    },
+    "resolutiondate": {
+      "available": 9578,
+      "percentage": 97.55551028722755
+    },
+    "labels": {
+      "available": 2138,
+      "percentage": 21.77632919128132
+    },
+    "components": {
+      "available": 0,
+      "percentage": 0.0
+    },
+    "comment": {
+      "available": 0,
+      "percentage": 0.0
+    }
+  },
+  "category_counts": {
+    "active": 8356,
+    "discarded": 1462
+  },
+  "project_counts": {
+    "MSM": 4965,
+    "OP": 2628,
+    "QA": 738,
+    "DES": 595,
+    "AP": 296,
+    "IN": 290,
+    "AA": 133,
+    "SDSS": 69,
+    "AS": 35,
+    "GTMS2": 22,
+    "GTMS3": 22,
+    "AR": 12,
+    "PMIG": 11,
+    "OPBS": 1,
+    "PB": 1
+  },
+  "sla_counts": {
+    "with_sla": 7575,
+    "breached": 1175,
+    "paused": 33
+  }
+}

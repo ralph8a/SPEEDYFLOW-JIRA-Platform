@@ -1,0 +1,104 @@
+{
+  "created_at": "2025-12-09T21:01:03.808813",
+  "total_tickets": 9818,
+  "active_tickets": 8356,
+  "discarded_tickets": 1462,
+  "projects": {
+    "AA": {
+      "activos": 133,
+      "descartados": 0
+    },
+    "AP": {
+      "activos": 268,
+      "descartados": 28
+    },
+    "AR": {
+      "activos": 10,
+      "descartados": 2
+    },
+    "AS": {
+      "activos": 35,
+      "descartados": 0
+    },
+    "DES": {
+      "activos": 566,
+      "descartados": 29
+    },
+    "GTMS2": {
+      "activos": 22,
+      "descartados": 0
+    },
+    "GTMS3": {
+      "activos": 22,
+      "descartados": 0
+    },
+    "IN": {
+      "activos": 274,
+      "descartados": 16
+    },
+    "MSM": {
+      "activos": 3667,
+      "descartados": 1298
+    },
+    "OP": {
+      "activos": 2583,
+      "descartados": 45
+    },
+    "OPBS": {
+      "activos": 1,
+      "descartados": 0
+    },
+    "PB": {
+      "activos": 1,
+      "descartados": 0
+    },
+    "PMIG": {
+      "activos": 11,
+      "descartados": 0
+    },
+    "QA": {
+      "activos": 694,
+      "descartados": 44
+    },
+    "SDSS": {
+      "activos": 69,
+      "descartados": 0
+    }
+  },
+  "status_distribution": {
+    "Cerrado": 7993,
+    "Cancelado": 1462,
+    "Finalizada": 109,
+    "Tareas por hacer": 45,
+    "Transferido": 35,
+    "Pausado": 30,
+    "Dependencia de externos": 26,
+    "En curso": 18,
+    "Registrado": 14,
+    "En Progreso": 9,
+    "Validación de solución": 9,
+    "En espera de cliente": 9,
+    "Finalizado": 8,
+    "Listo para el lanzamiento": 8,
+    "Lanzado": 6,
+    "Diseño Solución: En Proceso": 5,
+    "Imp: En Validación": 4,
+    "Diseño Solución: En Aceptación": 4,
+    "Análisis de Datos": 4,
+    "Servicio de Prueba": 4,
+    "Solución: Aplicativo": 3,
+    "Imp: Backend Speedy": 3,
+    "Actividades por Hacer": 3,
+    "Solución: Local (Operador)": 2,
+    "Backlog": 2,
+    "Cerrado.": 1,
+    "RCA": 1,
+    "En proceso con País": 1
+  },
+  "source": "JIRA REST API - Smart Range Fetcher",
+  "files": {
+    "active": "active_ml_tickets.json.gz",
+    "discarded": "discarded_ml_tickets.json.gz",
+    "full": "full_ml_tickets.json.gz"
+  }
+}

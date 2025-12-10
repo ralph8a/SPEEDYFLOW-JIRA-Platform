@@ -1,0 +1,3025 @@
+{
+  "generated_at": "2025-12-09",
+  "total_fields": 259,
+  "mapping": {
+    "customfield_10001": "Custom Object",
+    "customfield_10002": "Multi-Select Field",
+    "customfield_10003": "Unknown (always null)",
+    "customfield_10004": "Unknown (always null)",
+    "customfield_10005": "Unknown (always null)",
+    "customfield_10006": "Unknown (always null)",
+    "customfield_10007": "Unknown (always null)",
+    "customfield_10008": "Unknown (always null)",
+    "customfield_10009": "Unknown (always null)",
+    "customfield_10010": "Request Type",
+    "customfield_10014": "Unknown (always null)",
+    "customfield_10015": "Short Text Field",
+    "customfield_10016": "Unknown (always null)",
+    "customfield_10017": "Unknown (always null)",
+    "customfield_10019": "Rank/Order",
+    "customfield_10020": "Unknown (always null)",
+    "customfield_10021": "Unknown (always null)",
+    "customfield_10022": "Unknown (always null)",
+    "customfield_10023": "Unknown (always null)",
+    "customfield_10024": "Long Text Field",
+    "customfield_10025": "Rank/Order",
+    "customfield_10027": "Numeric Field",
+    "customfield_10028": "Numeric Field",
+    "customfield_10029": "Numeric Field",
+    "customfield_10030": "Numeric Field",
+    "customfield_10031": "Select List (Single)",
+    "customfield_10041": "Numeric Field",
+    "customfield_10042": "Numeric Field",
+    "customfield_10060": "Unknown (always null)",
+    "customfield_10061": "Custom Object",
+    "customfield_10063": "Unknown (always null)",
+    "customfield_10066": "Select List (Single)",
+    "customfield_10067": "Unknown (always null)",
+    "customfield_10071": "Unknown (always null)",
+    "customfield_10086": "Unknown (always null)",
+    "customfield_10087": "Unknown (always null)",
+    "customfield_10106": "Unknown (always null)",
+    "customfield_10110": "Short Text Field",
+    "customfield_10111": "Multi-Select Field",
+    "customfield_10112": "Custom Object",
+    "customfield_10113": "Long Text Field",
+    "customfield_10114": "Unknown (always null)",
+    "customfield_10115": "User Picker",
+    "customfield_10116": "Unknown (always null)",
+    "customfield_10117": "Unknown (always null)",
+    "customfield_10118": "Custom Object",
+    "customfield_10119": "Custom Object",
+    "customfield_10121": "Select List (Single)",
+    "customfield_10122": "Unknown (always null)",
+    "customfield_10123": "Short Text Field",
+    "customfield_10124": "Multi-Select Field",
+    "customfield_10125": "Select List (Single)",
+    "customfield_10126": "Unknown (always null)",
+    "customfield_10127": "Unknown (always null)",
+    "customfield_10128": "Unknown (always null)",
+    "customfield_10129": "Unknown (always null)",
+    "customfield_10130": "Unknown (always null)",
+    "customfield_10131": "Unknown (always null)",
+    "customfield_10132": "Unknown (always null)",
+    "customfield_10133": "Unknown (always null)",
+    "customfield_10134": "Unknown (always null)",
+    "customfield_10135": "Unknown (always null)",
+    "customfield_10136": "Custom Object",
+    "customfield_10137": "Custom Object",
+    "customfield_10138": "Select List (Single)",
+    "customfield_10139": "Multi-Select Field",
+    "customfield_10140": "Multi-Select Field",
+    "customfield_10141": "Long Text Field",
+    "customfield_10142": "Short Text Field",
+    "customfield_10143": "Short Text Field",
+    "customfield_10144": "Short Text Field",
+    "customfield_10146": "Select List (Single)",
+    "customfield_10147": "Unknown (always null)",
+    "customfield_10148": "Multi-Select Field",
+    "customfield_10149": "Custom Object",
+    "customfield_10150": "Custom Object",
+    "customfield_10151": "Custom Object",
+    "customfield_10152": "Numeric Field",
+    "customfield_10153": "Numeric Field",
+    "customfield_10154": "Custom Object",
+    "customfield_10155": "Custom Object",
+    "customfield_10156": "Select List (Single)",
+    "customfield_10157": "Multi-Select Field",
+    "customfield_10159": "Multi-Select Field",
+    "customfield_10160": "Multi-Select Field",
+    "customfield_10161": "Unknown (always null)",
+    "customfield_10162": "Unknown (always null)",
+    "customfield_10163": "Select List (Single)",
+    "customfield_10164": "Unknown (always null)",
+    "customfield_10165": "Select List (Single)",
+    "customfield_10166": "Select List (Single)",
+    "customfield_10167": "Select List (Single)",
+    "customfield_10168": "Select List (Single)",
+    "customfield_10169": "Select List (Single)",
+    "customfield_10170": "Custom Object",
+    "customfield_10171": "Custom Object",
+    "customfield_10176": "Custom Object",
+    "customfield_10180": "Custom Object",
+    "customfield_10181": "Custom Object",
+    "customfield_10182": "Custom Object",
+    "customfield_10183": "Custom Object",
+    "customfield_10184": "Custom Object",
+    "customfield_10185": "Custom Object",
+    "customfield_10186": "Custom Object",
+    "customfield_10187": "Custom Object",
+    "customfield_10190": "Custom Object",
+    "customfield_10191": "Custom Object",
+    "customfield_10192": "Custom Object",
+    "customfield_10193": "Custom Object",
+    "customfield_10194": "Custom Object",
+    "customfield_10195": "Unknown (always null)",
+    "customfield_10196": "Numeric Field",
+    "customfield_10197": "Numeric Field",
+    "customfield_10198": "Numeric Field",
+    "customfield_10204": "Unknown (always null)",
+    "customfield_10205": "Numeric Field",
+    "customfield_10206": "Numeric Field",
+    "customfield_10207": "Unknown (always null)",
+    "customfield_10208": "Select List (Single)",
+    "customfield_10209": "Unknown (always null)",
+    "customfield_10210": "Unknown (always null)",
+    "customfield_10211": "Unknown (always null)",
+    "customfield_10217": "Unknown (always null)",
+    "customfield_10218": "Numeric Field",
+    "customfield_10221": "Numeric Field",
+    "customfield_10224": "Numeric Field",
+    "customfield_10227": "Numeric Field",
+    "customfield_10230": "Numeric Field",
+    "customfield_10233": "Numeric Field",
+    "customfield_10236": "Numeric Field",
+    "customfield_10237": "Numeric Field",
+    "customfield_10238": "Numeric Field",
+    "customfield_10239": "Numeric Field",
+    "customfield_10240": "Numeric Field",
+    "customfield_10241": "Numeric Field",
+    "customfield_10242": "Numeric Field",
+    "customfield_10245": "Unknown (always null)",
+    "customfield_10246": "Unknown (always null)",
+    "customfield_10249": "Numeric Field",
+    "customfield_10252": "Select List (Single)",
+    "customfield_10253": "Custom Object",
+    "customfield_10255": "Select List (Single)",
+    "customfield_10256": "Short Text Field",
+    "customfield_10257": "Unknown (always null)",
+    "customfield_10258": "Unknown (always null)",
+    "customfield_10259": "Custom Object",
+    "customfield_10260": "Unknown (always null)",
+    "customfield_10278": "Custom Object",
+    "customfield_10279": "Numeric Field",
+    "customfield_10280": "Numeric Field",
+    "customfield_10289": "Numeric Field",
+    "customfield_10292": "Numeric Field",
+    "customfield_10295": "Numeric Field",
+    "customfield_10299": "Unknown (always null)",
+    "customfield_10300": "Unknown (always null)",
+    "customfield_10301": "Numeric Field",
+    "customfield_10335": "Select List (Single)",
+    "customfield_10341": "Numeric Field",
+    "customfield_10367": "Unknown (always null)",
+    "customfield_10368": "Unknown (always null)",
+    "customfield_10369": "Unknown (always null)",
+    "customfield_10371": "Multi-Select Field",
+    "customfield_10372": "Select List (Single)",
+    "customfield_10403": "Unknown (always null)",
+    "customfield_10404": "Unknown (always null)",
+    "customfield_10632": "Unknown (always null)",
+    "customfield_10677": "Numeric Field",
+    "customfield_10678": "Short Text Field",
+    "customfield_10717": "Numeric Field",
+    "customfield_10718": "Numeric Field",
+    "customfield_10719": "Numeric Field",
+    "customfield_10720": "Numeric Field",
+    "customfield_10733": "Numeric Field",
+    "customfield_10734": "Numeric Field",
+    "customfield_10797": "Unknown (always null)",
+    "customfield_10830": "Unknown (always null)",
+    "customfield_10863": "Unknown (always null)",
+    "customfield_10864": "Unknown (always null)",
+    "customfield_10865": "Unknown (always null)",
+    "customfield_10896": "Unknown (always null)",
+    "customfield_10929": "Numeric Field",
+    "customfield_10962": "Unknown (always null)",
+    "customfield_10963": "Unknown (always null)",
+    "customfield_10964": "Unknown (always null)",
+    "customfield_10995": "Unknown (always null)",
+    "customfield_10996": "Unknown (always null)",
+    "customfield_10997": "Unknown (always null)",
+    "customfield_10999": "Unknown (always null)",
+    "customfield_11028": "Unknown (always null)",
+    "customfield_11029": "Unknown (always null)",
+    "customfield_11030": "Unknown (always null)",
+    "customfield_11031": "Unknown (always null)",
+    "customfield_11032": "Unknown (always null)",
+    "customfield_11033": "Unknown (always null)",
+    "customfield_11034": "Unknown (always null)",
+    "customfield_11061": "Unknown (always null)",
+    "customfield_11094": "Unknown (always null)",
+    "customfield_11128": "Multi-Select Field",
+    "customfield_11129": "Unknown (always null)",
+    "customfield_11161": "Unknown (always null)",
+    "customfield_11194": "Unknown (always null)",
+    "customfield_11292": "Unknown (always null)",
+    "customfield_11325": "Unknown (always null)",
+    "customfield_11326": "Unknown (always null)",
+    "customfield_11358": "Select List (Single)",
+    "customfield_11359": "Custom Object",
+    "customfield_11391": "Unknown (always null)",
+    "customfield_11392": "Unknown (always null)",
+    "customfield_11393": "Unknown (always null)",
+    "customfield_11424": "Unknown (always null)",
+    "customfield_11425": "Unknown (always null)",
+    "customfield_11426": "Unknown (always null)",
+    "customfield_11457": "Multi-Select Field",
+    "customfield_11490": "Unknown (always null)",
+    "customfield_11523": "Unknown (always null)",
+    "customfield_11556": "Unknown (always null)",
+    "customfield_11558": "Unknown (always null)",
+    "customfield_11589": "Unknown (always null)",
+    "customfield_11622": "Multi-Select Field",
+    "customfield_11688": "Unknown (always null)",
+    "customfield_11689": "Unknown (always null)",
+    "customfield_11690": "Unknown (always null)",
+    "customfield_11721": "Unknown (always null)",
+    "customfield_11754": "Unknown (always null)",
+    "customfield_11755": "Unknown (always null)",
+    "customfield_11787": "Unknown (always null)",
+    "customfield_11788": "Unknown (always null)",
+    "customfield_11789": "Unknown (always null)",
+    "customfield_11790": "Unknown (always null)",
+    "customfield_11791": "Unknown (always null)",
+    "customfield_11820": "Unknown (always null)",
+    "customfield_11821": "Unknown (always null)",
+    "customfield_11822": "Unknown (always null)",
+    "customfield_11853": "Unknown (always null)",
+    "customfield_11854": "Unknown (always null)",
+    "customfield_11855": "Unknown (always null)",
+    "customfield_11888": "Unknown (always null)",
+    "customfield_11889": "Unknown (always null)",
+    "customfield_11890": "Unknown (always null)",
+    "customfield_11923": "Unknown (always null)",
+    "customfield_11924": "Unknown (always null)",
+    "customfield_11957": "Custom Object",
+    "customfield_11990": "Custom Object",
+    "customfield_12023": "Unknown (always null)",
+    "customfield_12024": "Unknown (always null)",
+    "customfield_12059": "Unknown (always null)",
+    "customfield_12063": "Unknown (always null)",
+    "customfield_12064": "Unknown (always null)",
+    "customfield_12065": "Unknown (always null)",
+    "customfield_12066": "Unknown (always null)",
+    "customfield_12099": "Unknown (always null)",
+    "customfield_12132": "Unknown (always null)",
+    "customfield_12133": "Unknown (always null)",
+    "customfield_12134": "Unknown (always null)",
+    "customfield_12167": "Unknown (always null)",
+    "customfield_12200": "Unknown (always null)",
+    "customfield_12233": "Unknown (always null)",
+    "customfield_12234": "Unknown (always null)",
+    "customfield_12267": "Unknown (always null)"
+  },
+  "usage_stats": [
+    {
+      "field_id": "customfield_10002",
+      "name": "Multi-Select Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "list": 1788
+      },
+      "sample": "Empty array"
+    },
+    {
+      "field_id": "customfield_10019",
+      "name": "Rank/Order",
+      "usage": 100.0,
+      "count": 2000,
+      "non_null": 2000,
+      "types": {
+        "str": 2000
+      },
+      "sample": "1|hzyefr:"
+    },
+    {
+      "field_id": "customfield_10041",
+      "name": "Numeric Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "float": 1788
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10042",
+      "name": "Numeric Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "float": 1788
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10061",
+      "name": "Custom Object",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "dict": 1788
+      },
+      "sample": {
+        "type": "str",
+        "version": "int",
+        "content": "list"
+      }
+    },
+    {
+      "field_id": "customfield_10111",
+      "name": "Multi-Select Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "list": 1788
+      },
+      "sample": "Empty array"
+    },
+    {
+      "field_id": "customfield_10115",
+      "name": "User Picker",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "dict": 1788
+      },
+      "sample": {
+        "languageCode": "str",
+        "displayName": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10124",
+      "name": "Multi-Select Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "list": 1788
+      },
+      "sample": "Empty array"
+    },
+    {
+      "field_id": "customfield_10148",
+      "name": "Multi-Select Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "list": 1788
+      },
+      "sample": "Empty array"
+    },
+    {
+      "field_id": "customfield_10157",
+      "name": "Multi-Select Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "list": 1788
+      },
+      "sample": "Empty array"
+    },
+    {
+      "field_id": "customfield_10159",
+      "name": "Multi-Select Field",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "list": 1788
+      },
+      "sample": "Empty array"
+    },
+    {
+      "field_id": "customfield_10167",
+      "name": "Select List (Single)",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "dict": 1788
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10176",
+      "name": "Custom Object",
+      "usage": 100.0,
+      "count": 1788,
+      "non_null": 1788,
+      "types": {
+        "dict": 1788
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "_links": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_10025",
+      "name": "Rank/Order",
+      "usage": 98.43400447427292,
+      "count": 1788,
+      "non_null": 1760,
+      "types": {
+        "str": 1760
+      },
+      "sample": "10008_*:*_1_*:*_0_*|*_10007_*:*_1_*:*_83046_*|*_10192_*:*_1_*:*_1486149851_*|*_10194_*:*_1_*:*_34352"
+    },
+    {
+      "field_id": "customfield_10196",
+      "name": "Numeric Field",
+      "usage": 98.43400447427292,
+      "count": 1788,
+      "non_null": 1760,
+      "types": {
+        "float": 1760
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10156",
+      "name": "Select List (Single)",
+      "usage": 98.2102908277405,
+      "count": 1788,
+      "non_null": 1756,
+      "types": {
+        "dict": 1756
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10010",
+      "name": "Request Type",
+      "usage": 98.09843400447427,
+      "count": 1788,
+      "non_null": 1754,
+      "types": {
+        "dict": 1754
+      },
+      "sample": {
+        "_links": "dict",
+        "requestType": "dict",
+        "currentStatus": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_10198",
+      "name": "Numeric Field",
+      "usage": 97.93064876957494,
+      "count": 1788,
+      "non_null": 1751,
+      "types": {
+        "float": 1751
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10197",
+      "name": "Numeric Field",
+      "usage": 97.20357941834452,
+      "count": 1788,
+      "non_null": 1738,
+      "types": {
+        "float": 1738
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10205",
+      "name": "Numeric Field",
+      "usage": 96.97986577181209,
+      "count": 1788,
+      "non_null": 1734,
+      "types": {
+        "float": 1734
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10206",
+      "name": "Numeric Field",
+      "usage": 96.97986577181209,
+      "count": 1788,
+      "non_null": 1734,
+      "types": {
+        "float": 1734
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10024",
+      "name": "Long Text Field",
+      "usage": 94.29530201342283,
+      "count": 1788,
+      "non_null": 1686,
+      "types": {
+        "str": 1686
+      },
+      "sample": "2024-07-16T14:39:41.183-0600"
+    },
+    {
+      "field_id": "customfield_10110",
+      "name": "Short Text Field",
+      "usage": 91.8903803131991,
+      "count": 1788,
+      "non_null": 1643,
+      "types": {
+        "str": 1643
+      },
+      "sample": "Service requests"
+    },
+    {
+      "field_id": "customfield_10125",
+      "name": "Select List (Single)",
+      "usage": 90.26845637583892,
+      "count": 1788,
+      "non_null": 1614,
+      "types": {
+        "dict": 1614
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10027",
+      "name": "Numeric Field",
+      "usage": 89.98881431767339,
+      "count": 1788,
+      "non_null": 1609,
+      "types": {
+        "float": 1609
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10028",
+      "name": "Numeric Field",
+      "usage": 89.98881431767339,
+      "count": 1788,
+      "non_null": 1609,
+      "types": {
+        "float": 1609
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10029",
+      "name": "Numeric Field",
+      "usage": 89.98881431767339,
+      "count": 1788,
+      "non_null": 1609,
+      "types": {
+        "float": 1609
+      },
+      "sample": "1.0"
+    },
+    {
+      "field_id": "customfield_10030",
+      "name": "Numeric Field",
+      "usage": 89.98881431767339,
+      "count": 1788,
+      "non_null": 1609,
+      "types": {
+        "float": 1609
+      },
+      "sample": "1.0"
+    },
+    {
+      "field_id": "customfield_10141",
+      "name": "Long Text Field",
+      "usage": 89.76510067114094,
+      "count": 1788,
+      "non_null": 1605,
+      "types": {
+        "str": 1605
+      },
+      "sample": "jonathan.sumano@speedymovil.com"
+    },
+    {
+      "field_id": "customfield_10142",
+      "name": "Short Text Field",
+      "usage": 89.70917225950782,
+      "count": 1788,
+      "non_null": 1604,
+      "types": {
+        "str": 1604
+      },
+      "sample": "5641750319"
+    },
+    {
+      "field_id": "customfield_10166",
+      "name": "Select List (Single)",
+      "usage": 89.70917225950782,
+      "count": 1788,
+      "non_null": 1604,
+      "types": {
+        "dict": 1604
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10144",
+      "name": "Short Text Field",
+      "usage": 89.65324384787472,
+      "count": 1788,
+      "non_null": 1603,
+      "types": {
+        "str": 1603
+      },
+      "sample": "Soporte"
+    },
+    {
+      "field_id": "customfield_10143",
+      "name": "Short Text Field",
+      "usage": 89.59731543624162,
+      "count": 1788,
+      "non_null": 1602,
+      "types": {
+        "str": 1602
+      },
+      "sample": "Speedy Móvil"
+    },
+    {
+      "field_id": "customfield_10165",
+      "name": "Select List (Single)",
+      "usage": 88.9261744966443,
+      "count": 1788,
+      "non_null": 1590,
+      "types": {
+        "dict": 1590
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10151",
+      "name": "Custom Object",
+      "usage": 88.31096196868009,
+      "count": 1788,
+      "non_null": 1579,
+      "types": {
+        "dict": 1579
+      },
+      "sample": {
+        "type": "str",
+        "version": "int",
+        "content": "list"
+      }
+    },
+    {
+      "field_id": "customfield_10218",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10221",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10224",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10227",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10230",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10233",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10236",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10237",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10238",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10239",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10240",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10241",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10242",
+      "name": "Numeric Field",
+      "usage": 86.01789709172259,
+      "count": 1788,
+      "non_null": 1538,
+      "types": {
+        "float": 1538
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10138",
+      "name": "Select List (Single)",
+      "usage": 83.7807606263982,
+      "count": 1788,
+      "non_null": 1498,
+      "types": {
+        "dict": 1498
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10249",
+      "name": "Numeric Field",
+      "usage": 79.75391498881433,
+      "count": 1788,
+      "non_null": 1426,
+      "types": {
+        "float": 1426
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10168",
+      "name": "Select List (Single)",
+      "usage": 46.14093959731543,
+      "count": 1788,
+      "non_null": 825,
+      "types": {
+        "dict": 825
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10279",
+      "name": "Numeric Field",
+      "usage": 40.044742729306485,
+      "count": 1788,
+      "non_null": 716,
+      "types": {
+        "float": 716
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10280",
+      "name": "Numeric Field",
+      "usage": 40.044742729306485,
+      "count": 1788,
+      "non_null": 716,
+      "types": {
+        "float": 716
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10170",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10181",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10182",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10183",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10184",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10185",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10186",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10187",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10190",
+      "name": "Custom Object",
+      "usage": 39.821029082774054,
+      "count": 1788,
+      "non_null": 712,
+      "types": {
+        "dict": 712
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10289",
+      "name": "Numeric Field",
+      "usage": 38.982102908277405,
+      "count": 1788,
+      "non_null": 697,
+      "types": {
+        "float": 697
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10292",
+      "name": "Numeric Field",
+      "usage": 38.982102908277405,
+      "count": 1788,
+      "non_null": 697,
+      "types": {
+        "float": 697
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10295",
+      "name": "Numeric Field",
+      "usage": 38.81431767337807,
+      "count": 1788,
+      "non_null": 694,
+      "types": {
+        "float": 694
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10259",
+      "name": "Custom Object",
+      "usage": 38.03131991051455,
+      "count": 1788,
+      "non_null": 680,
+      "types": {
+        "dict": 680
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "_links": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_10301",
+      "name": "Numeric Field",
+      "usage": 36.96868008948545,
+      "count": 1788,
+      "non_null": 661,
+      "types": {
+        "float": 661
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_11957",
+      "name": "Custom Object",
+      "usage": 36.35346756152125,
+      "count": 1788,
+      "non_null": 650,
+      "types": {
+        "dict": 650
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "_links": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_10149",
+      "name": "Custom Object",
+      "usage": 33.94854586129754,
+      "count": 1788,
+      "non_null": 607,
+      "types": {
+        "dict": 607
+      },
+      "sample": {
+        "type": "str",
+        "version": "int",
+        "content": "list"
+      }
+    },
+    {
+      "field_id": "customfield_10171",
+      "name": "Custom Object",
+      "usage": 33.16554809843401,
+      "count": 1788,
+      "non_null": 593,
+      "types": {
+        "dict": 593
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_11359",
+      "name": "Custom Object",
+      "usage": 31.879194630872483,
+      "count": 1788,
+      "non_null": 570,
+      "types": {
+        "dict": 570
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "_links": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_11990",
+      "name": "Custom Object",
+      "usage": 31.879194630872483,
+      "count": 1788,
+      "non_null": 570,
+      "types": {
+        "dict": 570
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "_links": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_10341",
+      "name": "Numeric Field",
+      "usage": 31.263982102908276,
+      "count": 1788,
+      "non_null": 559,
+      "types": {
+        "float": 559
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10150",
+      "name": "Custom Object",
+      "usage": 31.20805369127517,
+      "count": 1788,
+      "non_null": 558,
+      "types": {
+        "dict": 558
+      },
+      "sample": {
+        "type": "str",
+        "version": "int",
+        "content": "list"
+      }
+    },
+    {
+      "field_id": "customfield_10139",
+      "name": "Multi-Select Field",
+      "usage": 31.152125279642057,
+      "count": 1788,
+      "non_null": 557,
+      "types": {
+        "list": 557
+      },
+      "sample": "Array[1] of {self, value, id}"
+    },
+    {
+      "field_id": "customfield_10152",
+      "name": "Numeric Field",
+      "usage": 31.096196868008946,
+      "count": 1788,
+      "non_null": 556,
+      "types": {
+        "float": 556
+      },
+      "sample": "1.0"
+    },
+    {
+      "field_id": "customfield_10153",
+      "name": "Numeric Field",
+      "usage": 31.04026845637584,
+      "count": 1788,
+      "non_null": 555,
+      "types": {
+        "float": 555
+      },
+      "sample": "1.0"
+    },
+    {
+      "field_id": "customfield_10154",
+      "name": "Custom Object",
+      "usage": 31.04026845637584,
+      "count": 1788,
+      "non_null": 555,
+      "types": {
+        "dict": 555
+      },
+      "sample": {
+        "type": "str",
+        "version": "int",
+        "content": "list"
+      }
+    },
+    {
+      "field_id": "customfield_10155",
+      "name": "Custom Object",
+      "usage": 31.04026845637584,
+      "count": 1788,
+      "non_null": 555,
+      "types": {
+        "dict": 555
+      },
+      "sample": {
+        "type": "str",
+        "version": "int",
+        "content": "list"
+      }
+    },
+    {
+      "field_id": "customfield_10180",
+      "name": "Custom Object",
+      "usage": 18.176733780760625,
+      "count": 1788,
+      "non_null": 325,
+      "types": {
+        "dict": 325
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "_links": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_10191",
+      "name": "Custom Object",
+      "usage": 18.008948545861298,
+      "count": 1788,
+      "non_null": 322,
+      "types": {
+        "dict": 322
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10372",
+      "name": "Select List (Single)",
+      "usage": 14.93288590604027,
+      "count": 1788,
+      "non_null": 267,
+      "types": {
+        "dict": 267
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10677",
+      "name": "Numeric Field",
+      "usage": 14.373601789709173,
+      "count": 1788,
+      "non_null": 257,
+      "types": {
+        "float": 257
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10717",
+      "name": "Numeric Field",
+      "usage": 14.373601789709173,
+      "count": 1788,
+      "non_null": 257,
+      "types": {
+        "float": 257
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10718",
+      "name": "Numeric Field",
+      "usage": 14.373601789709173,
+      "count": 1788,
+      "non_null": 257,
+      "types": {
+        "float": 257
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10719",
+      "name": "Numeric Field",
+      "usage": 14.373601789709173,
+      "count": 1788,
+      "non_null": 257,
+      "types": {
+        "float": 257
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10720",
+      "name": "Numeric Field",
+      "usage": 14.373601789709173,
+      "count": 1788,
+      "non_null": 257,
+      "types": {
+        "float": 257
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10733",
+      "name": "Numeric Field",
+      "usage": 14.093959731543624,
+      "count": 1788,
+      "non_null": 252,
+      "types": {
+        "float": 252
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10734",
+      "name": "Numeric Field",
+      "usage": 14.093959731543624,
+      "count": 1788,
+      "non_null": 252,
+      "types": {
+        "float": 252
+      },
+      "sample": "0.0"
+    },
+    {
+      "field_id": "customfield_10929",
+      "name": "Numeric Field",
+      "usage": 9.022556390977442,
+      "count": 133,
+      "non_null": 12,
+      "types": {
+        "float": 12
+      },
+      "sample": "1.0"
+    },
+    {
+      "field_id": "customfield_10163",
+      "name": "Select List (Single)",
+      "usage": 8.852459016393443,
+      "count": 1220,
+      "non_null": 108,
+      "types": {
+        "dict": 108
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10140",
+      "name": "Multi-Select Field",
+      "usage": 7.2147651006711415,
+      "count": 1788,
+      "non_null": 129,
+      "types": {
+        "list": 129
+      },
+      "sample": "Array[1] of {self, value, id}"
+    },
+    {
+      "field_id": "customfield_10160",
+      "name": "Multi-Select Field",
+      "usage": 6.599552572706935,
+      "count": 1788,
+      "non_null": 118,
+      "types": {
+        "list": 118
+      },
+      "sample": "Array[1] of {self, value, id}"
+    },
+    {
+      "field_id": "customfield_10371",
+      "name": "Multi-Select Field",
+      "usage": 4.850746268656716,
+      "count": 268,
+      "non_null": 13,
+      "types": {
+        "list": 13
+      },
+      "sample": "Array[1] of {self, value, id}"
+    },
+    {
+      "field_id": "customfield_10208",
+      "name": "Select List (Single)",
+      "usage": 4.642058165548098,
+      "count": 1788,
+      "non_null": 83,
+      "types": {
+        "dict": 83
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10192",
+      "name": "Custom Object",
+      "usage": 4.082774049217002,
+      "count": 1788,
+      "non_null": 73,
+      "types": {
+        "dict": 73
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10169",
+      "name": "Select List (Single)",
+      "usage": 3.691275167785235,
+      "count": 1788,
+      "non_null": 66,
+      "types": {
+        "dict": 66
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10193",
+      "name": "Custom Object",
+      "usage": 3.5794183445190155,
+      "count": 1788,
+      "non_null": 64,
+      "types": {
+        "dict": 64
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10194",
+      "name": "Custom Object",
+      "usage": 3.5794183445190155,
+      "count": 1788,
+      "non_null": 64,
+      "types": {
+        "dict": 64
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "_links": "dict"
+      }
+    },
+    {
+      "field_id": "customfield_10118",
+      "name": "Custom Object",
+      "usage": 3.523489932885906,
+      "count": 1788,
+      "non_null": 63,
+      "types": {
+        "dict": 63
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10119",
+      "name": "Custom Object",
+      "usage": 3.523489932885906,
+      "count": 1788,
+      "non_null": 63,
+      "types": {
+        "dict": 63
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10136",
+      "name": "Custom Object",
+      "usage": 3.523489932885906,
+      "count": 1788,
+      "non_null": 63,
+      "types": {
+        "dict": 63
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10137",
+      "name": "Custom Object",
+      "usage": 3.523489932885906,
+      "count": 1788,
+      "non_null": 63,
+      "types": {
+        "dict": 63
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10335",
+      "name": "Select List (Single)",
+      "usage": 3.4274193548387095,
+      "count": 1488,
+      "non_null": 51,
+      "types": {
+        "dict": 51
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_11457",
+      "name": "Multi-Select Field",
+      "usage": 3.076062639821029,
+      "count": 1788,
+      "non_null": 55,
+      "types": {
+        "list": 55
+      },
+      "sample": "Array[1] of {self, value, id}"
+    },
+    {
+      "field_id": "customfield_10253",
+      "name": "Custom Object",
+      "usage": 2.460850111856823,
+      "count": 1788,
+      "non_null": 44,
+      "types": {
+        "dict": 44
+      },
+      "sample": {
+        "type": "str",
+        "version": "int",
+        "content": "list"
+      }
+    },
+    {
+      "field_id": "customfield_10031",
+      "name": "Select List (Single)",
+      "usage": 1.7999999999999998,
+      "count": 2000,
+      "non_null": 36,
+      "types": {
+        "dict": 36
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10278",
+      "name": "Custom Object",
+      "usage": 1.6778523489932886,
+      "count": 1788,
+      "non_null": 30,
+      "types": {
+        "dict": 30
+      },
+      "sample": {
+        "errorMessage": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10252",
+      "name": "Select List (Single)",
+      "usage": 1.6129032258064515,
+      "count": 1488,
+      "non_null": 24,
+      "types": {
+        "dict": 24
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10112",
+      "name": "Custom Object",
+      "usage": 1.2863534675615211,
+      "count": 1788,
+      "non_null": 23,
+      "types": {
+        "dict": 23
+      },
+      "sample": {
+        "rating": "int"
+      }
+    },
+    {
+      "field_id": "customfield_10113",
+      "name": "Long Text Field",
+      "usage": 1.2863534675615211,
+      "count": 1788,
+      "non_null": 23,
+      "types": {
+        "str": 23
+      },
+      "sample": "2025-03-26T12:20:20.380-0600"
+    },
+    {
+      "field_id": "customfield_11358",
+      "name": "Select List (Single)",
+      "usage": 1.174496644295302,
+      "count": 1788,
+      "non_null": 21,
+      "types": {
+        "dict": 21
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10015",
+      "name": "Short Text Field",
+      "usage": 1.15,
+      "count": 2000,
+      "non_null": 23,
+      "types": {
+        "str": 23
+      },
+      "sample": "2025-08-26"
+    },
+    {
+      "field_id": "customfield_10066",
+      "name": "Select List (Single)",
+      "usage": 0.6152125279642058,
+      "count": 1788,
+      "non_null": 11,
+      "types": {
+        "dict": 11
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10001",
+      "name": "Custom Object",
+      "usage": 0.25,
+      "count": 2000,
+      "non_null": 5,
+      "types": {
+        "dict": 5
+      },
+      "sample": {
+        "id": "str",
+        "name": "str",
+        "avatarUrl": "str"
+      }
+    },
+    {
+      "field_id": "customfield_11622",
+      "name": "Multi-Select Field",
+      "usage": 0.22371364653243847,
+      "count": 1788,
+      "non_null": 4,
+      "types": {
+        "list": 4
+      },
+      "sample": "Array[1] of {self, value, id}"
+    },
+    {
+      "field_id": "customfield_10255",
+      "name": "Select List (Single)",
+      "usage": 0.1989389920424403,
+      "count": 1508,
+      "non_null": 3,
+      "types": {
+        "dict": 3
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10256",
+      "name": "Short Text Field",
+      "usage": 0.1326259946949602,
+      "count": 1508,
+      "non_null": 2,
+      "types": {
+        "str": 2
+      },
+      "sample": "13.7"
+    },
+    {
+      "field_id": "customfield_10121",
+      "name": "Select List (Single)",
+      "usage": 0.11185682326621924,
+      "count": 1788,
+      "non_null": 2,
+      "types": {
+        "dict": 2
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10146",
+      "name": "Select List (Single)",
+      "usage": 0.11185682326621924,
+      "count": 1788,
+      "non_null": 2,
+      "types": {
+        "dict": 2
+      },
+      "sample": {
+        "self": "str",
+        "value": "str",
+        "id": "str"
+      }
+    },
+    {
+      "field_id": "customfield_10678",
+      "name": "Short Text Field",
+      "usage": 0.05688282138794084,
+      "count": 1758,
+      "non_null": 1,
+      "types": {
+        "str": 1
+      },
+      "sample": "MSM-4475"
+    },
+    {
+      "field_id": "customfield_10123",
+      "name": "Short Text Field",
+      "usage": 0.05592841163310962,
+      "count": 1788,
+      "non_null": 1,
+      "types": {
+        "str": 1
+      },
+      "sample": "MAJOR_INCIDENT"
+    },
+    {
+      "field_id": "customfield_11128",
+      "name": "Multi-Select Field",
+      "usage": 0.05592841163310962,
+      "count": 1788,
+      "non_null": 1,
+      "types": {
+        "list": 1
+      },
+      "sample": "Array[1] of {self, value, id}"
+    },
+    {
+      "field_id": "customfield_10003",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10004",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10005",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10006",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10007",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10008",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10009",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10014",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10016",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10017",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10020",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10021",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1832,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10022",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10023",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10060",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 20,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10063",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 650,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10067",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10071",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1220,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10086",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10087",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10106",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10114",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10116",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10117",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10122",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10126",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10127",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10128",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10129",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10130",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10131",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10132",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10133",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10134",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10135",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10147",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10161",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10162",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10164",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10195",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10204",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10207",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10209",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1220,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10210",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1220,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10211",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1220,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10217",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 650,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10245",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 650,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10246",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 650,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10257",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1220,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10258",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1490,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10260",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10299",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 15,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10300",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 7,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10367",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10368",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10369",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1220,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10403",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 15,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10404",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 7,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10632",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10797",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10830",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10863",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10864",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10865",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10896",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10962",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10963",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10964",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10995",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10996",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10997",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_10999",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11028",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11029",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11030",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11031",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11032",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11033",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11034",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11061",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11094",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11129",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11161",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11194",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11292",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11325",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11326",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11391",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11392",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11393",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11424",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11425",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11426",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11490",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11523",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11556",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11558",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11589",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11688",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11689",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11690",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11721",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11754",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11755",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11787",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11788",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11789",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11790",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11791",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11820",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11821",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11822",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11853",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11854",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11855",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11888",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11889",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11890",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11923",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_11924",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12023",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12024",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12059",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12063",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12064",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12065",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12066",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12099",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12132",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12133",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12134",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12167",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12200",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12233",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12234",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    },
+    {
+      "field_id": "customfield_12267",
+      "name": "Unknown (always null)",
+      "usage": 0.0,
+      "count": 1788,
+      "non_null": 0,
+      "types": {},
+      "sample": null
+    }
+  ]
+}

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowing MVP v2.1 - Smart Expansion</title>
+    <link rel="stylesheet" href="styles-v2.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Main Content Area -->
+    <div class="main-workspace">
+        <!-- Kanban Board Placeholder -->
+        <div class="kanban-placeholder">
+            <h2>🎯 Kanban Board</h2>
+            <p>Aquí está tu tablero kanban actual...</p>
+            
+            <!-- Sample tickets -->
+            <div class="sample-tickets">
+                <div class="ticket-card" onclick="openTicket('MSM-1234')">
+                    <strong>MSM-1234</strong>
+                    <p>Error en API de autenticación</p>
+                    <span class="badge badge-high">High</span>
+                </div>
+                <div class="ticket-card" onclick="openTicket('MSM-1235')">
+                    <strong>MSM-1235</strong>
+                    <p>Bug en frontend login</p>
+                    <span class="badge badge-medium">Medium</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Panel -->
+        <div class="ticket-panel" id="ticketPanel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <h3><i class="fas fa-ticket-alt"></i> <span id="ticketId">MSM-1234</span></h3>
+                    <span class="badge badge-open">Abierto</span>
+                </div>
+                <button class="btn-close" onclick="closeTicket()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Smart Banner - Compact 1 Line -->
+            <div class="smart-banner-two-lines" id="smartBanner">
+                <div class="banner-line-1">
+                    <div class="banner-icon-emoji">🤖</div>
+                    <div class="banner-message">
+                        <strong>💡 Sugerencias ML</strong>
+                    </div>
+                </div>
+                
+                <div class="banner-line-2">
+                    <div class="mini-card priority" onclick="showMLDetail('priority')" title="Prioridad: Medium → High (99%)">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>High</span>
+                        <small>99%</small>
+                    </div>
+                    <div class="mini-card warning" onclick="showMLDetail('sla')" title="Riesgo SLA Alto (71%)">
+                        <i class="fas fa-clock"></i>
+                        <span>SLA</span>
+                        <small>71%</small>
+                    </div>
+                    <div class="mini-card assignee" onclick="showMLDetail('assignee')" title="Asignado: Carlos Quintero (45%)">
+                        <i class="fas fa-user-tag"></i>
+                        <span>Carlos</span>
+                        <small>45%</small>
+                    </div>
+                    <div class="mini-card labels" onclick="showMLDetail('labels')" title="Labels: api, auth, mobile">
+                        <i class="fas fa-tags"></i>
+                        <span>Labels</span>
+                        <small>3</small>
+                    </div>
+                </div>
+                
+                <button class="btn-view-suggestions" onclick="toggleMLSuggestions()">
+                    <i class="fas fa-comments"></i>
+                    Ver sugerencias
+                </button>
+            </div>
+
+            <!-- Ticket Content -->
+            <div class="ticket-content">
+                <!-- Summary -->
+                <div class="field-section" id="field-summary">
+                    <label>Resumen</label>
+                    <div class="field-value editable" contenteditable="true">
+                        Error en API de autenticación
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="field-section" id="field-description">
+                    <label>Descripción</label>
+                    <div class="field-value editable multiline" contenteditable="true">
+                        Los usuarios no pueden hacer login desde la aplicación móvil.
+                    </div>
+                </div>
+
+                <!-- Priority -->
+                <div class="field-section" id="field-priority">
+                    <label>Prioridad</label>
+                    <select class="field-input" id="prioritySelect">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                    
+                    <!-- ML Suggestion Inline -->
+                    <div class="inline-ml-suggestion active">
+                        <div class="suggestion-header">
+                            <i class="fas fa-robot"></i>
+                            <strong>Sugerencia ML</strong>
+                            <span class="confidence-badge">99% confianza</span>
+                            <button class="btn-apply" onclick="applyPriority('High')">Aplicar</button>
+                        </div>
+                        <p class="suggestion-text">Cambiar prioridad a <strong>High</strong></p>
+                        <p class="suggestion-reason">Basado en palabras clave críticas y patrones similares</p>
+                    </div>
+                </div>
+
+                <!-- Assignee -->
+                <div class="field-section" id="field-assignee">
+                    <label>Asignado</label>
+                    <select class="field-input" id="assigneeSelect">
+                        <option value="">Sin asignar</option>
+                        <option value="carlos.quintero">Carlos Quintero</option>
+                        <option value="adrian.villegas">Adrian Villegas</option>
+                    </select>
+                    
+                    <!-- ML Suggestion Inline -->
+                    <div class="inline-ml-suggestion active">
+                        <div class="suggestion-header">
+                            <i class="fas fa-robot"></i>
+                            <strong>Sugerencia ML</strong>
+                            <span class="confidence-badge">45% confianza</span>
+                            <button class="btn-apply" onclick="applyAssignee('carlos.quintero')">Aplicar</button>
+                        </div>
+                        <p class="suggestion-text">Asignar a <strong>Carlos Quintero</strong></p>
+                        <p class="suggestion-reason">Basado en experiencia previa con tickets similares</p>
+                    </div>
+                </div>
+
+                <!-- Labels -->
+                <div class="field-section" id="field-labels">
+                    <label>Labels</label>
+                    <div class="labels-input">
+                        <span class="label-tag">backend <i class="fas fa-times"></i></span>
+                        <input type="text" placeholder="Agregar label...">
+                    </div>
+                    
+                    <!-- ML Suggestion Inline -->
+                    <div class="inline-ml-suggestion active">
+                        <div class="suggestion-header">
+                            <i class="fas fa-robot"></i>
+                            <strong>Sugerencias de Labels</strong>
+                            <button class="btn-apply" onclick="applyLabels(['api', 'auth', 'mobile'])">Aplicar todos</button>
+                        </div>
+                        <div class="suggested-labels">
+                            <span class="label-tag suggested" onclick="toggleLabel(this, 'api')">
+                                api <small>85%</small>
+                            </span>
+                            <span class="label-tag suggested" onclick="toggleLabel(this, 'auth')">
+                                auth <small>78%</small>
+                            </span>
+                            <span class="label-tag suggested" onclick="toggleLabel(this, 'mobile')">
+                                mobile <small>65%</small>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLA Risk Warning -->
+                <div class="field-section">
+                    <div class="inline-ml-suggestion active" style="background: rgba(245, 158, 11, 0.05); border-left-color: var(--warning);">
+                        <div class="suggestion-header">
+                            <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                            <strong>⚠️ Alerta SLA</strong>
+                            <span class="confidence-badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">71% riesgo</span>
+                        </div>
+                        <p class="suggestion-text">Este ticket tiene <strong>alto riesgo</strong> de incumplir el SLA</p>
+                        <p class="suggestion-reason">Tiempo de respuesta promedio: 4.2h | SLA objetivo: 4h</p>
+                    </div>
+                </div>
+
+                <!-- Comments -->
+                <div class="field-section">
+                    <label>Comentarios <span class="comment-count">(1)</span></label>
+                    <div class="comments-list">
+                        <div class="comment">
+                            <strong>Carlos Quintero</strong>
+                            <span class="time">Hace 2h</span>
+                            <p>Investigando el problema...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Panel (Bottom Slide) -->
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <h3><i class="fas fa-robot"></i> Asistente IA</h3>
+            <button class="btn-close-chat" onclick="closeChatPanel()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>        <!-- Recommended Actions -->
+        <div class="recommended-actions" id="recommendedActions">
+            <h4>✨ Sugerencias ML</h4>
+            <p class="actions-intro">Selecciona las sugerencias que quieres aplicar:</p>
+            
+            <div class="action-item">
+                <input type="checkbox" id="action-priority" checked>
+                <label for="action-priority">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Cambiar prioridad a "High" <small>(99% confianza)</small></span>
+                </label>
+            </div>
+
+            <div class="action-item">
+                <input type="checkbox" id="action-assignee" checked>
+                <label for="action-assignee">
+                    <i class="fas fa-user-tag"></i>
+                    <span>Asignar a Carlos Quintero <small>(45% confianza)</small></span>
+                </label>
+            </div>
+
+            <div class="action-item">
+                <input type="checkbox" id="action-labels">
+                <label for="action-labels">
+                    <i class="fas fa-tags"></i>
+                    <span>Agregar labels: api, auth, mobile <small>(3 sugeridos)</small></span>
+                </label>
+            </div>
+
+            <div class="action-item warning">
+                <input type="checkbox" id="action-sla">
+                <label for="action-sla">
+                    <i class="fas fa-bell"></i>
+                    <span>Activar alerta de SLA (Riesgo alto) <small>(71% probabilidad)</small></span>
+                </label>
+            </div>
+
+            <div class="action-item">
+                <input type="checkbox" id="action-comment">
+                <label for="action-comment">
+                    <i class="fas fa-comment"></i>
+                    <span>Agregar comentario generado por IA</span>
+                </label>
+            </div>
+
+            <div class="actions-buttons">
+                <button class="btn-primary" onclick="applySelectedActions()">
+                    <i class="fas fa-check"></i> Aplicar seleccionadas
+                </button>
+                <button class="btn-secondary" onclick="closeChatPanel()">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message system">
+                <i class="fas fa-robot"></i>
+                <p>¡Hola! He analizado el ticket y tengo sugerencias. ¿En qué puedo ayudarte?</p>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-wrapper" id="chatInputWrapper">
+            <button class="btn-ai-suggest" id="btnAISuggest" onclick="showAISuggestions()" title="Sugerencias IA">
+                <i class="fas fa-magic"></i>
+            </button>
+            <textarea id="chatInput" placeholder="Escribe tu pregunta..." rows="1"></textarea>
+            <button class="btn-send" onclick="sendChatMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        
+        <!-- AI Suggestions Popup -->
+        <div class="ai-suggestions-popup" id="aiSuggestionsPopup" style="display: none;">
+            <div class="ai-suggestion-item" id="aiSuggestion1">
+                <span>💡 ¿Cómo puedo ayudarte con este ticket?</span>
+            </div>
+            <button class="btn-next-suggestion" onclick="nextAISuggestion()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        
+        <!-- Action Buttons Footer (Shows when both panels open) -->
+        <div class="chat-action-footer" id="chatActionFooter" style="display: none;">
+            <div class="selected-count" id="selectedCount">0 seleccionadas</div>
+            <div class="action-buttons-group">
+                <button class="btn-apply-all" onclick="confirmApplyActions()">
+                    <i class="fas fa-check-circle"></i>
+                    Aplicar seleccionadas
+                </button>
+                <button class="btn-cancel-all" onclick="cancelActions()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Button to Open Footer -->
+    <button class="fab-footer" id="fabFooter" onclick="openFooterManually()" title="Abrir Chat IA">
+        <i class="fas fa-comment-dots"></i>
+    </button>
+
+    <!-- Footer Panel -->
+    <div class="footer-panel" id="footerPanel" onclick="expandFooter(event)">
+        <!-- Collapsed Title Bar -->
+        <div class="footer-title">
+            <i class="fas fa-rocket"></i>
+            <span>Flowing MVP</span>
+            <i class="fas fa-chevron-up" style="margin-left: auto; margin-right: 20px;"></i>
+        </div>
+        
+        <!-- Mode Switch (Top Right) -->
+        <div class="mode-switch">
+            <button class="mode-btn active" id="modeChatBtn" onclick="switchToChat()">
+                <i class="fas fa-comments"></i>
+                <span>Chat IA</span>
+            </button>
+            <button class="mode-btn" id="modeTicketBtn" onclick="switchToTicket()">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Ticket</span>
+            </button>
+        </div>
+
+        <!-- Chat IA View (Default) -->
+        <div class="footer-view" id="chatView">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message system">
+                    <i class="fas fa-robot"></i>
+                    <p>¡Hola! He analizado el ticket y tengo sugerencias. ¿En qué puedo ayudarte?</p>
+                </div>
+            </div>
+            
+            <div class="chat-input-wrapper" id="chatInputWrapper">
+                <button class="btn-ai-suggest" id="btnAISuggest" onclick="showAISuggestions()" title="Sugerencias IA">
+                    <i class="fas fa-magic"></i>
+                </button>
+                <textarea id="chatInput" placeholder="Escribe tu pregunta..." rows="1"></textarea>
+                <button class="btn-send" onclick="sendChatMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Ticket Details View (Hidden by default) -->
+        <div class="footer-view" id="ticketView" style="display: none;">
+            <div class="ticket-details-scroll">
+                <p style="text-align: center; color: var(--gray-500); padding: 20px;">Selecciona un ticket para ver sus detalles</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="ml_client.js"></script>
+    <script src="app-v2.js"></script>
+</body>
+</html>

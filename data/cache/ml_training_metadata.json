@@ -1,0 +1,29 @@
+{
+  "total_tickets": 1424,
+  "projects": {
+    "MSM": 744,
+    "OP": 394,
+    "QA": 110,
+    "DES": 89,
+    "AP": 44,
+    "IN": 43
+  },
+  "sla_stats": {
+    "with_sla": 1133,
+    "breached": 326,
+    "paused": 7,
+    "avg_elapsed_time": 0,
+    "total_cycles": 1915
+  },
+  "fields_available": {
+    "summary": 1424,
+    "description": 1364,
+    "status": 1424,
+    "priority": 1424,
+    "assignee": 1302,
+    "comments": 1412
+  },
+  "created_at": "2025-12-09",
+  "source": "SPEEDYFLOW-JIRA Smart Range Fetcher",
+  "sampling_strategy": "Balanced by project with SLA enrichment"
+}

@@ -1,0 +1,91 @@
+<svg width="1920" height="1080" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" class="bg-svg">
+  <defs>
+    <!-- Enhanced Glow effects - Bright and vibrant without blur -->
+    <radialGradient id="glow0">
+      <stop offset="0%" style="stop-color:#8a2be2;stop-opacity:1.0" />
+      <stop offset="20%" style="stop-color:#8a2be2;stop-opacity:0.95" />
+      <stop offset="60%" style="stop-color:#8a2be2;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#8a2be2;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow1">
+      <stop offset="0%" style="stop-color:#ff4000;stop-opacity:1.0" />
+      <stop offset="15%" style="stop-color:#ff4000;stop-opacity:0.98" />
+      <stop offset="50%" style="stop-color:#ff4000;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:#ff4000;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow2">
+      <stop offset="0%" style="stop-color:#ff0080;stop-opacity:1.0" />
+      <stop offset="10%" style="stop-color:#ff0080;stop-opacity:0.95" />
+      <stop offset="40%" style="stop-color:#ff0080;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ff0080;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow3">
+      <stop offset="0%" style="stop-color:#ffd60a;stop-opacity:1.0" />
+      <stop offset="12%" style="stop-color:#ffd60a;stop-opacity:0.92" />
+      <stop offset="45%" style="stop-color:#ffd60a;stop-opacity:0.75" />
+      <stop offset="100%" style="stop-color:#ffd60a;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Base gradient -->
+    <linearGradient id="baseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#111115;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#111115;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- No filters - crisp and vibrant graphics -->
+  </defs>
+  
+  <!-- Base background -->
+  <rect width="1920" height="1080" fill="url(#baseGrad)" />
+  
+  <!-- Art style elements -->
+<!-- ECOSISTEMA: JARDÍN ZEN -->
+  <rect x="0" y="0" width="1920" height="1080" fill="#0a0a0a" opacity="0.95"/>
+  <path d="M 0,300 Q 480,280 960,300 Q 1440,320 1920,300" stroke="#0d0d0f" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M 0,350 Q 480,330 960,350 Q 1440,370 1920,350" stroke="#0d0d0f" stroke-width="2" fill="none" opacity="0.4"/>
+  <path d="M 0,600 Q 480,580 960,600 Q 1440,620 1920,600" stroke="#0d0d0f" stroke-width="2" fill="none" opacity="0.35"/>
+  <path d="M 0,650 Q 480,630 960,650 Q 1440,670 1920,650" stroke="#0d0d0f" stroke-width="2" fill="none" opacity="0.35"/>
+  <path d="M 0,900 Q 480,880 960,900 Q 1440,920 1920,900" stroke="#0d0d0f" stroke-width="2" fill="none" opacity="0.3"/>
+  <ellipse cx="400" cy="500" rx="100" ry="80" fill="#ffd60a" opacity="0.85"/>
+  <ellipse cx="400" cy="500" rx="85" ry="65" fill="#0d0d0f" opacity="0.3"/>
+  <ellipse cx="700" cy="700" rx="120" ry="90" fill="#ffd60a" opacity="0.88"/>
+  <ellipse cx="700" cy="700" rx="105" ry="75" fill="#0d0d0f" opacity="0.32"/>
+  <ellipse cx="1200" cy="450" rx="90" ry="70" fill="#ffd60a" opacity="0.83"/>
+  <ellipse cx="1200" cy="450" rx="75" ry="55" fill="#0d0d0f" opacity="0.28"/>
+  <ellipse cx="1500" cy="650" rx="110" ry="85" fill="#ffd60a" opacity="0.86"/>
+  <ellipse cx="1500" cy="650" rx="95" ry="70" fill="#0d0d0f" opacity="0.3"/>
+  <ellipse cx="300" cy="850" rx="250" ry="150" fill="#ff4000" opacity="0.6"/>
+  <ellipse cx="300" cy="850" rx="200" ry="120" fill="#ff4000" opacity="0.4"/>
+  <ellipse cx="300" cy="850" rx="180" ry="100" fill="none" stroke="#8a2be2" stroke-width="2" opacity="0.3"/>
+  <ellipse cx="300" cy="850" rx="140" ry="75" fill="none" stroke="#8a2be2" stroke-width="1.5" opacity="0.25"/>
+  <rect x="1648" y="200" width="14" height="600" fill="#ff0080" opacity="0.8" rx="7"/>
+  <line x1="1648" y1="350" x2="1662" y2="350" stroke="#0d0d0f" stroke-width="3" opacity="0.6"/>
+  <line x1="1648" y1="550" x2="1662" y2="550" stroke="#0d0d0f" stroke-width="3" opacity="0.6"/>
+  <rect x="1698" y="150" width="16" height="680" fill="#ff0080" opacity="0.82" rx="8"/>
+  <line x1="1698" y1="320" x2="1714" y2="320" stroke="#0d0d0f" stroke-width="3" opacity="0.6"/>
+  <line x1="1698" y1="520" x2="1714" y2="520" stroke="#0d0d0f" stroke-width="3" opacity="0.6"/>
+  <line x1="1698" y1="720" x2="1714" y2="720" stroke="#0d0d0f" stroke-width="3" opacity="0.6"/>
+  <rect x="1748" y="180" width="15" height="640" fill="#ff0080" opacity="0.81" rx="7.5"/>
+  <line x1="1748" y1="340" x2="1763" y2="340" stroke="#0d0d0f" stroke-width="3" opacity="0.6"/>
+  <line x1="1748" y1="560" x2="1763" y2="560" stroke="#0d0d0f" stroke-width="3" opacity="0.6"/>
+  <ellipse cx="1640" cy="220" rx="30" ry="8" fill="#ff0080" opacity="0.7" transform="rotate(-30 1640 220)"/>
+  <ellipse cx="1680" cy="180" rx="35" ry="9" fill="#ff0080" opacity="0.72" transform="rotate(25 1680 180)"/>
+  <ellipse cx="1720" cy="200" rx="32" ry="8" fill="#ff0080" opacity="0.71" transform="rotate(-20 1720 200)"/>
+  <ellipse cx="200" cy="150" rx="8" ry="12" fill="#8a2be2" opacity="0.75" transform="rotate(20 200 150)"/>
+  <ellipse cx="500" cy="250" rx="9" ry="13" fill="#8a2be2" opacity="0.78" transform="rotate(-15 500 250)"/>
+  <ellipse cx="900" cy="180" rx="8" ry="12" fill="#8a2be2" opacity="0.76" transform="rotate(30 900 180)"/>
+  <ellipse cx="1100" cy="280" rx="9" ry="13" fill="#8a2be2" opacity="0.77" transform="rotate(-25 1100 280)"/>
+  <ellipse cx="1400" cy="220" rx="8" ry="12" fill="#8a2be2" opacity="0.75" transform="rotate(18 1400 220)"/>
+  <ellipse cx="300" cy="400" rx="8" ry="12" fill="#8a2be2" opacity="0.7" transform="rotate(-10 300 400)"/>
+  <ellipse cx="800" cy="480" rx="9" ry="13" fill="#8a2be2" opacity="0.72" transform="rotate(22 800 480)"/>
+  <ellipse cx="1300" cy="520" rx="8" ry="12" fill="#8a2be2" opacity="0.71" transform="rotate(-18 1300 520)"/>
+  <path d="M 0,50 Q 150,80 300,70 Q 400,65 500,80" stroke="#ffd60a" stroke-width="12" fill="none" opacity="0.7"/>
+  <circle cx="120" cy="75" r="15" fill="#8a2be2" opacity="0.8"/>
+  <circle cx="120" cy="75" r="8" fill="#ff4000" opacity="0.6"/>
+  <circle cx="250" cy="65" r="15" fill="#8a2be2" opacity="0.8"/>
+  <circle cx="250" cy="65" r="8" fill="#ff4000" opacity="0.6"/>
+  <circle cx="380" cy="68" r="15" fill="#8a2be2" opacity="0.8"/>
+  <circle cx="380" cy="68" r="8" fill="#ff4000" opacity="0.6"/>
+  <circle cx="450" cy="75" r="15" fill="#8a2be2" opacity="0.8"/>
+  <circle cx="450" cy="75" r="8" fill="#ff4000" opacity="0.6"/>
+</svg>
