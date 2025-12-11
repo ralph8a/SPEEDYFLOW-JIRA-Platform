@@ -106,8 +106,6 @@ function openChat() {
         switchMode('chat');
     }, 100);
     
-    // Hide FAB
-    document.getElementById('fab').classList.add('hidden');
 }
 
 // ==================== INIT ====================

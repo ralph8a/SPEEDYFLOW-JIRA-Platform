@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Flask Backend - Flowing MVP
   speedyflow:
@@ -20,31 +18,17 @@ services:
   
   # ML Microservice
   ml-service:
-    build: ./ml_service
-    container_name: speedyflow_ml
+    build:
+      context: ./ml_service
+      dockerfile: Dockerfile
+    container_name: ml_service
     ports:
       - "5001:5001"
-    environment:
-      - MODELS_DIR=/app/models
-      - PYTHONUNBUFFERED=1
     networks:
       - speedyflow-network
     volumes:
-      - ./models:/app/models:ro  # Read-only
-      - ./ml_service/cache:/app/cache
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          memory: 1G
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - ./data:/app/data
+      - ./logs:/app/logs
 
 networks:
   speedyflow-network:
