@@ -696,3 +696,43 @@ async function checkMLService() {
 
 // Refresh ML Service status every 30 seconds
 setInterval(checkMLService, 30000);
+
+// Cancel Suggestions
+function cancelSuggestions() {
+    console.log('❌ Cancelling suggestions...');
+    document.querySelectorAll('.ml-cb:checked').forEach(cb => {
+        cb.checked = false;
+    });
+    showNotification('🚫 All suggestions cancelled');
+}
+
+// Resuggest ML
+async function resuggestML() {
+    console.log('🔄 Re-fetching ML suggestions...');
+    showNotification('🔄 Requesting new suggestions from ML...');
+    
+    if (!state.mlServiceConnected) {
+        showNotification('⚠️ ML Service not connected');
+        return;
+    }
+    
+    if (!state.currentTicket || !state.currentTicket.key) {
+        showNotification('⚠️ No ticket selected');
+        return;
+    }
+    
+    // Reset all checkboxes
+    document.querySelectorAll('.ml-cb').forEach(cb => {
+        cb.checked = false;
+        const suggestionBox = cb.closest('.ml-suggestion-checkbox');
+        if (suggestionBox) {
+            suggestionBox.style.opacity = '1';
+            suggestionBox.style.background = '';
+            suggestionBox.style.borderColor = '';
+        }
+    });
+    
+    // Re-fetch predictions
+    await fetchMLPredictions(state.currentTicket.key);
+    showNotification('✅ New suggestions loaded');
+}
