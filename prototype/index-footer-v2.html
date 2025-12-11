@@ -97,7 +97,7 @@
                 <button class="btn-footer-toggle" id="toggleViewBtn" title="Toggle Chat View">
                     <i class="fas fa-comment-dots"></i>
                 </button>
-                <button class="btn-footer-chevron" id="expandBtn">
+                <button class="btn-footer-chevron" id="expandBtn" onclick="event.stopPropagation(); toggleMLFooter();">
                     <i class="fas fa-chevron-up"></i>
                 </button>
             </div>
@@ -127,14 +127,9 @@
                             <h4>Analicé el ticket y tengo algunas sugerencias</h4>
                             <p>Selecciona las que se acoplen mejor y presiona "Apply Selected"</p>
                         </div>
-                        <div class="banner-action">
-                            <button class="btn-banner-action" onclick="selectAllSuggestions()">
-                                <i class="fas fa-check-square"></i> Select All
-                            </button>
-                        </div>
                     </div>
 
-                    <!-- Essential Fields (2 Columns) -->
+                    <!-- Essential Fields (3 columns) -->
                     <div class="essential-fields-grid">
                         <!-- Priority -->
                         <div class="field-wrapper">
@@ -162,6 +157,22 @@
                             </div>
                         </div>
 
+                        <!-- Platform -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-mobile-alt"></i> Platform
+                            </label>
+                            <input type="text" class="field-input" value="Mobile iOS" readonly>
+                        </div>
+
+                        <!-- Reporter Area -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-map-marker-alt"></i> Reporter Area
+                            </label>
+                            <input type="text" class="field-input" value="Customer Support" readonly>
+                        </div>
+
                         <!-- Status -->
                         <div class="field-wrapper">
                             <label class="field-label">
@@ -173,6 +184,22 @@
                                 <option value="resolved">Resolved</option>
                                 <option value="closed">Closed</option>
                             </select>
+                        </div>
+
+                        <!-- Reporter -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-user-circle"></i> Reporter
+                            </label>
+                            <input type="text" class="field-input" value="Juan Pérez" readonly>
+                        </div>
+
+                        <!-- Reporter Phone -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-phone"></i> Reporter Phone
+                            </label>
+                            <input type="text" class="field-input" value="+1 555-0123" readonly>
                         </div>
 
                         <!-- Assignee -->
@@ -201,6 +228,22 @@
                             </div>
                         </div>
 
+                        <!-- Tipo de solicitud -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-clipboard-list"></i> Tipo de solicitud
+                            </label>
+                            <input type="text" class="field-input" value="Bug" readonly>
+                        </div>
+
+                        <!-- Reporter Email -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-envelope"></i> Reporter Email
+                            </label>
+                            <input type="text" class="field-input" value="juan.perez@example.com" readonly>
+                        </div>
+
                         <!-- Labels -->
                         <div class="field-wrapper">
                             <label class="field-label">
@@ -227,34 +270,39 @@
                         </div>
                     </div>
 
-                    <!-- SLA Monitor + Breach Risk -->
-                    <div class="sla-section">
+                    <!-- SLA Monitor + Breach Risk (combined) -->
+                    <div class="sla-combined-section">
                         <div class="sla-card">
-                            <div class="sla-icon-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="sla-content">
-                                <h4>SLA Breach Risk</h4>
-                                <p class="sla-risk">HIGH RISK</p>
-                                <div class="sla-bar">
-                                    <div class="sla-bar-fill" style="width: 92%"></div>
+                            <div class="sla-header">
+                                <div class="sla-icon-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
                                 </div>
-                                <span class="sla-prob">92% probability of breach</span>
+                                <h4>SLA Monitor & Breach Risk</h4>
                             </div>
-                            <button class="btn-sla-details" onclick="showSLADetails()">
-                                Details
-                            </button>
+                            <div class="sla-body">
+                                <div class="sla-metric">
+                                    <span class="sla-label">Progress:</span>
+                                    <div class="sla-bar">
+                                        <div class="sla-bar-fill" style="width: 92%"></div>
+                                    </div>
+                                    <span class="sla-prob">92% probability of breach</span>
+                                </div>
+                                <div class="sla-risk">
+                                    <span class="risk-badge critical">⚠️ HIGH RISK</span>
+                                    <button class="btn-sla-details" onclick="showSLADetails()">Details</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Collapsible Extra Details -->
+                    <!-- Collapsible Extra Details (3 columns) -->
                     <div class="extra-details">
                         <button class="btn-toggle-details" onclick="toggleExtraDetails()">
                             <i class="fas fa-chevron-down" id="detailsChevron"></i>
                             <span id="detailsText">Show More Details</span>
                         </button>
                         <div class="extra-details-content" id="extraDetailsContent" style="display: none;">
-                            <div class="details-grid">
+                            <div class="details-grid-3col">
                                 <div class="detail-item">
                                     <label><i class="fas fa-calendar"></i> Created</label>
                                     <input type="text" value="2025-12-09 14:30" readonly>
@@ -262,10 +310,6 @@
                                 <div class="detail-item">
                                     <label><i class="fas fa-calendar-check"></i> Updated</label>
                                     <input type="text" value="2025-12-10 09:15" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-user-circle"></i> Reporter</label>
-                                    <input type="text" value="Juan Pérez" readonly>
                                 </div>
                                 <div class="detail-item">
                                     <label><i class="fas fa-eye"></i> Watchers</label>
@@ -292,25 +336,23 @@
                                     <input type="text" value="Production" readonly>
                                 </div>
                                 <div class="detail-item">
-                                    <label><i class="fas fa-server"></i> Platform</label>
-                                    <input type="text" value="Mobile iOS" readonly>
-                                </div>
-                                <div class="detail-item">
                                     <label><i class="fas fa-users"></i> Team</label>
                                     <input type="text" value="Backend Team" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-star"></i> Story Points</label>
-                                    <input type="text" value="5" readonly>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Apply Selected Button -->
-                    <div class="apply-selected-container">
+                    <!-- Action Buttons -->
+                    <div class="action-buttons-container">
                         <button class="btn-apply-selected" onclick="applySelectedSuggestions()">
                             <i class="fas fa-check-double"></i> Apply Selected
+                        </button>
+                        <button class="btn-cancel" onclick="cancelSuggestions()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button class="btn-resuggest" onclick="resuggestML()">
+                            <i class="fas fa-sync-alt"></i> Volver a sugerir
                         </button>
                     </div>
                 </div>
