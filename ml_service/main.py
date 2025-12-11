@@ -1,6 +1,6 @@
 """
-SPEEDYFLOW ML Service - Microservicio FastAPI
-Unifica todos los modelos ML/IA para Flowing MVP
+SPEEDYFLOW ML Service - Microservicio FastAPI Simple
+Versión simplificada sin dependencias de modelos complejos
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,8 +9,6 @@ from typing import Optional, List, Dict, Any
 import time
 import logging
 
-from predictor import UnifiedMLPredictor
-
 # Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,46 +16,36 @@ logger = logging.getLogger(__name__)
 # FastAPI app
 app = FastAPI(
     title="SPEEDYFLOW ML Service",
-    description="Microservicio unificado de ML/IA para Flowing MVP",
+    description="Microservicio de ML/IA para Flowing MVP",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# CORS - Permitir acceso desde Flowing MVP (puerto 5000)
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5000",
         "http://127.0.0.1:5000",
-        "http://localhost:3000",  # Si usas frontend separado
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Cargar predictor al iniciar
+# ==================== VARIABLES GLOBALES ====================
+
+start_time = time.time()
 predictor = None
 
-@app.on_event("startup")
-async def startup_event():
-    """Cargar modelos al iniciar el servicio"""
-    global predictor
-    logger.info("🚀 Iniciando SPEEDYFLOW ML Service...")
-    
-    try:
-        predictor = UnifiedMLPredictor(models_dir="../models")
-        logger.info(f"✅ Modelos cargados: {predictor.get_loaded_models()}")
-    except Exception as e:
-        logger.error(f"❌ Error cargando modelos: {e}")
-        # Continuar sin modelos (modo degradado)
-        predictor = UnifiedMLPredictor(models_dir="../models", fallback_mode=True)
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Limpiar recursos al apagar"""
-    logger.info("👋 Cerrando SPEEDYFLOW ML Service...")
+def get_uptime() -> float:
+    """Obtener uptime en segundos"""
+    return time.time() - start_time
 
 # ==================== MODELOS DE DATOS ====================
 
