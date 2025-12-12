@@ -18,11 +18,39 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Flowing MVP Footer ML Assistant V2 initialized');
     checkMLService();
     setupVisibilityToggle();
-    // Toggle view button
-    const toggleViewBtn = document.getElementById('toggleViewBtn');
-    if (toggleViewBtn) {
-        toggleViewBtn.addEventListener('click', () => switchView());
-    }
+    
+    // Setup mode tabs event listeners
+    const tabs = document.querySelectorAll('.mode-tab');
+    console.log('Found tabs:', tabs.length);
+    tabs.forEach((tab, index) => {
+        console.log(`Setting up tab ${index}:`, tab.dataset.mode, tab);
+        
+        // Try multiple event types
+        ['click', 'mousedown', 'touchstart'].forEach(eventType => {
+            tab.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const mode = tab.dataset.mode;
+                console.log(`Tab ${eventType}:`, mode);
+                switchMode(mode);
+            }, { capture: true }); // Use capture phase
+        });
+        
+        // Force styles
+        tab.style.pointerEvents = 'auto';
+        tab.style.cursor = 'pointer';
+        tab.style.zIndex = '1000';
+    });
+    
+    // Global click listener for debugging
+    document.addEventListener('click', (e) => {
+        console.log('=== GLOBAL CLICK ===', e.target.tagName, e.target.className);
+        if (e.target.closest('.mode-tab')) {
+            const tab = e.target.closest('.mode-tab');
+            console.log('!!! CLICK ON MODE-TAB DETECTED !!!', tab.dataset.mode);
+            switchMode(tab.dataset.mode);
+        }
+    }, true);
 });
 
 // Toggle Footer
@@ -121,10 +149,14 @@ function switchView() {
     const footer = document.getElementById('mlFooter');
     footer.classList.toggle('chat-only');
     const toggleBtn = document.getElementById('toggleViewBtn');
+    
     if (footer.classList.contains('chat-only')) {
+        // Chat-only view: switch to AI mode
+        switchMode('ai');
         toggleBtn.innerHTML = '<i class="fas fa-columns"></i>';
         toggleBtn.title = 'Switch to Balanced View';
     } else {
+        // Balanced view: keep current mode
         toggleBtn.innerHTML = '<i class="fas fa-comment-dots"></i>';
         toggleBtn.title = 'Switch to Chat View';
     }
@@ -163,23 +195,40 @@ function applySuggestion(field, value) {
 
 // Switch Mode (Comments <-> AI)
 function switchMode(mode) {
-    state.currentMode = mode;
+    console.log('=== SWITCH MODE CALLED ===', mode);
     
-    // Update tabs
-    document.querySelectorAll('.mode-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.mode === mode);
-    });
-    
-    // Update panels
-    document.querySelectorAll('.mode-panel').forEach(panel => {
-        panel.classList.toggle('active', panel.dataset.panel === mode);
-    });
+    try {
+        state.currentMode = mode;
+        
+        console.log('Switching to mode:', mode); // Debug
+        
+        // Update tabs
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            const isActive = tab.dataset.mode === mode;
+            tab.classList.toggle('active', isActive);
+        });
+        
+        // Update panels - force remove/add to ensure visibility
+        document.querySelectorAll('.mode-panel').forEach(panel => {
+            console.log('Panel:', panel.dataset.panel, 'Mode:', mode, 'Match:', panel.dataset.panel === mode);
+            if (panel.dataset.panel === mode) {
+                panel.classList.add('active');
+                panel.style.setProperty('display', 'block', 'important');
+                console.log('Showing panel:', panel.dataset.panel, 'Classes:', panel.className, 'Display:', panel.style.display);
+            } else {
+                panel.classList.remove('active');
+                panel.style.setProperty('display', 'none', 'important');
+                console.log('Hiding panel:', panel.dataset.panel, 'Classes:', panel.className, 'Display:', panel.style.display);
+            }
+        });
     
     // Update input area
     const badge = document.getElementById('modeBadge');
     const input = document.getElementById('unifiedInput');
     const sendBtn = document.getElementById('sendBtnText');
     const toolbar = document.getElementById('inputToolbar');
+    const footer = document.getElementById('mlFooter');
+    const toggleBtn = document.getElementById('toggleViewBtn');
     
     if (mode === 'comments') {
         badge.textContent = '💬 Comment mode';
@@ -192,7 +241,13 @@ function switchMode(mode) {
         sendBtn.textContent = 'Ask';
         toolbar.style.display = 'none';
     }
+    } catch (error) {
+        console.error('Error in switchMode:', error);
+    }
 }
+
+// Make sure switchMode is available globally
+window.switchMode = switchMode;
 
 // Handle Send
 function handleSend() {
