@@ -682,16 +682,47 @@ body.theme-dark .ml-suggestion-checkbox {
 
 /* Chat-only view: hide left column and expand right */
 .ml-footer.chat-only .footer-two-columns {
-    grid-template-columns: 0fr 1fr;
+    grid-template-columns: 1fr;
+    gap: 0;
 }
 
 .ml-footer.chat-only .left-column {
     display: none;
 }
 
-.ml-actions-section#mlActionsLeft { display: none; }
+.ml-footer.chat-only .right-column {
+    width: 100%;
+    max-width: 100%;
+}
 
-    font-weight: 600;
+/* Hide ticket description when in chat-only mode */
+.ml-footer.chat-only .ticket-description-section {
+    display: none;
+}
+
+/* Hide ML actions in right column when in chat mode */
+.ml-footer.chat-only .ml-actions-section {
+    display: none;
+}
+
+/* Hide mode tabs when in chat-only mode */
+.ml-footer.chat-only .mode-tabs {
+    display: none;
+}
+
+/* Expand comments-ai-container to full width in chat-only mode */
+.ml-footer.chat-only .comments-ai-container {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Ensure active panel is visible in chat-only mode */
+.ml-footer.chat-only .mode-panel.active {
+    display: block !important;
+}
+
+.ml-actions-section#mlActionsLeft { 
+    display: none; 
 }
 
 /* SLA Section */
@@ -983,6 +1014,9 @@ body.theme-dark .ml-suggestion-checkbox {
     display: flex;
     background: #f7fafc;
     border-bottom: 2px solid #e2e8f0;
+    position: relative;
+    z-index: 10;
+    pointer-events: all;
 }
 
 .mode-tab {
@@ -992,6 +1026,10 @@ body.theme-dark .ml-suggestion-checkbox {
     border: none;
     color: #718096;
     font-weight: 600;
+    cursor: pointer;
+    pointer-events: all;
+    position: relative;
+    z-index: 11;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
