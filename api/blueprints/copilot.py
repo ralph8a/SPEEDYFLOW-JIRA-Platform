@@ -7,6 +7,7 @@ from flask import Blueprint, request, jsonify
 import logging
 from pathlib import Path
 import json
+import random
 
 # Optional integrations with ml_service utilities
 try:
@@ -63,6 +64,11 @@ def generate_response(message: str, context: dict) -> str:
         AI-generated response string
     """
     message_lower = message.lower()
+
+    # playful / chusca triggers — answer with humor when detected
+    chusca_triggers = ['chisme', 'chismeame', 'chusco', 'chusca', 'chisme?', 'chisme', 'cuentame un chiste', 'cuento', 'chiste', 'broma', 'qué onda', 'qué hubo', 'qué pasa']
+    if any(t in message_lower for t in chusca_triggers):
+        return witty_response(message_lower)
     
     # Extract context variables
     current_desk = context.get('currentDesk')
@@ -412,3 +418,18 @@ What would you like to know?"""
 
 # Export blueprint
 __all__ = ['copilot_bp']
+
+
+def witty_response(message: str) -> str:
+    """Return a short humorous answer for chusca questions."""
+    names = ['Güero','Güera','Pachi','Chuy','Toño']
+    jokes = [
+        "¿Chisme? Yo sólo sé lo que veo en los logs — y dicen que el servidor está de parranda.",
+        "¿Un chiste? ¿Por qué el ticket cruzó la calle? Porque quería llegar al otro sprint.",
+        "Te cuento un chisme: el servidor dijo que hoy sí va a portarse bien... no le creas mucho.",
+        "¡Pssst! Confidencial: el SLA tomó vacaciones por una semana.",
+        "Si buscas drama, revisa los 500s; ahí siempre hay telenovela.",
+    ]
+    reply = random.choice(jokes)
+    sign = random.choice(names)
+    return f"{reply} — {sign}"
