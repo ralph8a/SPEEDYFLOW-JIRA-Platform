@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flowing MVP - Clean Footer Component</title>
-    <link rel="stylesheet" href="prototype/styles-footer-v2.css">
+    <link rel="stylesheet" href="frontend/static/css/flowing-mvp-footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ===== CORE FOOTER STYLES ===== */
@@ -28,8 +28,8 @@
             transform: translateZ(0);
         }
 
-        /* Override ml-footer styles when inside Flowing MVP */
-        #balancedView .ml-footer {
+        /* Override legacy ml-footer styles when inside Flowing MVP */
+        #balancedView .flowing-footer {
             position: relative !important;
             bottom: auto !important;
             left: auto !important;
@@ -939,7 +939,7 @@
     </div>
 
     <!-- Flowing MVP JavaScript -->
-    <script src="prototype/footer-assistant-original.js"></script>
+    <script src="frontend/static/js/flowing-mvp-footer.js"></script>
     <script>
     // Toggle description
     function toggleDescription() {

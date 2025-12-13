@@ -273,7 +273,7 @@ body.theme-dark .btn-footer-chevron {
 }
 
 /* Footer Content */
-.ml-footer-content {
+.flowing-content, .ml-footer-content {
     max-height: 70vh;
     overflow-y: auto;
     animation: slideUp 0.3s ease;
