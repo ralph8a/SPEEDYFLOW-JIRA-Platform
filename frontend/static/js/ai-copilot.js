@@ -326,46 +326,57 @@ class AICopilot {
     const loadingMsg = this.addMessage('assistant', '', true);
 
     try {
-      // Support admin slash-commands for docs endpoints
-      const parts = message.split(' ');
-      const cmd = parts[0].toLowerCase();
+      // Background intent detection: if user message implies docs extraction/ingest,
+      // call the relevant endpoints in background without requiring slash-commands.
+      const msgLower = message.toLowerCase();
+      const intents = [];
 
-      if (cmd === '/ingest') {
-        const path = parts.slice(1).join(' ');
-        if (!path) {
-          loadingMsg?.remove();
-          this.addMessage('assistant', 'Usage: /ingest C:\\path\\to\\file.pdf');
-        } else {
-          const resp = await fetch('/api/copilot/docs/ingest', {
-            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({path})
-          });
-          const j = await resp.json();
-          loadingMsg?.remove();
-          this.addMessage('assistant', `Ingest result: ${JSON.stringify(j)}`);
+      // detect endpoint extraction intents
+      if (/\b(endpoint|endpoints|punto de entrada|puntos de entrada|api endpoints|extraer endpoints|extrae endpoints)\b/.test(msgLower)) {
+        intents.push(fetch('/api/copilot/docs/extract-endpoints', {
+          method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({})
+        }).then(r => r.json()).then(j => ({type: 'endpoints', data: j})).catch(() => null));
+      }
+
+      // detect playbook extraction intents
+      if (/\b(playbook|playbooks|procedimiento|procedimientos|extract playbooks|extraer playbooks|extrae playbooks)\b/.test(msgLower)) {
+        intents.push(fetch('/api/copilot/docs/extract-playbooks', {
+          method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({})
+        }).then(r => r.json()).then(j => ({type: 'playbooks', data: j})).catch(() => null));
+      }
+
+      // detect ingest-like intents if a path or url is present
+      if (/\.pdf\b|https?:\/\//i.test(message) || /\b(ingest|ingesta|indexar|cargar)\b/.test(msgLower)) {
+        // try to extract a URL or local path from the message
+        const urlMatch = message.match(/https?:\/\/\S+/i);
+        const windowsPathMatch = message.match(/[A-Za-z]:\\\\[\S ]+/);
+        const unixPathMatch = message.match(/\/(?:[\w-]+\/)*[\w-]+\.pdf/);
+        const path = urlMatch ? urlMatch[0] : (windowsPathMatch ? windowsPathMatch[0] : (unixPathMatch ? unixPathMatch[0] : null));
+        if (path) {
+          intents.push(fetch('/api/copilot/docs/ingest', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({path})
+          }).then(r => r.json()).then(j => ({type: 'ingest', data: j})).catch(() => null));
         }
-        return;
       }
 
-      if (cmd === '/extract-endpoints') {
-        const file = parts.slice(1).join(' ') || undefined;
-        const resp = await fetch('/api/copilot/docs/extract-endpoints', {
-          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({file})
-        });
-        const j = await resp.json();
-        loadingMsg?.remove();
-        this.addMessage('assistant', `Extracted endpoints: ${JSON.stringify(j.endpoints || j)}`);
-        return;
-      }
-
-      if (cmd === '/extract-playbooks') {
-        const file = parts.slice(1).join(' ') || undefined;
-        const resp = await fetch('/api/copilot/docs/extract-playbooks', {
-          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({file})
-        });
-        const j = await resp.json();
-        loadingMsg?.remove();
-        this.addMessage('assistant', `Extracted playbooks: ${JSON.stringify(j.playbooks || j)}`);
-        return;
+      // Execute intents in background and show lightweight notifications when they finish
+      if (intents.length > 0) {
+        Promise.all(intents).then(results => {
+          results.forEach(res => {
+            if (!res) return;
+            if (res.type === 'endpoints' && res.data) {
+              const count = (res.data.endpoints || []).length || 0;
+              this.addMessage('assistant', `He buscado endpoints en segundo plano y encontré ${count} elementos.`);
+            }
+            if (res.type === 'playbooks' && res.data) {
+              const count = (res.data.playbooks || []).length || 0;
+              this.addMessage('assistant', `He extraído playbooks en segundo plano: ${count} encontrados.`);
+            }
+            if (res.type === 'ingest' && res.data) {
+              this.addMessage('assistant', `Ingesta en segundo plano completada: ${JSON.stringify(res.data)}`);
+            }
+          });
+        }).catch(() => {});
       }
 
       // Default: send to chat endpoint
