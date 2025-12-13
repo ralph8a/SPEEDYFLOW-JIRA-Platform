@@ -28,8 +28,21 @@ const createMentionsAutocomplete = (() => {
 
     autocompleteDropdown = document.createElement('div');
     autocompleteDropdown.className = 'mentions-autocomplete-dropdown';
-    autocompleteDropdown.style.display = 'none';
-    autocompleteDropdown.innerHTML = '<div class="mentions-loading">Loading...</div>';
+    // Base inline styles to ensure visibility across contexts (high z-index, white bg)
+    autocompleteDropdown.style.cssText = `
+      display: none !important;
+      position: fixed !important;
+      z-index: 20000 !important;
+      background: #ffffff !important;
+      border: 1px solid rgba(0,0,0,0.08) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+      max-height: 320px !important;
+      overflow: auto !important;
+      font-size: 13px !important;
+      color: #0f172a !important;
+    `;
+    autocompleteDropdown.innerHTML = '<div class="mentions-loading" style="padding:10px; color:#6b7280; font-size:12px;">Loading...</div>';
     document.body.appendChild(autocompleteDropdown);
   }
 
@@ -198,6 +211,8 @@ const createMentionsAutocomplete = (() => {
 
     // Show dropdown
     autocompleteDropdown.style.display = 'block';
+    autocompleteDropdown.style.visibility = 'visible';
+    autocompleteDropdown.style.opacity = '1';
     selectedIndex = 0;
     updateSelection(autocompleteDropdown.querySelectorAll('.mention-item'));
   }
@@ -240,10 +255,25 @@ const createMentionsAutocomplete = (() => {
 
     autocompleteDropdown.innerHTML = html;
 
-    // Attach click listeners
+    // Attach pointer listeners. Use mousedown/touchstart to avoid textarea blur
     const items = autocompleteDropdown.querySelectorAll('.mention-item');
     items.forEach(item => {
-      item.addEventListener('click', () => selectUser(item));
+      const handler = (ev) => {
+        try {
+          ev.preventDefault();
+          ev.stopPropagation();
+        } catch (e) {}
+        selectUser(item);
+      };
+      item.addEventListener('mousedown', handler);
+      item.addEventListener('touchstart', handler, { passive: true });
+      // Keep click for compatibility but guard against lost focus
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // If the dropdown is already visible, handle selection via selectUser
+        if (autocompleteDropdown && autocompleteDropdown.style.display !== 'none') selectUser(item);
+      });
     });
   }
 

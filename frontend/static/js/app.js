@@ -1778,12 +1778,12 @@ function showAutoSwitchNotification(issueCount) {
   notification.className = 'auto-switch-notification';
   notification.innerHTML = `
     <div class="auto-switch-content">
-      <div class="auto-switch-icon">📊</div>
+      <div class="auto-switch-icon">${SVGIcons.chart({size:18,className:'inline-icon svg-assemble'})}</div>
       <div class="auto-switch-text">
         <strong>List View Activated</strong>
         <p>${issueCount} tickets detected. Using list view for better performance.</p>
       </div>
-      <button class="auto-switch-close" onclick="this.parentElement.parentElement.remove()">✕</button>
+      <button class="auto-switch-close" onclick="this.parentElement.parentElement.remove()">${SVGIcons.close({size:14,className:'inline-icon'})}</button>
     </div>
   `;
   
@@ -2606,10 +2606,10 @@ function renderList() {
       <!-- Header with search and controls -->
       <div class="list-header">
         <div class="list-stats">
-          <span class="stat-badge">📊 ${totalIssues} tickets loaded</span>
-          ${hasMoreServerPages ? `<span class="stat-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">📦 More available</span>` : ''}
-          ${state.listView.searchTerm ? `<span class="stat-badge">🔍 Filtered</span>` : ''}
-          <span class="stat-badge">📄 Page ${state.listView.currentPage}/${totalPages}</span>
+          <span class="stat-badge">${SVGIcons.chart({size:14,className:'inline-icon'})} ${totalIssues} tickets loaded</span>
+          ${hasMoreServerPages ? `<span class="stat-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">${SVGIcons.clipboard({size:14,className:'inline-icon'})} More available</span>` : ''}
+          ${state.listView.searchTerm ? `<span class="stat-badge">${SVGIcons.search({size:14,className:'inline-icon'})} Filtered</span>` : ''}
+          <span class="stat-badge">${SVGIcons.file({size:14,className:'inline-icon'})} Page ${state.listView.currentPage}/${totalPages}</span>
           <label class="assignee-edit-toggle" title="Enable assignee editing">
             <input type="checkbox" id="enableAssigneeEdit" />
             <span>✏️ Edit Assignees</span>

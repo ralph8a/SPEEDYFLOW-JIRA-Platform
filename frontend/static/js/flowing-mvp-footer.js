@@ -50,6 +50,27 @@ class FlowingFooter {
     this.updateContext();
     this.setupContextWatcher();
     this.startSuggestionRotation();
+
+    // Ensure footer responds to sidebar collapse/expand events
+    try {
+      window.addEventListener('sidebarToggled', () => {
+        const sidebar = document.querySelector('.sidebar-content-component');
+        const collapsed = !!(sidebar && sidebar.classList.contains('collapsed'));
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        this.adjustContentPadding(collapsed);
+      });
+
+      // Observe class changes on sidebar to react to programmatic toggles
+      const sb = document.querySelector('.sidebar-content-component');
+      if (sb) {
+        const mo = new MutationObserver(() => {
+          const c = sb.classList.contains('collapsed');
+          document.body.classList.toggle('sidebar-collapsed', c);
+          this.adjustContentPadding(c);
+        });
+        mo.observe(sb, { attributes: true, attributeFilter: ['class'] });
+      }
+    } catch (e) { console.warn('Could not attach sidebar observers for FlowingFooter:', e); }
     
     // Set initial padding
     this.adjustContentPadding(true); // Start collapsed
@@ -128,7 +149,7 @@ class FlowingFooter {
 
     if (overdueTickets.length > 0) {
       this.suggestions.push({
-        text: `⚠️ ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue (7+ days)`,
+        text: `${SVGIcons.alert({size:14,className:'inline-icon'})} ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue (7+ days)`,
         type: 'warning'
       });
     }
@@ -140,7 +161,7 @@ class FlowingFooter {
 
     if (urgentTickets.length > 0) {
       this.suggestions.push({
-        text: `🔴 ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`,
+        text: `${SVGIcons.xCircle({size:14,className:'inline-icon'})} ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`,
         type: 'critical'
       });
     }
@@ -152,7 +173,7 @@ class FlowingFooter {
 
     if (unassignedTickets.length > 0) {
       this.suggestions.push({
-        text: `👤 ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`,
+        text: `${SVGIcons.user({size:14,className:'inline-icon'})} ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`,
         type: 'info'
       });
     }
@@ -166,7 +187,7 @@ class FlowingFooter {
 
     if (aboutToBreachTickets.length > 0) {
       this.suggestions.push({
-        text: `⏱️ ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`,
+        text: `${SVGIcons.clock({size:14,className:'inline-icon'})} ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`,
         type: 'warning'
       });
     }
@@ -174,14 +195,14 @@ class FlowingFooter {
     // All clear message
     if (this.suggestions.length === 0) {
       this.suggestions.push({
-        text: '✅ All tickets are up to date!',
+        text: `${SVGIcons.success({size:14,className:'inline-icon'})} All tickets are up to date!`,
         type: 'success'
       });
     }
 
     // Add general queue info
     this.suggestions.push({
-      text: `📊 ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`,
+      text: `${SVGIcons.chart({size:14,className:'inline-icon'})} ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`,
       type: 'info'
     });
   }
@@ -209,7 +230,7 @@ class FlowingFooter {
       const suggestion = this.suggestions[this.currentSuggestionIndex];
       
       // Update text and styling
-      this.suggestionElement.textContent = suggestion.text;
+      this.suggestionElement.innerHTML = suggestion.text;
       
       // Remove all type classes
       this.suggestionElement.classList.remove(
@@ -248,22 +269,52 @@ class FlowingFooter {
   updateContextBadge() {
     if (!this.contextBadge) return;
 
-    const icon = this.contextBadge.querySelector('.context-icon');
-    const text = this.contextBadge.querySelector('.context-text');
+    const iconEl = this.contextBadge.querySelector('.context-icon');
+    const textEl = this.contextBadge.querySelector('.context-text');
 
+    // Remove emoji-based icon updates to avoid flashing; keep icon stable or empty
+    try {
+      if (iconEl && iconEl.dataset.staticRendered !== '1') {
+        // Prefer a small SVG logo if available, otherwise clear
+        if (typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall) {
+          iconEl.innerHTML = SVGIcons.logoSmall({ size: 16, className: 'inline-icon' });
+        } else {
+          iconEl.innerHTML = '';
+        }
+        iconEl.dataset.staticRendered = '1';
+      }
+    } catch (e) { /* swallow */ }
+
+    // Compute desired text for current context (include summary when an issue is selected)
+    let desiredText = 'No context';
     if (this.context.selectedIssue) {
-      icon.textContent = '🎯';
-      text.textContent = `Ticket: ${this.context.selectedIssue}`;
+      const issueKey = this.context.selectedIssue;
+      // Try to find the issue summary in app cache/state
+      let summary = '';
+      try {
+        if (window.app?.issuesCache && window.app.issuesCache.get) {
+          const issueObj = window.app.issuesCache.get(issueKey);
+          summary = issueObj?.summary || issueObj?.fields?.summary || '';
+        }
+        if (!summary && Array.isArray(window.state?.issues)) {
+          const issueObj = window.state.issues.find(i => i.key === issueKey);
+          summary = issueObj?.summary || issueObj?.fields?.summary || '';
+        }
+      } catch (e) { /* ignore */ }
+
+      desiredText = summary ? `${issueKey} — ${summary}` : `Ticket: ${issueKey}`;
     } else if (this.context.currentQueue) {
-      icon.textContent = '📋';
-      text.textContent = `Queue: ${this.context.currentQueue} (${this.context.issuesCount} tickets)`;
+      desiredText = `Queue: ${this.context.currentQueue} (${this.context.issuesCount} tickets)`;
     } else if (this.context.currentDesk) {
-      icon.textContent = '🏢';
-      text.textContent = `Desk: ${this.context.currentDesk}`;
-    } else {
-      icon.textContent = '📌';
-      text.textContent = 'No context';
+      desiredText = `Desk: ${this.context.currentDesk}`;
     }
+
+    // Only update DOM when the text actually changes to avoid reflows/flashes
+    try {
+      if (textEl && textEl.textContent !== desiredText) {
+        textEl.textContent = desiredText;
+      }
+    } catch (e) { /* ignore */ }
   }
 
   toggle() {
@@ -400,9 +451,15 @@ class FlowingFooter {
       
       // Render ticket details in balanced view
       this.renderBalancedContent(completeIssue);
+      // Render attachments preview for balanced view
+      try { this.renderAttachmentsForBalanced(completeIssue); } catch(e) { console.warn('Could not render attachments for balanced view', e); }
+      try { this.renderFooterAttachments(completeIssue); } catch(e) { /* ignore */ }
+      try { this.setupFooterAttachmentButton(); } catch(e) { /* ignore */ }
       
       // Load comments using the same method as right-sidebar
       this.loadCommentsForBalancedView(issueKey);
+      // adjust heights after comments load
+      setTimeout(() => this.adjustCommentsHeight(), 120);
       
       // Initialize SLA Monitor (same as right-sidebar)
       this.initializeSLAMonitor(issueKey);
@@ -411,6 +468,9 @@ class FlowingFooter {
       console.error('⚠️ Error fetching complete details, using cached data:', error);
       // Fallback: Use cached issue data
       this.renderBalancedContent(issue);
+      try { this.renderAttachmentsForBalanced(issue); } catch(e) { /* ignore */ }
+      try { this.renderFooterAttachments(issue); } catch(e) { /* ignore */ }
+      try { this.setupFooterAttachmentButton(); } catch(e) { /* ignore */ }
       this.loadCommentsForBalancedView(issueKey);
       this.initializeSLAMonitor(issueKey);
     }
@@ -446,11 +506,25 @@ class FlowingFooter {
         const slaPanel = window.slaMonitor.renderSLAPanel(issueKey);
         slaContainer.innerHTML = '';
         slaContainer.appendChild(slaPanel);
+
+        // Make the outer container transparent (no white background) but keep subtle shadow for depth
+        try {
+          slaContainer.style.background = 'transparent';
+          slaContainer.style.border = 'none';
+          slaContainer.style.borderRadius = '10px';
+          // Keep a soft shadow to lift the panel slightly
+          slaContainer.style.boxShadow = '0 8px 20px rgba(15, 23, 42, 0.06)';
+          // keep padding for spacing
+          slaContainer.style.padding = '12px';
+        } catch (e) {
+          console.warn('Could not set slaContainer transparent:', e);
+        }
         
         // Wait for DOM to be ready before customizing (nextTick)
         setTimeout(() => {
           // Customize layout for footer compact view
-          const slaPanelElement = slaContainer.querySelector('.sla-panel');
+          // `.sla-panel` was removed — fallback to `.sla-monitor` or `.sla-cycle`
+          const slaPanelElement = slaContainer.querySelector('.sla-panel') || slaContainer.querySelector('.sla-monitor') || slaContainer.querySelector('.sla-cycle');
           if (slaPanelElement) {
             console.log('🔧 Customizing SLA panel layout...');
             console.log('📋 Panel HTML:', slaPanelElement.innerHTML.substring(0, 200));
@@ -462,68 +536,91 @@ class FlowingFooter {
               console.log('✅ Hidden title');
             }
             
-            // Move refresh button next to ON TRACK badge - try multiple selectors
-            const refreshBtn = slaPanelElement.querySelector('.refresh-sla-btn') || 
+            // Move refresh button next to status badge (use SLA monitor's real classes)
+            const refreshBtn = slaPanelElement.querySelector('.sla-refresh-btn') ||
+                              slaPanelElement.querySelector('.refresh-sla-btn') || 
                               slaPanelElement.querySelector('.btn-refresh-sla') || 
                               slaPanelElement.querySelector('button[onclick*="refresh"]') ||
                               Array.from(slaPanelElement.querySelectorAll('button')).find(btn => 
-                                btn.textContent.includes('↻') || btn.textContent.includes('Refresh')
+                                (btn.textContent || '').toLowerCase().includes('↻') || (btn.textContent || '').toLowerCase().includes('refresh')
                               );
-            
-            const statusBadge = slaPanelElement.querySelector('.sla-status-badge') || 
-                               slaPanelElement.querySelector('.status-badge') ||
-                               Array.from(slaPanelElement.querySelectorAll('[class*="status"]')).find(el => 
-                                 el.textContent.includes('ON TRACK') || el.textContent.includes('BREACHED')
-                               );
+
+            // Status badge is rendered as .cycle-status inside the SLA panel
+            const statusBadge = slaPanelElement.querySelector('.cycle-status') ||
+                                slaPanelElement.querySelector('.cycle-status.healthy') ||
+                                Array.from(slaPanelElement.querySelectorAll('[class*="status"]')).find(el => 
+                                  (el.textContent || '').toLowerCase().includes('on track') || (el.textContent || '').toLowerCase().includes('breach') || (el.textContent || '').toLowerCase().includes('breached')
+                                );
             
             console.log('🔍 Refresh button:', refreshBtn);
             console.log('🔍 Status badge:', statusBadge);
             
             if (refreshBtn && statusBadge) {
-              // Get the container of the status badge
-              const statusContainer = statusBadge.parentElement || statusBadge.closest('.sla-header, .sla-status, div');
+              // Get the container of the status badge (cycle-header)
+              const statusContainer = statusBadge.closest('.cycle-header') || statusBadge.parentElement || slaPanelElement.querySelector('.sla-header') || slaPanelElement;
               if (statusContainer) {
                 refreshBtn.style.display = 'inline-flex';
                 refreshBtn.style.marginLeft = '8px';
-                refreshBtn.style.padding = '4px 8px';
-                refreshBtn.style.fontSize = '10px';
+                refreshBtn.style.padding = '6px 10px';
+                refreshBtn.style.fontSize = '13px';
+                refreshBtn.style.minWidth = '40px';
+                refreshBtn.style.height = '30px';
+                refreshBtn.style.borderRadius = '6px';
                 refreshBtn.style.verticalAlign = 'middle';
+                refreshBtn.style.alignItems = 'center';
+                refreshBtn.style.justifyContent = 'center';
+                refreshBtn.style.border = '1px solid rgba(255,255,255,0.06)';
+                // Move the refresh button into the status container
                 statusContainer.appendChild(refreshBtn);
                 console.log('✅ Moved refresh button next to status badge');
               }
             }
             
-            // Move "Updated" below "Elapsed" - try multiple selectors
-            const updatedElement = slaPanelElement.querySelector('.sla-updated') ||
+            // Move "Updated" next to "Remaining" (side-by-side)
+            // Updated element from SLA monitor is '.sla-last-updated'
+            const updatedElement = slaPanelElement.querySelector('.sla-last-updated') ||
                                   Array.from(slaPanelElement.querySelectorAll('*')).find(el => 
-                                    el.textContent && el.textContent.includes('Updated:')
+                                    (el.textContent || '').includes('Updated:')
                                   );
-            
-            const elapsedElement = slaPanelElement.querySelector('.sla-elapsed') ||
-                                  slaPanelElement.querySelector('[class*="elapsed"]') ||
-                                  Array.from(slaPanelElement.querySelectorAll('*')).find(el => 
-                                    el.textContent && el.textContent.includes('ELAPSED')
-                                  );
-            
+
+            // Find the detail row that contains the 'Remaining' label, then its value
+            let remainingValue = null;
+            const detailRows = Array.from(slaPanelElement.querySelectorAll('.detail-row'));
+            const remainingRow = detailRows.find(row => {
+              const lbl = row.querySelector('.detail-label');
+              return lbl && /remaining/i.test(lbl.textContent || '');
+            });
+            if (remainingRow) {
+              remainingValue = remainingRow.querySelector('.detail-value') || remainingRow.querySelector('span');
+            } else {
+              // Fallback: search generically for text
+              const found = Array.from(slaPanelElement.querySelectorAll('*')).find(el => /remaining/i.test(el.textContent || ''));
+              remainingValue = found;
+            }
+
             console.log('🔍 Updated element:', updatedElement);
-            console.log('🔍 Elapsed element:', elapsedElement);
-            
-            if (updatedElement && elapsedElement) {
-              const elapsedContainer = elapsedElement.parentElement || elapsedElement.closest('div');
-              if (elapsedContainer) {
+            console.log('🔍 Remaining value element:', remainingValue);
+
+            if (updatedElement && remainingValue) {
+              try {
                 updatedElement.style.fontSize = '10px';
                 updatedElement.style.color = '#9ca3af';
-                updatedElement.style.marginTop = '4px';
-                updatedElement.style.display = 'block';
-                elapsedContainer.appendChild(updatedElement);
-                console.log('✅ Moved updated below elapsed');
+                updatedElement.style.marginLeft = '8px';
+                updatedElement.style.display = 'inline-block';
+
+                // Place updated after the remaining value
+                if (remainingValue.parentElement) {
+                  remainingValue.after(updatedElement);
+                }
+
+                console.log('✅ Moved updated next to remaining');
+              } catch (e) {
+                console.warn('⚠️ Could not move Updated next to Remaining:', e);
               }
             }
             
-            // Reduce padding for compact view
+            // Reduce padding for compact view but keep panel visuals (do not override background/border)
             slaPanelElement.style.padding = '0';
-            slaPanelElement.style.background = 'transparent';
-            slaPanelElement.style.border = 'none';
           }
           
           console.log('✅ SLA Monitor rendered (compact mode)');
@@ -531,6 +628,70 @@ class FlowingFooter {
         
         // Calculate and render breach risk
         this.renderBreachRisk(issueKey);
+
+        // Attach footer comment composer handler (balanced view)
+        try {
+          const footerSend = document.querySelector('.btn-add-comment-footer');
+          if (footerSend) {
+            footerSend.addEventListener('click', async () => {
+              if (window.commentsModule && typeof window.commentsModule.postComment === 'function') {
+                await window.commentsModule.postComment(issueKey, {
+                  textareaSelector: '#footerCommentText',
+                  internalCheckboxSelector: '#commentInternalFooter',
+                  listSelector: '.comments-section .comments-list',
+                  countSelector: '#commentCountFooter',
+                  buttonSelector: '.btn-add-comment-footer',
+                  visibilityLabelSelector: '.visibility-label-footer'
+                });
+              } else {
+                console.warn('commentsModule.postComment not available');
+              }
+            });
+          }
+            // Attach mentions autocomplete to footer textarea (balanced view)
+            try {
+              const footerTextarea = document.getElementById('footerCommentText');
+              if (footerTextarea) {
+                const attachMentions = async () => {
+                  if (window.mentionsAutocomplete && typeof window.mentionsAutocomplete.attachTo === 'function') {
+                    window.mentionsAutocomplete.attachTo(footerTextarea, issueKey);
+                    console.log('✅ Attached mentionsAutocomplete to footer textarea');
+                    return;
+                  }
+                  // Load module dynamically if missing
+                  try {
+                    await new Promise((resolve, reject) => {
+                      const s = document.createElement('script');
+                      s.src = '/static/js/modules/mentions-autocomplete.js?v=' + Date.now();
+                      s.onload = resolve;
+                      s.onerror = reject;
+                      document.head.appendChild(s);
+                    });
+                    if (window.mentionsAutocomplete && typeof window.mentionsAutocomplete.attachTo === 'function') {
+                      window.mentionsAutocomplete.attachTo(footerTextarea, issueKey);
+                      console.log('✅ Dynamically loaded and attached mentionsAutocomplete to footer textarea');
+                    }
+                  } catch (err) {
+                    console.warn('⚠️ Failed to load mentions-autocomplete for footer:', err);
+                  }
+                };
+                // Small timeout to allow DOM and module init
+                setTimeout(attachMentions, 80);
+
+                // Shortcut: Ctrl/Cmd+Enter to send from footer
+                footerTextarea.addEventListener('keydown', (e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    document.querySelector('.btn-add-comment-footer')?.click();
+                  }
+                });
+              }
+            } catch (err) {
+              console.warn('Could not attach mentions to footer textarea', err);
+            }
+        } catch (e) {
+          console.warn('Could not attach footer comment handler', e);
+        }
       } else {
         slaContainer.innerHTML = `
           <div style="text-align: center; padding: 16px; color: #9ca3af; font-size: 11px;">
@@ -641,12 +802,12 @@ class FlowingFooter {
           <!-- Risk Factors -->
           <div style="font-size: 10px; color: #6b7280;">
             <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 2px;">
-              <span style="font-size: 8px;">⚡</span>
+              <span style="font-size: 8px;">${SVGIcons.zap({size:10,className:'inline-icon'})}</span>
               <span>Elapsed: ${percentage}%</span>
             </div>
             ${percentage >= 75 ? `
             <div style="display: flex; align-items: center; gap: 4px;">
-              <span style="font-size: 8px;">⚠️</span>
+              <span style="font-size: 8px;">${SVGIcons.alert({size:10,className:'inline-icon'})}</span>
               <span>Near deadline</span>
             </div>
             ` : ''}
@@ -657,106 +818,270 @@ class FlowingFooter {
   }
   
   async loadCommentsForBalancedView(issueKey) {
+    // Ensure comments module is loaded: dynamically load if missing
+    if (!window.commentsModule || typeof window.commentsModule.loadIssueComments !== 'function') {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = '/static/js/modules/comments.js?v=' + Date.now();
+          script.onload = () => resolve();
+          script.onerror = (e) => reject(e);
+          document.head.appendChild(script);
+        });
+      } catch (e) {
+        console.warn('Could not dynamically load comments module:', e);
+      }
+    }
+
+    if (window.commentsModule && typeof window.commentsModule.loadIssueComments === 'function') {
+      return window.commentsModule.loadIssueComments(issueKey, { listSelector: '.comments-section .comments-list', countSelector: '#commentCountFooter', order: 'desc' });
+    }
+
+    // Final fallback: show unavailable message
     const commentsContainer = document.querySelector('.comments-section .comments-list');
-    if (!commentsContainer) return;
-    
-    console.log('💬 Loading comments for:', issueKey);
-    
-    // Show loading state
-    commentsContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">Loading comments...</p>';
-    
+    if (commentsContainer) commentsContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">Comments unavailable</p>';
+  }
+
+  // After rendering balanced content, adjust comments container height to match left column
+  adjustCommentsHeight() {
     try {
-      // Use same endpoint as right-sidebar
-      const response = await fetch(`/api/v2/issues/${issueKey}/comments`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Handle different response formats (same logic as right-sidebar)
-      let comments = [];
-      
-      if (data.success && data.data) {
-        if (Array.isArray(data.data.comments)) {
-          comments = data.data.comments;
-        } else if (Array.isArray(data.data)) {
-          comments = data.data;
+      const container = document.getElementById('balancedContentContainer');
+      if (!container) return;
+      const leftCol = container.querySelector('.left-column');
+      const rightCol = container.querySelector('.right-column');
+      if (!leftCol || !rightCol) return;
+      const commentsSection = rightCol.querySelector('.comments-section');
+      const composer = rightCol.querySelector('.comment-composer');
+      if (!commentsSection) return;
+
+      // Compute available height: left column height minus paddings and composer height
+      const leftHeight = leftCol.getBoundingClientRect().height;
+      const composerHeight = composer ? composer.getBoundingClientRect().height : 0;
+      const paddingReserve = 40; // some breathing room
+      const maxH = Math.max(120, Math.floor(leftHeight - composerHeight - paddingReserve));
+      commentsSection.style.maxHeight = `${maxH}px`;
+      commentsSection.style.overflowY = 'auto';
+      // Also ensure comments list scrolls newest-first properly
+      const list = commentsSection.querySelector('.comments-list');
+      if (list) list.style.display = 'flex';
+      console.log('🔧 Adjusted commentsSection maxHeight to', maxH);
+    } catch (e) {
+      console.warn('Could not adjust comments height:', e);
+    }
+  }
+
+  renderAttachmentsForBalanced(issue) {
+    try {
+      const listContainer = document.getElementById('attachmentsListFooter');
+      if (!listContainer) return;
+      const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
+      // Debug: log attachments payload to help diagnose missing thumbnails
+      console.log('🔍 [Footer] attachments payload for', issue.key, attachments);
+      if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
+      let html = '';
+      attachments.forEach(att => {
+        const url = att.content || att.self || att.url || (`/api/issues/${issue.key}/attachments/${att.id}`);
+        console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
+        const filename = att.filename || att.name || att.displayName || 'attachment';
+        const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
+        if (isImage) {
+          html += `
+            <div class="attachment-item">
+              <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
+                <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
+              </a>
+              <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip({size:14,className:'inline-icon'})} <span>${filename}</span></a>
+                <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download({size:14,className:'inline-icon'})}</a>
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="attachment-item">
+              <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip({size:14,className:'inline-icon'})} <span>${filename}</span></a>
+              <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download({size:14,className:'inline-icon'})}</a>
+            </div>
+          `;
         }
-      } else if (Array.isArray(data)) {
-        comments = data;
-      } else if (data.data && Array.isArray(data.data)) {
-        comments = data.data;
-      } else if (data.comments && Array.isArray(data.comments)) {
-        comments = data.comments;
-      } else if (data.result && Array.isArray(data.result)) {
-        comments = data.result;
-      }
-      
-      if (!Array.isArray(comments)) {
-        comments = [];
-      }
-      
-      if (comments.length === 0) {
-        commentsContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">No comments yet</p>';
+      });
+      listContainer.innerHTML = html;
+      // Show preview container when attachments exist
+      const preview = document.getElementById('attachmentsPreviewFooter');
+      if (preview) preview.classList.add('show');
+      // Setup description toggle behavior (if present)
+      try {
+        const descToggle = document.getElementById('descriptionToggleBtn');
+        const descContent = document.getElementById('ticketDescriptionContent');
+        if (descToggle && descContent) {
+          descToggle.addEventListener('click', () => {
+            console.log('🔧 Description toggle clicked');
+            const isCollapsed = descContent.classList.toggle('collapsed');
+            descToggle.setAttribute('aria-expanded', String(!isCollapsed));
+            // toggle class for icon rotation
+            if (isCollapsed) descToggle.classList.add('collapsed'); else descToggle.classList.remove('collapsed');
+            // update title
+            descToggle.title = isCollapsed ? 'Expand description' : 'Collapse description';
+            // Allow re-animation of chevron by toggling svg-assemble if present
+            try {
+              const icon = descToggle.querySelector('.svg-icon');
+              if (icon) {
+                icon.classList.remove('svg-assemble');
+                // Force reflow then re-add
+                void icon.offsetWidth;
+                icon.classList.add('svg-assemble');
+              }
+            } catch (e) { console.warn('Could not re-animate chevron', e); }
+          });
+        }
+      } catch (e) { console.warn('Could not initialize description toggle', e); }
+    } catch (e) {
+      console.warn('renderAttachmentsForBalanced error', e);
+    }
+  }
+
+  // Footer attachments handling (separate from right-sidebar)
+  renderFooterAttachments(issue) {
+    try {
+      const listContainer = document.getElementById('attachmentsListFooter');
+      if (!listContainer) return;
+      const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
+      console.log('🔍 [Footer|renderFooterAttachments] attachments payload for', issue.key, attachments);
+      if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
+      let html = '';
+      attachments.forEach((att) => {
+        const url = att.content || att.self || att.url || (`/api/issues/${issue.key}/attachments/${att.id}`);
+        console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
+        const filename = att.filename || att.name || att.displayName || 'attachment';
+        const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
+        if (isImage) {
+          html += `
+            <div class="attachment-item">
+              <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
+                <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
+              </a>
+              <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip({size:14,className:'inline-icon'})} <span>${filename}</span></a>
+                <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download({size:14,className:'inline-icon'})}</a>
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="attachment-item">
+              <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip({size:14,className:'inline-icon'})} <span>${filename}</span></a>
+              <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download({size:14,className:'inline-icon'})}</a>
+            </div>
+          `;
+        }
+      });
+      listContainer.innerHTML = html;
+      // Show preview container when attachments exist
+      const preview = document.getElementById('attachmentsPreviewFooter');
+      if (preview) preview.classList.add('show');
+    } catch (e) {
+      console.warn('renderFooterAttachments error', e);
+    }
+  }
+
+  setupFooterAttachmentButton() {
+    try {
+      const attachBtn = document.getElementById('attachFooterBtn');
+      const attachmentsPreview = document.getElementById('attachmentsPreviewFooter');
+      const attachmentsList = document.getElementById('attachmentsListFooter');
+      console.log('🔧 setupFooterAttachmentButton: attachBtn=', !!attachBtn, 'attachmentsPreview=', !!attachmentsPreview, 'attachmentsList=', !!attachmentsList);
+      if (!attachBtn || !attachmentsList) {
+        // attachBtn might not be present yet; noop
+        console.warn('⚠️ setupFooterAttachmentButton: Missing elements - will retry later');
         return;
       }
-      
-      // Render comments
+
+      // Clone to remove previous listeners
+      const newBtn = attachBtn.cloneNode(true);
+      attachBtn.parentNode.replaceChild(newBtn, attachBtn);
+
+      newBtn.addEventListener('click', () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.multiple = true;
+        fileInput.accept = '*/*';
+        fileInput.addEventListener('change', (e) => {
+          const files = Array.from(e.target.files);
+          try { this.addFooterAttachments(files); } catch(err) { console.warn('addFooterAttachments error', err); }
+          if (attachmentsPreview) attachmentsPreview.classList.add('show');
+        });
+        fileInput.click();
+      });
+    } catch (e) { console.warn('setupFooterAttachmentButton error', e); }
+  }
+
+  addFooterAttachments(files) {
+    try {
+      window.footerAttachedFiles = window.footerAttachedFiles || [];
+      const attachmentsList = document.getElementById('attachmentsListFooter');
+      const attachmentsPreview = document.getElementById('attachmentsPreviewFooter');
+      if (!attachmentsList) return;
+      window.footerAttachedFiles.push(...files);
       let html = '';
-      comments.forEach(comment => {
-        const author = comment.author?.displayName || comment.author || 'Unknown';
-        const time = this.formatCommentTime(comment.created || comment.timestamp);
-        const text = comment.body_html || comment.body || comment.text || '';
-        const initials = author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        
+      window.footerAttachedFiles.forEach((file, idx) => {
         html += `
-          <div class="comment-item" style="display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f3f4f6;">
-            <div class="comment-avatar" style="width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0;">
-              ${initials}
-            </div>
-            <div class="comment-body" style="flex: 1; min-width: 0;">
-              <div class="comment-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                <span class="comment-author" style="font-weight: 600; font-size: 12px; color: #374151;">${author}</span>
-                <span class="comment-time" style="font-size: 10px; color: #9ca3af;">${time}</span>
-              </div>
-              <div class="comment-text" style="font-size: 12px; color: #4b5563; line-height: 1.5; word-wrap: break-word;">
-                ${text}
-              </div>
-            </div>
+          <div class="attachment-item">
+            <span class="attachment-name" title="${file.name}">${SVGIcons.file({size:14,className:'inline-icon'})} <span>${file.name}</span></span>
+            <button class="attachment-remove" data-index="${idx}">${SVGIcons.close({size:12,className:'inline-icon'})}</button>
           </div>
         `;
       });
-      
-      commentsContainer.innerHTML = html;
-      
-    } catch (error) {
-      console.error('❌ Error loading comments:', error);
-      commentsContainer.innerHTML = `
-        <p style="text-align: center; padding: 20px; color: #ef4444; font-size: 12px;">
-          Failed to load comments
-        </p>
-      `;
-    }
+      attachmentsList.innerHTML = html;
+      // Setup remove handlers
+      document.querySelectorAll('#attachmentsListFooter .attachment-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.index);
+          window.footerAttachedFiles.splice(idx, 1);
+          if (window.footerAttachedFiles.length === 0) {
+            attachmentsPreview?.classList.remove('show');
+            attachmentsList.innerHTML = '';
+          } else {
+            this.addFooterAttachments([]);
+          }
+        });
+      });
+    } catch (e) { console.warn('addFooterAttachments error', e); }
   }
   
   formatCommentTime(timestamp) {
+    if (window.commentsModule && typeof window.commentsModule.formatCommentTime === 'function') {
+      return window.commentsModule.formatCommentTime(timestamp);
+    }
     if (!timestamp) return '';
-    
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
     if (diffMins < 1) return 'just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // Ensure footer composer posts only after commentsModule is available
+  async ensureCommentsModule() {
+    if (window.commentsModule && typeof window.commentsModule.postComment === 'function') return true;
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = '/static/js/modules/comments.js?v=' + Date.now();
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      return !!(window.commentsModule && typeof window.commentsModule.postComment === 'function');
+    } catch (e) {
+      console.warn('Failed to load comments module dynamically:', e);
+      return false;
+    }
   }
   
   renderBalancedContent(issue) {
@@ -801,7 +1126,8 @@ class FlowingFooter {
     
     // Extract key fields from multiple sources (same as right-sidebar)
     const summary = issue.summary || getField('summary') || 'No title';
-    const description = issue.description || getField('description') || 'No description available';
+    // If no description provided, keep empty so we can hide the section
+    const description = issue.description || getField('description') || '';
     
     // Standard fields
     const priority = formatValue(issue.priority || getField('priority'));
@@ -855,24 +1181,51 @@ class FlowingFooter {
         minute: '2-digit'
       });
     };
+
+    // Collect long custom fields (strings > 120 chars) to show as full-width blocks
+    let longCustomFieldsHTML = '';
+    try {
+      const fld = issue.fields || {};
+      Object.keys(fld).forEach(k => {
+        if (!/^customfield_/.test(k)) return;
+        const raw = fld[k];
+        const val = formatValue(raw);
+        if (val && val.length > 120) {
+          const label = k.replace('customfield_', 'CF-');
+          longCustomFieldsHTML += `
+            <div style="grid-column: 1 / -1;">
+              <label style="font-size: 10px; font-weight: 700; color: #9ca3af; display:block; margin-bottom:6px;">${label}</label>
+              <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${val}</div>
+            </div>
+          `;
+        }
+      });
+    } catch (e) { console.warn('Could not collect long custom fields', e); }
     
     // TWO-COLUMN LAYOUT WITH ML SUGGESTIONS
     container.innerHTML = `
+      ${description ? `
       <!-- Description Section (Full Width) -->
       <div class="ticket-description-section" style="padding: 16px 20px; background: rgba(249, 250, 251, 0.5); border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
-        <label class="section-label" style="display: flex; align-items: center; gap: 8px; color: #4a5568; font-weight: 600; font-size: 13px; margin-bottom: 8px; cursor: pointer;">
-          <i class="fas fa-file-alt" style="color: #6366f1;"></i> Description
-          <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 11px;"></i>
+        <label class="section-label" style="display: flex; align-items: center; gap: 8px; color: #4a5568; font-weight: 600; font-size: 13px; margin-bottom: 8px;">
+          <span style="display:flex; align-items:center; gap:8px;">
+            ${SVGIcons.file({size:14,className:'inline-icon'})}
+            <span>Descripción</span>
+          </span>
+          <button id="descriptionToggleBtn" class="ticket-description-toggle" aria-expanded="true" title="Collapse description" style="margin-left:auto;">
+            ${SVGIcons.chevronDown({size:14,className:'inline-icon'})}
+          </button>
         </label>
-        <div class="ticket-description-content" style="color: #4b5563; line-height: 1.6; font-size: 13px; max-height: 120px; overflow-y: auto; white-space: pre-wrap;">
+        <div id="ticketDescriptionContent" class="ticket-description-content" style="color: #4b5563; line-height: 1.6; font-size: 13px; max-height: 120px; overflow-y: auto; white-space: pre-wrap;">
           ${description}
         </div>
       </div>
+      ` : ''}
       
-      <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent); margin: 0;"></div>
+      <div class="purple-divider" style="margin:0"></div>
       
       <!-- TWO COLUMNS LAYOUT -->
-      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 42%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto;">
+      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
         
         <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
         <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
@@ -890,6 +1243,8 @@ class FlowingFooter {
             </div>
           </div>
           
+          ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
+          
           <!-- Essential Fields Grid (3 columns) -->
           <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
             
@@ -899,7 +1254,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-flag" style="color: #ef4444;"></i> Priority
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${priority}
               </div>
               <!-- ML Suggestion Inline (placeholder) -->
@@ -916,7 +1271,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-user" style="color: #3b82f6;"></i> Assignee
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${assignee || 'Unassigned'}
               </div>
             </div>
@@ -928,7 +1283,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-tasks" style="color: #10b981;"></i> Status
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${status}
               </div>
             </div>
@@ -940,7 +1295,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Criticidad
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${criticidad}
               </div>
             </div>
@@ -952,7 +1307,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-clipboard-list" style="color: #8b5cf6;"></i> Tipo de Solicitud
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${tipoSolicitud}
               </div>
             </div>
@@ -964,7 +1319,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-laptop" style="color: #06b6d4;"></i> Plataforma
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${plataforma}
               </div>
             </div>
@@ -976,7 +1331,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-sitemap" style="color: #8b5cf6;"></i> Área
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${area}
               </div>
             </div>
@@ -1036,7 +1391,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-envelope" style="color: #3b82f6;"></i> Email
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; word-break: break-all;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 12px; word-break: break-all; color: var(--field-text);">
                 ${email}
               </div>
             </div>
@@ -1048,7 +1403,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-phone" style="color: #10b981;"></i> Phone
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${phone}
               </div>
             </div>
@@ -1060,7 +1415,7 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-globe" style="color: #06b6d4;"></i> País
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
                 ${pais}
               </div>
             </div>
@@ -1109,7 +1464,7 @@ class FlowingFooter {
           
           <!-- Extra Details (Collapsible) -->
           <div class="extra-details" style="margin-top: 8px;">
-            <button class="btn-toggle-details" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');" style="width: 100%; padding: 10px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-weight: 600; color: #6b7280; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+            <button class="btn-toggle-details" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');" style="width: 100%; padding: 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--field-text); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
               <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
               <span>Show More Details</span>
             </button>
@@ -1196,7 +1551,9 @@ class FlowingFooter {
             </button>
           </div>
         </div>
-        
+
+        <div class="columns-divider" aria-hidden="true"></div>
+
         <!-- RIGHT COLUMN: ML Actions & Comments (42%) -->
         <div class="right-column" style="display: flex; flex-direction: column; gap: 12px;">
           
@@ -1206,13 +1563,13 @@ class FlowingFooter {
               <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> ML Actions & Suggested Comments
             </h4>
             <div class="suggested-comments" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-              <div class="suggestion-item" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px; color: #4b5563; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+              <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
                 <span style="flex: 1;">Investigating issue, analyzing logs...</span>
                 <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
                   <i class="fas fa-copy"></i>
                 </button>
               </div>
-              <div class="suggestion-item" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px; color: #4b5563; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+              <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
                 <span style="flex: 1;">Escalating to backend team...</span>
                 <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
                   <i class="fas fa-copy"></i>
@@ -1220,22 +1577,42 @@ class FlowingFooter {
               </div>
             </div>
             <div class="quick-actions" style="display: flex; gap: 8px;">
-              <button style="flex: 1; padding: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.2s;">
+              <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
                 <i class="fas fa-clone" style="margin-right: 4px;"></i> Find Duplicates
               </button>
-              <button style="flex: 1; padding: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.2s;">
+              <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
                 <i class="fas fa-clock" style="margin-right: 4px;"></i> Estimate Time
               </button>
             </div>
           </div>
           
-          <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);"></div>
+          <div class="purple-divider"></div>
           
           <!-- Comments Section (Placeholder) -->
-          <div class="comments-section" style="flex: 1; background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; max-height: 280px; overflow-y: auto;">
-            <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
-              <i class="fas fa-comments" style="color: #3b82f6;"></i> Comments
-            </h4>
+          <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; max-height: 280px; overflow-y: auto;">
+            <!-- Attachments preview (balanced/footer) -->
+            <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <div class="attachments-list" id="attachmentsListFooter"></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-comments" style="color: #6d28d9;"></i> Comments
+              </h4>
+              <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
+            </div>
+
+            <!-- Comment composer (balanced/footer view) -->
+            <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
+              <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" style="flex:1; resize: vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; gap:8px;">
+                  <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip({size:14,className:'inline-icon'})}</button>
+                  <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
+                </div>
+                <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
+              </div>
+            </div>
+
             <div class="comments-list" style="display: flex; flex-direction: column; gap: 8px;">
               <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
                 <i class="fas fa-spinner fa-spin" style="font-size: 16px; margin-bottom: 8px;"></i><br>
@@ -1246,6 +1623,8 @@ class FlowingFooter {
         </div>
       </div>
     `;
+
+    
   }
 
   adjustContentPadding(isCollapsed) {

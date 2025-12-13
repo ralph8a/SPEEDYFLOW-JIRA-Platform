@@ -1,0 +1,101 @@
+/* Purple accents for Flowing MVP UI */
+
+.purple-accent { color: #6d28d9 !important; }
+.purple-bg { background: linear-gradient(135deg, #6d28d9, #8b5cf6) !important; color: white !important; }
+
+/* Purple divider in footer balanced view */
+.footer-two-columns .columns-divider {
+  width: 1px;
+  background: linear-gradient(180deg, rgba(109,40,217,0.12), rgba(99,102,241,0.06));
+  border-radius: 2px;
+  margin: 6px 0;
+  align-self: stretch;
+}
+
+/* Section labels and icons use purple where appropriate */
+.section-label i.fas.fa-file-alt { color: #6d28d9 !important; }
+.ml-suggestions-banner .banner-icon { background: linear-gradient(135deg, #6d28d9, #8b5cf6) !important; }
+
+/* Accent buttons */
+button.purple-btn, .purple-btn { background: linear-gradient(135deg, #6d28d9, #7c3aed); color: white; border: none; }
+
+/* Make purple primary for some UI elements */
+.purple-primary { color: #6d28d9 !important; }
+
+/* Dark mode adjustments for purple elements */
+body[data-theme="dark"] .section-label i.fas.fa-file-alt { color: #c4b5fd !important; }
+body[data-theme="dark"] .ml-suggestions-banner .banner-icon { background: linear-gradient(135deg, #5b21b6, #7c3aed) !important; }
+
+/* Comments composer attachments style */
+.attachments-preview-footer a img { border: 1px solid rgba(255,255,255,0.06); }
+.attachments-preview-footer a { color: inherit; }
+
+/* Footer attachments preview behavior */
+.attachments-preview-footer { display: none; padding: 8px 0; border-top: 1px solid rgba(109,40,217,0.06); }
+.attachments-preview-footer.show { display: flex; }
+.attachments-preview-footer .attachments-list { display: flex; gap: 8px; align-items: center; }
+.attachments-preview-footer .attachment-item { display:inline-flex; align-items:center; gap:8px; padding:6px 8px; background: rgba(109,40,217,0.04); border-radius:6px; }
+.attachments-preview-footer .attachment-remove { background: transparent; border: none; cursor: pointer; color: rgba(0,0,0,0.6); }
+.attachments-preview-footer .attachment-item { display:flex; flex-direction:column; align-items:flex-start; }
+.attachments-preview-footer .attachment-thumb img { display:block; border-radius:6px; }
+.attachments-preview-footer .attachment-link { color: inherit; font-size: 12px; text-decoration: none; }
+.attachments-preview-footer .attachment-download-btn { font-size: 12px; margin-left: 6px; text-decoration: none; }
+.attachments-preview-footer .attachment-item .attachment-link { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Inline SVG icon adjustments */
+.inline-icon { width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; }
+.attachments-preview-footer .svg-icon { display: inline-block; vertical-align: middle; }
+
+/* Description collapse/expand */
+.ticket-description-content { transition: max-height 260ms ease, opacity 220ms ease; }
+.ticket-description-content.collapsed { max-height: 0 !important; opacity: 0; overflow: hidden; padding: 0 !important; }
+.ticket-description-toggle { background: transparent; border: none; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center; }
+.ticket-description-toggle .svg-icon { transition: transform 200ms ease; }
+.ticket-description-toggle.collapsed .svg-icon { transform: rotate(180deg); }
+
+/* Theme variables for card/backgrounds (used by JS-rendered inline fields) */
+:root {
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --field-text: #1f2937;
+}
+
+[data-theme="dark"] {
+  --card-bg: rgba(30,41,59,0.84);
+  --card-border: rgba(255,255,255,0.04);
+  --field-text: #e5e7eb;
+}
+
+/* SVG assemble animation (draw + scale) */
+.svg-assemble .svg-icon path, .svg-assemble .svg-icon circle, .svg-assemble .svg-icon line, .svg-assemble .svg-icon polyline, .svg-assemble .svg-icon polygon {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: svg-assemble-draw 700ms ease forwards;
+}
+.svg-assemble { display: inline-block; transform-origin: center; animation: svg-assemble-pop 320ms cubic-bezier(.2,.8,.2,1) 160ms both; }
+
+@keyframes svg-assemble-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes svg-assemble-pop {
+  0% { transform: scale(.8); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* SVG assemble animation (draw + scale) */
+.svg-assemble .svg-icon path, .svg-assemble .svg-icon circle, .svg-assemble .svg-icon line, .svg-assemble .svg-icon polyline, .svg-assemble .svg-icon polygon {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: svg-assemble-draw 700ms ease forwards;
+}
+.svg-assemble { display: inline-block; transform-origin: center; animation: svg-assemble-pop 320ms cubic-bezier(.2,.8,.2,1) 160ms both; }
+
+@keyframes svg-assemble-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes svg-assemble-pop {
+  0% { transform: scale(.8); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}

@@ -203,6 +203,34 @@ const SVGIcons = {
   },
 
   /**
+   * Chevron Down
+   */
+  chevronDown(options = {}) {
+    return this._createSVG(`
+      <polyline points="6 9 12 15 18 9"></polyline>
+    `, options);
+  },
+
+  /**
+   * Chevron Up
+   */
+  chevronUp(options = {}) {
+    return this._createSVG(`
+      <polyline points="6 15 12 9 18 15"></polyline>
+    `, options);
+  },
+
+  /**
+   * Pause icon
+   */
+  pause(options = {}) {
+    return this._createSVG(`
+      <rect x="6" y="5" width="3" height="14" rx="1"></rect>
+      <rect x="15" y="5" width="3" height="14" rx="1"></rect>
+    `, options);
+  },
+
+  /**
    * Chevron Left
    */
   chevronLeft(options = {}) {

@@ -57,20 +57,22 @@ class SLAMonitor {
   renderSLAPanel(issueKey) {
     const slaData = this.slaData[issueKey];
     
-    // If no real SLA data, don't render anything
+    // If no real SLA data, return a hidden empty container (no white box)
     if (!slaData) {
       console.log(`❌ No SLA data for ${issueKey}, not rendering panel`);
       const container = document.createElement('div');
       container.className = 'sla-panel-empty';
-      container.innerHTML = '<!-- No SLA data available -->';
+      container.setAttribute('aria-hidden', 'true');
+      container.style.display = 'none';
       return container;
     }
     
     console.log(`🎨 Rendering SLA panel for ${issueKey}:`, slaData);
     
     const container = document.createElement('div');
-    container.className = 'sla-panel';
-    container.id = `sla-panel-${issueKey}`;
+    // Remove the outer `.sla-panel` wrapper — render header, cycle and footer directly
+    container.className = 'sla-monitor';
+    container.id = `sla-monitor-${issueKey}`;
 
     const cycle = slaData.cycles?.[0] || slaData;
     // Pass is_secondary flag from parent data to cycle
@@ -79,8 +81,10 @@ class SLAMonitor {
     
     container.innerHTML = `
       <div class="sla-header">
-        <h3 class="sla-title">📊 SLA Monitor</h3>
-        <button class="sla-refresh-btn" title="Refresh SLA">🔄</button>
+        <h3 class="sla-title">${SVGIcons.chart({size:18,className:'inline-icon'})} SLA Monitor</h3>
+        <button class="sla-refresh-btn" title="Refresh SLA" aria-label="Refresh SLA">
+          ${SVGIcons.sync({size:16,className:'sla-refresh-svg'})}
+        </button>
       </div>
 
       <div class="sla-content">
@@ -91,7 +95,35 @@ class SLAMonitor {
         <span class="sla-last-updated">Updated: ${new Date().toLocaleTimeString()}</span>
       </div>
     `;
-    // refreshBtn.addEventListener('click', ...
+
+    // If the .sla-content contains no meaningful elements (only dividers), remove it to avoid extra empty container
+    const contentElCheck = container.querySelector('.sla-content');
+    if (contentElCheck) {
+      const hasMeaningful = Boolean(contentElCheck.querySelector('.sla-cycle, .detail-row, .cycle-details, .cycle-progress'));
+      if (!hasMeaningful) {
+        contentElCheck.remove();
+      }
+    }
+
+    // Attach refresh handler to trigger live refresh with animated SVG
+    setTimeout(() => {
+      const btn = container.querySelector('.sla-refresh-btn');
+      const svg = container.querySelector('.sla-refresh-svg');
+      if (btn && svg) {
+        btn.addEventListener('click', async (e) => {
+          try {
+            btn.disabled = true;
+            svg.classList.add('spinning');
+            await this.refreshSLAData(issueKey);
+          } catch (err) {
+            console.error('Failed manual refresh:', err);
+          } finally {
+            svg.classList.remove('spinning');
+            btn.disabled = false;
+          }
+        });
+      }
+    }, 0);
 
     return container;
   }
@@ -109,15 +141,15 @@ class SLAMonitor {
     let statusIcon, statusClass, statusLabel;
     
     if (cycle.paused) {
-      statusIcon = '⏸️';
+      statusIcon = SVGIcons.pause({size:12,className:'inline-icon'});
       statusClass = 'paused';
       statusLabel = 'Paused';
     } else if (cycle.breached) {
-      statusIcon = '🔴';
+      statusIcon = SVGIcons.xCircle({size:12,className:'inline-icon'});
       statusClass = 'breached';
       statusLabel = 'Breached';
     } else {
-      statusIcon = '🟢';
+      statusIcon = SVGIcons.success({size:12,className:'inline-icon'});
       statusClass = 'healthy';
       statusLabel = 'On Track';
     }
