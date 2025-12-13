@@ -547,7 +547,7 @@ function createHelpModal() {
           <h3>🎨 Features</h3>
           <ul>
             <li><strong>Quick Triage:</strong> Identifies tickets requiring immediate attention (3+ days old)</li>
-            <li><strong>Flowing MVP:</strong> AI assistant for queue insights and suggestions</li>
+            <li><strong>AI Suggestions:</strong> ML-powered insights and field recommendations</li>
             <li><strong>Glassmorphism:</strong> Modern transparent UI with backdrop blur effects</li>
             <li><strong>Real-time Updates:</strong> Auto-refresh to stay synced with JIRA</li>
           </ul>
