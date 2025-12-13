@@ -14,21 +14,12 @@
 }
 
 /* Icon Sizes */
-.svg-icon-primary { stroke: var(--ff-accent); }
-.svg-icon-secondary { stroke: var(--ff-text-muted); }
-.svg-icon-success { stroke: var(--ff-success); }
-.svg-icon-danger { stroke: var(--ff-danger); }
-.svg-icon-warning { stroke: var(--ff-warning); }
-.svg-icon-info { stroke: var(--ff-accent); }
-.svg-icon-muted { stroke: var(--ff-text-muted); }
-    width: 24px;
-    height: 24px;
-}
-
-.svg-icon-2xl {
-    width: 32px;
-    height: 32px;
-}
+.svg-icon-xs { width: 12px; height: 12px; }
+.svg-icon-sm { width: 14px; height: 14px; }
+.svg-icon-md { width: 16px; height: 16px; }
+.svg-icon-lg { width: 20px; height: 20px; }
+.svg-icon-xl { width: 24px; height: 24px; }
+.svg-icon-2xl { width: 32px; height: 32px; }
 
 /* Button Icon Styles */
 button .svg-icon,
@@ -90,33 +81,13 @@ a:hover .svg-icon {
 }
 
 /* Icon Colors */
-.svg-icon-primary {
-    stroke: #6366f1;
-}
-
-.svg-icon-secondary {
-    stroke: #64748b;
-}
-
-.svg-icon-success {
-    stroke: #22c55e;
-}
-
-.svg-icon-danger {
-    stroke: #ef4444;
-}
-
-.svg-icon-warning {
-    stroke: #f59e0b;
-}
-
-.svg-icon-info {
-    stroke: #3b82f6;
-}
-
-.svg-icon-muted {
-    stroke: #94a3b8;
-}
+.svg-icon-primary { stroke: var(--ff-accent); }
+.svg-icon-secondary { stroke: var(--ff-text-muted); }
+.svg-icon-success { stroke: var(--ff-success); }
+.svg-icon-danger { stroke: var(--ff-danger); }
+.svg-icon-warning { stroke: var(--ff-warning); }
+.svg-icon-info { stroke: var(--ff-accent); }
+.svg-icon-muted { stroke: var(--ff-text-muted); }
 
 /* Spinning animation (for refresh icons) */
 @keyframes svg-spin {
