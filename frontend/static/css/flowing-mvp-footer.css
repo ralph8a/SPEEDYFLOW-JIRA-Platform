@@ -1,3 +1,28 @@
+/* Make the main content animate when footer expands so it is visibly pushed up */
+/* Use a body class toggled by JS to control expanded footer layout */
+html, body { transition: padding-bottom 0.25s ease; }
+
+/* When Flowing footer is expanded, push main content up to leave room */
+body.flowing-footer-expanded #kanbanView,
+body.flowing-footer-expanded .board-wrapper,
+body.flowing-footer-expanded #listView,
+body.flowing-footer-expanded .list-wrapper {
+  padding-bottom: 460px !important; /* slightly more than footer max-height for breathing room */
+}
+
+/* Respect sidebar-collapsed state too */
+body.sidebar-collapsed.flowing-footer-expanded #kanbanView,
+body.sidebar-collapsed.flowing-footer-expanded .board-wrapper {
+  padding-bottom: 460px !important;
+}
+/* Expanded state visual: allow taller footer with smooth transition */
+.flowing-footer:not(.collapsed) {
+  transition: max-height 0.28s ease, box-shadow 0.2s ease;
+  max-height: 420px;
+}
+
+
+
 /* ===================================
    FLOWING MVP - FOOTER ML ASSISTANT V2
    Diseño optimizado con checkboxes
