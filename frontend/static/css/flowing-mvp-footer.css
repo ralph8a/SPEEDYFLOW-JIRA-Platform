@@ -1658,6 +1658,7 @@ body.sidebar-collapsed .flowing-footer {
   /* Keep glassmorphism but add a subtle purple radial accent to reduce perceived flashing */
   background: radial-gradient(circle at 8% 30%, rgba(139,92,246,0.06) 0%, rgba(139,92,246,0.03) 18%, transparent 35%), rgba(255,255,255,0.56);
   backdrop-filter: blur(10px) saturate(1.02);
+}
 .flowing-header {
   position: absolute; /* position at top of footer */
   top: 0;
