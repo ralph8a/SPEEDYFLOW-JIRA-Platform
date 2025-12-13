@@ -1,0 +1,30 @@
+{
+  "jokes": [
+    "¿Chisme? Yo sólo sé lo que veo en los logs — y ahí dice que el servidor se tomó un café.",
+    "¿Un chiste? ¿Por qué el ticket cruzó la calle? Porque quería llegar al otro sprint.",
+    "Te cuento un chisme: el servidor dijo que hoy sí va a portarse bien... no le creas mucho.",
+    "Pssst: confidencial, el SLA pidió permiso para irse de vacaciones.",
+    "Si buscas drama, revisa los 500s; ahí siempre hay telenovela.",
+    "¿Quieres un chisme técnico? El deploy se fue a producción con sombrero y sin pruebas.",
+    "Consejo del día: cuando algo falla, reinicia; si sigue fallando, ofrece café al equipo.",
+    "¿Un dato gracioso? Los bugs siempre aparecen cuando todo está listo para la demo.",
+    "Advertencia amistosa: el servidor está en modo siesta. Prueba despertarlo con un ping.",
+    "Chisme de pasillo: alguien comentó 'esto funciona en mi máquina' y la oficina explotó en aplausos.",
+    "Pequeño secreto: las etiquetas no hablan, pero los desarrolladores sí — en Slack.",
+    "Si el ticket tuviera sentimientos, pediría vacaciones por tanta prioridad.",
+    "¿Quieres reír? Imagina un SLA que reconoce que también necesita terapia.",
+    "Regla número uno: nunca culpes al usuario hasta que revises los logs.",
+    "Broma rápida: '¿Cómo se llama el dev que nunca rompe producción?' — Un mito."
+  ],
+  "names": [
+    "Güero",
+    "Güera",
+    "Pachi",
+    "Chuy",
+    "Toño",
+    "Manolo",
+    "Lalo",
+    "Nati",
+    "Chelita"
+  ]
+}

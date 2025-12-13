@@ -24,6 +24,26 @@ logger = logging.getLogger(__name__)
 
 copilot_bp = Blueprint('copilot', __name__, url_prefix='/api/copilot')
 
+# Load chat jokes from file (expandable)
+JOKES_FILE = Path(__file__).resolve().parents[1] / 'ml_service' / 'chat_jokes.json'
+CHAT_JOKES = []
+CHAT_NAMES = []
+def load_chat_jokes():
+    global CHAT_JOKES, CHAT_NAMES
+    try:
+        if JOKES_FILE.exists():
+            with open(JOKES_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            CHAT_JOKES = data.get('jokes', []) or []
+            CHAT_NAMES = data.get('names', []) or []
+        else:
+            CHAT_JOKES = []
+            CHAT_NAMES = []
+    except Exception as e:
+        logger.warning(f"Could not load chat_jokes.json: {e}")
+
+load_chat_jokes()
+
 @copilot_bp.route('/chat', methods=['POST'])
 def chat():
     """
@@ -422,14 +442,12 @@ __all__ = ['copilot_bp']
 
 def witty_response(message: str) -> str:
     """Return a short humorous answer for chusca questions."""
-    names = ['Güero','Güera','Pachi','Chuy','Toño']
-    jokes = [
+    jokes = CHAT_JOKES or [
         "¿Chisme? Yo sólo sé lo que veo en los logs — y dicen que el servidor está de parranda.",
         "¿Un chiste? ¿Por qué el ticket cruzó la calle? Porque quería llegar al otro sprint.",
         "Te cuento un chisme: el servidor dijo que hoy sí va a portarse bien... no le creas mucho.",
-        "¡Pssst! Confidencial: el SLA tomó vacaciones por una semana.",
-        "Si buscas drama, revisa los 500s; ahí siempre hay telenovela.",
     ]
+    names = CHAT_NAMES or ['Güero','Güera','Pachi','Chuy','Toño']
     reply = random.choice(jokes)
     sign = random.choice(names)
     return f"{reply} — {sign}"
