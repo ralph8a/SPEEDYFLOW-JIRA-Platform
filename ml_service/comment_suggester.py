@@ -54,6 +54,15 @@ class CommentSuggester:
             except Exception:
                 payload['labels'] = []
 
+            # If comment_suggester model available, augment patterns
+            try:
+                comment_pred = self.predictor.suggest_comment_patterns(summary, comments_text)
+                # merge labels
+                payload['labels'] = list(dict.fromkeys(payload['labels'] + comment_pred.get('labels', [])))
+                patterns['model_comment_probs'] = comment_pred.get('probabilities', {})
+            except Exception:
+                pass
+
         # Rules based on patterns
         if patterns['has_error_500']:
             recommendations.append('Check backend origin errors and increase ServiceCallout timeout; collect server logs')

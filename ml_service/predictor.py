@@ -66,6 +66,7 @@ class UnifiedMLPredictor:
                 'assignee_suggester': 'assignee_suggester.keras',
                 'labels_suggester': 'labels_suggester.keras',
                 'status_suggester': 'status_suggester.keras',
+                'comment_suggester': 'comment_suggester.keras',
             }
             
             for name, filename in keras_models.items():
@@ -90,6 +91,7 @@ class UnifiedMLPredictor:
             'assignee_encoder': 'assignee_encoder.pkl',
             'labels_binarizer': 'labels_binarizer.pkl',
             'status_encoder': 'status_encoder.pkl',
+            'comment_labels_binarizer': 'comment_labels_binarizer.pkl',
         }
         
         for name, filename in encoders_map.items():
@@ -317,6 +319,34 @@ class UnifiedMLPredictor:
             "confidence": confidence,
             "probabilities": probas
         }
+
+    def suggest_comment_patterns(self, summary: str, comments: str = "", threshold: float = 0.5) -> Dict:
+        """Predict conversation/comment patterns (multi-label)"""
+        if 'comment_suggester' not in self.models:
+            return {"labels": [], "probabilities": {}}
+
+        text = f"{summary}. {comments}" if comments else summary
+        emb = self.get_embedding(text).reshape(1, -1)
+
+        pred = self.models['comment_suggester'].predict(emb, verbose=0)[0]
+
+        labels = []
+        probas = {}
+        if 'comment_labels_binarizer' in self.encoders:
+            mlb = self.encoders['comment_labels_binarizer']
+            classes = mlb.classes_
+            for i, p in enumerate(pred):
+                probas[classes[i]] = float(p)
+                if p >= threshold:
+                    labels.append(classes[i])
+        else:
+            # fallback: top-k
+            top_indices = (-pred).argsort()[:3]
+            for i in top_indices:
+                probas[str(i)] = float(pred[i])
+                labels.append(str(i))
+
+        return {"labels": labels, "probabilities": probas}
     
     def predict_all(self, summary: str, description: str = "") -> Dict:
         """Obtener todas las predicciones de una vez"""
