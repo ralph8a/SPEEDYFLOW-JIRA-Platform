@@ -2050,34 +2050,37 @@ body.sidebar-collapsed .flowing-footer {
 }
 
 /* Compact adjustments for right-column panels in balanced view */
-.footer-two-columns { gap: 1rem; padding: 1rem; }
-.footer-two-columns .right-column { padding-left: 0.5rem; }
+.footer-two-columns { gap: 0.5rem; padding: 0.5rem; }
+.footer-two-columns .right-column { padding-left: 0.25rem; }
 .footer-two-columns .right-column .panel,
 .footer-two-columns .right-column .panel-card,
 .footer-two-columns .right-column .ml-actions-section,
 .footer-two-columns .right-column .sla-monitor-container {
-  padding: 8px 10px;
-  margin-bottom: 10px;
-  border-radius: 8px;
+  padding: 6px 6px;
+  margin-bottom: 6px;
+  border-radius: 6px;
 }
 
-/* Make form controls and buttons in right column more compact */
+/* Make form controls and buttons in right column very compact */
 .footer-two-columns .right-column .btn,
 .footer-two-columns .right-column button,
 .footer-two-columns .right-column .field-input {
-  padding: 8px 10px;
-  font-size: 13px;
+  padding: 6px 8px;
+  font-size: 12px;
 }
 
-/* Reduce vertical spacing for small detail rows */
-.footer-two-columns .right-column .detail-row { gap: 8px; margin-bottom: 8px; }
+/* Reduce vertical spacing for detail rows */
+.footer-two-columns .right-column .detail-row { gap: 6px; margin-bottom: 6px; }
 
-/* Slightly smaller subtitles in right column */
+/* Smaller subtitles and titles in right column */
 .footer-two-columns .right-column .panel h3,
 .footer-two-columns .right-column .panel-title {
-  font-size: 13px;
-  margin-bottom: 6px;
+  font-size: 12px;
+  margin-bottom: 4px;
 }
+
+/* Reduce margin around context badge inside footer */
+.flowing-context-badge { margin: 0 12px; padding: 6px 10px; font-size: 11px; }
 
 /* Ensure panels do not overflow their column */
 .footer-two-columns .panel, .footer-two-columns .panel-card { box-sizing: border-box; max-width: 100%; overflow-wrap: break-word; }
