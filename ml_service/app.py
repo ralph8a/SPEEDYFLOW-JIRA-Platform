@@ -8,6 +8,8 @@ from typing import Optional, List, Dict, Any
 from pathlib import Path
 from predictor import UnifiedMLPredictor
 from chat import ChatEngine
+from comment_suggester import CommentSuggester
+import utils.api_migration as api_migration
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -48,10 +50,12 @@ async def startup():
     try:
         app.state.predictor = UnifiedMLPredictor(models_dir=str(models_path), fallback_mode=True)
         app.state.chat = ChatEngine(docs_dir=str(models_path.resolve().parent / 'docs'))
+        app.state.comment_suggester = CommentSuggester(predictor=app.state.predictor)
     except Exception as e:
         logger.error(f"Failed initializing predictor: {e}")
         app.state.predictor = None
         app.state.chat = ChatEngine()
+        app.state.comment_suggester = CommentSuggester()
 
 @app.get("/")
 async def root():
@@ -194,6 +198,49 @@ async def chat_endpoint(req: ChatRequest):
     if not chat:
         raise HTTPException(status_code=503, detail='Chat engine not available')
     return chat.answer(req.message)
+
+
+class CommentSuggestRequest(BaseModel):
+    issue_key: str
+    summary: str
+    comments: str
+
+
+@app.post('/predict/comment-suggest')
+async def predict_comment_suggest(req: CommentSuggestRequest):
+    suggester: CommentSuggester = getattr(app.state, 'comment_suggester', None)
+    if not suggester:
+        raise HTTPException(status_code=503, detail='Comment suggester not available')
+    result = suggester.suggest_actions(req.summary, req.comments or '')
+    return result
+
+
+class CommentActionRequest(BaseModel):
+    issue_key: str
+    action: str  # 'post_comment' | 'assign'
+    comment: str = None
+    assignee: str = None
+
+
+@app.post('/comment/action')
+async def comment_action(req: CommentActionRequest):
+    # Perform actions against JIRA via api_migration
+    if req.action == 'post_comment':
+        if not req.comment:
+            raise HTTPException(status_code=400, detail='comment required')
+        res = api_migration.add_comment(req.issue_key, req.comment)
+        if res is None:
+            raise HTTPException(status_code=500, detail='failed to add comment')
+        return {'status': 'comment_posted', 'response': res}
+    elif req.action == 'assign':
+        if not req.assignee:
+            raise HTTPException(status_code=400, detail='assignee required')
+        ok = api_migration.assign_issue(req.issue_key, req.assignee)
+        if not ok:
+            raise HTTPException(status_code=500, detail='failed to assign')
+        return {'status': 'assigned', 'assignee': req.assignee}
+    else:
+        raise HTTPException(status_code=400, detail='unknown action')
 
 @app.post("/predict-batch")
 async def predict_batch(requests: List[PredictRequest]):
