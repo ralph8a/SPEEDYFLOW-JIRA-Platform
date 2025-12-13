@@ -1644,8 +1644,9 @@ body.sidebar-collapsed .flowing-footer {
   flex: 1;
   opacity: 1;
   transition: all 0.3s ease;
-  overflow: hidden;
+  overflow: auto; /* allow inner scrolling */
   min-height: 0;
+  padding-top: var(--flowing-header-height, 72px); /* reserve space for absolute header */
 }
 
 /* Copilot Header */
@@ -1658,13 +1659,12 @@ body.sidebar-collapsed .flowing-footer {
   /* Keep glassmorphism but add a subtle purple radial accent to reduce perceived flashing */
   background: radial-gradient(circle at 8% 30%, rgba(139,92,246,0.06) 0%, rgba(139,92,246,0.03) 18%, transparent 35%), rgba(255,255,255,0.56);
   backdrop-filter: blur(10px) saturate(1.02);
-}
-
-/* Keep footer header fixed within the footer so toggling description doesn't move it */
 .flowing-header {
-  position: sticky;
+  position: absolute; /* position at top of footer */
   top: 0;
-  z-index: 40; /* above footer content but below global overlays */
+  left: 0;
+  right: 0;
+  z-index: 60; /* above footer content */
 }
 
 [data-theme="dark"] .flowing-header {
