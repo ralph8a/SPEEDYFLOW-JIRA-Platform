@@ -19,6 +19,7 @@ COPY . .
 EXPOSE 5005
 
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 # Use gunicorn to serve the Flask app on 0.0.0.0:5005
 CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5005", "server:app"]

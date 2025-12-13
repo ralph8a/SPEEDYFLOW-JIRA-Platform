@@ -8,6 +8,13 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import time
 import logging
+from pathlib import Path
+
+# Try to import unified predictor
+try:
+    from predictor import UnifiedMLPredictor
+except Exception:
+    UnifiedMLPredictor = None
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -159,6 +166,24 @@ async def models_status():
         "avg_latency_ms": predictor.avg_latency_ms,
         "cache_size": predictor.get_cache_size()
     }
+
+
+@app.on_event("startup")
+async def initialize_predictor():
+    global predictor
+    if predictor is not None:
+        return
+    models_path = Path(__file__).resolve().parent / "models"
+    try:
+        if UnifiedMLPredictor is not None:
+            predictor = UnifiedMLPredictor(models_dir=str(models_path), fallback_mode=True)
+            logger.info(f"Predictor initialized, models: {predictor.get_loaded_models()}")
+        else:
+            logger.warning("UnifiedMLPredictor not available; running with fallback disabled")
+            predictor = None
+    except Exception as e:
+        logger.error(f"Failed to initialize predictor on startup: {e}")
+        predictor = None
 
 # ==================== PREDICCIONES UNIFICADAS ====================
 

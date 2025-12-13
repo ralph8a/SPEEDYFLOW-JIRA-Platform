@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory, render_template
 from flask_cors import CORS
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from utils.config import config  # noqa: E402
 from utils.decorators import (  # noqa: E402
