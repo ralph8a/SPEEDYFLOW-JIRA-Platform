@@ -8,13 +8,11 @@ from utils.common import JiraApiError
 from utils.api_migration import get_api_client
 from api.blueprints.flowing.contextual_suggestions import get_contextual_suggestions
 from utils.embedding_manager import get_embedding_manager
-from utils.ollama_client import get_ollama_client
 import logging
 
 logger = logging.getLogger(__name__)
 
 flowing_semantic_bp = Blueprint('flowing_semantic', __name__)
-
 
 @flowing_semantic_bp.route('/api/flowing/contextual-suggestions', methods=['POST'])
 def get_suggestions():
@@ -70,7 +68,6 @@ def get_suggestions():
             'count': 0
         }), 500
 
-
 @flowing_semantic_bp.route('/api/flowing/semantic-search', methods=['POST'])
 def semantic_search():
     """
@@ -97,7 +94,7 @@ def semantic_search():
                 "similarity": 0.85
             }
         ],
-        "using_ollama": true
+        "": true
     }
     """
     try:
@@ -107,11 +104,9 @@ def semantic_search():
         limit = data.get('limit', 5)
         min_similarity = data.get('min_similarity', 0.5)
         
-        ollama = get_ollama_client()
-        embedding_mgr = get_embedding_manager()
+                embedding_mgr = get_embedding_manager()
         
-        # Verificar si Ollama está disponible
-        if not ollama.is_available():
+                if not ollama.is_available():
             logger.warning("Ollama not available, falling back to JQL search")
             # Fallback a búsqueda JQL básica
             return _fallback_jql_search(query, issue_key, limit)
@@ -171,14 +166,13 @@ def semantic_search():
             'success': True,
             'results': results,
             'count': len(results),
-            'using_ollama': True,
+            '': True,
             'query': query[:100]  # Preview
         })
         
     except Exception as e:
         logger.error(f"Error in semantic search: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 def _fallback_jql_search(query: str, issue_key: str, limit: int):
     """Fallback JQL search cuando Ollama no está disponible"""
@@ -213,14 +207,13 @@ def _fallback_jql_search(query: str, issue_key: str, limit: int):
             'success': True,
             'results': similar_tickets,
             'count': len(similar_tickets),
-            'using_ollama': False,
+            '': False,
             'fallback': 'JQL search (Ollama not available)'
         })
         
     except Exception as e:
         logger.error(f"Error in fallback search: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @flowing_semantic_bp.route('/api/flowing/detect-duplicates', methods=['POST'])
 def detect_duplicates():
@@ -239,7 +232,7 @@ def detect_duplicates():
         "success": true,
         "original_issue": "MSM-123",
         "duplicates": [...],
-        "using_ollama": true
+        "": true
     }
     """
     try:
@@ -254,8 +247,7 @@ def detect_duplicates():
                 'error': 'issue_key is required'
             }), 400
         
-        ollama = get_ollama_client()
-        embedding_mgr = get_embedding_manager()
+                embedding_mgr = get_embedding_manager()
         
         # Obtener datos del issue original
         issue_data = embedding_mgr.find_issue_in_cache(issue_key)
@@ -267,8 +259,7 @@ def detect_duplicates():
         
         query_text = embedding_mgr.get_issue_text(issue_data)
         
-        # Si Ollama no está disponible, fallback a JQL
-        if not ollama.is_available():
+                if not ollama.is_available():
             logger.warning("Ollama not available for duplicate detection")
             return _fallback_duplicate_detection(issue_key, query_text, limit)
         
@@ -305,14 +296,13 @@ def detect_duplicates():
             'original_issue': issue_key,
             'duplicates': results,
             'count': len(results),
-            'using_ollama': True,
+            '': True,
             'threshold': min_similarity
         })
         
     except Exception as e:
         logger.error(f"Error detecting duplicates: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 def _fallback_duplicate_detection(issue_key: str, query_text: str, limit: int):
     """Fallback para detección de duplicados sin Ollama"""
@@ -342,7 +332,7 @@ def _fallback_duplicate_detection(issue_key: str, query_text: str, limit: int):
             'original_issue': issue_key,
             'duplicates': duplicates,
             'count': len(duplicates),
-            'using_ollama': False,
+            '': False,
             'fallback': 'JQL search (Ollama not available)'
         })
         

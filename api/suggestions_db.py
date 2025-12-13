@@ -179,7 +179,6 @@ class SuggestionsDatabase:
             'remaining': len(self.data['suggestions'])
         }
 
-
 # Global instance
 _db_instance = None
 

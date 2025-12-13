@@ -188,8 +188,7 @@ async function initApp() {
   // No need to apply theme here - ThemeManager handles it from the start
   console.log('✨ Theme managed by ThemeManager');
   
-  // Warm up Ollama in background (non-blocking) for faster comment suggestions
-  warmupOllama();
+    warmupOllama();
   
   // Initialize background manager (AI backgrounds) - non-blocking
   if (typeof backgroundManager !== 'undefined' && backgroundManager.init) {
@@ -2519,7 +2518,6 @@ function applyCardLayout() {
   });
 }
 
-
 function transitionIssue(issueKey, transitionId) {
   console.log(`Transitioning ${issueKey} with transition ${transitionId}`);
   // Implementar lógica de transición aquí
@@ -3907,12 +3905,7 @@ window.openIssueDetails = openIssueDetails;
  * Warm up Ollama model in background for faster suggestions
  * First call always takes longer, this preloads the model
  */
-async function warmupOllama() {
-  try {
-    console.log('🔥 Warming up Ollama model in background...');
-    const response = await fetch('/api/ml/comments/warmup', {
-      method: 'GET'
-    });
+async );
     
     if (response.ok) {
       const data = await response.json();

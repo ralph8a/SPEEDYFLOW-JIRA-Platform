@@ -18,13 +18,10 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Import Ollama for AI-powered suggestions
-from api.ai_ollama import ollama_engine
 # Import ML training database
 from api.ml_training_db import get_ml_training_db
 
 logger = logging.getLogger(__name__)
-
 
 class CommentSuggestionEngine:
     """
@@ -339,7 +336,7 @@ class CommentSuggestionEngine:
                     priority=priority,
                     all_comments=all_comments or [],
                     suggestions=final_suggestions,
-                    model="ollama-llama3.2"
+                    model=""
                 )
             except Exception as e:
                 logger.error(f"Error saving to ML training DB: {e}")
@@ -424,8 +421,7 @@ class CommentSuggestionEngine:
         """Get AI-powered suggestions using Ollama with fallback to pattern-based suggestions"""
         suggestions = []
         
-        # Check if Ollama is available
-        if not ollama_engine.is_available:
+                if not ollama_engine.is_available:
             logger.warning("⚠️ Ollama not available - using pattern-based fallback")
             return self._get_fallback_suggestions(ticket_text, status, comments_text, all_comments)
         
@@ -502,17 +498,14 @@ Formato (una sugerencia por línea):
         except Exception as e:
             logger.error(f"Error generating AI suggestions: {e}")
         
-        # Fallback if Ollama fails
-        return [{
-            "text": "Error al generar sugerencias con IA. Por favor verifica que Ollama esté ejecutándose: ollama serve",
+                return [{
+            "",
             "type": "diagnostic",
             "confidence": 0.5
         }]
 
-
 # Singleton instance
 _engine_instance: Optional[CommentSuggestionEngine] = None
-
 
 def get_suggestion_engine() -> CommentSuggestionEngine:
     """Get or create the global suggestion engine instance"""
@@ -521,12 +514,10 @@ def get_suggestion_engine() -> CommentSuggestionEngine:
         _engine_instance = CommentSuggestionEngine()
     return _engine_instance
 
-
 def train_suggestion_engine() -> Dict[str, any]:
     """Train the suggestion engine (convenience function)"""
     engine = get_suggestion_engine()
     return engine.train()
-
 
 def get_comment_suggestions(
     ticket_summary: str,

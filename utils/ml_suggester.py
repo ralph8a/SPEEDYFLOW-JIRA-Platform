@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 _sentence_transformer = None
 _cosine_similarity = None
 
-
 def _get_transformer():
     """Lazy load de SentenceTransformer"""
     global _sentence_transformer
@@ -43,7 +42,6 @@ def _get_transformer():
             raise
     return _sentence_transformer
 
-
 def _get_cosine_similarity():
     """Lazy load de cosine_similarity"""
     global _cosine_similarity
@@ -51,7 +49,6 @@ def _get_cosine_similarity():
         from sklearn.metrics.pairwise import cosine_similarity
         _cosine_similarity = cosine_similarity
     return _cosine_similarity
-
 
 class MLSuggester:
     """ML-based suggester using semantic similarity"""
@@ -273,10 +270,8 @@ class MLSuggester:
         """Check if suggester is ready to make predictions"""
         return self.embeddings is not None and self.issues_data is not None
 
-
 # Global instance
 _ml_suggester = None
-
 
 def get_ml_suggester() -> MLSuggester:
     """Get global ML suggester instance"""

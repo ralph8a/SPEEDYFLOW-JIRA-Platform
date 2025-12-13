@@ -15,7 +15,6 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
-
 def compress_cache_file():
     """Compress the JSON cache file to .json.gz"""
     
@@ -108,7 +107,6 @@ def compress_cache_file():
         print(f"❌ Error compressing: {e}")
         return False
 
-
 def print_file_stats(file_path: Path):
     """Print stats for a file"""
     if not file_path.exists():
@@ -135,7 +133,6 @@ def print_file_stats(file_path: Path):
     except Exception as e:
         print(f"   Could not read file: {e}")
 
-
 def main():
     """Main entry point"""
     print()
@@ -151,7 +148,6 @@ def main():
         sys.exit(1)
     
     print()
-
 
 if __name__ == "__main__":
     main()

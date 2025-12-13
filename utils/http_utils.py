@@ -11,7 +11,6 @@ from typing import Callable, Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-
 def retry_on_error(max_retries: int = 3, delay: float = 1.0, backoff_factor: float = 2.0):
     """
     Decorator for retrying operations on failure with exponential backoff
@@ -52,7 +51,6 @@ def retry_on_error(max_retries: int = 3, delay: float = 1.0, backoff_factor: flo
             raise last_error
         return wrapper
     return decorator
-
 
 def retry_on_http_error(
     max_retries: int = 3, 
@@ -114,7 +112,6 @@ def retry_on_http_error(
         return wrapper
     return decorator
 
-
 def log_api_call(level: str = "DEBUG"):
     """
     Decorator for logging API calls with timing information
@@ -150,7 +147,6 @@ def log_api_call(level: str = "DEBUG"):
                 raise
         return wrapper
     return decorator
-
 
 def rate_limit(calls: int, period: float):
     """

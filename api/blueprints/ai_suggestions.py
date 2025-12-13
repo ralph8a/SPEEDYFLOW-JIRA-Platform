@@ -31,7 +31,6 @@ logger = logging.getLogger(__name__)
 
 ai_suggestions_bp = Blueprint('ai_suggestions', __name__)
 
-
 @ai_suggestions_bp.route('/api/ai/analyze-queue', methods=['POST'])
 @handle_api_error
 @json_response
@@ -276,7 +275,6 @@ def api_analyze_queue():
         logger.error(f"Error analyzing queue: {e}")
         return {'error': str(e)}, 500
 
-
 @ai_suggestions_bp.route('/api/ai/suggest-updates', methods=['POST'])
 @handle_api_error
 @json_response
@@ -345,7 +343,6 @@ def api_suggest_field_updates():
     except Exception as e:
         logger.error(f"Error generating suggestions for {issue_key}: {e}")
         return {'error': str(e), 'issue_key': issue_key}, 500
-
 
 def _analyze_and_suggest(
     issue_key: str,
@@ -701,7 +698,6 @@ def _analyze_and_suggest(
     
     return suggestions
 
-
 def _suggest_severity(
     summary: str,
     description: str,
@@ -796,7 +792,6 @@ def _suggest_severity(
     
     return 'Normal', 0.5, 'Valor por defecto (sin indicadores claros)'
 
-
 def _suggest_priority(summary: str, description: str) -> tuple[str, float, str]:
     """Sugiere prioridad basada en el contenido."""
     text = f"{summary} {description}".lower()
@@ -811,7 +806,6 @@ def _suggest_priority(summary: str, description: str) -> tuple[str, float, str]:
         return 'Low', 0.75, 'Prioridad baja'
     
     return 'Medium', 0.5, 'Prioridad por defecto'
-
 
 def _suggest_labels(
     summary: str,
