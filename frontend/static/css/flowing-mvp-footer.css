@@ -2185,6 +2185,48 @@ body.theme-dark .footer-two-columns .panel-card {
 .footer-two-columns .cycle-name { font-weight:600; color:var(--ff-accent-strong,#4c1d95); }
 .footer-two-columns .cycle-status { font-size:12px; padding:4px 8px; border-radius:999px; background: rgba(0,0,0,0.03); }
 
+/* Risk card styles (prototype-like) */
+.risk-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02));
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.risk-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--ff-accent-strong,#4c1d95), var(--ff-accent,#6366f1));
+}
+
+.risk-gauge { width: 72px; height: 72px; position: relative; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+.risk-gauge-svg { transform: rotate(-90deg); }
+.risk-percent { position: absolute; font-weight:700; font-size:14px; }
+
+.risk-info { flex:1; min-width:0; padding-left: 8px; }
+.risk-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+.risk-title { font-weight:700; color: var(--ff-text-primary,#1f2937); font-size:14px; }
+.risk-badge { font-weight:700; font-size:12px; padding:4px 8px; border-radius:999px; }
+
+.risk-body { display:flex; flex-direction:column; gap:6px; }
+.risk-line { display:flex; justify-content:space-between; color: var(--ff-text-muted,#9ca3af); font-size:13px; }
+.risk-line-value.risk-warning { color: #f59e0b; font-weight:700; }
+.risk-note { margin-top:6px; color:#b45309; font-weight:600; font-size:12px; display:flex; align-items:center; gap:8px; }
+
+@media (prefers-color-scheme: dark) {
+  .risk-card { background: rgba(17,24,39,0.18); border-color: rgba(255,255,255,0.04); }
+  .risk-card::before { background: linear-gradient(180deg, #8b5cf6, #6366f1); }
+}
+
 
 @media (max-width: 1100px) {
   .footer-two-columns { grid-template-columns: 1fr; }
