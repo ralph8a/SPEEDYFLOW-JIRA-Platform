@@ -21,12 +21,6 @@ class ReportsComponent {
         } else {
             console.log('⏳ Reports: Waiting for cache...');
             
-            // Wait for cache ready event
-            window.addEventListener('ml-dashboard-ready', () => {
-                console.log('✅ Reports: Cache ready, loading data');
-                this.loadFromCache();
-            });
-            
             // Fallback: If no preload after 10s, use API
             setTimeout(() => {
                 if (!this.isCacheReady()) {

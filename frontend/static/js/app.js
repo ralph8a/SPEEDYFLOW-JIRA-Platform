@@ -402,9 +402,6 @@ async function checkAndApplyInitialFilters() {
 function setupEventListeners() {
   // 💡 Show first-time tooltip for save button
   showFirstTimeTooltip();
-  
-  // NOTE: ML Dashboard Button listener is now in ml-priority-badges.js
-  // (registered when the button is created dynamically)
 
   // NEW FILTER SELECTORS (from header-menu-controller.js)
   const serviceDeskFilterSelect = document.getElementById('serviceDeskSelectFilter');
