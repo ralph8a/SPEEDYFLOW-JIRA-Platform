@@ -2073,6 +2073,24 @@ body.sidebar-collapsed .flowing-footer {
 .footer-two-columns .left-column { box-sizing: border-box; }
 .footer-two-columns .right-column { box-sizing: border-box; }
 
+/* Make the two-column area fill the footer content area (excluding header) and scroll internally */
+.flowing-footer .footer-two-columns,
+.ml-footer .footer-two-columns {
+  height: calc(var(--flowing-footer-height, 640px) - var(--flowing-header-height, 72px));
+  max-height: calc(100% - var(--flowing-header-height, 72px));
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+/* Ensure internal panels don't force overflow horizontally */
+.flowing-footer .footer-two-columns .panel,
+.flowing-footer .footer-two-columns .panel-card,
+.ml-footer .footer-two-columns .panel,
+.ml-footer .footer-two-columns .panel-card {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 @media (max-width: 1100px) {
   .footer-two-columns { grid-template-columns: 1fr; }
 }

@@ -353,6 +353,12 @@ class FlowingFooter {
           const used = Math.min(delta, cap);
           document.documentElement.style.setProperty('--flowing-footer-height', h + 'px');
           document.documentElement.style.setProperty('--flowing-footer-translate', used + 'px');
+          // compute header height inside the footer so columns can size to remaining space
+          try {
+            const headerEl = this.footer.querySelector('.flowing-header, .ml-footer-header, .footer-header-left') || null;
+            const headerH = headerEl ? Math.round(headerEl.getBoundingClientRect().height) : 72;
+            document.documentElement.style.setProperty('--flowing-header-height', headerH + 'px');
+          } catch (err) { document.documentElement.style.setProperty('--flowing-header-height', '72px'); }
           document.body.classList.add('flowing-footer-expanded');
         } catch (err) { /* ignore */ }
       }, 80);
@@ -370,6 +376,8 @@ class FlowingFooter {
     try { document.body.classList.remove('flowing-footer-expanded'); } catch(e){}
     try { if (this.footer) this.footer.style.maxHeight = ''; } catch(e){}
     try { document.documentElement.style.removeProperty('--flowing-footer-height'); } catch(e){}
+    try { document.documentElement.style.removeProperty('--flowing-header-height'); } catch(e){}
+    try { document.documentElement.style.removeProperty('--flowing-footer-translate'); } catch(e){}
     
     // Switch back to chat view when collapsing
     this.switchToChatView();
