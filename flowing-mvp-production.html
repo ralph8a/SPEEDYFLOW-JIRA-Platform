@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flowing MVP - Integrated Prototype</title>
-    <link rel="stylesheet" href="styles-footer-v2.css">
+    <title>Flowing MVP - Clean Footer Component</title>
+    <link rel="stylesheet" href="prototype/styles-footer-v2.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ===== CORE FOOTER STYLES ===== */
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        }
+
         /* Balanced view hidden by default */
         #balancedView {
             display: none;
@@ -15,12 +23,11 @@
             position: relative;
             overflow-y: auto;
             max-height: 70vh;
-            /* CRITICAL: Force viewport containment */
             contain: layout style paint;
             will-change: transform;
             transform: translateZ(0);
         }
-        
+
         /* Override ml-footer styles when inside Flowing MVP */
         #balancedView .ml-footer {
             position: relative !important;
@@ -31,7 +38,7 @@
             max-width: 100% !important;
             transform: none !important;
         }
-        
+
         /* FORCE all elements inside balancedView to stay contained */
         #balancedView,
         #balancedView * {
@@ -43,7 +50,7 @@
             transform: none !important;
             max-width: 100% !important;
         }
-        
+
         /* Ensure balanced content stays inside footer */
         #balancedView .ticket-description-section,
         #balancedView .footer-two-columns,
@@ -54,7 +61,7 @@
             max-width: 100% !important;
             overflow: hidden !important;
         }
-        
+
         /* Container must be constrained */
         #balancedContentContainer {
             position: relative !important;
@@ -63,33 +70,27 @@
             overflow-x: hidden !important;
             contain: layout style paint !important;
         }
-        
+
         /* NUCLEAR OPTION: Force everything inside flowing-footer to stay contained */
         .flowing-footer {
             contain: layout style paint !important;
             isolation: isolate !important;
             transform: translateZ(0) !important;
         }
-        
+
         /* Prevent any child from escaping the footer viewport */
         .flowing-footer * {
             position: relative !important;
             contain: style !important;
         }
-        
-        /* Hide any duplicate headers that might appear */
-        #balancedView .header,
-        #balancedView header {
-            display: none !important;
-        }
-        
+
         /* Keep essential fields grid as 3 columns */
         .essential-fields-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr !important;
             gap: 15px !important;
         }
-        
+
         /* Enhanced ML suggestions with premium design */
         .ml-suggestion-checkbox {
             position: relative !important;
@@ -102,17 +103,17 @@
             box-shadow: 0 1px 3px rgba(99, 102, 241, 0.1) !important;
             transition: all 0.2s ease !important;
         }
-        
+
         .ml-suggestion-checkbox:hover {
             transform: translateY(-1px) !important;
             box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
             border-color: #c7d2fe !important;
         }
-        
+
         .ml-suggestion-checkbox:hover .ml-detail {
             display: block !important;
         }
-        
+
         .ml-suggestion-checkbox label {
             display: flex !important;
             align-items: center !important;
@@ -121,7 +122,7 @@
             line-height: 1.2 !important;
             cursor: pointer !important;
         }
-        
+
         .ml-suggestion-checkbox .ml-icon {
             font-size: 10px !important;
             background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
@@ -129,7 +130,7 @@
             -webkit-text-fill-color: transparent !important;
             background-clip: text !important;
         }
-        
+
         .ml-suggestion-checkbox .ml-text {
             font-size: 10px !important;
             flex-grow: 1 !important;
@@ -137,7 +138,7 @@
             color: #374151 !important;
             font-weight: 500 !important;
         }
-        
+
         .ml-suggestion-checkbox .ml-conf {
             font-size: 9px !important;
             padding: 2px 6px !important;
@@ -148,11 +149,11 @@
             font-weight: 600 !important;
             box-shadow: 0 1px 2px rgba(79, 70, 229, 0.3) !important;
         }
-        
+
         .ml-detail {
             display: none !important;
         }
-        
+
         .ml-suggestion-checkbox:hover .ml-detail {
             display: block !important;
             position: absolute !important;
@@ -169,14 +170,14 @@
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15) !important;
             backdrop-filter: blur(8px) !important;
         }
-        
+
         .ml-detail .ml-explain {
             font-size: 9px !important;
             margin-bottom: 4px !important;
             color: #4b5563 !important;
             line-height: 1.4 !important;
         }
-        
+
         .ml-detail .ml-source {
             font-size: 8px !important;
             opacity: 0.7 !important;
@@ -187,7 +188,7 @@
             border-radius: 3px !important;
             display: inline-block !important;
         }
-        
+
         /* Enhanced SLA Progress section */
         .sla-progress-section {
             padding: 12px !important;
@@ -195,31 +196,31 @@
             border-radius: 8px !important;
             border: 1px solid #fee !important;
         }
-        
+
         .sla-time-info {
             display: flex !important;
             justify-content: space-between !important;
             margin-bottom: 8px !important;
         }
-        
+
         .time-remaining {
             font-size: 11px !important;
             font-weight: bold !important;
             color: #d73027 !important;
         }
-        
+
         .sla-target {
             font-size: 10px !important;
             color: #666 !important;
         }
-        
+
         .sla-progress-container {
             display: flex !important;
             align-items: center !important;
             gap: 8px !important;
             margin-bottom: 6px !important;
         }
-        
+
         .sla-progress-section .sla-bar {
             height: 16px !important;
             width: 100% !important;
@@ -228,7 +229,7 @@
             position: relative !important;
             overflow: hidden !important;
         }
-        
+
         .sla-bar-fill.critical {
             background: linear-gradient(90deg, #ff4757, #ff3838) !important;
             height: 100% !important;
@@ -238,14 +239,14 @@
             justify-content: center !important;
             position: relative !important;
         }
-        
+
         .sla-progress-text {
             color: white !important;
             font-size: 10px !important;
             font-weight: bold !important;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
         }
-        
+
         .sla-status-indicator {
             width: 20px !important;
             height: 20px !important;
@@ -255,26 +256,26 @@
             justify-content: center !important;
             font-size: 10px !important;
         }
-        
+
         .sla-status-indicator.critical {
             background: #ff4757 !important;
             color: white !important;
             animation: pulse 2s infinite !important;
         }
-        
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.6; }
             100% { opacity: 1; }
         }
-        
+
         .sla-bottom-info {
             display: flex !important;
             justify-content: space-between !important;
             font-size: 9px !important;
             color: #888 !important;
         }
-        
+
         /* Enhanced SLA Risk section */
         .sla-risk-section {
             padding: 12px !important;
@@ -282,14 +283,14 @@
             border-radius: 8px !important;
             border: 1px solid #ffeaa7 !important;
         }
-        
+
         .risk-indicator-container {
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
             gap: 8px !important;
         }
-        
+
         .risk-gauge {
             position: relative !important;
             width: 45px !important;
@@ -300,7 +301,7 @@
             border: 3px solid #fff !important;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
         }
-        
+
         .gauge-center {
             position: absolute !important;
             top: 50% !important;
@@ -317,21 +318,21 @@
             align-items: center !important;
             justify-content: center !important;
         }
-        
+
         .risk-percentage {
             font-size: 10px !important;
             font-weight: bold !important;
             color: #d73027 !important;
             line-height: 1 !important;
         }
-        
+
         .risk-label {
             font-size: 7px !important;
             color: #666 !important;
             text-transform: uppercase !important;
             line-height: 0.9 !important;
         }
-        
+
         .risk-details {
             display: flex !important;
             flex-direction: column !important;
@@ -339,18 +340,18 @@
             gap: 4px !important;
             flex: 1 !important;
         }
-        
+
         .risk-factor {
             display: flex !important;
             align-items: center !important;
             gap: 4px !important;
             font-size: 9px !important;
         }
-        
+
         .factor-icon {
             font-size: 10px !important;
         }
-        
+
         .btn-sla-analyze {
             font-size: 9px !important;
             padding: 4px 8px !important;
@@ -361,7 +362,7 @@
             cursor: pointer !important;
             margin-top: 4px !important;
         }
-        
+
         /* Subtle section divider */
         .section-divider {
             height: 1px !important;
@@ -369,7 +370,7 @@
             margin: 20px 0 !important;
             opacity: 1 !important;
         }
-        
+
         /* Enhanced ML Actions section to match interface */
         .ml-actions-section {
             background: transparent !important;
@@ -378,7 +379,7 @@
             padding: 0 !important;
             box-shadow: none !important;
         }
-        
+
         .ml-actions-section h4 {
             margin: 0 0 8px 0 !important;
             font-size: 12px !important;
@@ -389,12 +390,12 @@
             gap: 6px !important;
             line-height: 1.3 !important;
         }
-        
+
         .ml-actions-section h4 i {
             font-size: 13px !important;
             color: #6366f1 !important;
         }
-        
+
         /* Adjust ML banner for single line */
         .ml-suggestions-banner {
             display: flex !important;
@@ -407,17 +408,17 @@
             margin-bottom: 12px !important;
             margin-top: 0 !important;
         }
-        
+
         .ml-suggestions-banner .banner-icon {
             flex-shrink: 0 !important;
             font-size: 18px !important;
         }
-        
+
         .ml-suggestions-banner .banner-content {
             flex: 1 !important;
             display: block !important;
         }
-        
+
         .ml-suggestions-banner h4 {
             margin: 0 !important;
             font-size: 12px !important;
@@ -428,12 +429,12 @@
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
-        
+
         .banner-subtitle {
             color: #6b7280 !important;
             font-weight: 400 !important;
         }
-        
+
         /* Section label styles */
         .section-label {
             cursor: pointer !important;
@@ -441,38 +442,38 @@
             align-items: center !important;
             gap: 6px !important;
         }
-        
+
         #descriptionChevron {
             margin-left: auto !important;
             font-size: 12px !important;
             transition: transform 0.2s ease !important;
         }
-        
+
         /* Hidden sections by default */
         .sla-combined-section {
             display: none !important;
         }
-        
+
         #extraDetailsContent {
             display: none !important;
         }
-        
+
         /* SLA progress widths */
         .sla-92-percent {
             width: 92% !important;
         }
-        
+
         /* Gauge rotation */
         .gauge-fill {
             position: absolute !important;
             width: 100% !important;
             height: 100% !important;
         }
-        
+
         .gauge-165 {
             transform: rotate(165deg) !important;
         }
-        
+
         /* Input mode badge styles */
         .input-mode-badge {
             background: transparent !important;
@@ -482,12 +483,12 @@
             font-size: 12px !important;
             margin: 0 !important;
         }
-        
+
         /* Suggested comments styling */
         .suggested-comments {
             margin-bottom: 4px !important;
         }
-        
+
         .suggestion-item {
             background: rgba(255, 255, 255, 0.7) !important;
             border: 1px solid #e5e7eb !important;
@@ -499,21 +500,21 @@
             gap: 10px !important;
             transition: all 0.2s ease !important;
         }
-        
+
         .suggestion-item:hover {
             background: rgba(255, 255, 255, 0.9) !important;
             border-color: #d1d5db !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
         }
-        
+
         .suggestion-text {
             flex: 1 !important;
             font-size: 11px !important;
             color: #4b5563 !important;
             line-height: 1.4 !important;
         }
-        
+
         .btn-copy {
             padding: 4px 6px !important;
             background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
@@ -524,18 +525,18 @@
             cursor: pointer !important;
             transition: all 0.2s ease !important;
         }
-        
+
         .btn-copy:hover {
             background: linear-gradient(135deg, #e5e7eb, #d1d5db) !important;
             color: #374151 !important;
         }
-        
+
         /* Quick actions styling */
         .quick-actions {
             display: flex !important;
             gap: 8px !important;
         }
-        
+
         .action-btn {
             padding: 6px 12px !important;
             background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
@@ -547,13 +548,13 @@
             cursor: pointer !important;
             transition: all 0.2s ease !important;
         }
-        
+
         .action-btn:hover {
             background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3) !important;
         }
-        
+
         /* Enhanced Chat/Comments styling to match ML Actions */
         .mode-tabs {
             background: transparent !important;
@@ -564,44 +565,44 @@
             display: flex !important;
             gap: 4px !important;
         }
-        
+
         /* Left column border divider */
         .left-column {
             border-right: 1px solid #7c3aed !important;
             padding-right: 20px !important;
             margin-right: 20px !important;
         }
-        
+
         /* Right column padding */
         .right-column {
             padding-left: 0 !important;
         }
-        
+
         .comments-ai-container {
             padding: 0 !important;
         }
-        
+
         /* Add spacing to internal sections */
         .comments-ai-container > .section-divider {
             margin: 16px 0 !important;
         }
-        
+
         .comments-ai-container > .ml-actions-section {
             padding-bottom: 4px !important;
         }
-        
+
         .comments-ai-container > .mode-tabs {
             padding: 12px 0 !important;
         }
-        
+
         .comments-ai-container > .mode-content {
             padding: 12px 0 !important;
         }
-        
+
         .comments-ai-container > .input-area {
             padding-top: 12px !important;
         }
-        
+
         .mode-tab {
             flex: 1 !important;
             padding: 8px 12px !important;
@@ -618,22 +619,22 @@
             justify-content: center !important;
             gap: 6px !important;
         }
-        
+
         .mode-tab:hover {
             color: #374151 !important;
             background: rgba(255, 255, 255, 0.5) !important;
         }
-        
+
         .mode-tab.active {
             background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
             color: white !important;
             box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3) !important;
         }
-        
+
         .mode-tab i {
             font-size: 11px !important;
         }
-        
+
         /* Comments panel styling */
         .mode-panel[data-panel="comments"] {
             background: transparent !important;
@@ -643,7 +644,7 @@
             max-height: 300px !important;
             overflow-y: auto !important;
         }
-        
+
         .comment-item {
             background: rgba(255, 255, 255, 0.8) !important;
             border: 1px solid #e5e7eb !important;
@@ -652,21 +653,21 @@
             margin-bottom: 12px !important;
             transition: all 0.2s ease !important;
         }
-        
+
         .comment-item:hover {
             background: rgba(255, 255, 255, 0.95) !important;
             border-color: #d1d5db !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
         }
-        
+
         .comment-header {
             display: flex !important;
             align-items: center !important;
             gap: 8px !important;
             margin-bottom: 8px !important;
         }
-        
+
         .comment-avatar {
             width: 24px !important;
             height: 24px !important;
@@ -679,25 +680,25 @@
             font-size: 10px !important;
             font-weight: bold !important;
         }
-        
+
         .comment-author {
             font-weight: 600 !important;
             color: #374151 !important;
             font-size: 11px !important;
         }
-        
+
         .comment-time {
             color: #6b7280 !important;
             font-size: 9px !important;
             margin-left: auto !important;
         }
-        
+
         .comment-text {
             color: #4b5563 !important;
             font-size: 11px !important;
             line-height: 1.4 !important;
         }
-        
+
         /* AI Chat panel styling */
         .mode-panel[data-panel="ai"] {
             background: transparent !important;
@@ -707,7 +708,7 @@
             max-height: 300px !important;
             overflow-y: auto !important;
         }
-        
+
         .ai-message {
             background: rgba(255, 255, 255, 0.8) !important;
             border: 1px solid #e5e7eb !important;
@@ -715,25 +716,25 @@
             padding: 12px !important;
             margin-bottom: 12px !important;
         }
-        
+
         .ai-message.user {
             background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
             border-color: #bfdbfe !important;
             margin-left: 20px !important;
         }
-        
+
         .ai-message.assistant {
             background: linear-gradient(135deg, #f0f9ff, #e0f2fe) !important;
             border-color: #7dd3fc !important;
             margin-right: 20px !important;
         }
-        
+
         .ai-input-area {
             margin-top: 12px !important;
             display: flex !important;
             gap: 8px !important;
         }
-        
+
         .ai-input {
             flex: 1 !important;
             padding: 8px 12px !important;
@@ -742,7 +743,7 @@
             font-size: 12px !important;
             background: rgba(255, 255, 255, 0.9) !important;
         }
-        
+
         .ai-send-btn {
             padding: 8px 12px !important;
             background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
@@ -752,12 +753,12 @@
             cursor: pointer !important;
             transition: all 0.2s ease !important;
         }
-        
+
         .ai-send-btn:hover {
             background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
             transform: translateY(-1px) !important;
         }
-        
+
         /* Fix Chat-Only Input Styling */
         .flowing-input-area {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
@@ -766,7 +767,7 @@
             padding: 12px !important;
             margin-top: 16px !important;
         }
-        
+
         .flowing-context-badge {
             background: rgba(99, 102, 241, 0.1) !important;
             border: 1px solid #c7d2fe !important;
@@ -779,13 +780,13 @@
             align-items: center !important;
             gap: 6px !important;
         }
-        
+
         .flowing-input-wrapper {
             display: flex !important;
             gap: 8px !important;
             align-items: stretch !important;
         }
-        
+
         #flowingInput {
             flex: 1 !important;
             padding: 12px 16px !important;
@@ -797,17 +798,17 @@
             outline: none !important;
             transition: all 0.2s ease !important;
         }
-        
+
         #flowingInput:focus {
             border-color: #6366f1 !important;
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
             background: rgba(255, 255, 255, 1) !important;
         }
-        
+
         #flowingInput::placeholder {
             color: #9ca3af !important;
         }
-        
+
         .flowing-send-btn {
             padding: 12px 16px !important;
             background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
@@ -821,17 +822,17 @@
             justify-content: center !important;
             min-width: 48px !important;
         }
-        
+
         .flowing-send-btn:hover {
             background: linear-gradient(135deg, #4f46e5, #4338ca) !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
         }
-        
+
         .flowing-send-btn i {
             font-size: 14px !important;
         }
-        
+
         /* Comments AI Container - NUCLEAR: Remove white background completely */
         .comments-ai-container,
         div.comments-ai-container,
@@ -852,27 +853,27 @@
             color: inherit !important;
             font: inherit !important;
         }
-        
+
         /* Add internal spacing for child elements */
         .comments-ai-container > * {
             margin-bottom: 12px !important;
         }
-        
+
         .comments-ai-container > *:last-child {
             margin-bottom: 0 !important;
         }
-        
+
         /* Enforce child elements show their own backgrounds - OVERRIDE external CSS */
         #balancedView .comments-ai-container .comment-item,
         .comments-ai-container .comment-item {
             background: rgba(255, 255, 255, 0.8) !important;
         }
-        
+
         #balancedView .comments-ai-container .ai-message,
         .comments-ai-container .ai-message {
             background: rgba(255, 255, 255, 0.8) !important;
         }
-        
+
         #balancedView .comments-ai-container .suggestion-item,
         .comments-ai-container .suggestion-item {
             background: rgba(255, 255, 255, 0.7) !important;
@@ -880,44 +881,7 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <h1><i class="fas fa-rocket"></i> SPEEDYFLOW Flowing MVP</h1>
-            <span class="badge badge-beta">Integrated Prototype</span>
-        </div>
-        <div class="header-right">
-            <div class="ml-status">
-                <i class="fas fa-circle status-dot"></i>
-                <span>ML Service: <strong id="mlServiceStatus">Connected</strong></span>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Area - Ticket Board -->
-    <div class="main-content">
-        <div class="ticket-board">
-            <h2><i class="fas fa-columns"></i> Kanban Board</h2>
-            <div class="board-columns">
-                <div class="board-column">
-                    <h3>Abierto</h3>
-                    <div class="ticket-card">
-                        <div class="ticket-key">MSM-1234</div>
-                        <div class="ticket-summary">Error en API de autenticación</div>
-                        <div class="ticket-meta">
-                            <span class="priority high">Alta</span>
-                            <span class="assignee">Carlos Q.</span>
-                        </div>
-                        <button class="btn-ticket-details" onclick="showTicketDetails('MSM-1234')">
-                            <i class="fas fa-info-circle"></i> Ticket Details
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== FLOWING MVP FOOTER (Integrated) ===== -->
+    <!-- ===== FLOWING MVP FOOTER ONLY ===== -->
     <div id="flowingFooter" class="flowing-footer collapsed">
       <!-- Toggle Button -->
       <button id="flowingToggleBtn" class="flowing-toggle-btn" title="Flowing MVP Assistant">
@@ -969,459 +933,13 @@
 
         <!-- Balanced View (Hidden by default, shown when ticket selected) -->
         <div id="balancedView" class="balanced-view">
-          <!-- Integrated balanced content here -->
-          <div id='balancedContentContainer'><!-- Ticket Description (Full Width) -->
-            <div class="ticket-description-section">
-                <label class="section-label" onclick="toggleDescription()">
-                    <i class="fas fa-file-alt"></i> Description
-                    <i class="fas fa-chevron-down" id="descriptionChevron"></i>
-                </label>
-                <div class="ticket-description-content" id="ticketDescription">
-                    Los usuarios reportan que no pueden hacer login desde la aplicación móvil. El error aparece después de ingresar credenciales válidas. El problema comenzó esta mañana después del deploy de la versión 2.3.4.
-                </div>
-            </div>
-
-            <div class="section-divider"></div>
-
-            <div class="footer-two-columns">
-                <!-- LEFT COLUMN: Essential Fields + ML Suggestions (60%) -->
-                <div class="left-column">
-                    <!-- ML Suggestions Banner -->
-                    <div class="ml-suggestions-banner">
-                        <div class="banner-icon">
-                            <i class="fas fa-magic"></i>
-                        </div>
-                        <div class="banner-content">
-                            <h4>Analicé el ticket y tengo algunas sugerencias <span class="banner-subtitle">— Selecciona las que se acoplen mejor y presiona "Apply Selected"</span></h4>
-                        </div>
-                    </div>
-
-                    <!-- Essential Fields (3 columns) - ML fields first -->
-                    <div class="essential-fields-grid">
-                        <!-- FILA 1: Campos con ML Suggestions -->
-                        <!-- Priority -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-flag"></i> Priority
-                            </label>
-                            <select class="field-input" id="priorityField">
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high" selected>High</option>
-                                <option value="critical">Critical</option>
-                            </select>
-                            <!-- ML Suggestion with Checkbox -->
-                            <div class="ml-suggestion-checkbox" data-field="priority" data-value="high">
-                                <input type="checkbox" id="cb-priority" class="ml-cb" checked>
-                                <label for="cb-priority">
-                                    <span class="ml-icon">✨</span>
-                                    <span class="ml-text">ML: <strong>High</strong></span>
-                                    <span class="ml-conf">95%</span>
-                                </label>
-                                <div class="ml-detail">
-                                    <div class="ml-explain">Detected keywords: "login", "auth", frequent failures after deploy.</div>
-                                    <div class="ml-source">Model: priority-v2</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Assignee -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-user"></i> Assignee
-                            </label>
-                            <select class="field-input" id="assigneeField">
-                                <option value="">Unassigned</option>
-                                <option value="carlos">Carlos Q.</option>
-                                <option value="ana">Ana M.</option>
-                                <option value="luis">Luis P.</option>
-                            </select>
-                            <!-- ML Suggestion with Checkbox -->
-                            <div class="ml-suggestion-checkbox" data-field="assignee" data-value="carlos">
-                                <input type="checkbox" id="cb-assignee" class="ml-cb" checked>
-                                <label for="cb-assignee">
-                                    <span class="ml-icon">✨</span>
-                                    <span class="ml-text">ML: <strong>Carlos Q.</strong></span>
-                                    <span class="ml-conf">78%</span>
-                                </label>
-                                <div class="ml-detail">
-                                    <div class="ml-explain">Previous fixes and ownership on auth module.</div>
-                                    <div class="ml-source">Model: assignee-v1</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Labels -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-tags"></i> Labels
-                            </label>
-                            <div class="labels-container">
-                                <span class="label-tag">backend</span>
-                                <span class="label-tag">api</span>
-                                <button class="btn-add-label"><i class="fas fa-plus"></i></button>
-                            </div>
-                            <!-- ML Suggestion with Checkbox -->
-                            <div class="ml-suggestion-checkbox" data-field="labels" data-value="auth">
-                                <input type="checkbox" id="cb-labels" class="ml-cb" checked>
-                                <label for="cb-labels">
-                                    <span class="ml-icon">✨</span>
-                                    <span class="ml-text">ML: <strong>+auth</strong></span>
-                                    <span class="ml-conf">82%</span>
-                                </label>
-                                <div class="ml-detail">
-                                    <div class="ml-explain">Logs indicate auth-related stacktraces and endpoints.</div>
-                                    <div class="ml-source">Model: labels-v1</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- FILA 2: Campos importantes -->
-                        <!-- Status -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-tasks"></i> Status
-                            </label>
-                            <select class="field-input" id="statusField">
-                                <option value="open" selected>Open</option>
-                                <option value="in-progress">In Progress</option>
-                                <option value="resolved">Resolved</option>
-                                <option value="closed">Closed</option>
-                            </select>
-                        </div>
-
-                        <!-- Platform -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-mobile-alt"></i> Platform
-                            </label>
-                            <input type="text" class="field-input" value="Mobile iOS" readonly>
-                        </div>
-
-                        <!-- Reporter Area -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-map-marker-alt"></i> Reporter Area
-                            </label>
-                            <input type="text" class="field-input" value="Customer Support" readonly>
-                        </div>
-
-                        <!-- FILA 3: Información de reporter -->
-                        <!-- Reporter -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-user-circle"></i> Reporter
-                            </label>
-                            <input type="text" class="field-input" value="Juan Pérez" readonly>
-                        </div>
-
-                        <!-- Reporter Email -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-envelope"></i> Reporter Email
-                            </label>
-                            <input type="text" class="field-input" value="juan.perez@example.com" readonly>
-                        </div>
-
-                        <!-- Reporter Phone -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-phone"></i> Reporter Phone
-                            </label>
-                            <input type="text" class="field-input" value="+1 555-0123" readonly>
-                        </div>
-
-                        <!-- FILA 4: Detalles adicionales -->
-                        <!-- Tipo de solicitud -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-clipboard-list"></i> Tipo de solicitud
-                            </label>
-                            <input type="text" class="field-input" value="Bug" readonly>
-                        </div>
-
-                        <!-- SLA Monitor (columna 1) -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-tachometer-alt"></i> SLA Monitor
-                            </label>
-                            <div class="sla-progress-section">
-                                <div class="sla-time-info">
-                                    <span class="time-remaining">2h 15m remaining</span>
-                                    <span class="sla-target">Target: 4h</span>
-                                </div>
-                                <div class="sla-progress-container">
-                                    <div class="sla-bar">
-                                        <div class="sla-bar-fill critical sla-92-percent">
-                                            <div class="sla-progress-text">92%</div>
-                                        </div>
-                                    </div>
-                                    <div class="sla-status-indicator critical">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </div>
-                                </div>
-                                <div class="sla-bottom-info">
-                                    <span class="sla-started">Started: 2h ago</span>
-                                    <span class="sla-due">Due: 14:30</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SLA Breach Risk (columna 2) -->
-                        <div class="field-wrapper">
-                            <label class="field-label">
-                                <i class="fas fa-shield-alt"></i> Breach Analytics
-                            </label>
-                            <div class="sla-risk-section">
-                                <div class="risk-indicator-container">
-                                    <div class="risk-gauge">
-                                        <div class="gauge-arc">
-                                            <div class="gauge-fill gauge-165"></div>
-                                            <div class="gauge-center">
-                                                <span class="risk-percentage">92%</span>
-                                                <span class="risk-label">RISK</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="risk-details">
-                                        <div class="risk-factor">
-                                            <span class="factor-icon">⚡</span>
-                                            <span class="factor-text">High Priority</span>
-                                        </div>
-                                        <div class="risk-factor">
-                                            <span class="factor-icon">🔄</span>
-                                            <span class="factor-text">Complex Issue</span>
-                                        </div>
-                                        <button class="btn-sla-analyze">
-                                            <i class="fas fa-chart-line"></i> Analyze
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SLA Monitor + Breach Risk (combined) -->
-                    <div class="sla-combined-section">
-                        <div class="sla-card">
-                            <div class="sla-header">
-                                <div class="sla-icon-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <h4>SLA Monitor & Breach Risk</h4>
-                            </div>
-                            <div class="sla-body">
-                                <div class="sla-metric">
-                                    <span class="sla-label">Progress:</span>
-                                    <div class="sla-bar">
-                                        <div class="sla-bar-fill sla-92-percent"></div>
-                                    </div>
-                                    <span class="sla-prob">92% probability of breach</span>
-                                </div>
-                                <div class="sla-risk">
-                                    <span class="risk-badge critical">⚠️ HIGH RISK</span>
-                                    <button class="btn-sla-details" >Details</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Collapsible Extra Details (3 columns) -->
-                    <div class="extra-details">
-                        <button class="btn-toggle-details" >
-                            <i class="fas fa-chevron-down" id="detailsChevron"></i>
-                            <span id="detailsText">Show More Details</span>
-                        </button>
-                        <div class="extra-details-content" id="extraDetailsContent">
-                            <div class="details-grid-3col">
-                                <div class="detail-item">
-                                    <label><i class="fas fa-calendar"></i> Created</label>
-                                    <input type="text" value="2025-12-09 14:30" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-calendar-check"></i> Updated</label>
-                                    <input type="text" value="2025-12-10 09:15" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-eye"></i> Watchers</label>
-                                    <input type="text" value="3 watching" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-hashtag"></i> Issue Type</label>
-                                    <input type="text" value="Bug" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-folder"></i> Component</label>
-                                    <input type="text" value="Authentication" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-code-branch"></i> Affects Version</label>
-                                    <input type="text" value="2.3.4" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-bullseye"></i> Fix Version</label>
-                                    <input type="text" value="2.3.5" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-layer-group"></i> Environment</label>
-                                    <input type="text" value="Production" readonly>
-                                </div>
-                                <div class="detail-item">
-                                    <label><i class="fas fa-users"></i> Team</label>
-                                    <input type="text" value="Backend Team" readonly>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="action-buttons-container">
-                        <button class="btn-apply-selected" >
-                            <i class="fas fa-check-double"></i> Apply Selected
-                        </button>
-                        <button class="btn-cancel" >
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                        <button class="btn-resuggest" >
-                            <i class="fas fa-sync-alt"></i> Volver a sugerir
-                        </button>
-                    </div>
-                </div>
-
-                <!-- RIGHT COLUMN: Comments/AI Toggle (40%) -->
-                <div class="right-column">
-                    <div class="comments-ai-container">
-                            <!-- ML Actions & Suggested Comments (moved above chat) -->
-                            <div class="ml-actions-section" id="mlActionsRight">
-                                <h4><i class="fas fa-lightbulb"></i> ML Actions & Suggested Comments</h4>
-                                <div class="suggested-comments">
-                                    <div class="suggestion-item" >
-                                        <span class="suggestion-text">Investigando el problema, parece estar relacionado con la configuración de OAuth.</span>
-                                        <button class="btn-copy"><i class="fas fa-copy"></i></button>
-                                    </div>
-                                    <div class="suggestion-item" >
-                                        <span class="suggestion-text">Requiere revisión del equipo de backend para validar los endpoints de autenticación.</span>
-                                        <button class="btn-copy"><i class="fas fa-copy"></i></button>
-                                    </div>
-                                    <div class="suggestion-item" >
-                                        <span class="suggestion-text">Verificando logs del servidor para identificar la causa raíz del problema.</span>
-                                        <button class="btn-copy"><i class="fas fa-copy"></i></button>
-                                    </div>
-                                </div>
-                                <div class="quick-actions">
-                                    <button class="action-btn" >
-                                        <i class="fas fa-clone"></i> Find Duplicates
-                                    </button>
-                                    <button class="action-btn" >
-                                        <i class="fas fa-clock"></i> Estimate Time
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="section-divider"></div>
-                            
-                            <!-- Toggle Tabs -->
-                            <div class="mode-tabs">
-                            <button class="mode-tab active" data-mode="comments">
-                                <i class="fas fa-comments"></i> Comments
-                            </button>
-                        </div>
-
-                        <!-- Content Area -->
-                        <div class="mode-content">
-                            <!-- Comments Mode -->
-                            <div class="mode-panel active" data-panel="comments">
-                                <div class="comments-list" id="commentsList">
-                                    <div class="comment-item">
-                                        <div class="comment-avatar">CQ</div>
-                                        <div class="comment-body">
-                                            <div class="comment-header">
-                                                <span class="comment-author">Carlos Q.</span>
-                                                <span class="comment-time">2h ago</span>
-                                            </div>
-                                            <div class="comment-text">
-                                                Investigando el problema, parece relacionado con OAuth.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="comment-item">
-                                        <div class="comment-avatar">AM</div>
-                                        <div class="comment-body">
-                                            <div class="comment-header">
-                                                <span class="comment-author">Ana M.</span>
-                                                <span class="comment-time">1h ago</span>
-                                            </div>
-                                            <div class="comment-text">
-                                                ¿Revisaron los logs del servidor?
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- AI Mode -->
-                            <div class="mode-panel" data-panel="ai">
-                                <div class="ai-messages" id="aiMessages">
-                                    <div class="ai-message">
-                                        <div class="ai-avatar">
-                                            <i class="fas fa-robot"></i>
-                                        </div>
-                                        <div class="ai-text">
-                                            ¿En qué puedo ayudarte con este ticket? Puedo:
-                                            <ul>
-                                                <li>Analizar prioridad y SLA</li>
-                                                <li>Sugerir próximos pasos</li>
-                                                <li>Generar respuestas</li>
-                                                <li>Buscar tickets similares</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="section-divider"></div>
-
-                        <!-- Unified Input -->
-                        <div class="input-area">
-                            <div class="input-mode-badge" id="modeBadge">
-                                💬 Comment mode
-                            </div>
-                            <div class="input-toolbar" id="inputToolbar">
-                                <button class="tool-btn" title="Attach"><i class="fas fa-paperclip"></i></button>
-                                <button class="tool-btn" title="Mention"><i class="fas fa-at"></i></button>
-                                <div class="visibility-toggle">
-                                    <input type="checkbox" id="visibilityCheck">
-                                    <label for="visibilityCheck">
-                                        <span class="vis-icon">🔓</span>
-                                        <span class="vis-text">Public</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="input-wrapper">
-                                <textarea 
-                                    id="unifiedInput" 
-                                    placeholder="Write a comment... (@ to mention)"
-                                    rows="3"
-                                    onkeydown="handleInputKey(event)"
-                                ></textarea>
-                                <button class="btn-send" id="sendBtn" >
-                                    <i class="fas fa-paper-plane"></i>
-                                    <span id="sendBtnText">Post</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+          <div id='balancedContentContainer'></div>
         </div>
       </div>
     </div>
 
-    <!-- Flowing MVP Original JavaScript -->
-    <script src="footer-assistant-original.js"></script>
+    <!-- Flowing MVP JavaScript -->
+    <script src="prototype/footer-assistant-original.js"></script>
     <script>
     // Toggle description
     function toggleDescription() {
@@ -1438,43 +956,31 @@
     }
     
     // Integration Logic
-    let currentView = 'chat-only'; // 'chat-only' or 'balanced'
+    let currentView = 'chat-only';
     let selectedTicketKey = null;
 
     // Show ticket details (switch to balanced view)
     function showTicketDetails(ticketKey) {
         selectedTicketKey = ticketKey;
-        
-        // Update context badge
         const contextBadge = document.getElementById('flowingContextBadge');
         contextBadge.innerHTML = `<span class="context-icon">🎫</span><span class="context-text">${ticketKey}</span>`;
-        
-        // Update suggestion
         document.getElementById('flowingSuggestion').textContent = `${ticketKey} - Viewing details`;
-        
-        // Switch views - HIDE chat, SHOW balanced
         currentView = 'balanced';
         document.getElementById('chatOnlyView').style.display = 'none';
         document.getElementById('balancedView').style.display = 'block';
-        
-        // Expand footer if collapsed
         document.getElementById('flowingFooter').classList.remove('collapsed');
     }
 
-    // Close button - go back to chat-only OR collapse
+    // Close button
     document.getElementById('flowingCloseBtn').addEventListener('click', () => {
         if (currentView === 'balanced') {
-            // Switch back to chat-only
             currentView = 'chat-only';
             document.getElementById('chatOnlyView').style.display = 'block';
             document.getElementById('balancedView').style.display = 'none';
             document.getElementById('flowingSuggestion').textContent = 'Analyzing your queue...';
-            
-            // Reset context badge
             const contextBadge = document.getElementById('flowingContextBadge');
             contextBadge.innerHTML = `<span class="context-icon">🎯</span><span class="context-text">No context</span>`;
         } else {
-            // Just collapse footer
             document.getElementById('flowingFooter').classList.add('collapsed');
         }
     });
