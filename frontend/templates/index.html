@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -114,7 +114,7 @@
   
   <!-- DEBUG SCRIPT: Force button visibility -->
   <script>
-    console.log('🔍 DEBUG: Initializing sidebar action button...');
+    console.log('ðŸ” DEBUG: Initializing sidebar action button...');
     document.addEventListener('DOMContentLoaded', function() {
       // Inject SVG icons into sidebar menu
       if (typeof SVGIcons !== 'undefined') {
@@ -199,9 +199,9 @@
           }
         });
         
-        console.log('✅ All SVG icons injected (sidebar, header, ML dashboard, filter bar, right sidebar)');
+        console.log('âœ… All SVG icons injected (sidebar, header, ML dashboard, filter bar, right sidebar)');
       } else {
-        console.warn('⚠️ SVGIcons not loaded, sidebar icons will not render');
+        console.warn('âš ï¸ SVGIcons not loaded, sidebar icons will not render');
       }
       
       setTimeout(function() {
@@ -209,24 +209,24 @@
         const actionComponent = document.querySelector('.sidebar-action-component');
         const actionBtn = document.getElementById('quickActionBtn');
         
-        console.log('📍 Sidebar content:', sidebarContent);
-        console.log('📍 Action component:', actionComponent);
-        console.log('🔘 Action button:', actionBtn);
+        console.log('ðŸ“ Sidebar content:', sidebarContent);
+        console.log('ðŸ“ Action component:', actionComponent);
+        console.log('ðŸ”˜ Action button:', actionBtn);
         
         if (sidebarContent && actionComponent) {
           // Sync collapsed state with sidebar
           if (sidebarContent.classList.contains('collapsed')) {
             actionComponent.classList.add('collapsed');
-            console.log('🔄 Sidebar is collapsed, syncing action button');
+            console.log('ðŸ”„ Sidebar is collapsed, syncing action button');
           } else {
             actionComponent.classList.remove('collapsed');
-            console.log('✅ Sidebar is expanded, action button ready');
+            console.log('âœ… Sidebar is expanded, action button ready');
           }
         }
         
         // Listen for sidebar toggle events
         window.addEventListener('sidebarToggled', function() {
-          console.log('🔔 Sidebar toggled event received');
+          console.log('ðŸ”” Sidebar toggled event received');
           if (sidebarContent && actionComponent) {
             if (sidebarContent.classList.contains('collapsed')) {
               actionComponent.classList.add('collapsed');
@@ -236,7 +236,7 @@
           }
         });
         
-        console.log('✅ Sidebar action button initialized');
+        console.log('âœ… Sidebar action button initialized');
       }, 100);
     });
   </script>
@@ -247,11 +247,14 @@
   <!-- USER SETUP MODAL (First-time configuration) -->
   <link rel="stylesheet" href="/static/css/user-setup-modal.css?v={{ timestamp }}">
   
+
+  <!-- FOOTER V2 STYLES -->
+  <link rel="stylesheet" href="/static/css/components/footer-v2.css?v={{ timestamp }}">
 </head>
 <body class="theme-light">
   <script>
-    console.log('🚀 BODY LOADED - Checking for sidebar-action-component...');
-    console.log('📍 Elements in DOM:', document.querySelectorAll('aside').length, 'asides found');
+    console.log('ðŸš€ BODY LOADED - Checking for sidebar-action-component...');
+    console.log('ðŸ“ Elements in DOM:', document.querySelectorAll('aside').length, 'asides found');
   </script>
   
   <div class="app-container" role="application" aria-label="SpeedyFlow Ticket Workspace">
@@ -259,14 +262,14 @@
     <!-- SIDEBAR HEADER (Toggle Button) -->
     <aside class="sidebar-header-component" role="banner" aria-label="Sidebar Toggle">
       <button id="sidebarToggleBtn" class="sidebar-toggle-btn" aria-label="Toggle Sidebar">
-        <span class="toggle-icon">☰</span>
+        <span class="toggle-icon">â˜°</span>
       </button>
     </aside>
 
     <!-- SIDEBAR ACTION BUTTON (Clone of header style) -->
     <aside class="sidebar-header-component" id="sidebarActionComponent" role="complementary" aria-label="Quick Actions" style="top: 112px !important;">
       <button id="quickActionBtn" class="sidebar-toggle-btn" aria-label="Quick Action" title="Quick Action">
-        <span class="toggle-icon">⚡</span>
+        <span class="toggle-icon">âš¡</span>
       </button>
     </aside>
 
@@ -307,7 +310,7 @@
       <header class="header-enhanced" aria-label="Primary">
         <div class="header-left-section">
           <div class="header-brand">
-            <span class="brand-icon">⚡</span>
+            <span class="brand-icon">âš¡</span>
             <span class="brand-text">SpeedyFlow</span>
           </div>
           <div class="header-divider-vertical"></div>
@@ -319,7 +322,7 @@
         <div class="header-center-section">
           <nav aria-label="Breadcrumb" class="breadcrumb-enhanced">
             <span class="breadcrumb-item" id="deskBreadcrumb">Select Desk</span>
-            <span class="breadcrumb-separator" aria-hidden="true">›</span>
+            <span class="breadcrumb-separator" aria-hidden="true">â€º</span>
             <span class="breadcrumb-item" id="queueBreadcrumb">Select Queue</span>
           </nav>
         </div>
@@ -356,7 +359,7 @@
                 <select id="serviceDeskSelectFilter" class="filter-select">
                   <option value="">Select Desk...</option>
                 </select>
-                <span class="filter-dropdown-icon">▼</span>
+                <span class="filter-dropdown-icon">â–¼</span>
               </div>
             </div>
             
@@ -369,7 +372,7 @@
                 <select id="queueSelectFilter" class="filter-select">
                   <option value="">Select Queue...</option>
                 </select>
-                <span class="filter-dropdown-icon">▼</span>
+                <span class="filter-dropdown-icon">â–¼</span>
                 <button id="saveFiltersBtn" class="filter-action-btn" title="Save current filters">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17 3H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H7V5h8v4z"/>
@@ -409,16 +412,16 @@
           <div class="filter-section filter-theme">
             <div class="filter-group">
               <label class="filter-label">
-                <span class="filter-icon">✨</span>
+                <span class="filter-icon">âœ¨</span>
                 <span class="filter-text">Customize</span>
               </label>
               <div class="theme-controls">
                 <button id="bgSelectorHeaderBtn" class="theme-btn" title="Change background">
-                  <span class="theme-btn-icon">🎨</span>
+                  <span class="theme-btn-icon">ðŸŽ¨</span>
                   <span class="theme-btn-text">Background</span>
                 </button>
                 <button id="themeToggleBtn" class="theme-btn" title="Toggle theme">
-                  <span class="theme-btn-icon">🎭</span>
+                  <span class="theme-btn-icon">ðŸŽ­</span>
                   <span class="theme-btn-text">Theme</span>
                 </button>
               </div>
@@ -438,7 +441,7 @@
       <!-- RIGHT SIDEBAR (TICKET DETAILS) -->
       <div class="right-sidebar" id="rightSidebar" style="display: none; padding-bottom: 70px;">
       <!-- CLOSE BUTTON -->
-      <button class="btn-close-sidebar" id="closeSidebarBtn">✕</button>
+      <button class="btn-close-sidebar" id="closeSidebarBtn">âœ•</button>
 
       <!-- TWO COLUMN LAYOUT -->
       <div class="sidebar-two-columns">
@@ -489,7 +492,7 @@
             <!-- ATTACHMENTS SECTION -->
             <div class="detail-group detail-group-attachments" id="attachmentsSection" style="display: none;">
               <div class="detail-label">
-                <span>📎 Attachments</span>
+                <span>ðŸ“Ž Attachments</span>
                 <span class="detail-label-hint" id="attachmentCountLabel">(0)</span>
               </div>
               <div id="existingAttachmentsContainer" class="attachments-display-container">
@@ -516,15 +519,15 @@
             <!-- ATTACHMENTS TOOLBAR -->
             <div class="comment-toolbar">
               <button class="comment-toolbar-btn" id="attachBtn" title="Attach file">
-                <span class="toolbar-icon">📎</span>
+                <span class="toolbar-icon">ðŸ“Ž</span>
                 <span class="toolbar-text">Attach</span>
               </button>
               <div class="comment-hint">
-                <span style="opacity: 0.6; font-size: 11px;">💡 Type @ to mention someone</span>
+                <span style="opacity: 0.6; font-size: 11px;">ðŸ’¡ Type @ to mention someone</span>
               </div>
               <div class="visibility-toggle">
                 <input type="checkbox" id="commentInternal" />
-                <label for="commentInternal" class="visibility-label">🔓 Public</label>
+                <label for="commentInternal" class="visibility-label">ðŸ”“ Public</label>
               </div>
             </div>
 
@@ -584,7 +587,7 @@
         <span class="flowing-label">Flowing MVP</span>
         <span class="flowing-suggestion" id="flowingSuggestion">Analyzing your queue...</span>
       </div>
-      <span class="flowing-chevron">▲</span>
+      <span class="flowing-chevron">â–²</span>
     </button>
 
     <!-- Flowing Content -->
@@ -597,7 +600,7 @@
             <p class="flowing-subtitle">Your AI assistant for tickets, SLAs, and smart suggestions</p>
           </div>
         </div>
-        <button id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</button>
+        <button id="flowingCloseBtn" class="flowing-close-btn" title="Close">âœ•</button>
       </div>
 
       <!-- Messages Container -->
@@ -605,12 +608,12 @@
         <div class="flowing-message assistant">
           <div class="message-avatar flowing-sf-logo">SF</div>
           <div class="message-content">
-            <p>👋 Hi! I'm Flowing MVP, your SpeedyFlow Ticket Solving Mate! I can help you with:</p>
+            <p>ðŸ‘‹ Hi! I'm Flowing MVP, your SpeedyFlow Ticket Solving Mate! I can help you with:</p>
             <ul>
-              <li>📋 Analyzing ticket priorities and patterns</li>
-              <li>⏱️ Explaining SLA statuses and deadlines</li>
-              <li>🎯 Suggesting next actions for tickets</li>
-              <li>📊 Providing insights on queue metrics</li>
+              <li>ðŸ“‹ Analyzing ticket priorities and patterns</li>
+              <li>â±ï¸ Explaining SLA statuses and deadlines</li>
+              <li>ðŸŽ¯ Suggesting next actions for tickets</li>
+              <li>ðŸ“Š Providing insights on queue metrics</li>
             </ul>
             <p>Just ask me anything!</p>
           </div>
@@ -620,7 +623,7 @@
       <!-- Input Area -->
       <div class="flowing-input-area">
         <div class="flowing-context-badge" id="flowingContextBadge">
-          <span class="context-icon">📌</span>
+          <span class="context-icon">ðŸ“Œ</span>
           <span class="context-text">No context</span>
         </div>
         <div class="flowing-input-wrapper">
@@ -646,22 +649,22 @@
       <!-- Header -->
       <div class="ml-dashboard-header">
         <div class="ml-dashboard-title">
-          <h2>🎯 ML Predictive Dashboard</h2>
+          <h2>ðŸŽ¯ ML Predictive Dashboard</h2>
           <div class="ml-dashboard-subtitle">Real-time insights powered by Machine Learning</div>
           <div class="ml-dashboard-data-source" id="ml-data-source-indicator">
-            <span class="data-source-icon">📊</span>
+            <span class="data-source-icon">ðŸ“Š</span>
             <span class="data-source-text">Loading...</span>
           </div>
         </div>
         <div class="ml-dashboard-controls">
           <button class="ml-dashboard-refresh" title="Refresh data">
-            🔄 Refresh
+            ðŸ”„ Refresh
           </button>
           <div class="ml-dashboard-auto-refresh-toggle">
             <input type="checkbox" id="ml-dashboard-auto-refresh" checked />
             <label for="ml-dashboard-auto-refresh">Auto-refresh</label>
           </div>
-          <button class="ml-dashboard-close">✕ Close</button>
+          <button class="ml-dashboard-close">âœ• Close</button>
         </div>
       </div>
 
@@ -705,7 +708,7 @@
             </div>
           </div>
 
-          <h3 style="color: #f3f4f6; margin: 30px 0 15px;">⚠️ High-Risk Tickets</h3>
+          <h3 style="color: #f3f4f6; margin: 30px 0 15px;">âš ï¸ High-Risk Tickets</h3>
           <div id="breach-predictions-list"></div>
         </div>
 
@@ -838,28 +841,35 @@
         const commentToolbar = document.querySelector('.comment-toolbar');
         
         console.log('=== Right Sidebar Diagnostic ===');
-        console.log('✓ mentionBtn exists:', !!mentionBtn);
-        console.log('✓ attachBtn exists:', !!attachBtn);
-        console.log('✓ comment-toolbar exists:', !!commentToolbar);
+        console.log('âœ“ mentionBtn exists:', !!mentionBtn);
+        console.log('âœ“ attachBtn exists:', !!attachBtn);
+        console.log('âœ“ comment-toolbar exists:', !!commentToolbar);
         
         if (!mentionBtn) {
-          console.warn('⚠️ mentionBtn NOT FOUND - check HTML structure');
+          console.warn('âš ï¸ mentionBtn NOT FOUND - check HTML structure');
         }
         if (!attachBtn) {
-          console.warn('⚠️ attachBtn NOT FOUND - check HTML structure');
+          console.warn('âš ï¸ attachBtn NOT FOUND - check HTML structure');
         }
         if (!commentToolbar) {
-          console.warn('⚠️ comment-toolbar NOT FOUND - check CSS loading');
+          console.warn('âš ï¸ comment-toolbar NOT FOUND - check CSS loading');
         }
         
         // Check if setupMentionSystem function exists
-        console.log('✓ setupMentionSystem function exists:', typeof window.setupMentionSystem === 'function');
-        console.log('✓ setupAttachmentsSystem function exists:', typeof window.setupAttachmentsSystem === 'function');
+        console.log('âœ“ setupMentionSystem function exists:', typeof window.setupMentionSystem === 'function');
+        console.log('âœ“ setupAttachmentsSystem function exists:', typeof window.setupAttachmentsSystem === 'function');
       }, 500);
     });
   </script>
 
   <!-- User Setup Modal -->
   <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
+
+  <!-- FOOTER V2 - ML Assistant -->
+  <div id="footer-v2-root"></div>
+
+  <!-- Footer V2 Scripts -->
+  <script src="/static/js/footer-v2-bridge.js?v={{ timestamp }}"></script>
+  <script src="/static/js/footer-v2.js?v={{ timestamp }}"></script>
 </body>
 </html>
