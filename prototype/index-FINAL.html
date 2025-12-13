@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowing MVP - Integrated Prototype</title>
+    <link rel="stylesheet" href="styles-footer-v2.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Hide balanced content by default */
+        .balanced-view {
+            display: none;
+        }
+        
+        /* Show when active */
+        .balanced-view.active {
+            display: block;
+        }
+        
+        /* Hide chat-only when balanced is active */
+        .flowing-messages.hidden {
+            display: none;
+        }
+        
+        .flowing-input-area.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1><i class="fas fa-rocket"></i> SPEEDYFLOW Flowing MVP</h1>
+            <span class="badge badge-beta">Integrated Prototype</span>
+        </div>
+        <div class="header-right">
+            <div class="ml-status">
+                <i class="fas fa-circle status-dot"></i>
+                <span>ML Service: <strong id="mlServiceStatus">Connected</strong></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area - Ticket Board -->
+    <div class="main-content">
+        <div class="ticket-board">
+            <h2><i class="fas fa-columns"></i> Kanban Board</h2>
+            <div class="board-columns">
+                <div class="board-column">
+                    <h3>Abierto</h3>
+                    <div class="ticket-card">
+                        <div class="ticket-key">MSM-1234</div>
+                        <div class="ticket-summary">Error en API de autenticación</div>
+                        <div class="ticket-meta">
+                            <span class="priority high">Alta</span>
+                            <span class="assignee">Carlos Q.</span>
+                        </div>
+                        <button class="btn-ticket-details" onclick="showTicketDetails('MSM-1234')">
+                            <i class="fas fa-info-circle"></i> Ticket Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FLOWING MVP FOOTER (Integrated) ===== -->
+    <div id="flowingFooter" class="flowing-footer collapsed">
+      <!-- Toggle Button -->
+      <button id="flowingToggleBtn" class="flowing-toggle-btn" title="Flowing MVP Assistant">
+        <span class="flowing-icon flowing-sf-logo">SF</span>
+        <div class="flowing-info">
+          <span class="flowing-label">Flowing MVP</span>
+          <span class="flowing-suggestion" id="flowingSuggestion">Analyzing your queue...</span>
+        </div>
+        <span class="flowing-chevron">▲</span>
+      </button>
+
+      <!-- Flowing Content -->
+      <div class="flowing-content">
+        <div class="flowing-header">
+          <div class="flowing-title">
+            <span class="flowing-avatar flowing-sf-logo">SF</span>
+            <div class="flowing-title-text">
+              <h3>Flowing MVP</h3>
+              <p class="flowing-subtitle">Your AI assistant for tickets, SLAs, and smart suggestions</p>
+            </div>
+          </div>
+          <button id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</button>
+        </div>
+
+        <!-- Chat-Only View (Default) -->
+        <div id="chatOnlyView">
+          <!-- Messages Container -->
+          <div id="flowingMessages" class="flowing-messages">
+            <div class="flowing-message assistant">
+              <div class="message-avatar flowing-sf-logo">SF</div>
+              <div class="message-content">
+                <p>👋 Hi! I'm Flowing MVP, your SpeedyFlow Ticket Solving Mate! I can help you with:</p>
+                <ul>
+                  <li>📋 Analyzing ticket priorities and patterns</li>
+                  <li>⏱️ Explaining SLA statuses and deadlines</li>
+                  <li>🎯 Suggesting next actions for tickets</li>
+                  <li>📊 Providing insights on queue metrics</li>
+                </ul>
+                <p>Just ask me anything!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Area -->
+          <div class="flowing-input-area">
+            <div class="flowing-context-badge" id="flowingContextBadge">
+              <span class="context-icon">🎯</span>
+              <span class="context-text">No context</span>
+            </div>
+            <div class="flowing-input-wrapper">
+              <input type="text" id="flowingInput" placeholder="Ask me anything about your tickets..." />
+              <button id="flowingSendBtn" class="flowing-send-btn" title="Send">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Balanced View (Hidden by default, shown when ticket selected) -->
+        <div id="balancedView" class="balanced-view">
+          <!-- Integrated balanced content here -->
+          <div id="balancedContentContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flowing MVP Original JavaScript -->
+    <script src="footer-assistant-original.js"></script>
+    <script>
+    // Integration Logic
+    let currentView = 'chat-only'; // 'chat-only' or 'balanced'
+    let selectedTicketKey = null;
+
+    // Load balanced content (lazy load)
+    async function loadBalancedContent() {
+        if (document.getElementById('balancedContentContainer').innerHTML) {
+            return; // Already loaded
+        }
+        
+        try {
+            const response = await fetch('contenido-balanceado-LIMPIO.html');
+            const content = await response.text();
+            document.getElementById('balancedContentContainer').innerHTML = content;
+        } catch (error) {
+            console.error('Error loading balanced content:', error);
+        }
+    }
+
+    // Show ticket details (switch to balanced view)
+    function showTicketDetails(ticketKey) {
+        selectedTicketKey = ticketKey;
+        
+        // Update context badge
+        const contextBadge = document.getElementById('flowingContextBadge');
+        contextBadge.innerHTML = `<span class="context-icon">🎫</span><span class="context-text">${ticketKey}</span>`;
+        
+        // Update suggestion
+        document.getElementById('flowingSuggestion').textContent = `${ticketKey} - Viewing details`;
+        
+        // Load balanced content
+        loadBalancedContent().then(() => {
+            // Switch views
+            currentView = 'balanced';
+            document.getElementById('chatOnlyView').style.display = 'none';
+            document.getElementById('balancedView').classList.add('active');
+            
+            // Expand footer if collapsed
+            document.getElementById('flowingFooter').classList.remove('collapsed');
+        });
+    }
+
+    // Close button - go back to chat-only
+    document.getElementById('flowingCloseBtn').addEventListener('click', () => {
+        if (currentView === 'balanced') {
+            // Switch back to chat-only
+            currentView = 'chat-only';
+            document.getElementById('chatOnlyView').style.display = 'block';
+            document.getElementById('balancedView').classList.remove('active');
+            document.getElementById('flowingSuggestion').textContent = 'Analyzing your queue...';
+        }
+        
+        // Collapse footer
+        document.getElementById('flowingFooter').classList.add('collapsed');
+    });
+
+    // Toggle button
+    document.getElementById('flowingToggleBtn').addEventListener('click', () => {
+        document.getElementById('flowingFooter').classList.toggle('collapsed');
+    });
+    </script>
+</body>
+</html>
