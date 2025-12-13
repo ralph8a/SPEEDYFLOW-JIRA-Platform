@@ -3,7 +3,10 @@ info:
   title: SPEEDYFLOW API
   version: 2.0.0-rebuilt
 servers:
-  - url: http://127.0.0.1:5005
+  - url: http://localhost:5000
+    description: Local development (Flask backend)
+  - url: http://ml-service:5001
+    description: ML service (container network)
 paths:
   /api/dashboard/summary:
     get:

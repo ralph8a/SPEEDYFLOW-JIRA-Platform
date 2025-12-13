@@ -9,7 +9,8 @@ services:
       - FLASK_ENV=development
       - ML_SERVICE_URL=http://ml-service:5001
     depends_on:
-      - ml-service
+      ml-service:
+        condition: service_healthy
     networks:
       - speedyflow-network
     volumes:
@@ -29,6 +30,12 @@ services:
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 networks:
   speedyflow-network:
