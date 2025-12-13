@@ -53,6 +53,30 @@ def reload_jokes():
         logger.error(f"Error reloading chat_jokes.json: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+@copilot_bp.route('/docs/reload-resources', methods=['POST'])
+def reload_resources():
+    """Reload various resources at runtime: chat jokes and attempt to reload ML service models."""
+    results = {}
+    try:
+        load_chat_jokes()
+        results['jokes_reloaded'] = len(CHAT_JOKES)
+    except Exception as e:
+        results['jokes_error'] = str(e)
+
+    # Try to call ML service reload endpoint if available
+    try:
+        import requests
+        resp = requests.post('http://localhost:5001/models/reload', timeout=5)
+        if resp.ok:
+            results['ml_reload'] = resp.json()
+        else:
+            results['ml_reload_error'] = f"HTTP {resp.status_code}"
+    except Exception as e:
+        results['ml_reload_error'] = str(e)
+
+    return jsonify(results)
+
 @copilot_bp.route('/chat', methods=['POST'])
 def chat():
     """

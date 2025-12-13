@@ -2,6 +2,7 @@ import os
 from typing import List
 from pathlib import Path
 import re
+import hashlib
 
 class ChatEngine:
     """Simple keyword-based retriever over local docs for technical chat."""
@@ -13,8 +14,13 @@ class ChatEngine:
     def _load_docs(self):
         if not self.docs_dir.exists():
             return
+        seen = set()
         for p in self.docs_dir.glob('*.txt'):
             text = p.read_text(encoding='utf-8', errors='ignore')
+            key = hashlib.md5(text.encode('utf-8')).hexdigest()
+            if key in seen:
+                continue
+            seen.add(key)
             self.documents.append({'path': str(p.name), 'text': text})
 
         # Also load ticket dataset summaries/comments for conversational help
@@ -32,6 +38,10 @@ class ChatEngine:
                     if not summary and not comments:
                         continue
                     text = (summary + '\n\n' + comments).strip()
+                    key = hashlib.md5(text.encode('utf-8')).hexdigest()
+                    if key in seen:
+                        continue
+                    seen.add(key)
                     self.documents.append({'path': f'comments_dataset_row_{i}', 'text': text})
 
             # load augmented dataset if present (do not expose labels)
@@ -41,10 +51,13 @@ class ChatEngine:
                 for i, row in df2.iterrows():
                     summary = str(row.get('summary','') or '')
                     comments = str(row.get('comments','') or '')
-                    # skip rows that duplicate the original dataset by exact match
                     if not summary and not comments:
                         continue
                     text = (summary + '\n\n' + comments).strip()
+                    key = hashlib.md5(text.encode('utf-8')).hexdigest()
+                    if key in seen:
+                        continue
+                    seen.add(key)
                     self.documents.append({'path': f'comments_dataset_augmented_row_{i}', 'text': text})
         except Exception:
             # best-effort: ignore if pandas not available or file malformed
