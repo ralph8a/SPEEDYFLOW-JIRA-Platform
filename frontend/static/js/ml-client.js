@@ -1,5 +1,5 @@
 /**
- * SPEEDYFLOW ML Client - Cliente JavaScript para integrar ML Service con Flowing MVP
+ * SPEEDYFLOW ML Client - Cliente JavaScript para integrar ML Service
  * 
  * Uso:
  * const mlClient = new MLClient('http://localhost:5001');

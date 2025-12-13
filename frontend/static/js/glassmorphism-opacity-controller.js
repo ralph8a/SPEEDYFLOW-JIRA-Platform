@@ -263,8 +263,7 @@ class TransparencyManager {
       '.filter-bar-enhanced': 'primary',
       '.modal': 'secondary',
       '.navbar': 'tertiary',
-      '.kanban-column': 'secondary',
-      '.flowing-footer': 'tertiary'  // Flowing MVP footer
+      '.kanban-column': 'secondary'
     };
 
     Object.entries(mainContainers).forEach(([selector, level]) => {
@@ -289,16 +288,12 @@ class TransparencyManager {
             bgColor = `rgba(37, 37, 37, ${opacity})`;
           } else if (element.classList.contains('kanban-column')) {
             bgColor = `rgba(32, 32, 42, ${opacity})`;
-          } else if (element.classList.contains('flowing-footer')) {
-            bgColor = `rgba(30, 30, 38, ${opacity})`;
           } else {
             bgColor = `rgba(42, 42, 42, ${opacity})`;
           }
         } else {
           if (element.classList.contains('kanban-column')) {
             bgColor = `rgba(248, 250, 252, ${opacity})`;
-          } else if (element.classList.contains('flowing-footer') || element.classList.contains('filter-bar-enhanced')) {
-            bgColor = `rgba(255, 255, 255, ${opacity})`;
           } else {
             bgColor = `rgba(255, 255, 255, ${opacity})`;
           }
@@ -326,9 +321,6 @@ class TransparencyManager {
           element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
           element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         } else if (selector === '.kanban-column') {
-          element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
-          element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
-        } else if (selector === '.flowing-footer') {
           element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
           element.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
         }
