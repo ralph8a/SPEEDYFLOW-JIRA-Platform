@@ -11,8 +11,12 @@ import pickle
 class SpeedyflowMLPredictor:
     """Predictor unificado para todos los modelos ML de SPEEDYFLOW"""
     
-    def __init__(self, models_dir="C:/Users/rafae/SPEEDYFLOW-JIRA-Platform/models"):
-        self.models_dir = Path(models_dir)
+    def __init__(self, models_dir=None):
+        # Default to repo ml_service/models so models are consistent with ml_service
+        if models_dir:
+            self.models_dir = Path(models_dir)
+        else:
+            self.models_dir = Path(__file__).resolve().parent.parent / 'ml_service' / 'models'
         self.models = {}
         self.encoders = {}
         self.nlp = None
@@ -39,7 +43,8 @@ class SpeedyflowMLPredictor:
                 'breach_predictor': 'breach_predictor.keras',
                 'assignee_suggester': 'assignee_suggester.keras',
                 'labels_suggester': 'labels_suggester.keras',
-                'issuetype_suggester': 'issuetype_suggester.keras'
+                'issuetype_suggester': 'issuetype_suggester.keras',
+                'comment_suggester': 'comment_suggester.keras'
             }
             
             for name, filename in models_to_load.items():
@@ -53,7 +58,8 @@ class SpeedyflowMLPredictor:
                 'label_encoders': 'label_encoders.pkl',
                 'assignee_encoder': 'assignee_encoder.pkl',
                 'labels_binarizer': 'labels_binarizer.pkl',
-                'issuetype_encoder': 'issuetype_encoder.pkl'
+                'issuetype_encoder': 'issuetype_encoder.pkl',
+                'comment_labels_binarizer': 'comment_labels_binarizer.pkl'
             }
             
             for name, filename in encoders_to_load.items():
