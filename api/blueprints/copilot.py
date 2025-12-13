@@ -5,6 +5,19 @@ Handles chat interactions with context awareness
 
 from flask import Blueprint, request, jsonify
 import logging
+from pathlib import Path
+import json
+
+# Optional integrations with ml_service utilities
+try:
+    from ml_service.ingest_onenote import ingest_pdf_to_docs
+    from ml_service.docs_parser import extract_endpoints_from_text, extract_playbooks_from_text
+    from ml_service.predictor import UnifiedMLPredictor
+except Exception:
+    ingest_pdf_to_docs = None
+    extract_endpoints_from_text = None
+    extract_playbooks_from_text = None
+    UnifiedMLPredictor = None
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +79,80 @@ def generate_response(message: str, context: dict) -> str:
         return handle_desk_query(message_lower, current_desk, context)
     else:
         return handle_general_query(message_lower)
+
+
+@copilot_bp.route('/docs/ingest', methods=['POST'])
+def docs_ingest():
+    data = request.get_json() or {}
+    path = data.get('path')
+    if not path:
+        return jsonify({'error': 'path required'}), 400
+    if not ingest_pdf_to_docs:
+        return jsonify({'error': 'ingest handler not available on server'}), 500
+    try:
+        out = ingest_pdf_to_docs(path)
+        return jsonify({'status': 'ingested', 'path': out})
+    except Exception as e:
+        logger.error(f"Docs ingest error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@copilot_bp.route('/docs/extract-endpoints', methods=['POST'])
+def docs_extract_endpoints():
+    data = request.get_json() or {}
+    filename = data.get('file')
+    docs_dir = Path(__file__).resolve().parents[1] / 'ml_service' / 'docs'
+    texts = []
+    if filename:
+        p = docs_dir / filename
+        if not p.exists():
+            return jsonify({'error': 'file not found'}), 404
+        texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+    else:
+        for p in docs_dir.glob('*.txt'):
+            texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+    full = '\n\n'.join(texts)
+    if not extract_endpoints_from_text:
+        return jsonify({'error': 'docs parser not available'}), 500
+    endpoints = extract_endpoints_from_text(full)
+    return jsonify({'endpoints': endpoints})
+
+
+@copilot_bp.route('/docs/extract-playbooks', methods=['POST'])
+def docs_extract_playbooks():
+    data = request.get_json() or {}
+    filename = data.get('file')
+    docs_dir = Path(__file__).resolve().parents[1] / 'ml_service' / 'docs'
+    texts = []
+    if filename:
+        p = docs_dir / filename
+        if not p.exists():
+            return jsonify({'error': 'file not found'}), 404
+        texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+    else:
+        for p in docs_dir.glob('*.txt'):
+            texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+    full = '\n\n'.join(texts)
+    if not extract_playbooks_from_text:
+        return jsonify({'error': 'docs parser not available'}), 500
+    playbooks = extract_playbooks_from_text(full)
+    return jsonify({'playbooks': playbooks})
+
+
+@copilot_bp.route('/suggest/comment', methods=['POST'])
+def suggest_comment():
+    data = request.get_json() or {}
+    summary = data.get('summary','')
+    comments = data.get('comments','')
+    if not UnifiedMLPredictor:
+        return jsonify({'error': 'predictor not available'}), 500
+    try:
+        predictor = UnifiedMLPredictor(models_dir=str(Path(__file__).resolve().parents[1] / 'ml_service' / 'models'))
+        res = predictor.suggest_comment_patterns(summary, comments)
+        return jsonify(res)
+    except Exception as e:
+        logger.error(f"Suggest comment error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 def handle_ticket_query(message: str, issue_key: str, context: dict) -> str:
     """Handle queries about specific ticket"""
