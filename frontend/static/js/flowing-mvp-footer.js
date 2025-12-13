@@ -43,7 +43,6 @@ class FlowingFooter {
     // Get DOM elements
     this.footer = document.getElementById('flowingFooter');
     this.toggleBtn = document.getElementById('flowingToggleBtn');
-    this.closeBtn = document.getElementById('flowingCloseBtn');
     this.messagesContainer = document.getElementById('flowingMessages');
     this.input = document.getElementById('flowingInput');
     this.sendBtn = document.getElementById('flowingSendBtn');
@@ -115,8 +114,7 @@ class FlowingFooter {
       }
     });
     
-    // Close button
-    this.closeBtn?.addEventListener('click', () => this.collapse());
+    // Close button removed - use 'Back to Chat' control instead
     
     // Send button
     this.sendBtn?.addEventListener('click', () => this.sendMessage());
