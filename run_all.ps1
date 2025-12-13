@@ -34,7 +34,7 @@ Write-Host "Building and starting containers (detached)..."
 # Helper to poll HTTP endpoint
 function Wait-ForHttp($url, $timeoutSeconds=120) {
     $start = Get-Date
-    while ((Get-Date) - $start).TotalSeconds -lt $timeoutSeconds) {
+    while (((Get-Date) - $start).TotalSeconds -lt $timeoutSeconds) {
         try {
             $r = Invoke-WebRequest -Uri $url -UseBasicParsing -Method Get -ErrorAction Stop -TimeoutSec 5
             if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 400) {
@@ -46,7 +46,7 @@ function Wait-ForHttp($url, $timeoutSeconds=120) {
         }
         Start-Sleep -Seconds 2
     }
-    Write-Host "\nTimeout waiting for $url"
+    Write-Host "`nTimeout waiting for $url"
     return $false
 }
 
