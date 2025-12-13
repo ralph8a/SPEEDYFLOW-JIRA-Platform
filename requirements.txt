@@ -26,3 +26,4 @@ langdetect>=1.0.9
 # Optional: install spaCy medium models for better embeddings
 # python -m spacy download es_core_news_md
 # python -m spacy download en_core_web_md
+PyPDF2>=3.0.0

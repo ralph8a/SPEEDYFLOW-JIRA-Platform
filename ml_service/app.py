@@ -10,6 +10,7 @@ from predictor import UnifiedMLPredictor
 from chat import ChatEngine
 from comment_suggester import CommentSuggester
 import utils.api_migration as api_migration
+from ingest_onenote import ingest_pdf_to_docs
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -241,6 +242,30 @@ async def comment_action(req: CommentActionRequest):
         return {'status': 'assigned', 'assignee': req.assignee}
     else:
         raise HTTPException(status_code=400, detail='unknown action')
+
+
+@app.post('/docs/ingest')
+async def docs_ingest(path: Optional[str] = None):
+    """Ingest a PDF (OneNote export) into the knowledge docs folder.
+    Provide absolute path on server or leave empty to return error.
+    """
+    if not path:
+        raise HTTPException(status_code=400, detail='pdf path required')
+    try:
+        out = ingest_pdf_to_docs(path)
+        # reload chat engine documents
+        app.state.chat = ChatEngine()
+        return {'status': 'ingested', 'path': out}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/docs/search')
+async def docs_search(q: str):
+    chat = getattr(app.state, 'chat', None)
+    if not chat:
+        raise HTTPException(status_code=503, detail='chat engine not available')
+    return chat.answer(q, top_k=5)
 
 @app.post("/predict-batch")
 async def predict_batch(requests: List[PredictRequest]):
