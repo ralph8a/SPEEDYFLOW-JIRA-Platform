@@ -2038,56 +2038,23 @@ body.sidebar-collapsed .flowing-footer {
   }
 }
 
-/* Balanced view container inside Flowing MVP: responsive two-column layout */
-#balancedView {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 16px 24px 24px 24px;
-  overflow-x: hidden; /* prevent horizontal scrollbar inside footer */
-}
+/* Balanced view responsiveness: keep existing grid (.footer-two-columns) but make it wrap on narrow widths to avoid horizontal scroll */
+#balancedView { box-sizing: border-box; width: 100%; padding: 16px 24px 24px 24px; overflow-x: hidden; }
 
-#balancedContentContainer {
-  display: flex;
-  gap: 18px;
-  align-items: flex-start;
-  width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  flex-wrap: nowrap; /* try to keep side-by-side, allow shrink via flex-basis */
-}
+.footer-two-columns { display: grid; grid-template-columns: 60% 40%; gap: 2rem; padding: 1.5rem 2rem; box-sizing: border-box; }
+.footer-two-columns .left-column { box-sizing: border-box; }
+.footer-two-columns .right-column { box-sizing: border-box; }
 
-/* Left and right columns: allow flexible shrinking and minimum widths so they wrap vertically when space is insufficient */
-#balancedContentContainer .left-column {
-  flex: 1 1 60%;
-  min-width: 280px;
-  box-sizing: border-box;
-}
-
-#balancedContentContainer .right-column {
-  flex: 0 1 36%;
-  min-width: 260px;
-  box-sizing: border-box;
-}
-
-/* If the container cannot fit both columns, allow wrapping to stack them vertically */
-@media (max-width: 980px) {
-  #balancedContentContainer { flex-wrap: wrap; }
-  #balancedContentContainer .left-column, #balancedContentContainer .right-column { min-width: 100%; flex: 1 1 100%; }
+@media (max-width: 1100px) {
+  .footer-two-columns { grid-template-columns: 1fr; }
 }
 
 /* Ensure panels do not overflow their column */
-#balancedContentContainer .panel, #balancedContentContainer .panel-card { box-sizing: border-box; max-width: 100%; overflow-wrap: break-word; }
+.footer-two-columns .panel, .footer-two-columns .panel-card { box-sizing: border-box; max-width: 100%; overflow-wrap: break-word; }
 
 /* Tweak flowing-footer width calc to be robust to sidebar width variables */
-.flowing-footer {
-  width: calc(100% - var(--sidebar-width, 280px) - 32px) !important;
-  left: var(--sidebar-width, 280px) !important;
-}
-
-body.sidebar-collapsed .flowing-footer {
-  width: calc(100% - var(--sidebar-collapsed-width, 60px) - 32px) !important;
-  left: var(--sidebar-collapsed-width, 60px) !important;
-}
+.flowing-footer { width: calc(100% - var(--sidebar-width, 280px) - 32px) !important; left: var(--sidebar-width, 280px) !important; }
+body.sidebar-collapsed .flowing-footer { width: calc(100% - var(--sidebar-collapsed-width, 60px) - 32px) !important; left: var(--sidebar-collapsed-width, 60px) !important; }
 
 /* Purple dark gradient dividers used across sidebar/footer */
 .purple-divider {
