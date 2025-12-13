@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -31,7 +31,7 @@
                     <h3>Abierto</h3>
                     <div class="ticket-card" onclick="selectTicket('MSM-1234')">
                         <div class="ticket-key">MSM-1234</div>
-                        <div class="ticket-summary">Error en API de autenticaci�n</div>
+                        <div class="ticket-summary">Error en API de autenticación</div>
                         <div class="ticket-meta">
                             <span class="priority high">Alta</span>
                             <span class="assignee">Carlos Q.</span>
@@ -49,7 +49,7 @@
             <span class="flowing-icon flowing-sf-logo">SF</span>
             <div class="flowing-info">
                 <span class="flowing-label">Flowing MVP</span>
-                <span class="flowing-suggestion" id="flowingSuggestion">Analyzing your queue...</span>
+                <span class="flowing-suggestion" id="flowingSuggestion">Click to chat...</span>
             </div>
             <span class="flowing-chevron"></span>
         </button>
@@ -68,7 +68,7 @@
                     <button id="viewToggleBtn" class="view-toggle-btn" title="Switch to balanced view">
                         <i class="fas fa-columns"></i>
                     </button>
-                    <button id="flowingCloseBtn" class="flowing-close-btn" title="Close">?</button>
+                    <button id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</button>
                 </div>
             </div>
 
@@ -219,7 +219,7 @@
         viewToggleBtn.title = 'Switch to chat-only';
         
         // Show notification
-        addMessage('?? Switched to Balanced View - Now showing ML suggestions and ticket details', 'system');
+        addMessage('🔄 Switched to Balanced View - Now showing ML suggestions and ticket details', 'system');
         
         // Redirect to full balanced prototype
         setTimeout(() => {
@@ -235,7 +235,7 @@
         viewToggleBtn.title = 'Switch to balanced view';
         
         // Show notification
-        addMessage('?? Switched to Chat-Only View', 'system');    }
+        addMessage('💬 Switched to Chat-Only View', 'system');    }
     </script>
 </body>
 </html>
