@@ -116,7 +116,7 @@ body:has(.flowing-footer.collapsed) #listView {
    ML FOOTER - GLASSMORPHISM (Uses CSS Variables)
    =================================== */
 
-.ml-footer {
+.flowing-footer {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -145,24 +145,23 @@ body:has(.flowing-footer.collapsed) #listView {
 }
 
 /* When sidebar is collapsed (60px width) */
-body.sidebar-collapsed .ml-footer {
-    width: calc(100% - 60px - 32px);
-    left: 60px;
-    margin: 0 16px0px;
-    margin: 0 16px;
+body.sidebar-collapsed .flowing-footer {
+  width: calc(100% - 60px - 32px);
+  left: 60px;
+  margin: 0 16px;
 }
 
 /* Dark Theme Support */
-body.theme-dark .ml-footer {
-    background: var(--card-bg, rgba(10, 10, 10, 0.95));
-    border-top-color: var(--border, rgba(59, 130, 246, 0.25));
-    box-shadow: 
-        0 -8px 32px rgba(0, 0, 0, 0.4),
-        0 -4px 16px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+body.theme-dark .flowing-footer {
+  background: var(--card-bg, rgba(10, 10, 10, 0.95));
+  border-top-color: var(--border, rgba(59, 130, 246, 0.25));
+  box-shadow: 
+    0 -8px 32px rgba(0, 0, 0, 0.4),
+    0 -4px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.ml-footer-header {
+.flowing-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -173,14 +172,8 @@ body.theme-dark .ml-footer {
     background: var(--glass-backdrop, rgba(255, 255, 255, 0.5));
     backdrop-filter: var(--glass-blur, blur(10px));
 }
-
-body.theme-dark .ml-footer-header {
-    border-bottom-color: var(--border-base, rgba(120, 120, 120, 0.1));
-    background: var(--bg-hover, rgba(50, 50, 50, 0.1));
-}
-
-.ml-footer-header:hover {
-    background: var(--glass-blue-light, rgba(59, 130, 246, 0.1));
+.flowing-header:hover {
+  background: var(--glass-blue-light, rgba(59, 130, 246, 0.1));
 }
 
 .footer-header-left {
@@ -579,43 +572,43 @@ body.theme-dark .ml-suggestion-checkbox {
 }
 
 /* Chat-only view: hide left column and expand right */
-.ml-footer.chat-only .footer-two-columns {
+.flowing-footer.chat-only .footer-two-columns {
     grid-template-columns: 1fr;
     gap: 0;
 }
 
-.ml-footer.chat-only .left-column {
+.flowing-footer.chat-only .left-column {
     display: none;
 }
 
-.ml-footer.chat-only .right-column {
+.flowing-footer.chat-only .right-column {
     width: 100%;
     max-width: 100%;
 }
 
 /* Hide ticket description when in chat-only mode */
-.ml-footer.chat-only .ticket-description-section {
+.flowing-footer.chat-only .ticket-description-section {
     display: none;
 }
 
 /* Hide ML actions in right column when in chat mode */
-.ml-footer.chat-only .ml-actions-section {
+.flowing-footer.chat-only .ml-actions-section {
     display: none;
 }
 
 /* Hide mode tabs when in chat-only mode */
-.ml-footer.chat-only .mode-tabs {
+.flowing-footer.chat-only .mode-tabs {
     display: none;
 }
 
 /* Expand comments-ai-container to full width in chat-only mode */
-.ml-footer.chat-only .comments-ai-container {
+.flowing-footer.chat-only .comments-ai-container {
     width: 100%;
     max-width: 100%;
 }
 
 /* Ensure active panel is visible in chat-only mode */
-.ml-footer.chat-only .mode-panel.active {
+.flowing-footer.chat-only .mode-panel.active {
     display: block !important;
 }
 
@@ -2074,8 +2067,7 @@ body.sidebar-collapsed .flowing-footer {
 .footer-two-columns .right-column { box-sizing: border-box; width: 100%; }
 
 /* Make the two-column area fill the footer content area (excluding header) and scroll internally */
-.flowing-footer .footer-two-columns,
-.ml-footer .footer-two-columns {
+.flowing-footer .footer-two-columns {
   /* fill the footer content area: use computed footer max or measured height */
   height: calc(var(--flowing-footer-max, 640px) - var(--flowing-header-height, 72px));
   max-height: calc(var(--flowing-footer-max, 640px) - var(--flowing-header-height, 72px));
@@ -2086,16 +2078,13 @@ body.sidebar-collapsed .flowing-footer {
 
 /* Ensure internal panels don't force overflow horizontally */
 .flowing-footer .footer-two-columns .panel,
-.flowing-footer .footer-two-columns .panel-card,
-.ml-footer .footer-two-columns .panel,
-.ml-footer .footer-two-columns .panel-card {
+.flowing-footer .footer-two-columns .panel-card {
   max-width: 100%;
   box-sizing: border-box;
 }
 
 /* Remove horizontal scroll inside footer two-columns and allow children to shrink */
-.flowing-footer .footer-two-columns,
-.ml-footer .footer-two-columns {
+.flowing-footer .footer-two-columns {
   overflow-x: hidden;
 }
 
@@ -2133,8 +2122,7 @@ body.theme-dark .footer-two-columns .panel-card {
 }
 
 /* If any higher-specificity rules set solid backgrounds elsewhere, force transparency inside footer */
-.flowing-footer .panel, .flowing-footer .panel-card, .flowing-footer .left-column, .flowing-footer .right-column,
-.ml-footer .panel, .ml-footer .panel-card, .ml-footer .left-column, .ml-footer .right-column {
+.flowing-footer .panel, .flowing-footer .panel-card, .flowing-footer .left-column, .flowing-footer .right-column {
   background-clip: padding-box;
   background-color: transparent !important;
 }
@@ -2229,8 +2217,7 @@ body.theme-dark .footer-two-columns .panel-card {
 
 /* Stronger specificity to override inline styles or other rules that hide the new markup */
 .footer-two-columns .breach-risk-content .risk-card,
-.flowing-footer .breach-risk-content .risk-card,
-.ml-footer .breach-risk-content .risk-card {
+.flowing-footer .breach-risk-content .risk-card {
   display: flex !important;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02)) !important;
   border-radius: 12px !important;
@@ -2307,14 +2294,14 @@ body.sidebar-collapsed .flowing-footer { left: calc(var(--sidebar-collapsed-widt
 }
 
 /* Footer color variables and consistency overrides */
-.flowing-footer, .ml-footer, .footer-two-columns {
+.flowing-footer, .footer-two-columns {
   --ff-text-primary: var(--text-primary, #1f2937);
   --ff-text-muted: var(--text-muted, #6b7280);
   --ff-accent: var(--accent-primary, #6366f1);
   --ff-accent-strong: var(--accent-strong, #4c1d95);
 }
 
-[data-theme="dark"] .flowing-footer, body.theme-dark .ml-footer, [data-theme="dark"] .footer-two-columns {
+[data-theme="dark"] .flowing-footer, body.theme-dark .flowing-footer, [data-theme="dark"] .footer-two-columns {
   --ff-text-primary: var(--text-primary, #e5e7eb);
   --ff-text-muted: var(--text-muted, #9ca3af);
   --ff-accent: var(--accent-primary, #818cf8);
@@ -2322,7 +2309,7 @@ body.sidebar-collapsed .flowing-footer { left: calc(var(--sidebar-collapsed-widt
 }
 
 /* Use primary text for main content and muted for secondary text; accents for keys/titles */
-.flowing-footer, .ml-footer {
+.flowing-footer {
   color: var(--ff-text-primary);
 }
 .flowing-title-text h3,
