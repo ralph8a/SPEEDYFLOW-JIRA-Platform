@@ -2092,6 +2092,20 @@ body.sidebar-collapsed .flowing-footer {
   box-sizing: border-box;
 }
 
+/* Remove horizontal scroll inside footer two-columns and allow children to shrink */
+.flowing-footer .footer-two-columns,
+.ml-footer .footer-two-columns {
+  overflow-x: hidden;
+}
+
+.footer-two-columns .left-column,
+.footer-two-columns .right-column,
+.footer-two-columns .panel,
+.footer-two-columns .panel-card {
+  min-width: 0; /* allow columns to shrink below content width */
+  width: 100%;
+}
+
 @media (max-width: 1100px) {
   .footer-two-columns { grid-template-columns: 1fr; }
 }
