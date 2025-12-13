@@ -17,6 +17,17 @@
             max-height: 70vh;
         }
         
+        /* Override ml-footer styles when inside Flowing MVP */
+        #balancedView .ml-footer {
+            position: relative !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            transform: none !important;
+        }
+        
         /* Ensure balanced content stays inside footer */
         #balancedView .ticket-description-section,
         #balancedView .footer-two-columns {
