@@ -1,0 +1,8 @@
+Source: https://www.telcel.com/
+
+Telcel is a major Mexican mobile network operator offering mobile services, devices, and commercial plans. As a carrier, Telcel operates cellular networks, mobile data, and value-added services. For OTT providers, Telcel is an ISP/MNO that can deliver OTT traffic to end users and may have commercial partnerships with OTT platforms.
+
+Key concepts for integration with carriers:
+- Network considerations: mobile data, latency, throughput, network neutrality
+- Commercial partnerships and bundling with OTT services
+- API integrations for billing or provisioning (carrier-specific)

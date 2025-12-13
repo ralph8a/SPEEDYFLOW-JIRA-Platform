@@ -1,0 +1,13 @@
+Source: https://cloud.google.com/apigee/docs
+
+Apigee (Google Cloud) is an API management platform that provides tools for designing, securing, deploying, monitoring, and analyzing APIs. Core features include API proxies, API gateways, traffic management, security policies (OAuth, API keys), analytics, developer portals, and monetization.
+
+Key concepts:
+- API proxy / gateway
+- Security: OAuth2, JWT, API keys, traffic quotas
+- Analytics and monitoring for API usage
+- Developer portal for API documentation and onboarding
+- Policies for mediation, transformation, and routing
+
+Usage patterns:
+- Use Apigee to manage external and internal APIs, enforce security, rate limits, and collect telemetry.

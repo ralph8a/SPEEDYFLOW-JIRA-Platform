@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 from predictor import UnifiedMLPredictor
+from chat import ChatEngine
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -46,9 +47,11 @@ async def startup():
     models_path = Path(__file__).resolve().parent / "models"
     try:
         app.state.predictor = UnifiedMLPredictor(models_dir=str(models_path), fallback_mode=True)
+        app.state.chat = ChatEngine(docs_dir=str(models_path.resolve().parent / 'docs'))
     except Exception as e:
         logger.error(f"Failed initializing predictor: {e}")
         app.state.predictor = None
+        app.state.chat = ChatEngine()
 
 @app.get("/")
 async def root():
@@ -179,6 +182,18 @@ async def predict_sla(ticket: FullTicket):
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
     return predictor.predict_sla_breach(ticket.summary, ticket.description or "")
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+@app.post('/chat')
+async def chat_endpoint(req: ChatRequest):
+    chat = getattr(app.state, 'chat', None)
+    if not chat:
+        raise HTTPException(status_code=503, detail='Chat engine not available')
+    return chat.answer(req.message)
 
 @app.post("/predict-batch")
 async def predict_batch(requests: List[PredictRequest]):

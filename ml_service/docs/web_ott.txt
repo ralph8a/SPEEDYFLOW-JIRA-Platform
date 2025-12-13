@@ -1,0 +1,13 @@
+Source: https://en.wikipedia.org/wiki/Over-the-top_media_service
+
+Over-the-top (OTT) media services are digital distribution services of video and audio delivered directly to viewers via the public Internet, rather than through cable, satellite, or IPTV providers. OTT includes subscription-based services (SVOD), free ad-supported streaming (FAST), and "skinny" bundles that provide live streams. OTT is accessed via smart TVs, streaming devices, game consoles, web browsers, and mobile apps.
+
+Key concepts:
+- Delivery over public Internet (not managed networks)
+- Types: SVOD, AVOD, FAST, MVPDs, OVDs
+- Modes of access: smart TVs, streaming devices, apps
+- Important technical concerns: CDN, streaming protocols, latency, concurrent viewers, scaling, content licensing
+
+Trends and notes:
+- OTT platforms emphasize personalization, cloud scalability, and analytics.
+- Integration with IoT and smart devices increases personalization opportunities.
