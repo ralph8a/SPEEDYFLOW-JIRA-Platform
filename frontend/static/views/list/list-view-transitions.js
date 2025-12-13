@@ -134,10 +134,10 @@ class ListViewTransitions {
     bar.innerHTML = `
       <div class="transition-bar-horizontal-header">
         <div class="transition-bar-horizontal-title">
-          ⚡ Transitions
+          ${SVGIcons.zap({size:16,className:'inline-icon'})} Transitions
           <span class="transition-bar-horizontal-ticket">${issueKey}</span>
         </div>
-        <button class="transition-bar-horizontal-close" title="Close">✕</button>
+        <button class="transition-bar-horizontal-close" title="Close">${SVGIcons.close({size:14,className:'inline-icon'})}</button>
       </div>
       <div class="transition-bar-horizontal-content">
         <div class="transition-bar-horizontal-loading">

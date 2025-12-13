@@ -100,10 +100,10 @@ class DragTransitionVertical {
     
     this.transitionBar.innerHTML = `
       <div class="transition-bar-header">
-        <span class="icon">🎯</span>
+        <span class="icon">${SVGIcons.target({size:16,className:'inline-icon'})}</span>
         <span class="text">Drop aquí para transicionar:</span>
         <span class="issue-key" id="transitionIssueKey">—</span>
-        <button class="close-button" title="Presiona ESC o suelta fuera para cancelar">✕</button>
+        <button class="close-button" title="Presiona ESC o suelta fuera para cancelar">${SVGIcons.close({size:14,className:'inline-icon'})}</button>
       </div>
       <div class="transition-zones-vertical" id="transitionZonesVertical">
         <div class="transition-loading">

@@ -37,62 +37,12 @@ function setupSidebarEventListeners() {
 }
 
 // ===== SETUP PANEL TABS =====
-function setupPanelTabs() {
-  // Currently using 2-column layout - no tabs needed
-  // Function kept for future extensibility
-}
-
-// ===== SWITCH PANEL =====
-function switchPanel(panelId) {
-  // For future use with Activity panel
-  const panels = document.querySelectorAll('.sidebar-panel');
-  panels.forEach(panel => {
-    panel.style.display = panel.id === panelId ? 'flex' : 'none';
-  });
-}
-
-// ===== OPEN SIDEBAR WITH ISSUE =====
-function openIssueDetails(issueKey) {
-  console.log('🔍 [Right Sidebar] Opening issue details for:', issueKey);
-  console.log('🔍 [Right Sidebar] Current state.issues length:', state.issues?.length || 0);
-  
-  // Close any open modals before opening ticket
-  closeAllModals();
-  
-  const issue = state.issues.find(i => i.key === issueKey);
-  if (!issue) {
-    console.error('❌ [Right Sidebar] Issue not found:', issueKey);
-    console.log('📋 [Right Sidebar] Available issues:', state.issues?.map(i => i.key) || []);
-    return;
+function processCommentText(text) {
+  if (window.commentsModule && typeof window.commentsModule.processCommentText === 'function') {
+    return window.commentsModule.processCommentText(text);
   }
-
-  sidebarState.currentIssue = issue;
-  
-  // Populate details
-  populateIssueDetails(issue);
-  
-  // Load comments
-  loadIssueComments(issueKey);
-
-  // Show sidebar
-  const rightSidebar = document.getElementById('rightSidebar');
-  rightSidebar.style.display = 'flex';
-  sidebarState.isOpen = true;
-
-  // Add class to main-wrapper
-  document.querySelector('.main-wrapper').classList.add('sidebar-open');
-
-  // Reset to details panel
-  switchPanel('detailsPanel');
-
-  // Dispatch ticketSelected event for ML features
-  document.dispatchEvent(new CustomEvent('ticketSelected', {
-    detail: { ticket: issue, issueKey: issueKey }
-  }));
-
-  // NOW setup mention and attachment systems (after sidebar is visible)
-  console.log('🔧 [Right Sidebar] Setting up interaction systems after open...');
-  
+  return text || '';
+}
   // Wait for next paint cycle to ensure DOM is fully visible
   requestAnimationFrame(() => {
     setTimeout(() => {
@@ -148,6 +98,25 @@ function openIssueDetails(issueKey) {
     setTimeout(() => {
       window.mentionsAutocomplete.attachTo(commentTextarea, issueKey);
     }, 100);
+  }
+  // If mentionsAutocomplete is not present, try loading it dynamically
+  else if (commentTextarea && !window.mentionsAutocomplete) {
+    (async () => {
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = '/static/js/modules/mentions-autocomplete.js?v=' + Date.now();
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        if (window.mentionsAutocomplete) {
+          setTimeout(() => window.mentionsAutocomplete.attachTo(commentTextarea, issueKey), 120);
+        }
+      } catch (e) {
+        console.warn('Failed to dynamically load mentions-autocomplete:', e);
+      }
+    })();
   }
   
   // Initialize SLA Monitor if available
@@ -281,109 +250,10 @@ function fetchServiceDeskRequestDetails(issueKey) {
 
 // ===== LOAD COMMENTS =====
 function loadIssueComments(issueKey) {
-  const commentsList = document.getElementById('commentsList');
-  const commentCount = document.getElementById('commentCount');
-
-  if (!commentsList) {
-    return;
+  if (window.commentsModule && typeof window.commentsModule.loadIssueComments === 'function') {
+    return window.commentsModule.loadIssueComments(issueKey, { listSelector: '#commentsList', countSelector: '#commentCount' });
   }
-
-  // Show loading state
-  commentsList.innerHTML = '<p class="loading">Loading comments...</p>';
-
-  // Fetch from V2 API (includes body_html with rendered images)
-  fetch(`/api/v2/issues/${issueKey}/comments`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      
-      // Handle different response formats
-      // Backend wraps in: {success: true, data: {comments: [...], attachments: [...]}
-      let comments = [];
-      
-      // Check if wrapped by json_response decorator
-      if (data.success && data.data) {
-        // data.data contains the actual response from the endpoint
-        if (Array.isArray(data.data.comments)) {
-          comments = data.data.comments;
-        } else if (Array.isArray(data.data)) {
-          comments = data.data;
-        }
-      } else if (Array.isArray(data)) {
-        comments = data;
-      } else if (data.data && Array.isArray(data.data)) {
-        comments = data.data;
-      } else if (data.comments && Array.isArray(data.comments)) {
-        comments = data.comments;
-      } else if (data.result && Array.isArray(data.result)) {
-        comments = data.result;
-      } else {
-        comments = [];
-      }
-
-      if (!Array.isArray(comments)) {
-        comments = [];
-      }
-
-      if (comments.length === 0) {
-        commentsList.innerHTML = '<p class="no-comments">No comments yet</p>';
-        if (commentCount) commentCount.textContent = '(0)';
-        return;
-      }
-
-      if (commentCount) commentCount.textContent = `(${comments.length})`;
-
-      let html = '';
-      comments.forEach((comment, index) => {
-        const author = comment.author?.displayName || comment.author || 'Unknown';
-        const time = formatCommentTime(comment.created || comment.timestamp);
-        
-        // Get text content (V1 uses 'body', V2 might use 'text' or 'body_html')
-        let text = comment.body_html || comment.body || comment.text || '';
-        
-        // Process and clean up the comment text
-        text = processCommentText(text);
-        
-        const initials = author.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-        const commentId = comment.id || index;
-        
-        // Extract visibility if present (for internal comments)
-        const isInternal = comment.visibility === 'internal' || comment.jsdPublic === false;
-        const visibilityBadge = isInternal ? '<span class="comment-visibility-badge internal">🔒 Internal</span>' : '';
-
-        html += `
-          <div class="comment ${isInternal ? 'internal' : ''}" data-comment-id="${commentId}" data-author="${author}">
-            <div class="comment-avatar">${initials}</div>
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">${author}</span>
-                <span class="comment-time">${time}</span>
-                ${visibilityBadge}
-              </div>
-              <div class="comment-text">${text}</div>
-              <div class="comment-actions">
-                <button class="comment-action-btn" title="Reply to ${author}">↩️ Reply</button>
-                <button class="comment-action-btn" title="Like">👍 Like</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      commentsList.innerHTML = html;
-      setupCommentEventListeners(issueKey);
-      
-      // Initialize mentions system on comment textarea
-      if (window.mentionSystem) {
-        window.mentionSystem.init('commentText');
-      }
-    })
-    .catch(error => {
-      commentsList.innerHTML = '<p class="error">Failed to load comments</p>';
-    });
+  console.warn('commentsModule not available - cannot load comments');
 }
 
 // ===== GET ISSUE ATTACHMENTS =====
@@ -485,117 +355,19 @@ function processCommentText(text) {
 
 // ===== SETUP COMMENT EVENT LISTENERS =====
 function setupCommentEventListeners(issueKey) {
-  const actionBtns = document.querySelectorAll('.comment-action-btn');
-  actionBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const comment = e.target.closest('.comment');
-      const commentId = comment.dataset.commentId;
-      const action = e.target.textContent.trim().split(' ')[1];
-      
-      if (action.includes('Reply')) {
-        const textarea = document.getElementById('commentText');
-        if (textarea) {
-          // Get the author name from the comment dataset
-          const authorName = comment.dataset.author || '';
-          
-          // Auto-mention the author in the textarea
-          if (authorName) {
-            const mention = `@${authorName} `;
-            // If textarea is empty or doesn't already have this mention, add it
-            if (!textarea.value.includes(mention)) {
-              textarea.value = mention + textarea.value;
-            }
-          }
-          
-          textarea.focus();
-          // Move cursor to end of text
-          textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-          textarea.placeholder = `Reply to ${authorName}...`;
-        }
-      }
-    });
-  });
+  if (window.commentsModule && typeof window.commentsModule.setupCommentEventListeners === 'function') {
+    return window.commentsModule.setupCommentEventListeners(issueKey, { listSelector: '#commentsList', textareaSelector: '#commentText' });
+  }
+  console.warn('commentsModule not available - cannot setup comment event listeners');
 }
 
 // ===== POST COMMENT =====
 function postComment(issueKey) {
-  const textarea = document.getElementById('commentText');
-  if (!textarea) {
-    return;
+  if (window.commentsModule && typeof window.commentsModule.postComment === 'function') {
+    // default targets for right-sidebar
+    return window.commentsModule.postComment(issueKey, { textareaSelector: '#commentText', internalCheckboxSelector: '#commentInternal', listSelector: '#commentsList', countSelector: '#commentCount', buttonSelector: '.btn-add-comment', visibilityLabelSelector: '.visibility-label' });
   }
-
-  const text = textarea.value.trim();
-  if (!text) {
-    alert('Please enter a comment');
-    return;
-  }
-
-  // Get visibility setting
-  const internalCheckbox = document.getElementById('commentInternal');
-  const isInternal = internalCheckbox ? internalCheckbox.checked : false;
-
-  // Show loading state
-  const btn = document.querySelector('.btn-add-comment');
-  if (!btn) {
-    return;
-  }
-  
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Posting...';
-
-  // Call API V2 (better formatting and image support)
-  fetch(`/api/v2/issues/${issueKey}/comments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      body: text,
-      internal: isInternal,
-      format: 'text'
-    })
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      
-      // Check if wrapped by json_response decorator
-      const success = data.success || (data.data && data.data.id) || data.id;
-      
-      if (success) {
-        textarea.value = '';
-        
-        // Reset visibility to public
-        const internalCheckbox = document.getElementById('commentInternal');
-        if (internalCheckbox) {
-          internalCheckbox.checked = false;
-          const visibilityLabel = document.querySelector('.visibility-label');
-          if (visibilityLabel) visibilityLabel.textContent = '🔓 Public';
-        }
-        
-        // Update comment count
-        const countBadge = document.getElementById('commentCount');
-        if (countBadge) {
-          const currentCount = parseInt(countBadge.textContent) || 0;
-          countBadge.textContent = currentCount + 1;
-        }
-        
-        // Reload comments
-        loadIssueComments(issueKey);
-      } else {
-        alert('Failed to post comment');
-      }
-    })
-    .catch(error => {
-      alert(`Error posting comment: ${error.message}`);
-    })
-    .finally(() => {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    });
+  console.warn('commentsModule not available - cannot post comment');
 }
 
 // ===== CLOSE SIDEBAR =====
@@ -1239,19 +1011,13 @@ function formatDate(dateString) {
 
 // ===== FORMAT COMMENT TIME (relative) =====
 function formatCommentTime(dateString) {
+  if (window.commentsModule && typeof window.commentsModule.formatCommentTime === 'function') {
+    return window.commentsModule.formatCommentTime(dateString);
+  }
   if (!dateString) return '—';
-  
   try {
     const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    
-    if (seconds < 60) return 'just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
-    
-    return date.toLocaleDateString('en-US');
+    return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   } catch {
     return dateString;
   }
@@ -1301,16 +1067,8 @@ function renderAttachments(issue) {
     const isImage = mimeType.startsWith('image/');
     
     // Determine icon based on MIME type (only for non-images)
-    let icon = '📄';
-    if (!isImage) {
-      if (mimeType.startsWith('video/')) icon = '🎥';
-      else if (mimeType.startsWith('audio/')) icon = '🎵';
-      else if (mimeType.includes('pdf')) icon = '📕';
-      else if (mimeType.includes('word') || mimeType.includes('document')) icon = '📝';
-      else if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) icon = '📊';
-      else if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) icon = '📊';
-      else if (mimeType.includes('zip') || mimeType.includes('compressed')) icon = '📦';
-    }
+    let icon = SVGIcons.file({size:18,className:'attachment-icon-svg'});
+    // Future: map specific mime -> different icons; fallback to file icon
     
     html += `
       <div class="attachment-card">
@@ -1332,7 +1090,7 @@ function renderAttachments(issue) {
           <div class="attachment-date">${created}</div>
         </div>
         <a href="${url}" download="${filename}" class="attachment-download" title="Download">
-          ⬇️
+          ${SVGIcons.download({size:18,className:'attachment-download-svg'})}
         </a>
       </div>
     `;
@@ -1618,6 +1376,20 @@ function setupAttachmentsSystem() {
   console.log('✅ [Attachments] Setup complete');
 }
 
+// Delegated click: if user clicks attach button but setup failed earlier, retry setup
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('#attachBtn, .comment-toolbar-btn');
+  if (!target) return;
+  // If attachmentsPreview exists but has no children, try setupAttachmentsSystem
+  const preview = document.getElementById('attachmentsPreview');
+  const list = document.getElementById('attachmentsList');
+  if ((preview && (!preview.classList.contains('show') || (list && list.children.length === 0))) || !document.getElementById('attachBtn')) {
+    try {
+      setTimeout(() => { if (typeof setupAttachmentsSystem === 'function') setupAttachmentsSystem(); }, 80);
+    } catch (err) { /* silent */ }
+  }
+});
+
 let attachedFiles = [];
 
 function addAttachments(files) {
@@ -1654,17 +1426,9 @@ function addAttachments(files) {
 
 // ===== SETUP COMMENT KEYBOARD SHORTCUTS =====
 function setupCommentShortcuts() {
-  const commentText = document.getElementById('commentText');
-  
-  if (!commentText) return;
-
-  commentText.addEventListener('keydown', (e) => {
-    // Ctrl+Enter or Cmd+Enter to post
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      document.querySelector('.btn-add-comment')?.click();
-    }
-  });
+  if (window.commentsModule && typeof window.commentsModule.setupCommentShortcuts === 'function') {
+    return window.commentsModule.setupCommentShortcuts();
+  }
 }
 
 // ===== EXPORT FOR USE =====

@@ -45,6 +45,10 @@
   
   <!-- AUTO-SWITCH NOTIFICATION STYLING -->
   <link rel="stylesheet" href="/static/css/components/auto-switch-notification.css?v={{ timestamp }}">
+  <!-- GLOBAL SHADOWS: add depth to UI components -->
+  <link rel="stylesheet" href="/static/css/components/shadows.css?v={{ timestamp }}">
+  <!-- Purple accents for Flowing MVP -->
+  <link rel="stylesheet" href="/static/css/components/purple-accents.css?v={{ timestamp }}">
   
   
   <!-- INLINE STYLES FOR SIDEBAR ACTION BUTTON -->
@@ -192,6 +196,10 @@
             element.innerHTML = sidebarDetailIconMappings[id];
           }
         });
+
+        // Flowing MVP send icon
+        const flowingSendIconEl = document.getElementById('flowingSendIcon');
+        if (flowingSendIconEl) flowingSendIconEl.innerHTML = SVGIcons.send({ size: 14, className: 'svg-assemble' });
         
         console.log('✅ All SVG icons injected (sidebar, header, ML dashboard, filter bar, right sidebar)');
       } else {
@@ -237,9 +245,14 @@
   
   <!-- Chart.js for interactive charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Emoji -> SVG runtime replacer (uses SVGIcons.render) -->
+  <script src="/static/js/utils/emoji-replacer.js?v={{ timestamp }}"></script>
   
   <!-- USER SETUP MODAL (First-time configuration) -->
   <link rel="stylesheet" href="/static/css/user-setup-modal.css?v={{ timestamp }}">
+  
+  <!-- FLOWING MVP FOOTER STYLES -->
+  <link rel="stylesheet" href="/static/css/flowing-mvp-footer.css?v={{ timestamp }}">
   
 </head>
 <body class="theme-light">
@@ -442,6 +455,7 @@
           <div class="column-header">
             <h3>Ticket Details</h3>
           </div>
+          <div class="purple-divider" style="margin:8px 0;"></div>
 
           <div class="column-content">
             <!-- SLA MONITOR (First, most important) -->
@@ -569,6 +583,67 @@
     </div>
   </div>
 
+  <!-- ===== FLOWING MVP FOOTER (Integrated) ===== -->
+  <div id="flowingFooter" class="flowing-footer collapsed">
+    <!-- Toggle Button -->
+    <button id="flowingToggleBtn" class="flowing-toggle-btn" title="Flowing MVP Assistant">
+      <span class="flowing-icon flowing-sf-logo">SF</span>
+      <div class="flowing-info">
+        <span class="flowing-label">Flowing MVP</span>
+        <span class="flowing-suggestion" id="flowingSuggestion">Analyzing your queue...</span>
+      </div>
+      <span class="flowing-chevron">▲</span>
+      <span id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</span>
+    </button>
+
+    <!-- Flowing Content -->
+    <div class="flowing-content">
+
+      <!-- Chat-Only View (Default) -->
+      <div id="chatOnlyView">
+        <!-- Messages Container -->
+        <div id="flowingMessages" class="flowing-messages">
+          <div class="flowing-message assistant">
+            <div class="message-avatar flowing-sf-logo">SF</div>
+            <div class="message-content">
+              <p>👋 Hi! I'm Flowing MVP, your SpeedyFlow Ticket Solving Mate! I can help you with:</p>
+              <ul>
+                <li>📋 Analyzing ticket priorities and patterns</li>
+                <li>⏱️ Explaining SLA statuses and deadlines</li>
+                <li>🎯 Suggesting next actions for tickets</li>
+                <li>📊 Providing insights on queue metrics</li>
+              </ul>
+              <p>Just ask me anything!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="flowing-input-area">
+          <div class="flowing-context-badge" id="flowingContextBadge">
+            <span class="context-icon">🎯</span>
+            <span class="context-text">No context</span>
+          </div>
+          <div class="flowing-input-wrapper">
+            <input type="text" id="flowingInput" class="flowing-input" placeholder="Ask me anything about your tickets..." />
+            <button id="flowingSendBtn" class="flowing-send-btn" title="Send">
+              <span id="flowingSendIcon" class="inline-icon svg-assemble"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balanced View (Hidden by default, shown when ticket selected) -->
+      <div id="balancedView" class="balanced-view" style="display: none;">
+        <!-- This will be dynamically populated with ticket details when a ticket is selected -->
+        <div id="balancedContentContainer">
+          <!-- Ticket details will be loaded here by flowing-mvp-footer.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ===== END FLOWING MVP FOOTER ===== -->
+
   <script>
     // Detectar usuario actual desde JIRA
     fetch('/api/user')
@@ -599,6 +674,9 @@
   <script src="/static/js/sidebar-tooltip-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-actions.js?v={{ timestamp }}"></script>
   <script src="/static/js/header-menu-controller.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/mentions-autocomplete.js?v={{ timestamp }}"></script>
+  <!-- Comments module must load before right-sidebar to provide comment utilities -->
+  <script src="/static/js/modules/comments.js?v={{ timestamp }}"></script>
   <script src="/static/js/right-sidebar.js?v={{ timestamp }}"></script>
   <script src="/static/js/mentions-system.js?v={{ timestamp }}"></script>
   <script src="/static/js/notifications-panel.js?v={{ timestamp }}"></script>
@@ -664,11 +742,84 @@
         // Check if setupMentionSystem function exists
         console.log('✓ setupMentionSystem function exists:', typeof window.setupMentionSystem === 'function');
         console.log('✓ setupAttachmentsSystem function exists:', typeof window.setupAttachmentsSystem === 'function');
+        console.log('✓ window.commentsModule exists:', !!window.commentsModule);
+        console.log('✓ window.mentionsAutocomplete exists:', !!window.mentionsAutocomplete);
+        console.log('✓ window.mentionSystem exists:', !!window.mentionSystem);
       }, 500);
     });
   </script>
 
   <!-- User Setup Modal -->
   <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
+  
+  <!-- FLOWING MVP FOOTER SCRIPT -->
+  <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
+  
+  <!-- FLOWING MVP INTEGRATION SCRIPT -->
+  <script>
+    // Integration script: Connect Flowing MVP with main app
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🔗 Integrating Flowing MVP Footer with main app...');
+      
+      // Wait for both app.js and flowing-mvp-footer.js to load
+      const initFlowingIntegration = () => {
+        if (!window.flowingFooter) {
+          console.warn('⏳ Waiting for Flowing MVP Footer to initialize...');
+          setTimeout(initFlowingIntegration, 100);
+          return;
+        }
+        
+        // CRITICAL: Listen for ticket details button clicks
+        document.addEventListener('click', function(e) {
+          // Check if click is on a details button (kanban or list view)
+          const detailsBtn = e.target.closest('.issue-details-btn, .btn-view-details');
+          
+          if (detailsBtn && window.flowingFooter) {
+            e.preventDefault(); // Prevent default right sidebar opening
+            e.stopPropagation(); // Stop event from bubbling
+            
+            const issueKey = detailsBtn.dataset.issueKey || detailsBtn.dataset.key;
+            
+            if (issueKey) {
+              console.log('🎯 Details button clicked for ticket:', issueKey);
+              
+              // Expand footer if collapsed
+              if (!window.flowingFooter.isExpanded) {
+                window.flowingFooter.expand();
+              }
+              
+              // Switch to balanced view with ticket details
+              window.flowingFooter.switchToBalancedView(issueKey);
+              
+              // Prevent right sidebar from opening
+              return false;
+            }
+          }
+          
+          // Alternative: Listen for ticket card clicks (optional fallback)
+          const ticketCard = e.target.closest('.ticket-card, .kanban-card, .list-row');
+          if (ticketCard && !e.target.closest('.issue-details-btn, .btn-view-details') && window.flowingFooter) {
+            const ticketKey = ticketCard.dataset.issueKey || ticketCard.dataset.key;
+            if (ticketKey && window.flowingFooter.context) {
+              // Just update context, don't open balanced view (let right sidebar handle it)
+              window.flowingFooter.context.selectedIssue = ticketKey;
+            }
+          }
+        }, true); // Use capture phase to intercept before right-sidebar.js
+        
+        // Sync theme changes
+        const themeObserver = new MutationObserver(() => {
+          const bodyTheme = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
+          document.body.setAttribute('data-theme', bodyTheme);
+        });
+        themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        
+        console.log('✅ Flowing MVP Footer integrated successfully');
+        console.log('💡 Click on ticket details buttons to view in Flowing MVP');
+      };
+      
+      initFlowingIntegration();
+    });
+  </script>
 </body>
 </html>

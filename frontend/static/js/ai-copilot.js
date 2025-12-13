@@ -128,7 +128,7 @@ class AICopilot {
 
     if (overdueTickets.length > 0) {
       this.suggestions.push({
-        text: `⚠️ ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue (7+ days)`,
+        text: `${SVGIcons.alert({size:14,className:'inline-icon'})} ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue (7+ days)`,
         type: 'warning'
       });
     }
@@ -140,7 +140,7 @@ class AICopilot {
 
     if (urgentTickets.length > 0) {
       this.suggestions.push({
-        text: `🔴 ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`,
+        text: `${SVGIcons.xCircle({size:14,className:'inline-icon'})} ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`,
         type: 'critical'
       });
     }
@@ -152,7 +152,7 @@ class AICopilot {
 
     if (unassignedTickets.length > 0) {
       this.suggestions.push({
-        text: `👤 ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`,
+        text: `${SVGIcons.user({size:14,className:'inline-icon'})} ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`,
         type: 'info'
       });
     }
@@ -166,7 +166,7 @@ class AICopilot {
 
     if (aboutToBreachTickets.length > 0) {
       this.suggestions.push({
-        text: `⏱️ ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`,
+        text: `${SVGIcons.clock({size:14,className:'inline-icon'})} ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`,
         type: 'warning'
       });
     }
@@ -174,14 +174,14 @@ class AICopilot {
     // All clear message
     if (this.suggestions.length === 0) {
       this.suggestions.push({
-        text: '✅ All tickets are up to date!',
+        text: `${SVGIcons.success({size:14,className:'inline-icon'})} All tickets are up to date!`,
         type: 'success'
       });
     }
 
     // Add general queue info
     this.suggestions.push({
-      text: `📊 ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`,
+      text: `${SVGIcons.chart({size:14,className:'inline-icon'})} ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`,
       type: 'info'
     });
   }
@@ -208,8 +208,8 @@ class AICopilot {
       // Get current suggestion
       const suggestion = this.suggestions[this.currentSuggestionIndex];
       
-      // Update text and styling
-      this.suggestionElement.textContent = suggestion.text;
+      // Update HTML (suggestion.text may include SVG markup)
+      this.suggestionElement.innerHTML = suggestion.text;
       
       // Remove all type classes
       this.suggestionElement.classList.remove(

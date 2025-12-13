@@ -1,0 +1,84 @@
+/* Global shadows to add depth across the UI
+   Uses design tokens in :root (variables.css). This file provides stronger
+   shadows and dark-mode overrides to improve legibility in dark themes.
+*/
+
+:root {
+  /* Softer, lower-elevation shadows by default */
+  --shadow: 0 8px 24px rgba(2,6,23,0.10);
+  --shadow-md: 0 10px 30px rgba(2,6,23,0.12);
+  --shadow-sm: 0 4px 12px rgba(2,6,23,0.08);
+  --transition-base: 220ms;
+  --transition-fast: 120ms;
+}
+
+/* Apply shadows only to essential, small-to-medium elements */
+:where(.issue-card, .card, .flowing-footer, .mentions-autocomplete-dropdown, .comment) {
+  box-shadow: var(--shadow) !important;
+  transition: box-shadow var(--transition-base) ease, transform var(--transition-fast) ease;
+}
+
+/* Keep other large panels flat by default */
+:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-column, .right-column, .comments-section) {
+  box-shadow: none !important;
+}
+
+/* Smaller elements (buttons, small cards, mention items) */
+:where(button, .btn, .btn-add-comment, .btn-add-comment-footer, .comment-action-btn, .comment-toolbar-btn, .mention-item, .mention-option) {
+  box-shadow: var(--shadow-sm) !important;
+  transition: box-shadow var(--transition-fast) ease, transform var(--transition-fast) ease;
+}
+
+/* Hover/active states for emphasis */
+:where(.card:hover, [class*="card"]:hover, .panel:hover, .issue-card:hover, .flowing-footer:hover, .mentions-autocomplete-dropdown .mention-item:hover, button:hover, .btn:hover, .comment:hover) {
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-2px);
+}
+
+/* Focus states should also show slight elevation */
+:where(button:focus, .btn:focus, .mention-item:focus, .field-input:focus, textarea:focus, input:focus) {
+  outline: none !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Make the mentions dropdown items clearly separated */
+.mentions-autocomplete-dropdown .mention-item {
+  border-radius: 6px;
+  margin: 6px;
+  padding: 6px 8px;
+}
+
+/* Subtle inner shadows for cards that contain images */
+.issue-card .card-image, .comment .comment-avatar {
+  box-shadow: var(--shadow-sm) inset !important;
+}
+
+/* Dark mode overrides: force readable backgrounds and contrast */
+body[data-theme="dark"] :where(.ticket-description-section, .field-input, .ml-actions-section, .comments-section, .suggestion-item, .flowing-footer, .left-column, .right-column, .panel, .panel-card, .issue-card) {
+  background: linear-gradient(180deg, rgba(10,12,18,0.6), rgba(8,10,14,0.6)) !important;
+  color: #e6eef8 !important;
+  border-color: rgba(255,255,255,0.04) !important;
+}
+
+/* Ensure white text for small labels in dark mode */
+body[data-theme="dark"] .field-label, body[data-theme="dark"] .comment-author, body[data-theme="dark"] .comment-time {
+  color: #cbd5e1 !important;
+}
+
+/* Mentions dropdown in dark mode */
+body[data-theme="dark"] .mentions-autocomplete-dropdown {
+  background: #071022 !important;
+  color: #e6eef8 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+}
+
+/* Attachments preview in dark mode */
+body[data-theme="dark"] .attachments-preview, body[data-theme="dark"] .attachments-preview-footer {
+  background: transparent !important;
+}
+
+/* Remove shadows for large layout panels to keep UI light and avoid heavy elevation */
+:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-column, .right-column) {
+  box-shadow: none !important;
+}
