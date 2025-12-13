@@ -51,8 +51,26 @@ class FlowingFooter {
     this.suggestionElement = document.getElementById('flowingSuggestion');
 
     if (!this.footer) {
-      console.error('❌ Flowing MVP footer not found');
-      return;
+      // Backward-compat: some older/prototype markup uses `ml-footer` or id `mlFooter`.
+      // To avoid breaking existing markup, map legacy classes/ids to the new Flowing MVP names.
+      const legacy = document.getElementById('mlFooter') || document.querySelector('.ml-footer');
+      if (legacy) {
+        console.warn('⚠️ Flowing footer element not found by id; mapping legacy .ml-footer to Flowing MVP');
+        // ensure it has the expected id/class names used by the new implementation
+        legacy.id = legacy.id || 'flowingFooter';
+        legacy.classList.add('flowing-footer');
+        // map common legacy header/content classes
+        const legacyHeader = legacy.querySelector('.ml-footer-header');
+        if (legacyHeader) legacyHeader.classList.add('flowing-header');
+        const legacyContent = legacy.querySelector('.ml-footer-content');
+        if (legacyContent) legacyContent.classList.add('flowing-content');
+        // retry assigning
+        this.footer = document.getElementById('flowingFooter');
+      }
+      if (!this.footer) {
+        console.error('❌ Flowing MVP footer not found');
+        return;
+      }
     }
 
     this.attachEventListeners();
