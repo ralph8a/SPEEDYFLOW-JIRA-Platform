@@ -42,6 +42,17 @@ def load_chat_jokes():
 
 load_chat_jokes()
 
+
+@copilot_bp.route('/docs/reload-jokes', methods=['POST'])
+def reload_jokes():
+    """Reload chat_jokes.json without restarting the server (admin use)."""
+    try:
+        load_chat_jokes()
+        return jsonify({'status': 'reloaded', 'jokes_count': len(CHAT_JOKES), 'names_count': len(CHAT_NAMES)})
+    except Exception as e:
+        logger.error(f"Error reloading chat_jokes.json: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @copilot_bp.route('/chat', methods=['POST'])
 def chat():
     """
