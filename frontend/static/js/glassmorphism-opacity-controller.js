@@ -263,7 +263,12 @@ class TransparencyManager {
       '.filter-bar-enhanced': 'primary',
       '.modal': 'secondary',
       '.navbar': 'tertiary',
-      '.kanban-column': 'secondary'
+      '.kanban-column': 'secondary',
+      // Flowing MVP footer / chat assistant
+      '.flowing-footer': 'tertiary',
+      '.flowing-content': 'tertiary',
+      '.footer-two-columns': 'tertiary',
+      '.comments-ai-container': 'tertiary'
     };
 
     Object.entries(mainContainers).forEach(([selector, level]) => {
@@ -355,7 +360,12 @@ class TransparencyManager {
       '.filter-bar-enhanced',
       '.modal',
       '.navbar',
-      '.kanban-column'
+      '.kanban-column',
+      // Flowing MVP footer containers
+      '.flowing-footer',
+      '.flowing-content',
+      '.footer-two-columns',
+      '.comments-ai-container'
     ];
     
     elements.forEach(el => {
