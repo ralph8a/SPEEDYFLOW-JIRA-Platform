@@ -1179,7 +1179,29 @@ class FlowingFooter {
     // Extract key fields from multiple sources (same as right-sidebar)
     const summary = issue.summary || getField('summary') || 'No title';
     // If no description provided, keep empty so we can hide the section
-    const description = issue.description || getField('description') || '';
+    const rawDescription = issue.description || getField('description') || '';
+    // Helper to escape HTML
+    const escapeHtml = (str) => String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    // Normalize line endings and remove excessive blank lines and leading breaks
+    const normalizeDescription = (txt) => {
+      if (!txt) return '';
+      let s = String(txt).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      // Remove leading blank lines/spaces
+      s = s.replace(/^\s*\n+/, '');
+      // Collapse 3+ consecutive newlines to two (paragraph)
+      s = s.replace(/\n{3,}/g, '\n\n');
+      // Trim trailing whitespace
+      s = s.replace(/\s+$/g, '');
+      return s;
+    };
+    const cleanedDescription = normalizeDescription(rawDescription);
+    // Convert to safe HTML with <br> for line breaks so layout is consistent
+    const description = cleanedDescription ? escapeHtml(cleanedDescription).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') : '';
     
     // Standard fields
     const priority = formatValue(issue.priority || getField('priority'));
@@ -1268,8 +1290,8 @@ class FlowingFooter {
             ${SVGIcons.chevronDown({size:14,className:'inline-icon'})}
           </button>
         </label>
-        <div id="ticketDescriptionContent" class="ticket-description-content" style="color: #4b5563; line-height: 1.6; font-size: 13px; max-height: 120px; overflow-y: auto; white-space: pre-wrap;">
-          ${description}
+        <div id="ticketDescriptionContent" class="ticket-description-content" style="color: #4b5563; line-height: 1.6; font-size: 13px; max-height: 120px; overflow-y: auto;">
+          ${description ? `<p style="margin:0 0 8px 0;">${description}</p>` : ''}
         </div>
       </div>
       ` : ''}
