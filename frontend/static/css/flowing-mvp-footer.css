@@ -1524,11 +1524,11 @@ body.sidebar-collapsed .flowing-footer {
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #374151;
+  color: var(--ff-text-primary);
 }
 
 [data-theme="dark"] .flowing-toggle-btn {
-  color: #e5e7eb;
+  color: var(--ff-text-muted);
 }
 
 .flowing-toggle-btn:hover {
@@ -1589,7 +1589,7 @@ body.sidebar-collapsed .flowing-footer {
   font-size: 13px;
   font-weight: 400;
   opacity: 0;
-  color: #6b7280;
+  color: var(--ff-text-muted);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
