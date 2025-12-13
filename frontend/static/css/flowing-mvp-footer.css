@@ -336,6 +336,21 @@ body.theme-dark .ticket-description-content {
     color: var(--text-secondary, #e0e0e0);
 }
 
+/* Collapse the entire description SECTION so following content moves up when collapsed */
+.ticket-description-section {
+  transition: max-height 260ms ease, padding 200ms ease, opacity 180ms ease;
+  max-height: 9999px; /* allow natural height */
+  overflow: hidden;
+}
+.ticket-description-section.collapsed {
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+  opacity: 0; /* fade out slightly */
+}
+.ticket-description-section .ticket-description-content { max-height: none !important; }
+
 /* Two Columns Layout: consolidated later in file (keep single canonical definition near bottom) */
 
 /* LEFT COLUMN */

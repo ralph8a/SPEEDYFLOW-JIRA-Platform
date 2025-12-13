@@ -939,12 +939,14 @@ class FlowingFooter {
       try {
         const descToggle = document.getElementById('descriptionToggleBtn');
         const descContent = document.getElementById('ticketDescriptionContent');
-        if (descToggle && descContent) {
+        const descSection = document.getElementById('ticketDescriptionSection');
+        if (descToggle && descContent && descSection) {
           descToggle.addEventListener('click', () => {
             console.log('🔧 Description toggle clicked');
-            const isCollapsed = descContent.classList.toggle('collapsed');
+            // Toggle collapsed on the SECTION to collapse upward and free space for following content
+            const isCollapsed = descSection.classList.toggle('collapsed');
             descToggle.setAttribute('aria-expanded', String(!isCollapsed));
-            // toggle class for icon rotation
+            // toggle class for icon rotation (on the button)
             if (isCollapsed) descToggle.classList.add('collapsed'); else descToggle.classList.remove('collapsed');
             // update title
             descToggle.title = isCollapsed ? 'Expand description' : 'Collapse description';
@@ -1254,7 +1256,7 @@ class FlowingFooter {
     container.innerHTML = `
       ${description ? `
       <!-- Description Section (Full Width) -->
-      <div class="ticket-description-section" style="padding: 16px 20px; background: rgba(249, 250, 251, 0.5); border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
+      <div id="ticketDescriptionSection" class="ticket-description-section" style="padding: 16px 20px; background: rgba(249, 250, 251, 0.5); border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
         <label class="section-label" style="display: flex; align-items: center; gap: 8px; color: #4a5568; font-weight: 600; font-size: 13px; margin-bottom: 8px;">
           <span style="display:flex; align-items:center; gap:8px;">
             ${SVGIcons.file({size:14,className:'inline-icon'})}
