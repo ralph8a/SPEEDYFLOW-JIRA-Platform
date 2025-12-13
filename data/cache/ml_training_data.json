@@ -549,12 +549,47 @@
         "suggestions_count": 1,
         "model": "ollama-llama3.2"
       }
+    },
+    {
+      "context_hash": "7e0c11f59ded99d3c3b1ad02cc90fbed",
+      "ticket_key": "Tiempos",
+      "timestamp": "2025-12-12T21:39:37.507998",
+      "input": {
+        "summary": "Tiempos Altos en Product Ordering 12/12/2025",
+        "description": "",
+        "issue_type": "Unknown",
+        "status": "En Progreso",
+        "priority": "Medium",
+        "comments": [],
+        "comments_count": 0
+      },
+      "output": {
+        "suggestions": [
+          {
+            "text": "Revisar el historial de usuarios para detectar patrones de alta demanda.",
+            "type": "action",
+            "confidence": 0.9
+          },
+          {
+            "text": "Verificar la configuración de la base de datos y asegurarse de que no esté sobrecargada.",
+            "type": "action",
+            "confidence": 0.9
+          },
+          {
+            "text": "Implementar un sistema de carga dinámica para manejar picos de tráfico.",
+            "type": "action",
+            "confidence": 0.9
+          }
+        ],
+        "suggestions_count": 3,
+        "model": "ollama-llama3.2"
+      }
     }
   ],
   "metadata": {
     "created": "2025-12-07T23:58:43.823087",
-    "last_modified": "2025-12-09T09:29:22.806278",
-    "total_samples": 17,
+    "last_modified": "2025-12-12T21:39:37.507998",
+    "total_samples": 18,
     "compressed": false,
     "version": "1.0"
   }
