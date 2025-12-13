@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 # Blueprint para rutas de severidad
 severity_bp = Blueprint('severity', __name__, url_prefix='/api/severity')
 
-
 @severity_bp.route('/issues/<queue_id>', methods=['GET'])
 def get_issues_with_severity(queue_id):
     """
@@ -79,7 +78,6 @@ def get_issues_with_severity(queue_id):
         logger.exception(f"Error in severity endpoint: {e}")
         return jsonify({'error': str(e)}), 500
 
-
 @severity_bp.route('/test', methods=['GET'])
 def test_severity():
     """
@@ -112,7 +110,6 @@ def test_severity():
         'message': 'Severity enrichment test',
         'data': enriched
     }), 200
-
 
 def register_severity_routes(app):
     """Registra las rutas de severidad en la app"""

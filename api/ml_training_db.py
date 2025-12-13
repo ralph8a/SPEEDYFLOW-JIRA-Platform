@@ -100,7 +100,7 @@ class MLTrainingDatabase:
         priority: str,
         all_comments: list,
         suggestions: list,
-        model: str = "ollama"
+        model: str = ""
     ):
         """
         Add a training sample with full context and AI-generated suggestions
@@ -114,7 +114,7 @@ class MLTrainingDatabase:
             priority: Priority level
             all_comments: List of all comments
             suggestions: List of AI-generated suggestions
-            model: Model used (default: "ollama")
+            model: Model used (default: "")
         """
         
         # Generate context hash to avoid duplicates
@@ -241,7 +241,6 @@ class MLTrainingDatabase:
         
         logger.info(f"📦 Exported {len(training_data)} training examples to {output_path}")
         return str(output_path)
-
 
 # Singleton instance
 _ml_db_instance = None

@@ -34,7 +34,6 @@ def broadcast_notification(notification):
             except Exception as e:
                 logger.error("Error broadcasting to client: %s", str(e))
 
-
 @notifications_bp.route('/api/notifications/stream', methods=['GET'])
 @require_credentials
 def notifications_stream():
@@ -77,7 +76,6 @@ def notifications_stream():
         'Connection': 'keep-alive'
     })
 
-
 @notifications_bp.route('/api/notifications', methods=['GET'])
 @handle_api_error
 @json_response
@@ -93,7 +91,6 @@ def list_notifications():
     # Fetch notifications for this user + global notifications
     items = list_notifications_for_user(user_id)
     return {'notifications': items, 'count': len(items)}
-
 
 @notifications_bp.route('/api/notifications', methods=['POST'])
 @handle_api_error
@@ -113,7 +110,6 @@ def create_notification_endpoint():
     
     return {'created': True, 'notification': rec}
 
-
 @notifications_bp.route('/api/notifications/<int:nid>/read', methods=['POST'])
 @handle_api_error
 @json_response
@@ -126,7 +122,6 @@ def mark_read_endpoint(nid: int):
         return {'error': 'Notification not found', 'id': nid}, 404
     return {'updated': True, 'notification': rec}
 
-
 @notifications_bp.route('/api/notifications/<int:nid>', methods=['DELETE'])
 @handle_api_error
 @json_response
@@ -138,7 +133,6 @@ def delete_notification_endpoint(nid: int):
     if not ok:
         return {'error': 'Notification not found', 'id': nid}, 404
     return {'deleted': True, 'id': nid}
-
 
 # Backward compatibility test endpoint
 @notifications_bp.route('/api/notifications/test', methods=['POST'])
@@ -153,7 +147,6 @@ def create_test_notification():
     broadcast_notification(rec)
     
     return {'created': True, 'id': rec['id'], 'message': rec['message']}
-
 
 # Sync recent JIRA activity as notifications
 @notifications_bp.route('/api/notifications/sync', methods=['POST'])

@@ -19,7 +19,6 @@ from utils.config import config
 
 logger = logging.getLogger(__name__)
 
-
 class JiraPlatformAPI:
     """
     JIRA Platform REST API v3 Client

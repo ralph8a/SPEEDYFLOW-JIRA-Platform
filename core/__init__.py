@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-
 @dataclass
 class User:
     """User object"""
@@ -17,7 +16,6 @@ class User:
     
     def __str__(self):
         return self.name or "Unknown"
-
 
 @dataclass
 class Project:
@@ -29,7 +27,6 @@ class Project:
     
     def __str__(self):
         return self.name
-
 
 @dataclass
 class Issue:
@@ -66,7 +63,6 @@ class Issue:
             "custom_fields": self.custom_fields,
         }
 
-
 @dataclass
 class Filter:
     """Filter criteria for issues"""
@@ -97,7 +93,6 @@ class Filter:
             filters.append(f"priority: {self.priority}")
         return " | ".join(filters) if filters else "No filters"
 
-
 @dataclass
 class BoardColumn:
     """Kanban board column"""
@@ -118,7 +113,6 @@ class BoardColumn:
     def __str__(self):
         return f"{self.name} ({self.count()} issues)"
 
-
 @dataclass
 class Board:
     """Kanban board"""
@@ -133,7 +127,6 @@ class Board:
     
     def __str__(self):
         return f"Board: {self.project} ({self.total_issues()} issues)"
-
 
 @dataclass
 class UIState:
@@ -156,7 +149,6 @@ class UIState:
             "current_user": self.current_user,
             "current_project": self.current_project,
         }
-
 
 @dataclass
 class APIConfig:

@@ -12,7 +12,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.embedding_manager import get_embedding_manager
-from utils.ollama_client import ensure_ollama_available
 import logging
 
 logging.basicConfig(
@@ -20,7 +19,6 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
 
 def main():
     """
@@ -31,15 +29,14 @@ def main():
     print("="*60)
     print()
     
-    # Verificar que Ollama esté disponible
-    print("1. Verificando disponibilidad de Ollama...")
+        print("1. Verificando disponibilidad de Ollama...")
     if not ensure_ollama_available():
         print()
         print("❌ Ollama no está disponible.")
         print()
         print("Para iniciar Ollama:")
         print("  1. Abre una nueva terminal")
-        print("  2. Ejecuta: ollama serve")
+        print("")
         print("  3. Vuelve a ejecutar este script")
         print()
         return 1
@@ -113,7 +110,6 @@ def main():
         print(f"❌ Error: {e}")
         logger.exception("Error generando embeddings")
         return 1
-
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -8,7 +8,6 @@ from typing import List, Dict, Any, Optional
 import uuid
 from enum import Enum
 
-
 class NotificationCategory(Enum):
     """Notification categories"""
     ISSUE_CREATED = "issue_created"
@@ -19,14 +18,12 @@ class NotificationCategory(Enum):
     STATUS_CHANGED = "status_changed"
     PRIORITY_CHANGED = "priority_changed"
 
-
 class NotificationPriority(Enum):
     """Notification priority levels"""
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
-
 
 class Notification:
     """Notification data model"""
@@ -81,7 +78,6 @@ class Notification:
         else:
             days = delta.days
             return f"{days}d ago"
-
 
 class NotificationService:
     """Service for managing notifications"""
@@ -267,10 +263,8 @@ class NotificationService:
         ]
         return [n.to_dict() for n in results[:limit]]
 
-
 # Global notification service instance
 _notification_service = NotificationService()
-
 
 def get_notification_service() -> NotificationService:
     """Get global notification service instance"""

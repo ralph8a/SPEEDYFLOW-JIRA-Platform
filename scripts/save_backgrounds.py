@@ -12,10 +12,8 @@ from datetime import datetime
 
 from api.ai_backgrounds import enhanced_generator, get_ai_backgrounds
 
-
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
-
 
 def save_variants(theme: str = 'light', count: int = 10):
     out_dir = os.path.join('frontend', 'static', 'backgrounds', 'generated')
@@ -60,7 +58,6 @@ def save_variants(theme: str = 'light', count: int = 10):
     print(f'Wrote {len(variants)} backgrounds to {out_dir}')
     return manifest_path
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--theme', default='light', choices=['light', 'dark'])
@@ -68,7 +65,6 @@ def main():
     args = parser.parse_args()
 
     save_variants(theme=args.theme, count=args.count)
-
 
 if __name__ == '__main__':
     main()
