@@ -818,51 +818,25 @@ class FlowingFooter {
     }
     
     riskContainer.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 12px; padding: 8px;">
-        <!-- Risk Gauge (Left side) -->
-        <div style="flex-shrink: 0;">
-          <div style="width: 60px; height: 60px; position: relative;">
-            <svg width="60" height="60" style="transform: rotate(-90deg);">
-              <!-- Background circle -->
-              <circle cx="30" cy="30" r="25" fill="none" stroke="#e5e7eb" stroke-width="5"/>
-              <!-- Progress circle -->
-              <circle 
-                cx="30" 
-                cy="30" 
-                r="25" 
-                fill="none" 
-                stroke="${riskColor}" 
-                stroke-width="5"
-                stroke-dasharray="${(percentage / 100) * 157} 157"
-                stroke-linecap="round"
-              />
-            </svg>
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-              <div style="font-size: 14px; font-weight: 700; color: ${riskColor};">${percentage}%</div>
-            </div>
-          </div>
+      <div class="risk-card">
+        <div class="risk-gauge" aria-hidden="true">
+          <svg width="72" height="72" viewBox="0 0 60 60" class="risk-gauge-svg" aria-hidden="true">
+            <circle cx="30" cy="30" r="25" fill="none" stroke="#e5e7eb" stroke-width="5"/>
+            <circle cx="30" cy="30" r="25" fill="none" stroke="${riskColor}" stroke-width="5" stroke-dasharray="${(percentage / 100) * 157} 157" stroke-linecap="round" />
+          </svg>
+          <div class="risk-percent" style="color: ${riskColor};">${percentage}%</div>
         </div>
-        
-        <!-- Risk Info (Right side) -->
-        <div style="flex: 1; min-width: 0;">
-          <!-- Risk Badge -->
-          <div style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: ${riskBg}; border-radius: 6px; margin-bottom: 6px;">
-            <i class="fas ${riskIcon}" style="font-size: 9px; color: ${riskColor};"></i>
-            <span style="font-size: 10px; font-weight: 600; color: ${riskColor};">${riskLevel}</span>
+
+        <div class="risk-info">
+          <div class="risk-header">
+            <div class="risk-title">Breach Risk</div>
+            <div class="risk-badge" style="background:${riskBg}; color: ${riskColor};">${riskLevel}</div>
           </div>
-          
-          <!-- Risk Factors -->
-          <div style="font-size: 10px; color: #6b7280;">
-            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 2px;">
-              <span style="font-size: 8px;">${SVGIcons.zap({size:10,className:'inline-icon'})}</span>
-              <span>Elapsed: ${percentage}%</span>
-            </div>
-            ${percentage >= 75 ? `
-            <div style="display: flex; align-items: center; gap: 4px;">
-              <span style="font-size: 8px;">${SVGIcons.alert({size:10,className:'inline-icon'})}</span>
-              <span>Near deadline</span>
-            </div>
-            ` : ''}
+
+          <div class="risk-body">
+            <div class="risk-line"><span class="risk-line-label">Elapsed</span><span class="risk-line-value">${percentage}%</span></div>
+            <div class="risk-line"><span class="risk-line-label">Remaining</span><span class="risk-line-value ${percentage >= 75 ? 'risk-warning' : ''}">${data.ongoingCycle.remainingTime?.readable || data.ongoingCycle.remainingTime || 'N/A'}</span></div>
+            ${percentage >= 75 ? `<div class="risk-note">${SVGIcons.alert({size:12,className:'inline-icon'})} Near deadline — attention recommended</div>` : ''}
           </div>
         </div>
       </div>
