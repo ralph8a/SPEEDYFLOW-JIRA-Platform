@@ -369,6 +369,32 @@ class AICopilot {
         }).then(r => r.json()).then(j => ({type: 'playbooks', data: j})).catch(() => null));
       }
 
+      // detect SLA-related intents
+      if (/\b(sla|breach|breached|incumpl|vencim|deadline|tiempo restante|riesgo|brecha|plazo|a punto de)\b/.test(msgLower)) {
+        if (this.context.selectedIssue) {
+          const issue = this.context.selectedIssue;
+          intents.push(fetch(`/api/ticket-sla/${encodeURIComponent(issue)}`, { method: 'GET' })
+            .then(r => r.json()).then(j => ({ type: 'sla_issue', data: j, issue })).catch(() => null));
+        } else {
+          intents.push(fetch('/api/sla/health', { method: 'GET' })
+            .then(r => r.json()).then(j => ({ type: 'sla_health', data: j })).catch(() => null));
+        }
+      }
+
+      // detect user-related intents (who, usuarios, asignar)
+      if (/\b(usuario|usuarios|user|who|quién|quien|asignado|asignar|buscar usuario|find user)\b/.test(msgLower)) {
+        const q = encodeURIComponent(message);
+        intents.push(fetch(`/api/users?query=${q}`, { method: 'GET' })
+          .then(r => r.json()).then(j => ({ type: 'users', data: j })).catch(() => null));
+      }
+
+      // detect severity/priorities intents
+      if (/\b(severity|severidad|prioridad|critico|alto|mayor|baja|low|high)\b/.test(msgLower)) {
+        // call a safe test endpoint that returns severity mappings
+        intents.push(fetch('/api/severity/test', { method: 'GET' })
+          .then(r => r.json()).then(j => ({ type: 'severity', data: j })).catch(() => null));
+      }
+
       // (Ingest functionality removed) — we no longer auto-ingest documents
 
       // Execute intents in background and show lightweight notifications when they finish
