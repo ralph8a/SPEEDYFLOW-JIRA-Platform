@@ -3902,24 +3902,6 @@ async function loadSLAForListView(issues) {
 window.openIssueDetails = openIssueDetails;
 
 /**
- * Warm up Ollama model in background for faster suggestions
- * First call always takes longer, this preloads the model
- */
-async );
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Ollama warmed up:', data.message);
-    } else {
-      console.warn('⚠️ Ollama warmup failed (not critical)');
-    }
-  } catch (error) {
-    // Non-blocking: if warmup fails, suggestions will just take longer on first call
-    console.warn('⚠️ Ollama warmup error (not critical):', error.message);
-  }
-}
-
-/**
  * Show notification toast
  */
 function showNotification(message, type = 'info') {

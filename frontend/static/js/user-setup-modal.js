@@ -262,9 +262,6 @@ class UserSetupModal {
                 saveBtn.classList.add('success');
                 
                 // Show success message
-                const successIcon = typeof SVGIcons !== 'undefined' 
-                  ? SVGIcons.success({ size: 16, className: 'inline-icon' })
-                  : '✅';
                 this.showSuccess(`${successIcon} Configuración guardada. Inicializando SpeedyFlow...`);
                 
                 // Reload and trigger initial filters
