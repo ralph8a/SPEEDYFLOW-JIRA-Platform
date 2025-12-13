@@ -162,18 +162,38 @@ body.theme-dark .flowing-footer {
 }
 
 .flowing-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 2rem;
-    cursor: pointer;
-    transition: all var(--transition-base, 0.25s) ease;
-    border-bottom: 1px solid var(--border-light, rgba(59, 130, 246, 0.1));
-    background: var(--glass-backdrop, rgba(255, 255, 255, 0.5));
-    backdrop-filter: var(--glass-blur, blur(10px));
+  /* Consolidated header for Flowing footer (single source of truth) */
+  position: absolute; /* positioned at top of footer */
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  cursor: pointer;
+  transition: all var(--transition-base, 0.25s) ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: radial-gradient(circle at 8% 30%, rgba(139,92,246,0.06) 0%, rgba(139,92,246,0.03) 18%, transparent 35%), rgba(255,255,255,0.56);
+  backdrop-filter: blur(10px) saturate(1.02);
 }
-.flowing-header:hover {
-  background: var(--glass-blue-light, rgba(59, 130, 246, 0.1));
+.flowing-header:hover { background: var(--glass-blue-light, rgba(59, 130, 246, 0.1)); }
+
+/* Dark theme overrides for header */
+[data-theme="dark"] .flowing-header, body.theme-dark .flowing-footer .flowing-header {
+  border-bottom-color: rgba(255,255,255,0.06);
+  background: radial-gradient(circle at 8% 30%, rgba(139,92,246,0.06) 0%, rgba(139,92,246,0.03) 18%, transparent 35%), rgba(17,24,39,0.72);
+  backdrop-filter: blur(10px) saturate(1.04);
+}
+
+.flowing-title-text h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ff-accent-strong, #1f2937);
+  background: linear-gradient(135deg, var(--ff-accent, #6366f1) 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .footer-header-left {
@@ -1641,38 +1661,7 @@ body.sidebar-collapsed .flowing-footer {
   min-height: 0;
 }
 
-/* Copilot Header */
-.flowing-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  /* Keep glassmorphism but add a subtle purple radial accent to reduce perceived flashing */
-  background: radial-gradient(circle at 8% 30%, rgba(139,92,246,0.06) 0%, rgba(139,92,246,0.03) 18%, transparent 35%), rgba(255,255,255,0.56);
-  backdrop-filter: blur(10px) saturate(1.02);
-}
-.flowing-header {
-  position: absolute; /* position at top of footer */
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 60; /* above footer content */
-}
 
-[data-theme="dark"] .flowing-header {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-  background: radial-gradient(circle at 8% 30%, rgba(139,92,246,0.06) 0%, rgba(139,92,246,0.03) 18%, transparent 35%), rgba(17,24,39,0.72);
-  backdrop-filter: blur(10px) saturate(1.04);
-}
-
-.flowing-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
 .flowing-title-text h3 {
   margin: 0;
   font-size: 18px;
