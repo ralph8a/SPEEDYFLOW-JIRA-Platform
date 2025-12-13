@@ -6,7 +6,9 @@ html, body { transition: padding-bottom 0.25s ease; }
 body.flowing-footer-expanded #kanbanView,
 body.flowing-footer-expanded .board-wrapper,
 body.flowing-footer-expanded #listView,
-body.flowing-footer-expanded .list-wrapper {
+body.flowing-footer-expanded .list-wrapper,
+body.flowing-footer-expanded .header-enhanced,
+body.flowing-footer-expanded .filter-bar-enhanced {
   /* translate the main content up by the footer added delta so it visually makes room (avoid adding scroll) */
   transform: translateY(calc(-1 * var(--flowing-footer-translate, 0px))) !important;
   transition: transform 0.28s ease;
@@ -14,7 +16,9 @@ body.flowing-footer-expanded .list-wrapper {
 
 /* Respect sidebar-collapsed state too */
 body.sidebar-collapsed.flowing-footer-expanded #kanbanView,
-body.sidebar-collapsed.flowing-footer-expanded .board-wrapper {
+body.sidebar-collapsed.flowing-footer-expanded .board-wrapper,
+body.sidebar-collapsed.flowing-footer-expanded .header-enhanced,
+body.sidebar-collapsed.flowing-footer-expanded .filter-bar-enhanced {
   transform: translateY(calc(-1 * var(--flowing-footer-translate, 0px))) !important;
   transition: transform 0.28s ease;
 }
