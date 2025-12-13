@@ -125,6 +125,39 @@ body[data-theme="dark"] {
   --ff-accent-strong: #f8fafc;
 }
 
+/* Ensure Flowing MVP / ML footer and balanced view honor the typography tokens
+   and adapt automatically to dark mode via the variables above. This avoids
+   hard-coded colors in legacy CSS causing poor contrast in dark theme.
+*/
+.flowing-footer, .ml-footer, .footer-two-columns, #balancedView {
+  color: var(--ff-text-primary) !important;
+  background-color: transparent !important;
+}
+
+.flowing-footer .ticket-description-content,
+.flowing-footer .ticket-meta,
+.flowing-footer .flowing-subtitle,
+.footer-subtext,
+.ticket-summary,
+.ticket-key,
+.left-column, .right-column {
+  color: var(--ff-text-muted) !important;
+}
+
+/* Links and strong titles inside footer */
+.flowing-footer a,
+.flowing-footer .footer-title,
+.flowing-footer .flowing-title-text h3 {
+  color: var(--ff-accent) !important;
+}
+
+/* Dark-mode specific tweaks for footer backgrounds to preserve glassmorphism */
+body[data-theme="dark"] .flowing-footer,
+body.theme-dark .ml-footer {
+  background: linear-gradient(180deg, rgba(17,24,39,0.76), rgba(12,14,18,0.72)) !important;
+  border-top-color: rgba(255,255,255,0.04) !important;
+}
+
 /* Ensure white text for small labels in dark mode */
 body[data-theme="dark"] .field-label, body[data-theme="dark"] .comment-author, body[data-theme="dark"] .comment-time {
   color: #cbd5e1 !important;
