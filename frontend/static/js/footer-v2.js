@@ -1,4 +1,4 @@
-/**
+﻿/**
  * FLOWING MVP - FOOTER ML ASSISTANT V2
  * JavaScript optimizado con checkboxes
  */
@@ -6,24 +6,24 @@
 // Estado global
 const state = {
     footerExpanded: false,
-    currentTicket: { key: 'MSM-1234', summary: 'Error en API de autenticación' },
+    currentTicket: { key: 'MSM-1234', summary: 'Error en API de autenticaciÃ³n' },
     mlServiceConnected: false,
     currentMode: 'comments',
     duplicates: [],
     estimatedResolution: null
 };
 
-// Inicialización
+// InicializaciÃ³n
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Flowing MVP Footer ML Assistant V2 initialized');
+    // console.log('ðŸš€ Flowing MVP Footer ML Assistant V2 initialized');
     checkMLService();
     setupVisibilityToggle();
     
     // Setup mode tabs event listeners
     const tabs = document.querySelectorAll('.mode-tab');
-    console.log('Found tabs:', tabs.length);
+    // console.log('Found tabs:', tabs.length);
     tabs.forEach((tab, index) => {
-        console.log(`Setting up tab ${index}:`, tab.dataset.mode, tab);
+        // console.log(`Setting up tab ${index}:`, tab.dataset.mode, tab);
         
         // Try multiple event types
         ['click', 'mousedown', 'touchstart'].forEach(eventType => {
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 e.stopPropagation();
                 const mode = tab.dataset.mode;
-                console.log(`Tab ${eventType}:`, mode);
+                // console.log(`Tab ${eventType}:`, mode);
                 switchMode(mode);
             }, { capture: true }); // Use capture phase
         });
@@ -44,10 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Global click listener for debugging
     document.addEventListener('click', (e) => {
-        console.log('=== GLOBAL CLICK ===', e.target.tagName, e.target.className);
+        // console.log('=== GLOBAL CLICK ===', e.target.tagName, e.target.className);
         if (e.target.closest('.mode-tab')) {
             const tab = e.target.closest('.mode-tab');
-            console.log('!!! CLICK ON MODE-TAB DETECTED !!!', tab.dataset.mode);
+            // console.log('!!! CLICK ON MODE-TAB DETECTED !!!', tab.dataset.mode);
             switchMode(tab.dataset.mode);
         }
     }, true);
@@ -111,7 +111,7 @@ function applySelectedSuggestions() {
     const checkboxes = document.querySelectorAll('.ml-cb:checked');
     
     if (checkboxes.length === 0) {
-        showNotification('⚠️ No suggestions selected');
+        showNotification('âš ï¸ No suggestions selected');
         return;
     }
     
@@ -127,7 +127,7 @@ function applySelectedSuggestions() {
             applied++;
             
             if (applied === checkboxes.length) {
-                showNotification(`✅ Applied ${applied} suggestion${applied > 1 ? 's' : ''}`);
+                showNotification(`âœ… Applied ${applied} suggestion${applied > 1 ? 's' : ''}`);
             }
         }, index * 200);
     });
@@ -164,7 +164,7 @@ function switchView() {
 
 // Apply Single Suggestion
 function applySuggestion(field, value) {
-    console.log(`✅ Applying: ${field} = ${value}`);
+    // console.log(`âœ… Applying: ${field} = ${value}`);
     
     if (field === 'priority') {
         document.getElementById('priorityField').value = value;
@@ -195,12 +195,12 @@ function applySuggestion(field, value) {
 
 // Switch Mode (Comments <-> AI)
 function switchMode(mode) {
-    console.log('=== SWITCH MODE CALLED ===', mode);
+    // console.log('=== SWITCH MODE CALLED ===', mode);
     
     try {
         state.currentMode = mode;
         
-        console.log('Switching to mode:', mode); // Debug
+        // console.log('Switching to mode:', mode); // Debug
         
         // Update tabs
         document.querySelectorAll('.mode-tab').forEach(tab => {
@@ -210,15 +210,15 @@ function switchMode(mode) {
         
         // Update panels - force remove/add to ensure visibility
         document.querySelectorAll('.mode-panel').forEach(panel => {
-            console.log('Panel:', panel.dataset.panel, 'Mode:', mode, 'Match:', panel.dataset.panel === mode);
+            // console.log('Panel:', panel.dataset.panel, 'Mode:', mode, 'Match:', panel.dataset.panel === mode);
             if (panel.dataset.panel === mode) {
                 panel.classList.add('active');
                 panel.style.setProperty('display', 'block', 'important');
-                console.log('Showing panel:', panel.dataset.panel, 'Classes:', panel.className, 'Display:', panel.style.display);
+                // console.log('Showing panel:', panel.dataset.panel, 'Classes:', panel.className, 'Display:', panel.style.display);
             } else {
                 panel.classList.remove('active');
                 panel.style.setProperty('display', 'none', 'important');
-                console.log('Hiding panel:', panel.dataset.panel, 'Classes:', panel.className, 'Display:', panel.style.display);
+                // console.log('Hiding panel:', panel.dataset.panel, 'Classes:', panel.className, 'Display:', panel.style.display);
             }
         });
     
@@ -231,12 +231,12 @@ function switchMode(mode) {
     const toggleBtn = document.getElementById('toggleViewBtn');
     
     if (mode === 'comments') {
-        badge.textContent = '💬 Comment mode';
+        badge.textContent = 'ðŸ’¬ Comment mode';
         input.placeholder = 'Write a comment... (@ to mention)';
         sendBtn.textContent = 'Post';
         toolbar.style.display = 'flex';
     } else {
-        badge.textContent = '🤖 AI mode';
+        badge.textContent = 'ðŸ¤– AI mode';
         input.placeholder = 'Ask the AI anything...';
         sendBtn.textContent = 'Ask';
         toolbar.style.display = 'none';
@@ -274,7 +274,7 @@ function handleInputKey(event) {
 
 // Post Comment
 function postComment(message) {
-    console.log('💬 Posting comment:', message);
+    // console.log('ðŸ’¬ Posting comment:', message);
     
     const isInternal = document.getElementById('visibilityCheck').checked;
     const commentsList = document.getElementById('commentsList');
@@ -287,19 +287,19 @@ function postComment(message) {
             <div class="comment-header">
                 <span class="comment-author">You</span>
                 <span class="comment-time">Just now</span>
-                ${isInternal ? '<span style="color: #f59e0b; font-size: 0.75rem;">🔒</span>' : ''}
+                ${isInternal ? '<span style="color: #f59e0b; font-size: 0.75rem;">ðŸ”’</span>' : ''}
             </div>
             <div class="comment-text">${message}</div>
         </div>
     `;
     
     commentsList.insertBefore(commentDiv, commentsList.firstChild);
-    showNotification('✅ Comment posted');
+    showNotification('âœ… Comment posted');
 }
 
 // Ask AI
 function askAI(question) {
-    console.log('🤖 Asking AI:', question);
+    // console.log('ðŸ¤– Asking AI:', question);
     
     const aiMessages = document.getElementById('aiMessages');
     
@@ -351,16 +351,16 @@ function generateAIResponse(question) {
     const lowerQ = question.toLowerCase();
     
     if (lowerQ.includes('prioridad')) {
-        return 'Basándome en el análisis, recomiendo prioridad <strong>Alta</strong> debido a que afecta autenticación, componente crítico del sistema.';
+        return 'BasÃ¡ndome en el anÃ¡lisis, recomiendo prioridad <strong>Alta</strong> debido a que afecta autenticaciÃ³n, componente crÃ­tico del sistema.';
     } else if (lowerQ.includes('asignar')) {
-        return 'Sugiero asignar a <strong>Carlos Q.</strong> quien tiene experiencia con problemas de autenticación (78% confianza).';
+        return 'Sugiero asignar a <strong>Carlos Q.</strong> quien tiene experiencia con problemas de autenticaciÃ³n (78% confianza).';
     } else if (lowerQ.includes('sla')) {
         return 'Este ticket tiene <strong>alto riesgo de breach SLA</strong> (92%). Recomiendo escalarlo inmediatamente.';
     } else if (lowerQ.includes('duplicado')) {
-        return 'Encontré 2 tickets similares: MSM-1189 y MSM-1201. Ambos relacionados con errores de autenticación.';
+        return 'EncontrÃ© 2 tickets similares: MSM-1189 y MSM-1201. Ambos relacionados con errores de autenticaciÃ³n.';
     }
     
-    return 'Entiendo tu pregunta. Recomiendo revisar los logs del servidor y verificar la configuración de OAuth. ¿Necesitas ayuda con algo más?';
+    return 'Entiendo tu pregunta. Recomiendo revisar los logs del servidor y verificar la configuraciÃ³n de OAuth. Â¿Necesitas ayuda con algo mÃ¡s?';
 }
 
 // Copy Comment
@@ -381,22 +381,22 @@ function copyComment(element) {
             btn.style.color = '';
         }, 2000);
         
-        showNotification('✅ Comment copied to clipboard');
+        showNotification('âœ… Comment copied to clipboard');
     });
 }
 
 // Find Duplicates
 async function findDuplicates() {
-    console.log('🔍 Finding duplicates...');
+    // console.log('ðŸ” Finding duplicates...');
     
     if (state.duplicates && state.duplicates.length > 0) {
         // Show stored duplicates
         const duplicatesList = state.duplicates
             .map(d => `${d.issue_key} (${Math.round(d.similarity * 100)}% similar)`)
             .join(', ');
-        showNotification(`🔍 Found ${state.duplicates.length} duplicates: ${duplicatesList}`);
+        showNotification(`ðŸ” Found ${state.duplicates.length} duplicates: ${duplicatesList}`);
     } else {
-        showNotification('🔍 Searching for duplicates...');
+        showNotification('ðŸ” Searching for duplicates...');
         
         // Re-fetch if not available
         try {
@@ -416,26 +416,26 @@ async function findDuplicates() {
                 const duplicatesList = data.duplicates
                     .map(d => `${d.issue_key} (${Math.round(d.similarity * 100)}% similar)`)
                     .join(', ');
-                showNotification(`✅ Found ${data.duplicates.length} duplicates: ${duplicatesList}`);
+                showNotification(`âœ… Found ${data.duplicates.length} duplicates: ${duplicatesList}`);
             } else {
-                showNotification('✅ No duplicates found');
+                showNotification('âœ… No duplicates found');
             }
         } catch (error) {
             console.error('Error finding duplicates:', error);
-            showNotification('❌ Error searching duplicates');
+            showNotification('âŒ Error searching duplicates');
         }
     }
 }
 
 // Predict Resolution
 function predictResolution() {
-    console.log('⏱️ Predicting resolution...');
+    // console.log('â±ï¸ Predicting resolution...');
     
     if (state.estimatedResolution) {
-        showNotification(`⏱️ Estimated: ${state.estimatedResolution} hours`);
+        showNotification(`â±ï¸ Estimated: ${state.estimatedResolution} hours`);
     } else {
         const hours = Math.floor(Math.random() * 24) + 1;
-        showNotification(`⏱️ Estimated: ${hours} hours`);
+        showNotification(`â±ï¸ Estimated: ${hours} hours`);
     }
 }
 
@@ -471,7 +471,7 @@ function showSLADetails() {
 
 // Open Ticket
 function openTicket(ticketKey) {
-    state.currentTicket = { key: ticketKey, summary: 'Error en API de autenticación' };
+    state.currentTicket = { key: ticketKey, summary: 'Error en API de autenticaciÃ³n' };
     
     document.getElementById('currentTicketKey').textContent = ticketKey;
     document.getElementById('currentTicketSummary').textContent = state.currentTicket.summary;
@@ -501,7 +501,7 @@ async function fetchMLPredictions(ticketKey) {
             status: "Open",
             priority: "High",
             created: "2025-12-09T14:30:00",
-            reporter: "Juan Pérez"
+            reporter: "Juan PÃ©rez"
         };
         
         // Fetch ALL ML predictions in parallel
@@ -543,7 +543,7 @@ async function fetchMLPredictions(ticketKey) {
         const resolutionData = await resolutionResponse.json();
         const slaData = await slaResponse.json();
         
-        console.log('✅ All ML Predictions received:', {
+        // console.log('âœ… All ML Predictions received:', {
             unified: unifiedData,
             duplicates: duplicatesData,
             resolution: resolutionData,
@@ -557,8 +557,8 @@ async function fetchMLPredictions(ticketKey) {
         storeDuplicates(duplicatesData);
         
     } catch (error) {
-        console.error('❌ Failed to fetch predictions:', error);
-        showNotification('⚠️ Error loading ML predictions');
+        console.error('âŒ Failed to fetch predictions:', error);
+        showNotification('âš ï¸ Error loading ML predictions');
     }
 }
 
@@ -663,7 +663,7 @@ function updateResolutionTime(resolutionData) {
     if (resolutionData && resolutionData.estimated_hours) {
         const hours = Math.round(resolutionData.estimated_hours);
         state.estimatedResolution = hours;
-        console.log(`⏱️ Estimated resolution: ${hours} hours`);
+        // console.log(`â±ï¸ Estimated resolution: ${hours} hours`);
     }
 }
 
@@ -671,7 +671,7 @@ function updateResolutionTime(resolutionData) {
 function storeDuplicates(duplicatesData) {
     if (duplicatesData && duplicatesData.duplicates) {
         state.duplicates = duplicatesData.duplicates;
-        console.log(`🔍 Found ${duplicatesData.duplicates.length} potential duplicates`);
+        // console.log(`ðŸ” Found ${duplicatesData.duplicates.length} potential duplicates`);
     }
 }
 
@@ -686,10 +686,10 @@ function setupVisibilityToggle() {
             const text = label.querySelector('.vis-text');
             
             if (e.target.checked) {
-                icon.textContent = '🔒';
+                icon.textContent = 'ðŸ”’';
                 text.textContent = 'Internal';
             } else {
-                icon.textContent = '🔓';
+                icon.textContent = 'ðŸ”“';
                 text.textContent = 'Public';
             }
         });
@@ -754,25 +754,25 @@ setInterval(checkMLService, 30000);
 
 // Cancel Suggestions
 function cancelSuggestions() {
-    console.log('❌ Cancelling suggestions...');
+    // console.log('âŒ Cancelling suggestions...');
     document.querySelectorAll('.ml-cb:checked').forEach(cb => {
         cb.checked = false;
     });
-    showNotification('🚫 All suggestions cancelled');
+    showNotification('ðŸš« All suggestions cancelled');
 }
 
 // Resuggest ML
 async function resuggestML() {
-    console.log('🔄 Re-fetching ML suggestions...');
-    showNotification('🔄 Requesting new suggestions from ML...');
+    // console.log('ðŸ”„ Re-fetching ML suggestions...');
+    showNotification('ðŸ”„ Requesting new suggestions from ML...');
     
     if (!state.mlServiceConnected) {
-        showNotification('⚠️ ML Service not connected');
+        showNotification('âš ï¸ ML Service not connected');
         return;
     }
     
     if (!state.currentTicket || !state.currentTicket.key) {
-        showNotification('⚠️ No ticket selected');
+        showNotification('âš ï¸ No ticket selected');
         return;
     }
     
@@ -789,5 +789,5 @@ async function resuggestML() {
     
     // Re-fetch predictions
     await fetchMLPredictions(state.currentTicket.key);
-    showNotification('✅ New suggestions loaded');
+    showNotification('âœ… New suggestions loaded');
 }
