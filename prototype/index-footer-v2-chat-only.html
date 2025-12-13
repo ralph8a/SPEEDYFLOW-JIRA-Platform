@@ -64,7 +64,12 @@
                         <p class="flowing-subtitle">Your AI assistant for tickets, SLAs, and smart suggestions</p>
                     </div>
                 </div>
-                <button id="flowingCloseBtn" class="flowing-close-btn" title="Close"></button>
+                <div class="flowing-header-controls">
+                    <button id="viewToggleBtn" class="view-toggle-btn" title="Switch to balanced view">
+                        <i class="fas fa-columns"></i>
+                    </button>
+                    <button id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</button>
+                </div>
             </div>
 
             <!-- Messages Container -->
@@ -107,10 +112,13 @@
     const flowingFooter = document.getElementById('flowingFooter');
     const flowingToggleBtn = document.getElementById('flowingToggleBtn');
     const flowingCloseBtn = document.getElementById('flowingCloseBtn');
+    const viewToggleBtn = document.getElementById('viewToggleBtn');
     const flowingInput = document.getElementById('flowingInput');
     const flowingSendBtn = document.getElementById('flowingSendBtn');
     const flowingMessages = document.getElementById('flowingMessages');
+    const flowingSuggestion = document.getElementById('flowingSuggestion');
     let selectedTicketKey = null;
+    let currentView = 'chat-only'; // 'chat-only' or 'balanced'
 
     // Toggle footer
     flowingToggleBtn.addEventListener('click', () => {
@@ -119,6 +127,11 @@
 
     flowingCloseBtn.addEventListener('click', () => {
         flowingFooter.classList.add('collapsed');
+    });
+
+    // View toggle
+    viewToggleBtn.addEventListener('click', () => {
+        toggleView();
     });
 
     // Send message
@@ -151,6 +164,10 @@
                 <div class="message-avatar flowing-sf-logo">SF</div>
                 <div class="message-content"><p>${text}</p></div>
             `;
+        } else if (type === 'system') {
+            msgDiv.innerHTML = `
+                <div class="message-content" style="text-align: center; color: #6b7280; font-style: italic;"><p>${text}</p></div>
+            `;
         } else {
             msgDiv.innerHTML = `
                 <div class="message-content"><p>${text}</p></div>
@@ -178,8 +195,47 @@
         selectedTicketKey = key;
         const contextBadge = document.getElementById('flowingContextBadge');
         contextBadge.innerHTML = `<span class="context-icon"></span><span class="context-text">${key}</span>`;
-        flowingSuggestion.textContent = `${key} selected - Ask me about it!`;
+        flowingSuggestion.textContent = `${key} selected - Ask me about it!`;        
+        // Automatically switch to balanced view and open footer
+        if (currentView === 'chat-only') {
+            switchToBalancedView();
+        }
+        flowingFooter.classList.remove('collapsed');
     }
+
+    function toggleView() {
+        if (currentView === 'chat-only') {
+            switchToBalancedView();
+        } else {
+            switchToChatOnlyView();
+        }
+    }
+
+    function switchToBalancedView() {
+        currentView = 'balanced';
+        
+        // Update view toggle button
+        viewToggleBtn.innerHTML = '<i class="fas fa-comment"></i>';
+        viewToggleBtn.title = 'Switch to chat-only';
+        
+        // Show notification
+        addMessage('🔄 Switched to Balanced View - Now showing ML suggestions and ticket details', 'system');
+        
+        // Redirect to full balanced prototype
+        setTimeout(() => {
+            window.location.href = 'index-footer-v2.html?ticket=' + selectedTicketKey;
+        }, 500);
+    }
+
+    function switchToChatOnlyView() {
+        currentView = 'chat-only';
+        
+        // Update view toggle button
+        viewToggleBtn.innerHTML = '<i class="fas fa-columns"></i>';
+        viewToggleBtn.title = 'Switch to balanced view';
+        
+        // Show notification
+        addMessage('💬 Switched to Chat-Only View', 'system');    }
     </script>
 </body>
 </html>
