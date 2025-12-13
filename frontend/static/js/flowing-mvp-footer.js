@@ -337,10 +337,19 @@ class FlowingFooter {
     
     // Adjust content padding for expanded footer
     this.adjustContentPadding(false);
-    // Mark body so layout can react (push content up)
-    try { document.body.classList.add('flowing-footer-expanded'); } catch(e){}
     // Increase footer max-height to give more space when expanded
     try { if (this.footer) this.footer.style.maxHeight = '420px'; } catch(e){}
+
+    // After layout, compute footer height and set CSS var so page can be translated up
+    try {
+      setTimeout(() => {
+        try {
+          const h = this.footer ? Math.round(this.footer.getBoundingClientRect().height) : 420;
+          document.documentElement.style.setProperty('--flowing-footer-height', h + 'px');
+          document.body.classList.add('flowing-footer-expanded');
+        } catch (err) { /* ignore */ }
+      }, 80);
+    } catch (e) { /* ignore */ }
     
     console.log('🤖 Flowing MVP expanded');
   }
@@ -353,6 +362,7 @@ class FlowingFooter {
     this.adjustContentPadding(true);
     try { document.body.classList.remove('flowing-footer-expanded'); } catch(e){}
     try { if (this.footer) this.footer.style.maxHeight = ''; } catch(e){}
+    try { document.documentElement.style.removeProperty('--flowing-footer-height'); } catch(e){}
     
     // Switch back to chat view when collapsing
     this.switchToChatView();
