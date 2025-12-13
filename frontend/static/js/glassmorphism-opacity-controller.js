@@ -257,7 +257,7 @@ class TransparencyManager {
     // CRITICAL: Apply directly to real UI elements ONLY
     // MAIN CONTAINERS (should receive effects)
     const mainContainers = {
-      '.sidebar': 'primary',
+      '.sidebar': 'tertiary',
       '.main-header-pro': 'tertiary',
       '.right-sidebar': 'primary',
       '.filter-bar-enhanced': 'tertiary',
