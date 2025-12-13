@@ -17,6 +17,24 @@ class ChatEngine:
             text = p.read_text(encoding='utf-8', errors='ignore')
             self.documents.append({'path': str(p.name), 'text': text})
 
+        # Also load ticket dataset summaries/comments for conversational help
+        try:
+            import pandas as pd
+            data_path = Path(__file__).resolve().parents[1] / 'data' / 'comments_dataset.csv'
+            if data_path.exists():
+                df = pd.read_csv(data_path)
+                for i, row in df.iterrows():
+                    # Do NOT include labels field in chat documents to avoid mixing labels
+                    summary = str(row.get('summary','') or '')
+                    comments = str(row.get('comments','') or '')
+                    if not summary and not comments:
+                        continue
+                    text = (summary + '\n\n' + comments).strip()
+                    self.documents.append({'path': f'comments_dataset_row_{i}', 'text': text})
+        except Exception:
+            # best-effort: ignore if pandas not available or file malformed
+            pass
+
     def _score(self, query: str, text: str) -> int:
         # simple overlap score on words
         qwords = set(re.findall(r"\w+", query.lower()))
