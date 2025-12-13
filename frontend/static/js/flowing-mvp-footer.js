@@ -337,6 +337,10 @@ class FlowingFooter {
     
     // Adjust content padding for expanded footer
     this.adjustContentPadding(false);
+    // Mark body so layout can react (push content up)
+    try { document.body.classList.add('flowing-footer-expanded'); } catch(e){}
+    // Increase footer max-height to give more space when expanded
+    try { if (this.footer) this.footer.style.maxHeight = '420px'; } catch(e){}
     
     console.log('🤖 Flowing MVP expanded');
   }
@@ -347,6 +351,8 @@ class FlowingFooter {
     
     // Adjust content padding for collapsed footer
     this.adjustContentPadding(true);
+    try { document.body.classList.remove('flowing-footer-expanded'); } catch(e){}
+    try { if (this.footer) this.footer.style.maxHeight = ''; } catch(e){}
     
     // Switch back to chat view when collapsing
     this.switchToChatView();
