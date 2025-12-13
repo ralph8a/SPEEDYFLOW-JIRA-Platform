@@ -447,65 +447,87 @@ class FlowingFooter {
         slaContainer.innerHTML = '';
         slaContainer.appendChild(slaPanel);
         
-        // Customize layout for footer compact view
-        const slaPanelElement = slaContainer.querySelector('.sla-panel');
-        if (slaPanelElement) {
-          console.log('🔧 Customizing SLA panel layout...');
-          
-          // Hide "SLA Monitor" title
-          const titleElement = slaPanelElement.querySelector('h3');
-          if (titleElement) {
-            titleElement.style.display = 'none';
-            console.log('✅ Hidden title');
-          }
-          
-          // Move refresh button next to ON TRACK badge
-          const refreshBtn = slaPanelElement.querySelector('.refresh-sla-btn, .btn-refresh-sla, button[onclick*="refresh"]');
-          const statusBadge = slaPanelElement.querySelector('.sla-status-badge, .status-badge, [class*="status"]');
-          
-          console.log('🔍 Refresh button:', refreshBtn);
-          console.log('🔍 Status badge:', statusBadge);
-          
-          if (refreshBtn && statusBadge) {
-            // Get the container of the status badge
-            const statusContainer = statusBadge.parentElement || statusBadge.closest('.sla-header, .sla-status, div');
-            if (statusContainer) {
-              refreshBtn.style.display = 'inline-flex';
-              refreshBtn.style.marginLeft = '8px';
-              refreshBtn.style.padding = '4px 8px';
-              refreshBtn.style.fontSize = '10px';
-              refreshBtn.style.verticalAlign = 'middle';
-              statusContainer.appendChild(refreshBtn);
-              console.log('✅ Moved refresh button next to status badge');
+        // Wait for DOM to be ready before customizing (nextTick)
+        setTimeout(() => {
+          // Customize layout for footer compact view
+          const slaPanelElement = slaContainer.querySelector('.sla-panel');
+          if (slaPanelElement) {
+            console.log('🔧 Customizing SLA panel layout...');
+            console.log('📋 Panel HTML:', slaPanelElement.innerHTML.substring(0, 200));
+            
+            // Hide "SLA Monitor" title
+            const titleElement = slaPanelElement.querySelector('h3');
+            if (titleElement) {
+              titleElement.style.display = 'none';
+              console.log('✅ Hidden title');
             }
-          }
-          
-          // Move "Updated" below "Elapsed"
-          const updatedElement = slaPanelElement.querySelector('.sla-updated, [class*="updated"], small:has-text("Updated")');
-          const elapsedElement = slaPanelElement.querySelector('.sla-elapsed, [class*="elapsed"], [class*="Elapsed"]');
-          
-          console.log('🔍 Updated element:', updatedElement);
-          console.log('🔍 Elapsed element:', elapsedElement);
-          
-          if (updatedElement && elapsedElement) {
-            const elapsedContainer = elapsedElement.parentElement || elapsedElement.closest('div');
-            if (elapsedContainer) {
-              updatedElement.style.fontSize = '10px';
-              updatedElement.style.color = '#9ca3af';
-              updatedElement.style.marginTop = '4px';
-              updatedElement.style.display = 'block';
-              elapsedContainer.appendChild(updatedElement);
-              console.log('✅ Moved updated below elapsed');
+            
+            // Move refresh button next to ON TRACK badge - try multiple selectors
+            const refreshBtn = slaPanelElement.querySelector('.refresh-sla-btn') || 
+                              slaPanelElement.querySelector('.btn-refresh-sla') || 
+                              slaPanelElement.querySelector('button[onclick*="refresh"]') ||
+                              Array.from(slaPanelElement.querySelectorAll('button')).find(btn => 
+                                btn.textContent.includes('↻') || btn.textContent.includes('Refresh')
+                              );
+            
+            const statusBadge = slaPanelElement.querySelector('.sla-status-badge') || 
+                               slaPanelElement.querySelector('.status-badge') ||
+                               Array.from(slaPanelElement.querySelectorAll('[class*="status"]')).find(el => 
+                                 el.textContent.includes('ON TRACK') || el.textContent.includes('BREACHED')
+                               );
+            
+            console.log('🔍 Refresh button:', refreshBtn);
+            console.log('🔍 Status badge:', statusBadge);
+            
+            if (refreshBtn && statusBadge) {
+              // Get the container of the status badge
+              const statusContainer = statusBadge.parentElement || statusBadge.closest('.sla-header, .sla-status, div');
+              if (statusContainer) {
+                refreshBtn.style.display = 'inline-flex';
+                refreshBtn.style.marginLeft = '8px';
+                refreshBtn.style.padding = '4px 8px';
+                refreshBtn.style.fontSize = '10px';
+                refreshBtn.style.verticalAlign = 'middle';
+                statusContainer.appendChild(refreshBtn);
+                console.log('✅ Moved refresh button next to status badge');
+              }
             }
+            
+            // Move "Updated" below "Elapsed" - try multiple selectors
+            const updatedElement = slaPanelElement.querySelector('.sla-updated') ||
+                                  Array.from(slaPanelElement.querySelectorAll('*')).find(el => 
+                                    el.textContent && el.textContent.includes('Updated:')
+                                  );
+            
+            const elapsedElement = slaPanelElement.querySelector('.sla-elapsed') ||
+                                  slaPanelElement.querySelector('[class*="elapsed"]') ||
+                                  Array.from(slaPanelElement.querySelectorAll('*')).find(el => 
+                                    el.textContent && el.textContent.includes('ELAPSED')
+                                  );
+            
+            console.log('🔍 Updated element:', updatedElement);
+            console.log('🔍 Elapsed element:', elapsedElement);
+            
+            if (updatedElement && elapsedElement) {
+              const elapsedContainer = elapsedElement.parentElement || elapsedElement.closest('div');
+              if (elapsedContainer) {
+                updatedElement.style.fontSize = '10px';
+                updatedElement.style.color = '#9ca3af';
+                updatedElement.style.marginTop = '4px';
+                updatedElement.style.display = 'block';
+                elapsedContainer.appendChild(updatedElement);
+                console.log('✅ Moved updated below elapsed');
+              }
+            }
+            
+            // Reduce padding for compact view
+            slaPanelElement.style.padding = '0';
+            slaPanelElement.style.background = 'transparent';
+            slaPanelElement.style.border = 'none';
           }
           
-          // Reduce padding for compact view
-          slaPanelElement.style.padding = '0';
-          slaPanelElement.style.background = 'transparent';
-          slaPanelElement.style.border = 'none';
-        }
-        
-        console.log('✅ SLA Monitor rendered (compact mode)');
+          console.log('✅ SLA Monitor rendered (compact mode)');
+        }, 100); // Wait 100ms for DOM to stabilize
         
         // Calculate and render breach risk
         this.renderBreachRisk(issueKey);
