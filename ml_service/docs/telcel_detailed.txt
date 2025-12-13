@@ -1,0 +1,21 @@
+Source: Telcel / Wikipedia summary (https://www.telcel.com and https://en.wikipedia.org/wiki/Telcel)
+
+Overview
+--------
+Telcel is Mexico's largest mobile network operator (subsidiary of América Móvil) providing GSM/3G/4G/5G services, voice, SMS, mobile data and value-added services. For OTT and API integration, Telcel functions as the network/carrier that delivers traffic to end-users and may provide partner APIs for billing or provisioning in commercial agreements.
+
+Network & Technical Notes
+-------------------------
+- Radio technologies: GSM, UMTS (3G), HSPA+, LTE (4G), VoLTE/VoWiFi and emerging 5G deployments.
+- Connectivity concerns for OTT: mobile data throughput, latency, packet loss, and metered/bundled plans affecting user experience.
+- Carrier partnerships: Telcel can bundle OTT services into plans (zero-rating), which may require commercial and technical integration.
+
+Integration patterns
+--------------------
+- For OTT providers: monitor mobile QoS (latency, throughput) per region and adapt bitrate/codec accordingly.
+- For API integrations with carriers: use well-defined RESTful APIs (provisioning, billing) behind an API management layer (Apigee) with mutual TLS / OAuth and strict rate limits.
+
+References & further reading
+---------------------------
+- Telcel corporate / network pages: https://www.telcel.com/
+- Telcel (Wikipedia): https://en.wikipedia.org/wiki/Telcel

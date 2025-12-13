@@ -1,0 +1,41 @@
+Source: Google Cloud Apigee documentation (https://cloud.google.com/apigee/docs)
+
+Overview
+--------
+Apigee is an API management platform for designing, securing, publishing, monitoring and analyzing APIs at scale. It sits in front of backend services as an API gateway / proxy, applying policies and flows so teams can change behavior without modifying backend code.
+
+Core Concepts
+-------------
+- API proxy: lightweight facade in front of backend APIs. Proxies declare flows (Request/Response) and attach policies.
+- Flow: ordered sequence of steps (policies, scripts, service callouts) that run for requests and responses.
+- Policies: declarative building blocks used to implement security, mediation, transformation, caching, quotas and analytics. Examples: OAuth2, VerifyJWT, SpikeArrest, Quota, JSONThreatProtection, AssignMessage, PopulateCache, ServiceCallout.
+- Environment: runtime container where proxies are deployed (dev, test, prod, pay-as-you-go environment types).
+- Shared flows: reusable sequences that can be attached to multiple proxies for cross-cutting concerns (logging, auth).
+- Developer portal: portal to onboard API consumers, publish API docs, manage keys and product subscriptions.
+
+Policy Categories & Patterns
+---------------------------
+- Security: OAuth v2, VerifyAPIKey, VerifyJWT, JSONThreatProtection — pattern: always authenticate incoming traffic first, then apply authorization and threat protection.
+- Traffic Management: SpikeArrest, Quota, ConcurrentRateLimit — pattern: protections placed early in flow to reject abusive traffic before heavy processing.
+- Transformation / Mediation: AssignMessage, ExtractVariables, JSONtoXML, XSLTransform — pattern: canonicalize requests early and canonicalize responses before returning to client.
+- Caching: PopulateCache / LookupCache / ResponseCache — pattern: cache safe GET responses at edge to reduce backend load.
+- Extensible policies: where custom JS/Java/Python is required (use sparingly; prefer declarative policies).
+
+Best Practices (from docs)
+-------------------------
+1. Use declarative policies whenever possible (less custom code → easier maintenance).
+2. Keep security policies near the start of the request flow.
+3. Use analytics for baselining and anomaly detection before setting strict quotas.
+4. Use shared flows for cross-cutting concerns (auth, telemetry, error handling).
+5. Monitor latency and error budgets; protect backends with rate limits and circuit-breaker patterns (ServiceCallout + RaiseFault).
+
+Integration patterns for SPEEDYFLOW
+---------------------------------
+- Protect JIRA integration endpoints via API gateway: apply OAuth/JWT, rate limiting and JSONThreatProtection.
+- Add a shared flow that logs ticket-related metrics (counts by status/assignee/priority) into Apigee analytics for dashboards.
+- Use ServiceCallout to contact ML microservice (ml_service) for real-time predictions in request flow (e.g., when creating/updating issues, enrich payload with suggested assignee/labels).
+
+References
+----------
+- Policy reference: https://cloud.google.com/apigee/docs/api-platform/reference/policies
+- What is Apigee: https://cloud.google.com/apigee/docs/api-platform/get-started/what-is-apigee
