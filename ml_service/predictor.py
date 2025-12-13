@@ -62,6 +62,14 @@ class UnifiedMLPredictor:
             # prefer Spanish if available for legacy behavior
             self.nlp = self.nlp_es or self.nlp_en
             logger.info("✅ spaCy loaded (preferred model set)")
+            # try to load sentence-transformers multilingual model for better embeddings
+            try:
+                from sentence_transformers import SentenceTransformer
+                self.st_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+                logger.info("✅ sentence-transformers multilingual model loaded")
+            except Exception as e:
+                self.st_model = None
+                logger.warning(f"sentence-transformers not available: {e}")
         except Exception as e:
             logger.warning(f"⚠️ spaCy no disponible: {e}")
             if not self.fallback_mode:
@@ -132,6 +140,13 @@ class UnifiedMLPredictor:
         except Exception:
             # fallback heuristic: accented chars -> es
             lang = 'es' if re.search(r'[\u00C0-\u017F]', text) else 'en'
+        # Prefer sentence-transformers if available
+        if getattr(self, 'st_model', None):
+            try:
+                vec = self.st_model.encode([text], show_progress_bar=False)[0]
+                return vec
+            except Exception:
+                pass
 
         if lang and lang.startswith('es') and getattr(self, 'nlp_es', None):
             doc = self.nlp_es(str(text)[:max_length])

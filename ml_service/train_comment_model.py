@@ -63,6 +63,15 @@ def main(dataset_path, models_dir, epochs_phase1=5, epochs_phase2=3, batch_size=
         def detect(text):
             return 'es' if re.search(r'[\u00C0-\u017F]', text) else 'en'
 
+    # Prefer sentence-transformers if available (better multilingual embeddings)
+    st_model = None
+    try:
+        from sentence_transformers import SentenceTransformer
+        st_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        print('Using sentence-transformers model for embeddings')
+    except Exception:
+        st_model = None
+
     ds = pd.read_csv(dataset_path)
     if ds.empty:
         raise RuntimeError('Dataset empty')
@@ -70,22 +79,26 @@ def main(dataset_path, models_dir, epochs_phase1=5, epochs_phase2=3, batch_size=
     texts = (ds.get('summary','').fillna('') + '. ' + ds.get('comments','').fillna('')).tolist()
 
     print('Computing embeddings (auto-detecting language per text)...')
-    emb_list = []
-    for t in texts:
-        lang = 'en'
-        try:
-            lang = detect(str(t))
-        except Exception:
-            pass
-        if lang and lang.startswith('es') and nlp_es:
-            vec = nlp_es(str(t)).vector
-        elif lang and lang.startswith('en') and nlp_en:
-            vec = nlp_en(str(t)).vector
-        else:
-            # fallback: use whichever is available
-            vec = (nlp_es or nlp_en)(str(t)).vector
-        emb_list.append(vec)
-    embeddings = np.vstack(emb_list)
+    if st_model is not None:
+        # sentence-transformers can encode list of texts efficiently
+        embeddings = np.array(st_model.encode(texts, show_progress_bar=True))
+    else:
+        emb_list = []
+        for t in texts:
+            lang = 'en'
+            try:
+                lang = detect(str(t))
+            except Exception:
+                pass
+            if lang and lang.startswith('es') and nlp_es:
+                vec = nlp_es(str(t)).vector
+            elif lang and lang.startswith('en') and nlp_en:
+                vec = nlp_en(str(t)).vector
+            else:
+                # fallback: use whichever is available
+                vec = (nlp_es or nlp_en)(str(t)).vector
+            emb_list.append(vec)
+        embeddings = np.vstack(emb_list)
 
     # labels
     raw_labels = ds.get('labels', '').fillna('').astype(str).apply(lambda s: [x.strip() for x in s.split(',') if x.strip()])
