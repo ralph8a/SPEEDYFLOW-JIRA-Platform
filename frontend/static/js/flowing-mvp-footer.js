@@ -222,35 +222,32 @@ class FlowingFooter {
     if (!this.suggestionElement || this.suggestions.length === 0) return;
 
     // Fade out current suggestion
+    // Only change content if different to avoid unnecessary reflows/flashes
+    const suggestion = this.suggestions[this.currentSuggestionIndex];
+    const current = (this.suggestionElement.innerHTML || '').trim();
+    const incoming = (suggestion.text || '').trim();
+
+    if (current === incoming) {
+      // Advance index but don't re-render the same content
+      this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
+      return;
+    }
+
     this.suggestionElement.classList.remove('visible');
-    
+
     // Wait for fade out, then update content
     setTimeout(() => {
-      // Get current suggestion
-      const suggestion = this.suggestions[this.currentSuggestionIndex];
-      
-      // Update text and styling
-      this.suggestionElement.innerHTML = suggestion.text;
-      
-      // Remove all type classes
-      this.suggestionElement.classList.remove(
-        'suggestion-critical',
-        'suggestion-warning',
-        'suggestion-info',
-        'suggestion-success'
-      );
-      
-      // Add appropriate class
+      // Update HTML and classes
+      this.suggestionElement.innerHTML = incoming;
+      this.suggestionElement.classList.remove('suggestion-critical','suggestion-warning','suggestion-info','suggestion-success');
       this.suggestionElement.classList.add(`suggestion-${suggestion.type}`);
 
       // Move to next suggestion
       this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
-      
+
       // Fade in new suggestion after a brief delay
-      setTimeout(() => {
-        this.suggestionElement.classList.add('visible');
-      }, 50);
-    }, 600); // Match CSS transition duration
+      setTimeout(() => this.suggestionElement.classList.add('visible'), 50);
+    }, 260); // shorter fade to feel snappier but avoid flash
   }
 
   updateContext() {
