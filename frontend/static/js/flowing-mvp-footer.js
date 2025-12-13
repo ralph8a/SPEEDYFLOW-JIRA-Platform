@@ -960,6 +960,22 @@ class FlowingFooter {
                 icon.classList.add('svg-assemble');
               }
             } catch (e) { console.warn('Could not re-animate chevron', e); }
+            // Recompute footer height/translate so page elements (header/filter/kanban) reflow correctly
+            try {
+              setTimeout(() => {
+                try {
+                  const footerEl = document.querySelector('.flowing-footer') || document.querySelector('.ml-footer') || null;
+                  const h = footerEl ? Math.round(footerEl.getBoundingClientRect().height) : 420;
+                  const COLLAPSED_HEIGHT = 56;
+                  const delta = Math.max(0, h - COLLAPSED_HEIGHT);
+                  const cap = Math.max(0, (window.innerHeight || 800) - 120);
+                  const used = Math.min(delta, cap);
+                  document.documentElement.style.setProperty('--flowing-footer-height', h + 'px');
+                  document.documentElement.style.setProperty('--flowing-footer-translate', used + 'px');
+                  if (used > 0) document.body.classList.add('flowing-footer-expanded'); else document.body.classList.remove('flowing-footer-expanded');
+                } catch (err) { /* ignore */ }
+              }, 100);
+            } catch (err) { /* ignore */ }
           });
         }
       } catch (e) { console.warn('Could not initialize description toggle', e); }
