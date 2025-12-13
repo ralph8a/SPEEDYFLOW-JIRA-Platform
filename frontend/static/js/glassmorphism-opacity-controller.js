@@ -258,9 +258,9 @@ class TransparencyManager {
     // MAIN CONTAINERS (should receive effects)
     const mainContainers = {
       '.sidebar': 'primary',
-      '.main-header-pro': 'secondary',
+      '.main-header-pro': 'tertiary',
       '.right-sidebar': 'primary',
-      '.filter-bar-enhanced': 'primary',
+      '.filter-bar-enhanced': 'tertiary',
       '.modal': 'secondary',
       '.navbar': 'tertiary',
       '.kanban-column': 'secondary',
