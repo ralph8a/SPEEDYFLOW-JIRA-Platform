@@ -24,8 +24,16 @@ class FlowingFooter {
     this.suggestions = [];
     this.currentSuggestionIndex = 0;
     this.suggestionInterval = null;
+    this.lastAnalyzeAt = 0;
     
     this.init();
+  }
+
+  // Utility: strip HTML tags and normalize whitespace for stable comparisons
+  _stripHTML(text = '') {
+    try {
+      return (text + '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    } catch (e) { return (text || '').toString(); }
   }
 
   init() {
@@ -118,9 +126,20 @@ class FlowingFooter {
       
       if (oldContext !== newContext) {
         console.log('🔄 Context updated:', this.context);
-        this.analyzeSuggestions();
+        // Debounce/throttle analysis to avoid frequent re-renders
+        this._throttledAnalyzeSuggestions();
       }
     }, 1000);
+  }
+
+  _throttledAnalyzeSuggestions() {
+    const now = Date.now();
+    // limit to once every 2.5s
+    if (now - this.lastAnalyzeAt < 2500) return;
+    this.lastAnalyzeAt = now;
+    this.analyzeSuggestions();
+    // Immediately update suggestion display after analyzing
+    this.updateSuggestion();
   }
 
   analyzeSuggestions() {
@@ -148,10 +167,8 @@ class FlowingFooter {
     });
 
     if (overdueTickets.length > 0) {
-      this.suggestions.push({
-        text: `${SVGIcons.alert({size:14,className:'inline-icon'})} ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue (7+ days)`,
-        type: 'warning'
-      });
+      const txt = `${SVGIcons.alert({size:14,className:'inline-icon'})} ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue (7+ days)`;
+      this.suggestions.push({ text: txt, type: 'warning', key: this._stripHTML(txt) });
     }
 
     // Analyze critical/high priority tickets
@@ -160,10 +177,8 @@ class FlowingFooter {
     );
 
     if (urgentTickets.length > 0) {
-      this.suggestions.push({
-        text: `${SVGIcons.xCircle({size:14,className:'inline-icon'})} ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`,
-        type: 'critical'
-      });
+      const txt = `${SVGIcons.xCircle({size:14,className:'inline-icon'})} ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`;
+      this.suggestions.push({ text: txt, type: 'critical', key: this._stripHTML(txt) });
     }
 
     // Analyze unassigned tickets
@@ -172,10 +187,8 @@ class FlowingFooter {
     );
 
     if (unassignedTickets.length > 0) {
-      this.suggestions.push({
-        text: `${SVGIcons.user({size:14,className:'inline-icon'})} ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`,
-        type: 'info'
-      });
+      const txt = `${SVGIcons.user({size:14,className:'inline-icon'})} ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`;
+      this.suggestions.push({ text: txt, type: 'info', key: this._stripHTML(txt) });
     }
 
     // Analyze about to breach (3+ days)
@@ -186,25 +199,19 @@ class FlowingFooter {
     });
 
     if (aboutToBreachTickets.length > 0) {
-      this.suggestions.push({
-        text: `${SVGIcons.clock({size:14,className:'inline-icon'})} ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`,
-        type: 'warning'
-      });
+      const txt = `${SVGIcons.clock({size:14,className:'inline-icon'})} ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`;
+      this.suggestions.push({ text: txt, type: 'warning', key: this._stripHTML(txt) });
     }
 
     // All clear message
     if (this.suggestions.length === 0) {
-      this.suggestions.push({
-        text: `${SVGIcons.success({size:14,className:'inline-icon'})} All tickets are up to date!`,
-        type: 'success'
-      });
+      const txt = `${SVGIcons.success({size:14,className:'inline-icon'})} All tickets are up to date!`;
+      this.suggestions.push({ text: txt, type: 'success', key: this._stripHTML(txt) });
     }
 
     // Add general queue info
-    this.suggestions.push({
-      text: `${SVGIcons.chart({size:14,className:'inline-icon'})} ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`,
-      type: 'info'
-    });
+    const txt = `${SVGIcons.chart({size:14,className:'inline-icon'})} ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`;
+    this.suggestions.push({ text: txt, type: 'info', key: this._stripHTML(txt) });
   }
 
   startSuggestionRotation() {
@@ -224,10 +231,10 @@ class FlowingFooter {
     // Fade out current suggestion
     // Only change content if different to avoid unnecessary reflows/flashes
     const suggestion = this.suggestions[this.currentSuggestionIndex];
-    const current = (this.suggestionElement.innerHTML || '').trim();
-    const incoming = (suggestion.text || '').trim();
+    const currentPlain = this._stripHTML(this.suggestionElement.innerHTML || '');
+    const incomingPlain = suggestion.key || this._stripHTML(suggestion.text || '');
 
-    if (current === incoming) {
+    if (currentPlain === incomingPlain) {
       // Advance index but don't re-render the same content
       this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
       return;
@@ -238,7 +245,8 @@ class FlowingFooter {
     // Wait for fade out, then update content
     setTimeout(() => {
       // Update HTML and classes
-      this.suggestionElement.innerHTML = incoming;
+      // Use suggestion.text (full HTML) when rendering
+      this.suggestionElement.innerHTML = suggestion.text || '';
       this.suggestionElement.classList.remove('suggestion-critical','suggestion-warning','suggestion-info','suggestion-success');
       this.suggestionElement.classList.add(`suggestion-${suggestion.type}`);
 
