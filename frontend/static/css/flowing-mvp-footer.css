@@ -2053,8 +2053,8 @@ body.sidebar-collapsed .flowing-footer {
 .footer-two-columns .panel, .footer-two-columns .panel-card { box-sizing: border-box; max-width: 100%; overflow-wrap: break-word; }
 
 /* Tweak flowing-footer width calc to be robust to sidebar width variables */
-.flowing-footer { width: calc(100% - var(--sidebar-width, 280px) - 32px) !important; left: var(--sidebar-width, 280px) !important; }
-body.sidebar-collapsed .flowing-footer { width: calc(100% - var(--sidebar-collapsed-width, 60px) - 32px) !important; left: var(--sidebar-collapsed-width, 60px) !important; }
+.flowing-footer { left: calc(var(--sidebar-width, 280px) + 16px) !important; right: 16px !important; width: auto !important; }
+body.sidebar-collapsed .flowing-footer { left: calc(var(--sidebar-collapsed-width, 60px) + 16px) !important; right: 16px !important; width: auto !important; }
 
 /* Purple dark gradient dividers used across sidebar/footer */
 .purple-divider {

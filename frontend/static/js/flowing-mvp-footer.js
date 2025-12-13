@@ -278,18 +278,17 @@ class FlowingFooter {
     const iconEl = this.contextBadge.querySelector('.context-icon');
     const textEl = this.contextBadge.querySelector('.context-text');
 
-    // Remove emoji-based icon updates to avoid flashing; keep icon stable or empty
+    // Always clear any emoji/text in the icon slot to avoid flashes
     try {
-      if (iconEl && iconEl.dataset.staticRendered !== '1') {
-        // Prefer a small SVG logo if available, otherwise clear
+      if (iconEl) {
+        // Prefer a small SVG logo if available, otherwise clear the slot
         if (typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall) {
           iconEl.innerHTML = SVGIcons.logoSmall({ size: 16, className: 'inline-icon' });
         } else {
           iconEl.innerHTML = '';
         }
-        iconEl.dataset.staticRendered = '1';
       }
-    } catch (e) { /* swallow */ }
+    } catch (e) { if (iconEl) iconEl.innerHTML = ''; }
 
     // Compute desired text for current context (include summary when an issue is selected)
     let desiredText = 'No context';
