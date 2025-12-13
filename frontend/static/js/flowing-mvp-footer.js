@@ -25,6 +25,7 @@ class FlowingFooter {
     this.currentSuggestionIndex = 0;
     this.suggestionInterval = null;
     this.lastAnalyzeAt = 0;
+    this.suggestionPaused = false;
     
     this.init();
   }
@@ -221,7 +222,7 @@ class FlowingFooter {
 
     // Rotate suggestions every 6 seconds (5s visible + 1s transition)
     this.suggestionInterval = setInterval(() => {
-      this.updateSuggestion();
+      if (!this.suggestionPaused) this.updateSuggestion();
     }, 6000);
   }
 
@@ -367,6 +368,8 @@ class FlowingFooter {
     
     if (this.suggestionElement) {
       this.suggestionElement.textContent = 'Analyzing your queue...';
+      // resume rotation when returning to chat view
+      this.resumeSuggestionRotation();
     }
   }
   
@@ -390,7 +393,17 @@ class FlowingFooter {
     
     if (this.suggestionElement) {
       this.suggestionElement.textContent = `${issueKey} - Viewing details`;
+      // pause rotation while viewing a ticket to avoid overwrites/flashes
+      this.pauseSuggestionRotation();
     }
+  }
+
+  pauseSuggestionRotation() {
+    this.suggestionPaused = true;
+  }
+
+  resumeSuggestionRotation() {
+    this.suggestionPaused = false;
   }
   
   async loadTicketIntoBalancedView(issueKey) {
