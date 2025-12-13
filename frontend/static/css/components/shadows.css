@@ -10,6 +10,20 @@
   --shadow-sm: 0 4px 12px rgba(2,6,23,0.08);
   --transition-base: 220ms;
   --transition-fast: 120ms;
+  /* Typography color tokens (simplified palette for consistent UI)
+     --ff-text-primary: main content color
+     --ff-text-muted: secondary / muted text
+     --ff-accent: brand/accent links and highlights
+     --ff-accent-strong: stronger accent for titles
+     --ff-success/: success, danger, warning
+  */
+  --ff-text-primary: #1f2937; /* slate-800 */
+  --ff-text-muted: #6b7280; /* gray-500 */
+  --ff-accent: #6366f1; /* indigo-500 */
+  --ff-accent-strong: #111827; /* slate-900 */
+  --ff-success: #10b981;
+  --ff-danger: #ef4444;
+  --ff-warning: #f59e0b;
 }
 
 /* Apply shadows only to essential, small-to-medium elements */
@@ -58,6 +72,57 @@ body[data-theme="dark"] :where(.ticket-description-section, .field-input, .ml-ac
   background: linear-gradient(180deg, rgba(10,12,18,0.6), rgba(8,10,14,0.6)) !important;
   color: #e6eef8 !important;
   border-color: rgba(255,255,255,0.04) !important;
+}
+
+/* Global typography color normalization
+   Reduce the number of distinct font colors by mapping common UI text
+   to a small, pleasant palette. Use !important sparingly to override
+   legacy inline colors where necessary.
+*/
+body {
+  color: var(--ff-text-primary);
+}
+
+/* Muted / secondary text */
+.ff-text-muted,
+.ticket-meta,
+.flowing-subtitle,
+.flowing-label,
+.context-text,
+.comment-time,
+.field-label,
+.footer-subtext,
+.small-muted {
+  color: var(--ff-text-muted) !important;
+}
+
+/* Accent / links / titles */
+a,
+.flowing-title-text h3,
+.footer-title,
+.ticket-key-header,
+.ticket-summary-header {
+  color: var(--ff-accent) !important;
+}
+
+/* Strong headings */
+h1,h2,h3,h4,h5,h6,
+.flowing-title,
+.footer-title {
+  color: var(--ff-accent-strong) !important;
+}
+
+/* Status colors mapped to tokens */
+.status-success { color: var(--ff-success) !important; }
+.status-danger { color: var(--ff-danger) !important; }
+.status-warning { color: var(--ff-warning) !important; }
+
+/* Dark theme: pick lighter palette for text while preserving tokens */
+body[data-theme="dark"] {
+  --ff-text-primary: #e6eef8;
+  --ff-text-muted: #cbd5e1;
+  --ff-accent: #8b5cf6;
+  --ff-accent-strong: #f8fafc;
 }
 
 /* Ensure white text for small labels in dark mode */
