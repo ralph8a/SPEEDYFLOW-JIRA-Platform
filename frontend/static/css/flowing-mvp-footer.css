@@ -2116,8 +2116,27 @@ body.sidebar-collapsed .flowing-footer {
 /* Panels keep subtle card background but with some transparency to blend */
 .footer-two-columns .panel,
 .footer-two-columns .panel-card {
-  background: color-mix(in srgb, white 88%, transparent);
-  border: 1px solid rgba(0,0,0,0.04);
+  /* Use a subtle semi-transparent surface that respects dark/light themes */
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(0,0,0,0.04) !important;
+  box-shadow: none !important;
+}
+
+/* Dark theme: slightly different transparency */
+[data-theme="dark"] .footer-two-columns .panel,
+body.theme-dark .footer-two-columns .panel,
+[data-theme="dark"] .footer-two-columns .panel-card,
+body.theme-dark .footer-two-columns .panel-card {
+  background: rgba(17,24,39,0.22) !important;
+  border-color: rgba(255,255,255,0.04) !important;
+  box-shadow: none !important;
+}
+
+/* If any higher-specificity rules set solid backgrounds elsewhere, force transparency inside footer */
+.flowing-footer .panel, .flowing-footer .panel-card, .flowing-footer .left-column, .flowing-footer .right-column,
+.ml-footer .panel, .ml-footer .panel-card, .ml-footer .left-column, .ml-footer .right-column {
+  background-clip: padding-box;
+  background-color: transparent !important;
 }
 
 @media (max-width: 1100px) {
