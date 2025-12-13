@@ -1,0 +1,27 @@
+CMD / Grep / PowerShell quick reference
+
+Grep (Linux/macOS)
+------------------
+- Search for text recursively: grep -R --line-number "pattern" ./
+- Show context lines: grep -R -n -C 3 "pattern" ./
+- Search only in *.log files: grep -R --include="*.log" -n "pattern" ./logs
+
+Ripgrep (recommended)
+----------------------
+- rg "pattern" --glob "*.log" -n
+
+Windows PowerShell
+-------------------
+- Search recursively: Select-String -Path "*.log" -Pattern "pattern" -CaseSensitive:$false -List
+- Show with context: Select-String -Path "*.log" -Pattern "pattern" -Context 3
+
+Useful patterns for tickets
+---------------------------
+- Find HTTP 500 errors in logs: rg "\b500\b|\b502\b|\b504\b" ./logs
+- Find SLA mentions: rg "\bSLA\b|\bbreach\b" -i
+- Extract trace IDs: rg "trace_id=([A-Za-z0-9\-]+)" -o
+
+Tips
+----
+- Use ripgrep (rg) for speed on large codebases.
+- Combine with head/tail to inspect top results.

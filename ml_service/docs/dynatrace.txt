@@ -1,0 +1,30 @@
+Source: Dynatrace documentation (summary)
+
+Overview
+--------
+Dynatrace is an APM and observability platform for monitoring applications, infrastructure, and user experience. Key features: full-stack monitoring, distributed traces, metrics, logs, synthetic monitoring, real-user monitoring (RUM), AI-driven root cause analysis (Davis).
+
+Key Concepts
+------------
+- OneAgent: automatic instrumentation agent for hosts and containers.
+- Davis AI: automated problem detection and root cause analysis.
+- Dynatrace Metrics / Custom Metrics: ingest application and infrastructure metrics.
+- Traces: distributed tracing for request flows across services.
+- Log monitoring: ingest logs and connect to traces for context.
+
+APIs & Integrations
+-------------------
+- Metrics API: push metrics to Dynatrace.
+- Events API: send custom events/annotations.
+- Problems API: query detected problems.
+- Logs ingest API: ship logs via HTTP or collectors.
+
+Patterns for SPEEDYFLOW
+----------------------
+- Use OneAgent in staging/prod to collect traces and map slow transactions to tickets.
+- When comment patterns indicate "timeout" or "500", query Dynatrace Problems and Traces for related timestamps and attach summaries to the ticket.
+- Enrich tickets with Dynatrace problem IDs and URLs for quick investigation.
+
+References
+----------
+- https://www.dynatrace.com/support/help/

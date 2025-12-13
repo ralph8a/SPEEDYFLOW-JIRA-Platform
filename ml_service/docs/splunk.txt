@@ -1,0 +1,30 @@
+Source: Splunk documentation (summary)
+
+Overview
+--------
+Splunk is a platform for searching, monitoring, and analyzing machine-generated data (logs, metrics, events). Supports powerful search language (SPL), dashboards, alerts, and integrations.
+
+Key Concepts
+------------
+- Indexes: store time-series event data.
+- SPL (Search Processing Language): query language for filtering, aggregations, and transformations.
+- Forwarders: ship logs to Splunk indexers.
+- Dashboards/Alerts: create visualizations and trigger alerts.
+
+Useful SPL Patterns
+-------------------
+- Search error rates in last 15 min:
+  index=app_logs level=ERROR | timechart count by service span=1m
+- Find occurrences of HTTP 500 and top endpoints:
+  index=app_logs "500" | stats count by uri | sort -count
+- Correlate logs by trace id:
+  index=app_logs trace_id=abc123 | table _time service message
+
+Integration Patterns
+--------------------
+- When a ticket mentions an error code, run a Splunk search for that code within the incident window and attach results or link to the dashboard.
+- Use Splunk alerts to create JIRA tickets via webhook for critical incidents.
+
+References
+----------
+- https://docs.splunk.com/
