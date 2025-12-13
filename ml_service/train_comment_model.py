@@ -19,9 +19,17 @@ import pickle
 def ensure_spacy_model():
     try:
         import spacy
-        spacy.load('es_core_news_md')
+        # Try to load both Spanish and English medium models
+        try:
+            spacy.load('es_core_news_md')
+        except Exception:
+            print('spaCy Spanish model es_core_news_md not found')
+        try:
+            spacy.load('en_core_web_md')
+        except Exception:
+            print('spaCy English model en_core_web_md not found')
     except Exception:
-        raise RuntimeError('Please install spaCy Spanish model: python -m spacy download es_core_news_md')
+        raise RuntimeError('Please install spaCy and language models: pip install spacy && python -m spacy download es_core_news_md && python -m spacy download en_core_web_md')
 
 def build_model(input_dim, output_dim):
     from tensorflow.keras import layers, models, optimizers
@@ -36,7 +44,24 @@ def build_model(input_dim, output_dim):
 def main(dataset_path, models_dir, epochs_phase1=5, epochs_phase2=3, batch_size=32):
     ensure_spacy_model()
     import spacy
-    nlp = spacy.load('es_core_news_md', disable=['ner'])
+    # load both language models if available
+    nlp_es = None
+    nlp_en = None
+    try:
+        nlp_es = spacy.load('es_core_news_md', disable=['ner'])
+    except Exception:
+        print('Warning: es_core_news_md not available')
+    try:
+        nlp_en = spacy.load('en_core_web_md', disable=['ner'])
+    except Exception:
+        print('Warning: en_core_web_md not available')
+
+    # lazy language detector
+    try:
+        from langdetect import detect
+    except Exception:
+        def detect(text):
+            return 'es' if re.search(r'[\u00C0-\u017F]', text) else 'en'
 
     ds = pd.read_csv(dataset_path)
     if ds.empty:
@@ -44,8 +69,23 @@ def main(dataset_path, models_dir, epochs_phase1=5, epochs_phase2=3, batch_size=
 
     texts = (ds.get('summary','').fillna('') + '. ' + ds.get('comments','').fillna('')).tolist()
 
-    print('Computing embeddings...')
-    embeddings = np.vstack([nlp(str(t)) .vector for t in texts])
+    print('Computing embeddings (auto-detecting language per text)...')
+    emb_list = []
+    for t in texts:
+        lang = 'en'
+        try:
+            lang = detect(str(t))
+        except Exception:
+            pass
+        if lang and lang.startswith('es') and nlp_es:
+            vec = nlp_es(str(t)).vector
+        elif lang and lang.startswith('en') and nlp_en:
+            vec = nlp_en(str(t)).vector
+        else:
+            # fallback: use whichever is available
+            vec = (nlp_es or nlp_en)(str(t)).vector
+        emb_list.append(vec)
+    embeddings = np.vstack(emb_list)
 
     # labels
     raw_labels = ds.get('labels', '').fillna('').astype(str).apply(lambda s: [x.strip() for x in s.split(',') if x.strip()])

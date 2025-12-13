@@ -46,8 +46,22 @@ class UnifiedMLPredictor:
         # 1. Cargar spaCy (necesario para embeddings)
         try:
             import spacy
-            self.nlp = spacy.load("es_core_news_md", disable=["ner"])
-            logger.info("✅ spaCy cargado")
+            # try loading both Spanish and English models
+            try:
+                self.nlp_es = spacy.load("es_core_news_md", disable=["ner"])
+                logger.info("✅ spaCy Spanish model loaded")
+            except Exception:
+                self.nlp_es = None
+                logger.warning("spaCy Spanish model not available")
+            try:
+                self.nlp_en = spacy.load("en_core_web_md", disable=["ner"])
+                logger.info("✅ spaCy English model loaded")
+            except Exception:
+                self.nlp_en = None
+                logger.warning("spaCy English model not available")
+            # prefer Spanish if available for legacy behavior
+            self.nlp = self.nlp_es or self.nlp_en
+            logger.info("✅ spaCy loaded (preferred model set)")
         except Exception as e:
             logger.warning(f"⚠️ spaCy no disponible: {e}")
             if not self.fallback_mode:
@@ -108,10 +122,26 @@ class UnifiedMLPredictor:
     
     def get_embedding(self, text: str, max_length: int = 512) -> np.ndarray:
         """Generar embedding de texto con spaCy"""
-        if not text or not self.nlp:
+        if not text:
             return np.zeros(300)
-        
-        doc = self.nlp(str(text)[:max_length])
+        # try language detection
+        lang = None
+        try:
+            from langdetect import detect
+            lang = detect(text)
+        except Exception:
+            # fallback heuristic: accented chars -> es
+            lang = 'es' if re.search(r'[\u00C0-\u017F]', text) else 'en'
+
+        if lang and lang.startswith('es') and getattr(self, 'nlp_es', None):
+            doc = self.nlp_es(str(text)[:max_length])
+        elif lang and lang.startswith('en') and getattr(self, 'nlp_en', None):
+            doc = self.nlp_en(str(text)[:max_length])
+        elif getattr(self, 'nlp', None):
+            doc = self.nlp(str(text)[:max_length])
+        else:
+            return np.zeros(300)
+
         return doc.vector
     
     def _get_cache_key(self, summary: str, description: str) -> str:
