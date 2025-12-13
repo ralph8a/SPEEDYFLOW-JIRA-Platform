@@ -49,8 +49,6 @@ def generate_backgrounds():
         # Generate backgrounds (returns dict with success, variants, etc)
         result = get_ai_backgrounds(theme)
         
-                result[''] = False
-        
         return jsonify(result), 200
         
     except Exception as e:
