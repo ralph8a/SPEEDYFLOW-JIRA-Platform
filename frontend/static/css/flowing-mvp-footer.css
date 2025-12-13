@@ -2194,8 +2194,8 @@ body.theme-dark .footer-two-columns .panel-card {
   border-radius: 12px;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02));
-  border: 1px solid rgba(0,0,0,0.06);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02)) !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
 }
 
 .risk-card::before {
@@ -2225,6 +2225,24 @@ body.theme-dark .footer-two-columns .panel-card {
 @media (prefers-color-scheme: dark) {
   .risk-card { background: rgba(17,24,39,0.18); border-color: rgba(255,255,255,0.04); }
   .risk-card::before { background: linear-gradient(180deg, #8b5cf6, #6366f1); }
+}
+
+/* Stronger specificity to override inline styles or other rules that hide the new markup */
+.footer-two-columns .breach-risk-content .risk-card,
+.flowing-footer .breach-risk-content .risk-card,
+.ml-footer .breach-risk-content .risk-card {
+  display: flex !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02)) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  padding: 12px !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+.footer-two-columns .breach-risk-content .risk-card .risk-info,
+.flowing-footer .breach-risk-content .risk-card .risk-info {
+  display: block !important;
 }
 
 
