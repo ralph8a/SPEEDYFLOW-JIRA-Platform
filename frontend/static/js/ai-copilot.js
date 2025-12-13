@@ -348,6 +348,26 @@ class AICopilot {
       // Add assistant response
       this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
       
+      // If a ticket is selected, fetch ML comment suggestions and show them
+      if (this.context.selectedIssue) {
+        try {
+          const suggestResp = await fetch('/api/copilot/suggest/comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ summary: window.app?.issuesCache?.get(this.context.selectedIssue)?.summary || '', comments: '' })
+          });
+          if (suggestResp.ok) {
+            const sdata = await suggestResp.json();
+            if (sdata && (sdata.labels || sdata.probabilities)) {
+              const sugText = `Suggested comment labels: ${ (sdata.labels || []).join(', ') }`;
+              this.addMessage('assistant', `💡 ML suggestions: ${sugText}`);
+            }
+          }
+        } catch (e) {
+          console.warn('Comment suggestion failed', e);
+        }
+      }
+      
     } catch (error) {
       console.error('❌ Flowing MVP error:', error);
       loadingMsg?.remove();
