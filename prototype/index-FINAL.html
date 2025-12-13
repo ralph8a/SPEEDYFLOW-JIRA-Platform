@@ -884,18 +884,6 @@
     let currentView = 'chat-only'; // 'chat-only' or 'balanced'
     let selectedTicketKey = null;
 
-    // Load balanced content (lazy load)
-    function loadBalancedContent() { /* Content already embedded */ }
-        
-        try {
-            const response = await fetch('contenido-balanceado-LIMPIO.html');
-            const content = await response.text();
-            document.getElementById('balancedContentContainer').innerHTML = content;
-        } catch (error) {
-            console.error('Error loading balanced content:', error);
-        }
-    }
-
     // Show ticket details (switch to balanced view)
     function showTicketDetails(ticketKey) {
         selectedTicketKey = ticketKey;
