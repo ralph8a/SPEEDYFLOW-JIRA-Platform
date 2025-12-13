@@ -23,7 +23,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 def load_cache() -> Dict:
     """Load existing cache"""
     cache_path = 'data/cache/msm_issues.json.gz'
@@ -36,7 +35,6 @@ def load_cache() -> Dict:
     except Exception as e:
         logger.error(f"Error loading cache: {e}")
         return {'issues': []}
-
 
 def fetch_comments_for_ticket(site: str, headers: Dict, ticket_key: str) -> List[Dict]:
     """Fetch comments for a specific ticket"""
@@ -52,7 +50,6 @@ def fetch_comments_for_ticket(site: str, headers: Dict, ticket_key: str) -> List
     except Exception as e:
         logger.debug(f"Error fetching comments for {ticket_key}: {e}")
         return []
-
 
 def enrich_tickets_with_comments(tickets: List[Dict], max_tickets: int = 500) -> int:
     """
@@ -106,7 +103,6 @@ def enrich_tickets_with_comments(tickets: List[Dict], max_tickets: int = 500) ->
     
     return updated_count
 
-
 def save_cache(data: Dict):
     """Save updated cache"""
     cache_path = 'data/cache/msm_issues.json.gz'
@@ -127,7 +123,6 @@ def save_cache(data: Dict):
     except Exception as e:
         logger.error(f"Error saving cache: {e}")
         raise
-
 
 def main():
     """Main execution"""
@@ -197,7 +192,6 @@ def main():
         print("Next step: Run train_ml_features.py to retrain models")
     else:
         logger.warning("⚠️  No tickets were updated, cache not modified")
-
 
 if __name__ == '__main__':
     main()

@@ -11,7 +11,6 @@ import streamlit as st
 
 logger = logging.getLogger(__name__)
 
-
 def _get_fieldnames_from_data(data: List) -> List[str]:
     """
     Extrae los nombres de campos de una lista de datos de manera segura
@@ -31,7 +30,6 @@ def _get_fieldnames_from_data(data: List) -> List[str]:
     
     return []
 
-
 def _get_mime_type(export_type: str) -> str:
     """
     Obtiene el tipo MIME correcto para el tipo de exportación
@@ -47,7 +45,6 @@ def _get_mime_type(export_type: str) -> str:
         "json": "application/json"
     }
     return mime_types.get(export_type, "application/octet-stream")
-
 
 def prepare_export(
     data: Any,
@@ -107,7 +104,6 @@ def prepare_export(
         logger.error(f"Error preparing export: {e}")
         return None, None
 
-
 def render_export_button(
     data: Any,
     label: str = "⬇️ Download",
@@ -153,7 +149,6 @@ def render_export_button(
         logger.error(f"Error rendering export button: {e}")
         st.error(f"❌ Export error: {str(e)}")
         return False
-
 
 def handle_export_session_state(
     session_state_key: str = "export_state",

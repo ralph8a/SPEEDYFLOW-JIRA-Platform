@@ -15,7 +15,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Descargar modelo spaCy
-RUN python -m spacy download es_core_news_md
+RUN python -m spacy download es_core_news_md --direct
 
 # Copiar código
 COPY . .

@@ -555,7 +555,6 @@ class SidebarActions {
     }
   }
 
-
   /**
    * Select desk in UI
    */

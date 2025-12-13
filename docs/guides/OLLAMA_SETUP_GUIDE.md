@@ -1,4 +1,3 @@
-# Flowing MVP con Ollama - Guía de Activación
 
 ## ✅ Implementación Completa con IA Real
 
@@ -11,10 +10,6 @@ Se ha implementado **integración completa con Ollama** para todas las funcional
 - 🌐 **Traducción de comentarios** multiidioma
 
 ---
-
-## 🚀 Cómo Activar Ollama
-
-### 1. Iniciar Servidor de Ollama
 
 ```bash
 # En una terminal separada:
@@ -122,7 +117,7 @@ curl -X POST http://localhost:5005/api/flowing/semantic-search \
       "similarity": 0.87
     }
   ],
-  "using_ollama": true
+  "": true
 }
 ```
 
@@ -152,7 +147,7 @@ curl -X POST http://localhost:5005/api/flowing/detect-duplicates \
       "is_likely_duplicate": true
     }
   ],
-  "using_ollama": true
+  "": true
 }
 ```
 
@@ -190,7 +185,7 @@ curl -X POST http://localhost:5005/api/flowing/suggest-response \
       "tone": "professional"
     }
   ],
-  "using_ollama": true
+  "": true
 }
 ```
 
@@ -246,20 +241,15 @@ curl -X POST http://localhost:5005/api/flowing/translate-comment \
 
 ---
 
-## 📝 Verificar Estado de Ollama
-
 ### Desde Python
 
 ```python
-from utils.ollama_client import get_ollama_client
-
-ollama = get_ollama_client()
 
 # Verificar disponibilidad
-print(f"Disponible: {ollama.is_available()}")
+print(f"")
 
 # Ver modelos
-print(f"Modelos: {ollama.list_models()}")
+print(f"")
 
 # Test de embedding
 embedding = ollama.generate_embedding("test de embedding")
@@ -296,17 +286,13 @@ curl http://localhost:11434/api/generate -d '{
 
 ## ⚠️ Troubleshooting
 
-### Problema: "Ollama not available"
-
-**Síntomas**: Frontend muestra resultados pero con `"using_ollama": false`
+**Síntomas**: Frontend muestra resultados pero con `"": false`
 
 **Solución**:
 ```bash
-# 1. Verificar que Ollama esté corriendo
 curl http://localhost:11434/api/tags
 
 # Si falla:
-# 2. Iniciar Ollama
 ollama serve
 
 # 3. Reiniciar servidor Flask
@@ -383,14 +369,12 @@ API Flask (/api/flowing/*)
 
 ## 🎯 Features Implementadas
 
-### ✅ Con Ollama Activo
 - Búsqueda semántica real con embeddings vectoriales
 - Detección de duplicados con umbral de similitud
 - Generación de respuestas contextuales inteligentes
 - Resúmenes de conversaciones con puntos clave
 - Traducción automática multiidioma
 
-### ⚠️ Fallback sin Ollama
 - Búsqueda JQL básica (keywords)
 - Detección de duplicados por palabras clave
 - Respuestas con templates predefinidos
@@ -400,8 +384,6 @@ API Flask (/api/flowing/*)
 ---
 
 ## 📈 Métricas de Performance
-
-### Ollama Local (CPU Intel i7, 16GB RAM)
 
 | Operación | Tiempo Promedio | Notas |
 |-----------|----------------|-------|

@@ -5,7 +5,6 @@ JIRA API Operations Module
 Centralized API calls for JIRA integration
 """
 
-
 import logging
 from typing import Optional, List, Dict, Any, Union, Tuple
 import streamlit as st
@@ -22,7 +21,6 @@ logger = logging.getLogger(__name__)
 # Cache para enriquecimiento de issues (TTL: 1 hora)
 _enrich_cache = {}
 _enrich_cache_ttl = 3600  # 1 hora en segundos
-
 
 # ============================================================================
 # FIELD NORMALIZATION - Support both Spanish and English field names
@@ -43,7 +41,6 @@ def _get_field_value(fields_dict: Dict, *field_names: str) -> Any:
         if field_name in fields_dict:
             return fields_dict[field_name]
     return None
-
 
 def enrich_issue_from_jira(issue: Dict, client=None) -> Dict:
     """
@@ -71,7 +68,6 @@ def enrich_issue_from_jira(issue: Dict, client=None) -> Dict:
     logger.debug(f"Enrich DISABLED for {issue.get('key', 'unknown')} - returning issue as-is")
     return enriched
 
-
 @dataclass
 class Project:
     key: str
@@ -83,8 +79,6 @@ class User:
     name: str
     display_name: Optional[str] = None
     email: Optional[str] = None
-
-
 
 @st.cache_data(show_spinner=True)
 def get_project_name(project_key: str) -> str:
@@ -113,7 +107,6 @@ def get_project_name(project_key: str) -> str:
     
     return project_key
 
-
 def get_project(project_key: str) -> Optional[Project]:
     """
     Get Project object from JIRA
@@ -137,7 +130,6 @@ def get_project(project_key: str) -> Optional[Project]:
         logger.error(f"Error getting project: {e}")
         
     return None
-
 
 @st.cache_data(ttl=3600)
 def list_available_projects() -> List[Dict[str, str]]:
@@ -169,7 +161,6 @@ def list_available_projects() -> List[Dict[str, str]]:
     except Exception as e:
         logger.error(f"Error listing projects: {e}")
         return []
-
 
 @st.cache_data(show_spinner=True)
 def get_service_desk_id(project_key: str) -> Optional[str]:
@@ -246,7 +237,6 @@ def get_queue_id_from_name(project_key: str, queue_name: str) -> Optional[int]:
         logger.error(f"Error getting queue ID from name: {e}")
         return None
 
-
 @st.cache_data(ttl=3600)
 def list_available_queues() -> List[Dict[str, str]]:
     """List all available Service Desk queues"""
@@ -306,7 +296,6 @@ def list_available_queues() -> List[Dict[str, str]]:
                     
     logger.info(f"Returning {len(queues)} queues total")
     return queues
-
 
 @st.cache_data(ttl=3600)
 def get_severity_values() -> List[Dict[str, str]]:
@@ -396,7 +385,6 @@ def get_severity_values() -> List[Dict[str, str]]:
             {'id': '5', 'name': 'Normal', 'description': 'Normal severity', 'field_id': 'fallback'}
         ]
 
-
 @st.cache_data(ttl=3600)
 def get_current_user_name() -> Optional[str]:
     """
@@ -433,7 +421,6 @@ def get_current_user_name() -> Optional[str]:
         logger.error(f"❌ Error getting current user: {e}")
         return None
 
-
 def get_current_user() -> Optional[User]:
     """Get User object for current user"""
     try:
@@ -444,7 +431,6 @@ def get_current_user() -> Optional[User]:
     except Exception as e:
         logger.error(f"Error getting current user: {e}")
         return None
-
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_reporter_issues(service_desk_id: Optional[str] = None, project_key: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -607,7 +593,6 @@ def get_reporter_issues(service_desk_id: Optional[str] = None, project_key: Opti
         logger.error(f"Error in get_reporter_issues: {e}")
         return []
 
-
 def _normalize_severity_value(severity_obj: Any, custom_fields: Dict[str, Any], issue_key: str) -> str:
     """
     Normalize severity value from different sources
@@ -660,7 +645,6 @@ def _normalize_severity_value(severity_obj: Any, custom_fields: Dict[str, Any], 
     # No fallback - retornar None cuando no hay severity
     logger.debug(f"⚠️ {issue_key} - No severity data found")
     return None
-
 
 def _extract_service_desk_custom_fields(fields: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -727,7 +711,6 @@ def _extract_service_desk_custom_fields(fields: Dict[str, Any]) -> Dict[str, Any
     
     return custom_fields
 
-
 # Watchers cache with 8-hour TTL
 _watchers_cache = {}
 _watchers_cache_ttl = 28800  # 8 hours in seconds
@@ -772,7 +755,6 @@ def fetch_watchers_batch(issue_keys: List[str], use_cache: bool = True) -> Dict[
             watchers_map[issue_key] = []
     
     return watchers_map
-
 
 def load_queue_issues(
     service_desk_id: str,
@@ -1066,7 +1048,6 @@ def load_queue_issues(
         logger.error(f"Error loading queue issues: {e}")
         return None, str(e)
 
-
 def fetch_and_log_states(service_desk_id: str, queue_id: int) -> None:
     """
     Fetch and log state information from the JIRA API for debugging
@@ -1092,7 +1073,6 @@ def fetch_and_log_states(service_desk_id: str, queue_id: int) -> None:
         
     except Exception as e:
         logger.error(f"Error fetching or logging states: {e}")
-
 
 def organize_issues_by_state(service_desk_id: str, queue_id: int) -> Dict[str, List[Dict[str, Any]]]:
     """
@@ -1127,7 +1107,6 @@ def organize_issues_by_state(service_desk_id: str, queue_id: int) -> Dict[str, L
     except Exception as e:
         logger.error(f"Error organizing issues by state: {e}")
         return {}
-
 
 def fetch_and_fill_dataframe(
     service_desk_id: str,
@@ -1171,7 +1150,6 @@ def fetch_and_fill_dataframe(
     except Exception as e:
         logger.error(f"Error creating DataFrame: {e}")
         return None
-
 
 def add_issue_metrics(df: pd.DataFrame, issues: List[Dict[str, Any]]) -> pd.DataFrame:
     """
@@ -1257,7 +1235,6 @@ def add_issue_metrics(df: pd.DataFrame, issues: List[Dict[str, Any]]) -> pd.Data
     except Exception as e:
         logger.error(f"Error adding issue metrics: {e}")
         return df
-
 
 from utils.retry import with_retry
 from datetime import datetime, timedelta
@@ -1421,7 +1398,6 @@ def fetch_issues(
         logger.error(f"Error fetching issues: {e}")
         return None
 
-
 def analyze_workflow_metrics(
     service_desk_id: str,
     queue_id: int,
@@ -1525,10 +1501,8 @@ def analyze_workflow_metrics(
         logger.error(f"Error analyzing workflow metrics: {e}")
         return {}
 
-
 # This function has been removed as it duplicates organize_issues_by_state
 # Use organize_issues_by_state instead
-
 
 # ===== DASHBOARD FUNCTIONS =====
 

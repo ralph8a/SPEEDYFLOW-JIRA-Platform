@@ -24,7 +24,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class JiraRestFetcher:
     """Fetcher usando JIRA REST API estándar"""
     
@@ -197,7 +196,6 @@ class JiraRestFetcher:
         logger.info(f"  ⚡ Velocidad: {len(issues)/elapsed:.1f} tickets/s")
         logger.info(f"  📁 Directorio: {Path(output_dir).absolute()}")
         logger.info("="*70)
-
 
 if __name__ == "__main__":
     import argparse
