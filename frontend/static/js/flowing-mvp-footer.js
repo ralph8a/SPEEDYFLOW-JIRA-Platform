@@ -935,35 +935,7 @@ class FlowingFooter {
       // Show preview container when attachments exist
       const preview = document.getElementById('attachmentsPreviewFooter');
       if (preview) preview.classList.add('show');
-      // Setup description toggle behavior (if present)
-      try {
-        const descToggle = document.getElementById('descriptionToggleBtn');
-        const descContent = document.getElementById('ticketDescriptionContent');
-        const descSection = document.getElementById('ticketDescriptionSection');
-        if (descToggle && descContent && descSection) {
-          descToggle.addEventListener('click', () => {
-            console.log('🔧 Description toggle clicked');
-            // Toggle collapsed on the SECTION to collapse upward and free space for following content
-            const isCollapsed = descSection.classList.toggle('collapsed');
-            descToggle.setAttribute('aria-expanded', String(!isCollapsed));
-            // toggle class for icon rotation (on the button)
-            if (isCollapsed) descToggle.classList.add('collapsed'); else descToggle.classList.remove('collapsed');
-            // update title
-            descToggle.title = isCollapsed ? 'Expand description' : 'Collapse description';
-            // Allow re-animation of chevron by toggling svg-assemble if present
-            try {
-              const icon = descToggle.querySelector('.svg-icon');
-              if (icon) {
-                icon.classList.remove('svg-assemble');
-                // Force reflow then re-add
-                void icon.offsetWidth;
-                icon.classList.add('svg-assemble');
-              }
-            } catch (e) { console.warn('Could not re-animate chevron', e); }
-            // Collapse handled purely via CSS on the section; do not recompute footer translate here.
-          });
-        }
-      } catch (e) { console.warn('Could not initialize description toggle', e); }
+      // Description collapse now handled by native <details> element in the markup above; no JS required.
     } catch (e) {
       console.warn('renderAttachmentsForBalanced error', e);
     }
@@ -1256,21 +1228,19 @@ class FlowingFooter {
     // TWO-COLUMN LAYOUT WITH ML SUGGESTIONS
     container.innerHTML = `
       ${description ? `
-      <!-- Description Section (Full Width) -->
-      <div id="ticketDescriptionSection" class="ticket-description-section" style="padding: 16px 20px; background: rgba(249, 250, 251, 0.5); border-bottom: 1px solid rgba(59, 130, 246, 0.1);">
-        <label class="section-label" style="display: flex; align-items: center; gap: 8px; color: #4a5568; font-weight: 600; font-size: 13px; margin-bottom: 8px;">
+      <!-- Description Section (Full Width) - use native <details> so collapse is CSS-driven and simpler -->
+      <details open class="ticket-description-section" style="padding: 0; background: transparent; border-bottom: 1px solid rgba(59, 130, 246, 0.08);">
+        <summary class="section-label" style="display:flex; align-items:center; gap:8px; padding: 16px 20px; color: #4a5568; font-weight:600; font-size:13px; cursor:pointer;">
           <span style="display:flex; align-items:center; gap:8px;">
             ${SVGIcons.file({size:14,className:'inline-icon'})}
             <span>Descripción</span>
           </span>
-          <button id="descriptionToggleBtn" class="ticket-description-toggle" aria-expanded="true" title="Collapse description" style="margin-left:auto;">
-            ${SVGIcons.chevronDown({size:14,className:'inline-icon'})}
-          </button>
-        </label>
-        <div id="ticketDescriptionContent" class="ticket-description-content" style="color: #4b5563; line-height: 1.6; font-size: 13px; max-height: 120px; overflow-y: auto;">
+          <span style="margin-left:auto;">${SVGIcons.chevronDown({size:14,className:'inline-icon'})}</span>
+        </summary>
+        <div id="ticketDescriptionContent" class="ticket-description-content" style="padding: 0 20px 16px 20px; color: #4b5563; line-height:1.6; font-size:13px;">
           ${description ? `<p style="margin:0 0 8px 0;">${description}</p>` : ''}
         </div>
-      </div>
+      </details>
       ` : ''}
       
       <div class="purple-divider" style="margin:0"></div>
