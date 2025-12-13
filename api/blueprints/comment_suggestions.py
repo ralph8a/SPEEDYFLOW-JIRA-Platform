@@ -16,31 +16,7 @@ logger = logging.getLogger(__name__)
 
 comment_suggestions_bp = Blueprint('comment_suggestions', __name__, url_prefix='/api/ml/comments')
 
-
 @comment_suggestions_bp.route('/warmup', methods=['GET'])
-def warmup_ollama():
-    """
-    Warm up Ollama model with a simple request to load it into memory.
-    First request always takes longer, subsequent ones are faster.
-    """
-    try:
-        from api.ai_ollama import ollama_engine
-        
-        if not ollama_engine.is_available:
-            return jsonify({"success": False, "message": "Ollama not available"}), 503
-        
-        # Simple warmup prompt
-        response = ollama_engine._call_ollama("Responde solo: OK", max_tokens=5, timeout=10)
-        
-        return jsonify({
-            "success": True,
-            "message": "Ollama warmed up",
-            "response": response
-        })
-    except Exception as e:
-        logger.error(f"Warmup error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
-
 
 @comment_suggestions_bp.route('/suggestions', methods=['POST'])
 def get_suggestions():
@@ -111,7 +87,6 @@ def get_suggestions():
         logger.error(f"Error getting suggestions: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @comment_suggestions_bp.route('/train', methods=['POST'])
 def train_engine():
     """
@@ -137,7 +112,6 @@ def train_engine():
     except Exception as e:
         logger.error(f"Error training engine: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-
 
 @comment_suggestions_bp.route('/ml-stats', methods=['GET'])
 def get_ml_stats():
@@ -166,7 +140,6 @@ def get_ml_stats():
         logger.error(f"Error getting ML stats: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @comment_suggestions_bp.route('/export-training-data', methods=['POST'])
 def export_training_data():
     """
@@ -190,7 +163,6 @@ def export_training_data():
         logger.error(f"Error exporting training data: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @comment_suggestions_bp.route('/cache/stats', methods=['GET'])
 def get_cache_stats():
     """
@@ -212,7 +184,6 @@ def get_cache_stats():
             "success": False,
             "error": str(e)
         }), 500
-
 
 @comment_suggestions_bp.route('/cache/clear', methods=['POST'])
 def clear_suggestion_cache():
@@ -237,7 +208,6 @@ def clear_suggestion_cache():
             "error": str(e)
         }), 500
 
-
 @comment_suggestions_bp.route('/record', methods=['POST'])
 def get_status():
     """Get the current status of the suggestion engine"""
@@ -257,7 +227,6 @@ def get_status():
     except Exception as e:
         logger.error(f"Error getting status: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-
 
 @comment_suggestions_bp.route('/save', methods=['POST'])
 def save_suggestion():
@@ -302,7 +271,6 @@ def save_suggestion():
         logger.error(f"Error saving suggestion: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @comment_suggestions_bp.route('/stats', methods=['GET'])
 def get_suggestion_stats():
     """Get database statistics including compression status"""
@@ -320,7 +288,6 @@ def get_suggestion_stats():
     except Exception as e:
         logger.error(f"Error getting stats: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-
 
 @comment_suggestions_bp.route('/health', methods=['GET'])
 def health_check():

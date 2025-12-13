@@ -37,7 +37,6 @@ def load_env_config():
 # Load environment configuration
 JIRA_SITE, JIRA_EMAIL, JIRA_API_TOKEN = load_env_config()
 
-
 @dataclass
 class JiraConfig:
     """JIRA API configuration"""

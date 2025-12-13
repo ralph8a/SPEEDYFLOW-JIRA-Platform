@@ -1,4 +1,3 @@
-# 🤖 Integración Completa de Ollama en Comment Suggestions
 
 **Fecha**: 7 de Diciembre, 2025  
 **Cambios**: Eliminación de sugerencias default + Integración Ollama AI + Colores sólidos por tema
@@ -36,8 +35,7 @@ def _get_generic_suggestions(...):
     comments_context = "\n\nCOMENTARIOS EXISTENTES:\n" + 
                        "\n".join([f"- {c}" for c in all_comments[-10:]])
     
-    # Prompt estructurado para Ollama
-    prompt = f"""Eres un asistente de soporte técnico experto. 
+        prompt = f"""Eres un asistente de soporte técnico experto. 
 Analiza este ticket y genera 5 sugerencias profesionales.
 
 TICKET: {ticket_text}
@@ -194,18 +192,12 @@ document.addEventListener('themeChanged', (e) => {
 
 ---
 
-## 🚀 Cómo Usar Ollama con Comment Suggestions
-
-### Instalación de Ollama (Requerido)
-
 1. **Instalar Ollama**:
    ```bash
    # Linux/Mac
-   curl -fsSL https://ollama.ai/install.sh | sh
-   
+   curl -fsSL https:   
    # Windows
-   # Download from https://ollama.ai
-   ```
+      ```
 
 2. **Descargar modelo LLaMA 2**:
    ```bash
@@ -238,13 +230,10 @@ Una vez Ollama esté corriendo:
    - **Usar**: Pega la sugerencia en el cuadro de comentarios
    - **Copiar**: Copia al portapapeles
 
-### Si Ollama NO está disponible
-
 El sistema muestra mensaje de advertencia:
 ```
 ⚠️ Ollama AI no disponible. 
-Instala Ollama para obtener sugerencias inteligentes: https://ollama.ai
-```
+Instala Ollama para obtener sugerencias inteligentes: https:```
 
 **No hay sugerencias default como fallback** - esto fuerza la instalación de Ollama para aprovechar la IA real.
 
@@ -267,7 +256,6 @@ Instala Ollama para obtener sugerencias inteligentes: https://ollama.ai
 
 ## 🧪 Testing
 
-### 1. Verificar Ollama
 ```bash
 # Check si está corriendo
 curl http://localhost:11434/api/tags
@@ -310,9 +298,7 @@ ollama serve &
 
 ## 🐛 Troubleshooting
 
-### "Ollama not available"
 ```bash
-# Solución 1: Iniciar Ollama
 ollama serve
 
 # Solución 2: Verificar puerto 11434
@@ -322,7 +308,6 @@ lsof -i :11434
 ollama pull llama2
 ```
 
-### "Failed to parse Ollama JSON"
 - **Causa**: Ollama a veces agrega texto extra fuera del JSON
 - **Solución**: El código extrae automáticamente `[...]` del response
 - **Log**: Revisa `/tmp/speedyflow_server.log` para ver raw response
@@ -341,7 +326,6 @@ document.querySelector('.ml-comment-suggestions').classList
 
 ## 📈 Métricas de Rendimiento
 
-### Ollama (Local AI)
 - **Tiempo de respuesta**: ~2-5 segundos (depende del hardware)
 - **Costo**: $0 (100% local, sin API keys)
 - **Privacidad**: 100% (datos no salen del servidor)

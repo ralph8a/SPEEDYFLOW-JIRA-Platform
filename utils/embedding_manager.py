@@ -10,7 +10,6 @@ import os
 from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 from datetime import datetime
-from utils.ollama_client import get_ollama_client, OllamaClient
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +17,11 @@ logger = logging.getLogger(__name__)
 EMBEDDINGS_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "embeddings.json"
 ISSUES_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "msm_issues.json.gz"  # Compressed cache
 
-
 class EmbeddingManager:
     """Gestor de embeddings con cache persistente"""
     
     def __init__(self):
-        self.ollama = get_ollama_client()
-        self.embeddings_cache: Dict[str, Dict] = {}
+        self.        self.embeddings_cache: Dict[str, Dict] = {}
         self.load_cache()
     
     def load_cache(self):
@@ -283,10 +280,8 @@ class EmbeddingManager:
         except Exception as e:
             logger.error(f"Error generating embeddings: {e}")
 
-
 # Singleton global
 _embedding_manager = None
-
 
 def get_embedding_manager() -> EmbeddingManager:
     """Obtener instancia global del gestor de embeddings"""
@@ -294,7 +289,6 @@ def get_embedding_manager() -> EmbeddingManager:
     if _embedding_manager is None:
         _embedding_manager = EmbeddingManager()
     return _embedding_manager
-
 
 def search_similar_issues(query: str, top_k: int = 5, min_similarity: float = 0.5) -> List[Dict]:
     """

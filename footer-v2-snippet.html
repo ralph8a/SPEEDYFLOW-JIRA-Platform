@@ -1,0 +1,78 @@
+﻿<!-- ML ASSISTANT FOOTER - Collapsible -->
+    <div class="ml-footer" id="mlFooter">
+        <!-- Footer Header (always visible) -->
+        <div class="ml-footer-header" onclick="toggleMLFooter()">
+            <div class="footer-header-left">
+                <i class="fas fa-brain footer-icon"></i>
+                <span class="footer-title">Flowing MVP</span>
+                <span class="badge badge-ai">AI</span>
+            </div>
+            <div class="footer-header-center">
+                <div class="ticket-info-header hidden" id="ticketInfoHeader">
+                    <span class="ticket-key-header" id="currentTicketKey"></span>
+                    <span class="ticket-separator">-</span>
+                    <span class="ticket-summary-header" id="currentTicketSummary"></span>
+                </div>
+            </div>
+            <div class="footer-header-right">
+                <button class="btn-footer-toggle" id="toggleViewBtn" title="Toggle Chat View" onclick="event.stopPropagation(); switchView();">
+                    <i class="fas fa-comment-dots"></i>
+                </button>
+                <button class="btn-footer-chevron" id="expandBtn" onclick="event.stopPropagation(); toggleMLFooter();">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer Content (collapsible) -->
+        <div class="ml-footer-content" id="mlFooterContent" style="display: none;">
+            <!-- Ticket Description (Full Width) -->
+            <div class="ticket-description-section">
+                <label class="section-label">
+                    <i class="fas fa-file-alt"></i> Description
+                </label>
+                <div class="ticket-description-content" id="ticketDescription">
+                    Los usuarios reportan que no pueden hacer login desde la aplicaciÃ³n mÃ³vil. El error aparece despuÃ©s de ingresar credenciales vÃ¡lidas. El problema comenzÃ³ esta maÃ±ana despuÃ©s del deploy de la versiÃ³n 2.3.4.
+                </div>
+            </div>
+
+            <div class="footer-two-columns">
+                <!-- LEFT COLUMN: Essential Fields + ML Suggestions (60%) -->
+                <div class="left-column">
+                    <!-- ML Suggestions Banner -->
+                    <div class="ml-suggestions-banner">
+                        <div class="banner-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div class="banner-content">
+                            <h4>AnalicÃ© el ticket y tengo algunas sugerencias</h4>
+                            <p>Selecciona las que se acoplen mejor y presiona "Apply Selected"</p>
+                        </div>
+                    </div>
+
+                    <!-- Essential Fields (3 columns) -->
+                    <div class="essential-fields-grid">
+                        <!-- Priority -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-flag"></i> Priority
+                            </label>
+                            <select class="field-input" id="priorityField">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high" selected>High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                            <!-- ML Suggestion with Checkbox -->
+                            <div class="ml-suggestion-checkbox" data-field="priority" data-value="high">
+                                <input type="checkbox" id="cb-priority" class="ml-cb" checked>
+                                <label for="cb-priority">
+                                    <span class="ml-icon">âœ¨</span>
+                                    <span class="ml-text">ML: <strong>High</strong></span>
+                                    <span class="ml-conf">95%</span>
+                                </label>
+                                <div class="ml-detail">
+                                    <div class="ml-explain">Detected keywords: "login", "auth", frequent failures after deploy.</div>
+                                    <div class="ml-source">Model: priority-v2</div>
+                                </div>
+                            </div>

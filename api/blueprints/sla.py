@@ -19,7 +19,6 @@ from utils.decorators import (handle_api_error, json_response,
 logger = logging.getLogger(__name__)
 sla_bp = Blueprint('sla', __name__)
 
-
 def _format_minutes(minutes: int) -> str:
     """Convert minutes to human-readable format (e.g., '2 h 30 m')"""
     hours = minutes // 60
@@ -27,7 +26,6 @@ def _format_minutes(minutes: int) -> str:
     if hours > 0:
         return f"{hours} h {mins} m" if mins else f"{hours} h"
     return f"{mins} m"
-
 
 def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
     """Get SLA data from JIRA API (database cache disabled)"""
@@ -294,7 +292,6 @@ def _get_issue_sla(issue_key: str) -> Dict[str, Any]:
         logger.warning(f"Failed to get SLA for {issue_key}: {e}")
         return None
 
-
 @sla_bp.route('/api/issues/<issue_key>/sla', methods=['GET'])
 @handle_api_error
 @json_response
@@ -312,7 +309,6 @@ def api_issue_sla(issue_key: str):
             'issue_key': issue_key
         }), 404
     return sla_data
-
 
 @sla_bp.route('/api/sla/health', methods=['GET'])
 @handle_api_error
@@ -352,7 +348,6 @@ def api_sla_health():
         }
     }
 
-
 @sla_bp.route('/api/sla/breached', methods=['GET'])
 @handle_api_error
 @json_response
@@ -373,7 +368,6 @@ def api_breached_slas():
         'service_desk_id': service_desk_id if service_desk_id else 'all',
         'note': 'Database SLA caching disabled. Use /api/issues/{key}/sla for live data.'
     }
-
 
 @sla_bp.route('/api/sla/cache/clear', methods=['POST'])
 @handle_api_error

@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 _processed_issues = {}
 _cache_ttl = 300  # 5 minutes
 
-
 def should_create_notification(issue_key: str, last_change: str) -> bool:
     """Check if we should create a notification for this issue change"""
     now = datetime.now()
@@ -39,7 +38,6 @@ def should_create_notification(issue_key: str, last_change: str) -> bool:
     }
     
     return True
-
 
 def create_issue_notification(
     issue_key: str,
@@ -116,7 +114,6 @@ def create_issue_notification(
         logger.error(f"❌ Failed to create notification for {issue_key}: {e}")
         return None
 
-
 def create_issue_notifications_for_watchers(
     issue_key: str,
     summary: str,
@@ -175,7 +172,6 @@ def create_issue_notifications_for_watchers(
             logger.debug(f"👁️ Notified watcher: {watcher_name} ({issue_key})")
     
     return created
-
 
 def process_issue_for_notifications(issue: Dict, enriched_data: Dict) -> None:
     """
@@ -291,7 +287,6 @@ def process_issue_for_notifications(issue: Dict, enriched_data: Dict) -> None:
         
     except Exception as e:
         logger.error(f"Error processing {issue.get('key')} for notif: {e}")
-
 
 def process_issues_batch_for_notifications(
     issues: List[Dict],

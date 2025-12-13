@@ -5,13 +5,11 @@ Uses Ollama for intelligent comment assistance
 """
 
 from flask import Blueprint, request, jsonify
-from utils.ollama_client import get_ollama_client
 import logging
 
 logger = logging.getLogger(__name__)
 
 flowing_comments_bp = Blueprint('flowing_comments', __name__, url_prefix='/api/flowing')
-
 
 @flowing_comments_bp.route('/suggest-response', methods=['POST'])
 def suggest_response():
@@ -41,8 +39,7 @@ def suggest_response():
         if not issue_key:
             return jsonify({'error': 'issueKey is required'}), 400
         
-        ollama = get_ollama_client()
-        
+                
         if not ollama.is_available():
             return jsonify({
                 'error': 'AI service not available',
@@ -89,7 +86,6 @@ Suggested response:"""
         logger.error(f"Error in suggest_response: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
-
 @flowing_comments_bp.route('/summarize-conversation', methods=['POST'])
 def summarize_conversation():
     """
@@ -115,8 +111,7 @@ def summarize_conversation():
         if not comments:
             return jsonify({'error': 'No comments to summarize'}), 400
         
-        ollama = get_ollama_client()
-        
+                
         if not ollama.is_available():
             return jsonify({'error': 'AI service not available'}), 503
         
@@ -160,7 +155,6 @@ Summary:"""
         logger.error(f"Error in summarize_conversation: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
-
 @flowing_comments_bp.route('/translate-comment', methods=['POST'])
 def translate_comment():
     """
@@ -186,8 +180,7 @@ def translate_comment():
         if not text:
             return jsonify({'error': 'Text is required'}), 400
         
-        ollama = get_ollama_client()
-        
+                
         if not ollama.is_available():
             return jsonify({'error': 'AI service not available'}), 503
         

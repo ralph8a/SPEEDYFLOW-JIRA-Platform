@@ -241,7 +241,6 @@ class SpeedyflowMLPredictor:
             "issuetype": self.suggest_issuetype(summary, description)
         }
 
-
 # Ejemplo de uso
 if __name__ == "__main__":
     print("="*70)

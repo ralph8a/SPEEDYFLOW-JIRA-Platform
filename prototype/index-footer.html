@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowing MVP - Footer ML Assistant</title>
+    <link rel="stylesheet" href="styles-footer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header - Estilos originales Flowing MVP -->
+    <header class="header">
+        <div class="header-left">
+            <h1><i class="fas fa-rocket"></i> SPEEDYFLOW Flowing MVP</h1>
+            <span class="badge badge-beta">AI Powered</span>
+        </div>
+        <div class="header-right">
+            <div class="ml-status">
+                <i class="fas fa-circle status-dot"></i>
+                <span>ML Service: <strong id="mlServiceStatus">Connected</strong></span>
+            </div>
+            <button class="btn-icon" id="settingsBtn">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area - Ticket Board (Simulado) -->
+    <div class="main-content">
+        <div class="ticket-board">
+            <h2><i class="fas fa-columns"></i> Kanban Board</h2>
+            <div class="board-columns">
+                <div class="board-column">
+                    <h3>Abierto</h3>
+                    <div class="ticket-card" onclick="openTicket('MSM-1234')">
+                        <div class="ticket-key">MSM-1234</div>
+                        <div class="ticket-summary">Error en API de autenticación</div>
+                        <div class="ticket-meta">
+                            <span class="priority high">Alta</span>
+                            <span class="assignee">Carlos Q.</span>
+                        </div>
+                    </div>
+                    <div class="ticket-card" onclick="openTicket('MSM-1235')">
+                        <div class="ticket-key">MSM-1235</div>
+                        <div class="ticket-summary">Los usuarios no pueden hacer login</div>
+                        <div class="ticket-meta">
+                            <span class="priority critical">Crítica</span>
+                            <span class="assignee">Sin asignar</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="board-column">
+                    <h3>En Progreso</h3>
+                    <div class="ticket-card">
+                        <div class="ticket-key">MSM-1236</div>
+                        <div class="ticket-summary">Optimizar consulta de reportes</div>
+                        <div class="ticket-meta">
+                            <span class="priority medium">Media</span>
+                            <span class="assignee">Ana M.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="board-column">
+                    <h3>Completado</h3>
+                    <div class="ticket-card">
+                        <div class="ticket-key">MSM-1237</div>
+                        <div class="ticket-summary">Actualizar dependencias</div>
+                        <div class="ticket-meta">
+                            <span class="priority low">Baja</span>
+                            <span class="assignee">Luis P.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML ASSISTANT FOOTER - Collapsible -->
+    <div class="ml-footer" id="mlFooter">
+        <!-- Footer Header (always visible) -->
+        <div class="ml-footer-header" onclick="toggleMLFooter()">
+            <div class="footer-header-left">
+                <i class="fas fa-brain footer-icon"></i>
+                <span class="footer-title">Flowing MVP</span>
+                <span class="badge badge-ai">AI Powered</span>
+            </div>
+            <div class="footer-header-center">
+                <div class="ticket-info-mini">
+                    <span class="ticket-key-mini" id="currentTicketKey">MSM-1234</span>
+                    <span class="ticket-separator">-</span>
+                    <span class="ticket-summary-mini" id="currentTicketSummary">Error en API de autenticación</span>
+                </div>
+            </div>
+            <div class="footer-header-right">
+                <button class="btn-footer-chevron" id="expandBtn">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer Content (collapsible) -->
+        <div class="ml-footer-content" id="mlFooterContent" style="display: none;">
+            <div class="footer-inner">
+                <!-- Left: Essential Fields with ML Inline Suggestions (60%) -->
+                <div class="essential-fields-section">
+                    <h3><i class="fas fa-file-alt"></i> Essential Fields</h3>
+                    
+                    <!-- Priority Field -->
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-flag"></i> Priority
+                        </label>
+                        <select class="field-input" id="priorityField">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high" selected>High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                        
+                        <!-- ML Inline Suggestion -->
+                        <div class="ml-inline-suggestion" data-field="priority">
+                            <div class="suggestion-content">
+                                <span class="suggestion-icon">✨</span>
+                                <span class="suggestion-text">ML suggests: <strong>High</strong></span>
+                                <span class="suggestion-confidence">95%</span>
+                            </div>
+                            <button class="btn-apply-inline" onclick="applySuggestion('priority', 'High')">
+                                <i class="fas fa-check"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Assignee Field -->
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-user"></i> Assignee
+                        </label>
+                        <select class="field-input" id="assigneeField">
+                            <option value="">Unassigned</option>
+                            <option value="carlos">Carlos Q.</option>
+                            <option value="ana">Ana M.</option>
+                            <option value="luis">Luis P.</option>
+                        </select>
+                        
+                        <!-- ML Inline Suggestion -->
+                        <div class="ml-inline-suggestion" data-field="assignee">
+                            <div class="suggestion-content">
+                                <span class="suggestion-icon">✨</span>
+                                <span class="suggestion-text">ML suggests: <strong>Carlos Q.</strong></span>
+                                <span class="suggestion-confidence">78%</span>
+                            </div>
+                            <button class="btn-apply-inline" onclick="applySuggestion('assignee', 'carlos')">
+                                <i class="fas fa-check"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Field -->
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-tasks"></i> Status
+                        </label>
+                        <select class="field-input" id="statusField">
+                            <option value="open" selected>Open</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+
+                    <!-- Labels Field -->
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-tags"></i> Labels
+                        </label>
+                        <div class="labels-container">
+                            <span class="label-tag">backend</span>
+                            <span class="label-tag">api</span>
+                            <button class="btn-add-label"><i class="fas fa-plus"></i></button>
+                        </div>
+                        
+                        <!-- ML Inline Suggestion -->
+                        <div class="ml-inline-suggestion" data-field="labels">
+                            <div class="suggestion-content">
+                                <span class="suggestion-icon">✨</span>
+                                <span class="suggestion-text">ML suggests: <strong>+auth</strong></span>
+                                <span class="suggestion-confidence">82%</span>
+                            </div>
+                            <button class="btn-apply-inline" onclick="applySuggestion('labels', 'auth')">
+                                <i class="fas fa-check"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SLA Alert -->
+                    <div class="field-group sla-alert-group">
+                        <div class="sla-alert-card">
+                            <div class="sla-icon-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="sla-alert-content">
+                                <h4>SLA Breach Risk</h4>
+                                <p class="sla-risk-level">HIGH RISK</p>
+                                <div class="sla-progress-bar">
+                                    <div class="sla-progress-fill critical" style="width: 92%"></div>
+                                </div>
+                                <span class="sla-probability">92% probability of breach</span>
+                            </div>
+                            <button class="btn-sla-details" onclick="showSLADetails()">
+                                Details
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Extra Details -->
+                    <div class="extra-details-section">
+                        <button class="btn-toggle-details" onclick="toggleExtraDetails()">
+                            <i class="fas fa-chevron-down"></i>
+                            <span>Show More Details</span>
+                        </button>
+                        
+                        <div class="extra-details-content" id="extraDetailsContent" style="display: none;">
+                            <div class="field-group">
+                                <label class="field-label">
+                                    <i class="fas fa-calendar"></i> Created
+                                </label>
+                                <input type="text" class="field-input" value="2025-12-09 14:30" readonly>
+                            </div>
+                            
+                            <div class="field-group">
+                                <label class="field-label">
+                                    <i class="fas fa-user-circle"></i> Reporter
+                                </label>
+                                <input type="text" class="field-input" value="Juan Pérez" readonly>
+                            </div>
+                            
+                            <div class="field-group">
+                                <label class="field-label">
+                                    <i class="fas fa-eye"></i> Watchers
+                                </label>
+                                <input type="text" class="field-input" value="3 watching" readonly>
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label">
+                                    <i class="fas fa-hashtag"></i> Issue Type
+                                </label>
+                                <input type="text" class="field-input" value="Bug" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions-compact">
+                        <button class="action-btn-compact" onclick="applyAllSuggestions()" title="Apply all ML suggestions">
+                            <i class="fas fa-magic"></i> Apply All
+                        </button>
+                        <button class="action-btn-compact" onclick="findDuplicates()" title="Find duplicate tickets">
+                            <i class="fas fa-clone"></i> Duplicates
+                        </button>
+                        <button class="action-btn-compact" onclick="predictResolution()" title="Estimate resolution time">
+                            <i class="fas fa-clock"></i> Estimate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Comments/AI Toggle Section (40%) -->
+                <div class="comments-ai-section">
+                    <!-- Toggle Tabs -->
+                    <div class="action-mode-tabs">
+                        <button class="action-mode-tab active" data-mode="comments" onclick="switchActionMode('comments')">
+                            <i class="fas fa-comments"></i> Comments
+                        </button>
+                        <button class="action-mode-tab" data-mode="ai" onclick="switchActionMode('ai')">
+                            <i class="fas fa-robot"></i> AI Chat
+                        </button>
+                    </div>
+
+                    <!-- Content Area (switchable) -->
+                    <div class="action-mode-content">
+                        <!-- Comments Mode -->
+                        <div class="content-mode-panel active" data-panel="comments">
+                            <div class="comments-list-mini" id="miniCommentsList">
+                                <div class="mini-comment">
+                                    <div class="comment-avatar-mini">CQ</div>
+                                    <div class="comment-content-mini">
+                                        <div class="comment-header-mini">
+                                            <span class="comment-author-mini">Carlos Q.</span>
+                                            <span class="comment-time-mini">2h ago</span>
+                                        </div>
+                                        <div class="comment-text-mini">
+                                            Investigando el problema, parece relacionado con OAuth.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mini-comment">
+                                    <div class="comment-avatar-mini">AM</div>
+                                    <div class="comment-content-mini">
+                                        <div class="comment-header-mini">
+                                            <span class="comment-author-mini">Ana M.</span>
+                                            <span class="comment-time-mini">1h ago</span>
+                                        </div>
+                                        <div class="comment-text-mini">
+                                            ¿Revisaron los logs del servidor?
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Mode -->
+                        <div class="content-mode-panel" data-panel="ai">
+                            <div class="ai-messages-mini" id="miniAIMessages">
+                                <div class="ai-message">
+                                    <div class="ai-avatar">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <div class="ai-message-content">
+                                        ¿En qué puedo ayudarte con este ticket? Puedo:
+                                        <ul>
+                                            <li>Analizar prioridad y SLA</li>
+                                            <li>Sugerir próximos pasos</li>
+                                            <li>Generar respuestas</li>
+                                            <li>Buscar tickets similares</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unified Input Area -->
+                    <div class="action-input-area">
+                        <!-- Mode Badge -->
+                        <div class="input-mode-badge" id="inputModeBadge">
+                            <span class="mode-icon">💬</span>
+                            <span class="mode-text">Comment mode</span>
+                        </div>
+
+                        <!-- Toolbar (visible only in Comments mode) -->
+                        <div class="input-toolbar" id="inputToolbar">
+                            <button class="toolbar-btn" title="Attach file">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button class="toolbar-btn" title="Mention user">
+                                <i class="fas fa-at"></i>
+                            </button>
+                            <div class="visibility-toggle-mini">
+                                <input type="checkbox" id="commentVisibility" />
+                                <label for="commentVisibility">
+                                    <span class="visibility-icon">🔓</span>
+                                    <span class="visibility-text">Public</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Input Wrapper -->
+                        <div class="unified-input-wrapper">
+                            <textarea 
+                                id="unifiedInput" 
+                                class="unified-input" 
+                                placeholder="Write a comment... (@ to mention)"
+                                rows="3"
+                                onkeypress="handleUnifiedInputEnter(event)"
+                            ></textarea>
+                            <button class="btn-unified-send" id="unifiedSendBtn" onclick="handleUnifiedSend()">
+                                <i class="fas fa-paper-plane"></i>
+                                <span class="btn-text">Post Comment</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Detail Modal (opcional) -->
+    <div class="modal" id="ticketModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><span id="modalTicketKey">MSM-1234</span></h2>
+                <button class="btn-close" onclick="closeTicketModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="ticket-details">
+                    <h3>Error en API de autenticación</h3>
+                    <p>Los usuarios reportan problemas al intentar autenticarse...</p>
+                    
+                    <div class="ticket-fields">
+                        <div class="field-group">
+                            <label>Prioridad</label>
+                            <select class="field-input" id="priorityField">
+                                <option value="low">Baja</option>
+                                <option value="medium">Media</option>
+                                <option value="high" selected>Alta</option>
+                                <option value="critical">Crítica</option>
+                            </select>
+                        </div>
+                        
+                        <div class="field-group">
+                            <label>Asignado</label>
+                            <select class="field-input" id="assigneeField">
+                                <option value="">Sin asignar</option>
+                                <option value="carlos">Carlos Q.</option>
+                                <option value="ana">Ana M.</option>
+                                <option value="luis">Luis P.</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app-footer.js"></script>
+</body>
+</html>

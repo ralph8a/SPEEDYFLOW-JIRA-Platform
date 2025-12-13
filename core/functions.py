@@ -22,13 +22,11 @@ from .helpers import (
 
 logger = logging.getLogger(__name__)
 
-
 # ============================================================================
 # SEARCHING
 # ============================================================================
 
 SEARCH_COLUMNS = ["key", "resumen", "summary", "descripcion", "description", "asignado_a", "assignee"]
-
 
 def search_issues(df: pd.DataFrame, search_term: str) -> pd.DataFrame:
     """Search across multiple columns"""
@@ -44,7 +42,6 @@ def search_issues(df: pd.DataFrame, search_term: str) -> pd.DataFrame:
     
     return df[mask]
 
-
 # ============================================================================
 # FILTERING
 # ============================================================================
@@ -53,16 +50,13 @@ def filter_by_assignee(df: pd.DataFrame, assignee: str) -> pd.DataFrame:
     """Filter issues by assignee (delegates to helpers.filter_by_column)"""
     return filter_by_column(df, assignee, ("asignado_a", "assignee", "assigned_to"))
 
-
 def filter_by_status(df: pd.DataFrame, status: str) -> pd.DataFrame:
     """Filter issues by status (delegates to helpers.filter_by_column)"""
     return filter_by_column(df, status, ("estado", "status"))
 
-
 def filter_by_priority(df: pd.DataFrame, priority: str) -> pd.DataFrame:
     """Filter issues by priority (delegates to helpers.filter_by_column)"""
     return filter_by_column(df, priority, ("prioridad", "priority"), skip_values=("Todas",))
-
 
 def apply_filters(df: pd.DataFrame, filters: Filter) -> pd.DataFrame:
     """Apply all filters to DataFrame"""
@@ -83,7 +77,6 @@ def apply_filters(df: pd.DataFrame, filters: Filter) -> pd.DataFrame:
     
     return df
 
-
 # ============================================================================
 # DATA EXTRACTION
 # ============================================================================
@@ -92,16 +85,13 @@ def get_assignees_from_issues(df: pd.DataFrame) -> List[str]:
     """Get list of unique assignees from issues (delegates to helpers)"""
     return get_unique_values(df, ("asignado_a", "assignee"))
 
-
 def get_statuses_from_issues(df: pd.DataFrame) -> List[str]:
     """Get list of unique statuses from issues (delegates to helpers)"""
     return get_unique_values(df, ("estado", "status"))
 
-
 def get_priorities_from_issues(df: pd.DataFrame) -> List[str]:
     """Get list of unique priorities from issues (delegates to helpers)"""
     return get_unique_values(df, ("prioridad", "priority"))
-
 
 # ============================================================================
 # STATISTICS
@@ -111,16 +101,13 @@ def get_status_distribution(df: pd.DataFrame) -> Dict[str, int]:
     """Get count of issues per status (delegates to helpers)"""
     return get_distribution(df, ("estado", "status"))
 
-
 def get_assignee_distribution(df: pd.DataFrame) -> Dict[str, int]:
     """Get count of issues per assignee (delegates to helpers)"""
     return get_distribution(df, ("asignado_a", "assignee"))
 
-
 def get_priority_distribution(df: pd.DataFrame) -> Dict[str, int]:
     """Get count of issues per priority (delegates to helpers)"""
     return get_distribution(df, ("prioridad", "priority"))
-
 
 def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """Normalize and clean the DataFrame for consistent processing.

@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 attachments_bp = Blueprint('attachments', __name__)
 
-
 @attachments_bp.route('/api/issues/<issue_key>/attachments', methods=['GET'])
 @handle_api_error
 @json_response
@@ -59,7 +58,6 @@ def api_get_attachments(issue_key):
         'count': len(formatted),
         'issue_key': issue_key
     }
-
 
 @attachments_bp.route(
     '/api/issues/<issue_key>/attachments/<attachment_id>',
