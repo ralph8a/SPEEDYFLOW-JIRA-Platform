@@ -188,8 +188,6 @@ async function initApp() {
   // No need to apply theme here - ThemeManager handles it from the start
   console.log('✨ Theme managed by ThemeManager');
   
-    warmupOllama();
-  
   // Initialize background manager (AI backgrounds) - non-blocking
   if (typeof backgroundManager !== 'undefined' && backgroundManager.init) {
     console.log('📸 Initializing background manager...');
