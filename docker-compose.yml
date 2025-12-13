@@ -4,7 +4,7 @@ services:
     build: ./api
     container_name: speedyflow_backend
     ports:
-      - "5000:5000"
+      - "5005:5005"
     environment:
       - FLASK_ENV=development
       - ML_SERVICE_URL=http://ml-service:5001
@@ -31,7 +31,7 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      test: ["CMD", "python", "-c", "import requests,sys; sys.exit(0 if requests.get('http://localhost:5001/health').status_code==200 else 1)"]
       interval: 10s
       timeout: 5s
       retries: 5
