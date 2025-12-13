@@ -61,6 +61,14 @@ class AICopilot {
     this.updateContext();
     this.setupContextWatcher();
     this.startSuggestionRotation();
+    // Silent background resource reload (attempt once on init)
+    try {
+      fetch('/api/copilot/docs/reload-resources', { method: 'POST' }).then(r => r.json()).then(j => {
+        console.log('Silent reload-resources result:', j);
+      }).catch(e => { console.debug('Silent reload failed', e); });
+    } catch (e) {
+      console.debug('Silent reload exception', e);
+    }
     
     // Set initial padding
     this.adjustContentPadding(true); // Start collapsed
