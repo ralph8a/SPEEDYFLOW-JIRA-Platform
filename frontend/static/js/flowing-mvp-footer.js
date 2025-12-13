@@ -345,9 +345,14 @@ class FlowingFooter {
       setTimeout(() => {
         try {
           const h = this.footer ? Math.round(this.footer.getBoundingClientRect().height) : 420;
-          // ensure measured height is at least the requested expanded height
-          const measured = Math.max(h, 640);
-          document.documentElement.style.setProperty('--flowing-footer-height', measured + 'px');
+          // compute delta from collapsed footer height so we only push by the added space
+          const COLLAPSED_HEIGHT = 56; // matches .flowing-footer.collapsed max-height
+          const delta = Math.max(0, h - COLLAPSED_HEIGHT);
+          // cap delta to viewport height minus 120px to avoid pushing content completely out
+          const cap = Math.max(0, (window.innerHeight || 800) - 120);
+          const used = Math.min(delta, cap);
+          document.documentElement.style.setProperty('--flowing-footer-height', h + 'px');
+          document.documentElement.style.setProperty('--flowing-footer-translate', used + 'px');
           document.body.classList.add('flowing-footer-expanded');
         } catch (err) { /* ignore */ }
       }, 80);
