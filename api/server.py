@@ -1106,7 +1106,5 @@ def internal_error(error):
 if __name__ == '__main__':
     PORT = 5005
     
-        start_ollama_service()
-    
     logger.info(f"🚀 Starting Stable API Server on {PORT}")
     app.run(host='127.0.0.1', port=PORT, debug=False, threaded=True, use_reloader=False)

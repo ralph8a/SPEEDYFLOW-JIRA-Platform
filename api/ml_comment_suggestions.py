@@ -421,7 +421,7 @@ class CommentSuggestionEngine:
         """Get AI-powered suggestions using Ollama with fallback to pattern-based suggestions"""
         suggestions = []
         
-                if not ollama_engine.is_available:
+        if not ollama_engine.is_available:
             logger.warning("⚠️ Ollama not available - using pattern-based fallback")
             return self._get_fallback_suggestions(ticket_text, status, comments_text, all_comments)
         
@@ -498,8 +498,8 @@ Formato (una sugerencia por línea):
         except Exception as e:
             logger.error(f"Error generating AI suggestions: {e}")
         
-                return [{
-            "",
+        return [{
+            "text": "Please describe the issue in detail",
             "type": "diagnostic",
             "confidence": 0.5
         }]

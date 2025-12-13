@@ -5,7 +5,7 @@ Uses Ollama for intelligent comment assistance
 """
 
 from flask import Blueprint, request, jsonify
-from utils.ollama_client import get_ollama_client
+# from utils.ollama_client import get_ollama_client  # TODO: Restore when Ollama service is available
 import logging
 
 logger = logging.getLogger(__name__)
