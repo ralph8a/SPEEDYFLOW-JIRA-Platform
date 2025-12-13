@@ -1,0 +1,9 @@
+summary,comments,labels
+"API returning 500 on POST /api/v1/issues","When creating an issue we get a 500 error. Trace id=abc123. Backend logs show NullPointerException.","server-error,needs-investigation"
+"User cannot login","User reports ""cannot reproduce"" on our side. Steps: enter credentials, hit login. No logs found.","needs-info,auth"
+"SLA breach reported","Customer reports SLA breach, response time exceeded 30s multiple times.","sla,priority-high"
+"Service timeout spike","Multiple timeouts (504) observed after deployment. Suspect upstream timeout config.","timeout,deploy-issue"
+"Labels missing after migration","Labels not migrated for some issues; occurs on bulk import. Attached sample payload.","data-migration,needs-info"
+"Payment gateway error 502","Users see 502 Bad Gateway when hitting /checkout. Correlate with gateway traces.","gateway-error,server-error"
+"Fixed in commit 1234","Issue resolved after hotfix, closing. Verified by QA.","fixed,qa-verified"
+"Assign to backend","Please assign to @backend-team for investigation and debugging.","assign,triage"

@@ -7,7 +7,7 @@ function Check-Command($cmd) {
     $null -ne (Get-Command $cmd -ErrorAction SilentlyContinue)
 }
 
-if (-not (Check-Command docker)) {
+if (-not (Check-Command 'docker')) {
     Write-Error "Docker CLI not found. Please install Docker Desktop and ensure 'docker' is on PATH."
     exit 1
 }

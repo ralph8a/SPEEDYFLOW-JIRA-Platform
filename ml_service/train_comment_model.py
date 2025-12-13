@@ -125,7 +125,19 @@ def main(dataset_path, models_dir, epochs_phase1=5, epochs_phase2=3, batch_size=
 
     # Phase 2: fine-tune with lower LR
     print('Phase 2 fine-tuning...')
-    tf.keras.backend.set_value(model.optimizer.learning_rate, 1e-4)
+    # Set lower learning rate robustly across Keras versions
+    try:
+        # prefer assign if available
+        model.optimizer.learning_rate.assign(1e-4)
+    except Exception:
+        try:
+            tf.keras.backend.set_value(model.optimizer.learning_rate, 1e-4)
+        except Exception:
+            # fallback: replace optimizer learning rate attribute
+            try:
+                model.optimizer.learning_rate = 1e-4
+            except Exception:
+                pass
     model.fit(embeddings, Y, epochs=epochs_phase2, batch_size=batch_size, validation_split=0.1)
 
     # Save model
