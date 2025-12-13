@@ -1233,7 +1233,7 @@ class FlowingFooter {
         <summary class="section-label" style="display:flex; align-items:center; gap:8px; padding: 16px 20px; color: #4a5568; font-weight:600; font-size:13px; cursor:pointer;">
           <span style="display:flex; align-items:center; gap:8px;">
             ${SVGIcons.file({size:14,className:'inline-icon'})}
-            <span>Descripción</span>
+            <span>Descripción:</span>
           </span>
           <span style="margin-left:auto;">${SVGIcons.chevronDown({size:14,className:'inline-icon'})}</span>
         </summary>

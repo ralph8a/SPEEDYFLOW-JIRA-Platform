@@ -342,7 +342,9 @@ details.ticket-description-section summary { list-style: none; display:flex; ali
 details.ticket-description-section summary::-webkit-details-marker { display: none; }
 details.ticket-description-section .ticket-description-content { padding: 0 20px 16px 20px; color: var(--text-primary,#4b5563); line-height:1.6; }
 /* Rotate the chevron icon when open (assumes SVG inside summary as last child) */
-details.ticket-description-section[open] summary > :last-child { transform: rotate(180deg); transition: transform 180ms ease; }
+/* By default (collapsed) rotate the chevron up; when open, reset to down */
+details.ticket-description-section summary > :last-child { transform: rotate(180deg); transition: transform 180ms ease; }
+details.ticket-description-section[open] summary > :last-child { transform: rotate(0deg); }
 
 /* Two Columns Layout: consolidated later in file (keep single canonical definition near bottom) */
 
