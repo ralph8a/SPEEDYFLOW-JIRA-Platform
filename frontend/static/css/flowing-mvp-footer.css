@@ -1492,7 +1492,7 @@ body.sidebar-collapsed .flowing-footer {
 .flowing-footer.collapsed .flowing-content {
   opacity: 0;
   pointer-events: none;
-  transform: translateY(10px);
+  transform: none !important; /* avoid translating header/content when collapsing */
 }
 
 .flowing-footer.collapsed .flowing-chevron {
