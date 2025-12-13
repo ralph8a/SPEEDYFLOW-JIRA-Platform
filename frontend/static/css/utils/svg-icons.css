@@ -14,27 +14,13 @@
 }
 
 /* Icon Sizes */
-.svg-icon-xs {
-    width: 12px;
-    height: 12px;
-}
-
-.svg-icon-sm {
-    width: 14px;
-    height: 14px;
-}
-
-.svg-icon-md {
-    width: 16px;
-    height: 16px;
-}
-
-.svg-icon-lg {
-    width: 20px;
-    height: 20px;
-}
-
-.svg-icon-xl {
+.svg-icon-primary { stroke: var(--ff-accent); }
+.svg-icon-secondary { stroke: var(--ff-text-muted); }
+.svg-icon-success { stroke: var(--ff-success); }
+.svg-icon-danger { stroke: var(--ff-danger); }
+.svg-icon-warning { stroke: var(--ff-warning); }
+.svg-icon-info { stroke: var(--ff-accent); }
+.svg-icon-muted { stroke: var(--ff-text-muted); }
     width: 24px;
     height: 24px;
 }
