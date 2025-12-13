@@ -15,7 +15,38 @@ def pdf_to_text(pdf_path: str) -> str:
             except Exception:
                 # best-effort
                 continue
-    return '\n\n'.join(text_parts)
+    raw = '\n\n'.join(text_parts)
+
+    # Redact or remove credential sections and sensitive lines
+    # 1) Remove blocks that begin with headings mentioning credentials (English/Spanish)
+    lines = raw.splitlines()
+    out_lines = []
+    skip_block = False
+    credential_headings = [r'credentials', r'credenciales', r'api key', r'api keys', r'secrets', r'secretos']
+    cred_heading_re = re.compile(r"^\s*(?:" + r"|".join(credential_headings) + r")(?:\b|:).*", re.IGNORECASE)
+    sensitive_kv_re = re.compile(r"(?i)\b(api[_-]?key|secret|password|token|bearer|pwd|clave|contraseñ[ae])\b\s*[:=]\s*\S+")
+
+    for ln in lines:
+        if skip_block:
+            # end block on blank line or on a new section header (simple heuristic: line with 1-5 words capitalized)
+            if not ln.strip():
+                skip_block = False
+            else:
+                # continue skipping
+                continue
+
+        if cred_heading_re.match(ln):
+            skip_block = True
+            continue
+
+        # redact inline sensitive key=value patterns
+        if sensitive_kv_re.search(ln):
+            ln = sensitive_kv_re.sub(lambda m: f"{m.group(1)}: [REDACTED]", ln)
+
+        out_lines.append(ln)
+
+    cleaned = '\n'.join(out_lines)
+    return cleaned
 
 def ingest_pdf_to_docs(pdf_path: str, out_dir: str = None, out_name: str = None) -> str:
     out_dir = Path(out_dir) if out_dir else Path(__file__).resolve().parent / 'docs'
