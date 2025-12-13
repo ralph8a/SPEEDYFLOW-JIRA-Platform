@@ -70,15 +70,13 @@ html body .sidebar,
 html body .sidebar-header-component,
 html body .sidebar-content-component,
 html body .right-sidebar,
-html body .flowing-footer,
 html body.theme-light .header,
 html body.theme-light .header-enhanced,
 html body.theme-light .header-bar-enhanced,
 html body.theme-light .sidebar,
 html body.theme-light .sidebar-header-component,
 html body.theme-light .sidebar-content-component,
-html body.theme-light .right-sidebar,
-html body.theme-light .flowing-footer {
+html body.theme-light .right-sidebar {
   background: rgba(255, 255, 255, var(--glasmorphic-primary-opacity)) !important;
   backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
   -webkit-backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
@@ -92,8 +90,7 @@ html body.theme-dark .header-bar-enhanced,
 html body.theme-dark .sidebar,
 html body.theme-dark .sidebar-header-component,
 html body.theme-dark .sidebar-content-component,
-html body.theme-dark .right-sidebar,
-html body.theme-dark .flowing-footer {
+html body.theme-dark .right-sidebar {
   background: rgba(26, 26, 26, var(--glasmorphic-primary-opacity)) !important;
   backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
   -webkit-backdrop-filter: blur(var(--glasmorphic-primary-blur)) saturate(180%) !important;
@@ -104,7 +101,7 @@ html body.theme-dark .flowing-footer {
 /* Board Wrapper - TRANSPARENT (no background interference with AI backgrounds) */
 .board-wrapper {
   background: transparent !important;
-  padding-bottom: 70px !important; /* Space for Flowing MVP footer */
+  padding-bottom: 0 !important;
 }
 
 body.theme-dark .board-wrapper {
