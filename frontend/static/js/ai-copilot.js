@@ -410,6 +410,25 @@ class AICopilot {
               const count = (res.data.playbooks || []).length || 0;
               this.addMessage('assistant', `He extraído playbooks en segundo plano: ${count} encontrados.`);
             }
+            if (res.type === 'sla_issue' && res.data) {
+              const sla = res.data.sla || {};
+              const hasBreach = sla.has_breach || sla.has_breach === true;
+              const cycles = sla.cycles || [];
+              const first = cycles[0] || {};
+              this.addMessage('assistant', `SLA para ${res.issue}: ${sla.sla_name || ''} — Breach: ${hasBreach ? 'Sí' : 'No'} — Ciclos: ${cycles.length} — Tiempo restante ejemplo: ${first.remaining_time || 'N/A'}`);
+            }
+            if (res.type === 'sla_health' && res.data) {
+              this.addMessage('assistant', `Estado SLA: ${res.data.status || 'unknown'} — Cache cargada: ${res.data.sla_cache_loaded ? 'sí' : 'no'} — Desks: ${res.data.desks || 0}`);
+            }
+            if (res.type === 'users' && res.data) {
+              const list = Array.isArray(res.data) ? res.data : (res.data.users || res.data.data || []);
+              const names = (list || []).slice(0,5).map(u => u.displayName || u.name || u).join(', ');
+              this.addMessage('assistant', `Usuarios encontrados: ${names || 'No se encontraron usuarios relevantes.'}`);
+            }
+            if (res.type === 'severity' && res.data) {
+              const msg = (res.data.message || 'Severity info') + '\n' + (JSON.stringify(res.data.data || res.data, null, 2)).slice(0,500);
+              this.addMessage('assistant', `Información de severidad (resumen): ${msg}`);
+            }
           });
         }).catch(() => {});
       }
