@@ -7,22 +7,8 @@
     <link rel="stylesheet" href="styles-footer-v2.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Hide balanced content by default */
-        .balanced-view {
-            display: none;
-        }
-        
-        /* Show when active */
-        .balanced-view.active {
-            display: block;
-        }
-        
-        /* Hide chat-only when balanced is active */
-        .flowing-messages.hidden {
-            display: none;
-        }
-        
-        .flowing-input-area.hidden {
+        /* Balanced view hidden by default */
+        #balancedView {
             display: none;
         }
     </style>
@@ -909,30 +895,31 @@
         // Update suggestion
         document.getElementById('flowingSuggestion').textContent = `${ticketKey} - Viewing details`;
         
-        // Load balanced content
-        loadBalancedContent().then(() => {
-            // Switch views
-            currentView = 'balanced';
-            document.getElementById('chatOnlyView').style.display = 'none';
-            document.getElementById('balancedView').classList.add('active');
-            
-            // Expand footer if collapsed
-            document.getElementById('flowingFooter').classList.remove('collapsed');
-        });
+        // Switch views - HIDE chat, SHOW balanced
+        currentView = 'balanced';
+        document.getElementById('chatOnlyView').style.display = 'none';
+        document.getElementById('balancedView').style.display = 'block';
+        
+        // Expand footer if collapsed
+        document.getElementById('flowingFooter').classList.remove('collapsed');
     }
 
-    // Close button - go back to chat-only
+    // Close button - go back to chat-only OR collapse
     document.getElementById('flowingCloseBtn').addEventListener('click', () => {
         if (currentView === 'balanced') {
             // Switch back to chat-only
             currentView = 'chat-only';
             document.getElementById('chatOnlyView').style.display = 'block';
-            document.getElementById('balancedView').classList.remove('active');
+            document.getElementById('balancedView').style.display = 'none';
             document.getElementById('flowingSuggestion').textContent = 'Analyzing your queue...';
+            
+            // Reset context badge
+            const contextBadge = document.getElementById('flowingContextBadge');
+            contextBadge.innerHTML = `<span class="context-icon">🎯</span><span class="context-text">No context</span>`;
+        } else {
+            // Just collapse footer
+            document.getElementById('flowingFooter').classList.add('collapsed');
         }
-        
-        // Collapse footer
-        document.getElementById('flowingFooter').classList.add('collapsed');
     });
 
     // Toggle button
