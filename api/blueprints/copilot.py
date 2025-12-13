@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 copilot_bp = Blueprint('copilot', __name__, url_prefix='/api/copilot')
 
-
 @copilot_bp.route('/chat', methods=['POST'])
 def chat():
     """
@@ -38,7 +37,6 @@ def chat():
     except Exception as e:
         logger.error(f"❌ Flowing MVP error: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
-
 
 def generate_response(message: str, context: dict) -> str:
     """
@@ -68,7 +66,6 @@ def generate_response(message: str, context: dict) -> str:
         return handle_desk_query(message_lower, current_desk, context)
     else:
         return handle_general_query(message_lower)
-
 
 def handle_ticket_query(message: str, issue_key: str, context: dict) -> str:
     """Handle queries about specific ticket"""
@@ -132,7 +129,6 @@ I can help you with:
 - **Activity History**: Review comments and updates
 
 What specific aspect would you like to know more about?"""
-
 
 def handle_queue_query(message: str, queue_name: str, issues_count: int, context: dict) -> str:
     """Handle queries about queue"""
@@ -199,7 +195,6 @@ Currently managing **{issues_count} tickets**.
 
 What would you like to focus on?"""
 
-
 def handle_desk_query(message: str, desk_name: str, context: dict) -> str:
     """Handle queries about service desk"""
     
@@ -226,7 +221,6 @@ You're currently in **{desk_name}**.
 - Manage team members
 
 Select a queue from the filter bar to get started!"""
-
 
 def handle_general_query(message: str) -> str:
     """Handle general queries without specific context"""
@@ -328,7 +322,6 @@ To give you the best assistance, try:
 - "What are the urgent items?"
 
 What would you like to know?"""
-
 
 # Export blueprint
 __all__ = ['copilot_bp']

@@ -21,7 +21,6 @@ from utils.config import config
 
 logger = logging.getLogger(__name__)
 
-
 class JiraServiceDeskAPI:
     """
     JIRA Service Desk REST API Client
@@ -433,7 +432,6 @@ class JiraServiceDeskAPI:
         except Exception as e:
             logger.error(f"❌ Error building desk/queue structure: {e}")
             return {}
-
 
 # ============================================================
 # SINGLETON INSTANCE

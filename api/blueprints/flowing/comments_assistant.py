@@ -6,13 +6,11 @@ Asistente inteligente para comentarios: generar respuestas, resumir, traducir
 from flask import Blueprint, request, jsonify
 from utils.common import JiraApiError
 from utils.api_migration import get_api_client
-from utils.ollama_client import get_ollama_client
 import logging
 
 logger = logging.getLogger(__name__)
 
 flowing_comments_bp = Blueprint('flowing_comments', __name__)
-
 
 @flowing_comments_bp.route('/api/flowing/suggest-response', methods=['POST'])
 def suggest_response():
@@ -35,7 +33,7 @@ def suggest_response():
             {"type": "request_info", "text": "...", "tone": "professional"},
             {"type": "resolution", "text": "...", "tone": "professional"}
         ],
-        "using_ollama": true
+        "": true
     }
     """
     try:
@@ -52,8 +50,7 @@ def suggest_response():
             }), 400
         
         client = get_api_client()
-        ollama = get_ollama_client()
-        
+                
         # Obtener el ticket
         issue = client.get_issue(issue_key)
         summary = issue['fields'].get('summary', '')
@@ -61,8 +58,7 @@ def suggest_response():
         
         suggestions = []
         
-        # Si Ollama está disponible, generar respuestas con IA
-        if ollama.is_available():
+                if ollama.is_available():
             logger.info(f"Generating AI responses for {issue_key} with Ollama")
             
             # Contexto base
@@ -125,7 +121,7 @@ def suggest_response():
                 'success': True,
                 'suggestions': suggestions,
                 'count': len(suggestions),
-                'using_ollama': True,
+                '': True,
                 'issue_key': issue_key
             })
         
@@ -155,7 +151,7 @@ def suggest_response():
                 'success': True,
                 'suggestions': suggestions,
                 'count': len(suggestions),
-                'using_ollama': False,
+                '': False,
                 'fallback': 'Template responses (Ollama not available)',
                 'issue_key': issue_key
             })
@@ -166,7 +162,6 @@ def suggest_response():
     except Exception as e:
         logger.error(f"Error in suggest response: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @flowing_comments_bp.route('/api/flowing/summarize-conversation', methods=['POST'])
 def summarize_conversation():
@@ -185,7 +180,7 @@ def summarize_conversation():
         "summary": "Resumen de la conversación...",
         "comment_count": 8,
         "key_points": ["punto 1", "punto 2"],
-        "using_ollama": true
+        "": true
     }
     """
     try:
@@ -200,8 +195,7 @@ def summarize_conversation():
             }), 400
         
         client = get_api_client()
-        ollama = get_ollama_client()
-        
+                
         # Obtener issue y comentarios
         issue = client.get_issue(issue_key)
         summary_text = issue['fields'].get('summary', '')
@@ -214,14 +208,13 @@ def summarize_conversation():
                 'summary': 'No hay comentarios para resumir.',
                 'comment_count': 0,
                 'key_points': [],
-                'using_ollama': False
+                '': False
             })
         
         comment_count = len(comments)
         authors = set(c.get('author', {}).get('displayName', 'Unknown') for c in comments)
         
-        # Si Ollama está disponible, generar resumen inteligente
-        if ollama.is_available():
+                if ollama.is_available():
             logger.info(f"Generating AI summary for {issue_key} with {comment_count} comments")
             
             # Construir contexto de comentarios (últimos 10)
@@ -235,8 +228,7 @@ def summarize_conversation():
             
             conversation_text = "\n".join(conversation)
             
-            # Generar resumen con Ollama
-            prompt = f"""Ticket: {summary_text}
+                        prompt = f"""Ticket: {summary_text}
 Descripción: {description}
 
 Conversación ({comment_count} comentarios):
@@ -284,7 +276,7 @@ Máximo {max_length} palabras."""
                     'comment_count': comment_count,
                     'participants': list(authors),
                     'key_points': key_points[:5],  # Max 5 puntos
-                    'using_ollama': True,
+                    '': True,
                     'issue_key': issue_key
                 })
         
@@ -316,7 +308,6 @@ Máximo {max_length} palabras."""
         logger.error(f"Error in summarize conversation: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @flowing_comments_bp.route('/api/flowing/translate-comment', methods=['POST'])
 def translate_comment():
     """
@@ -337,7 +328,7 @@ def translate_comment():
         "translated_text": "...",
         "source_language": "es",
         "target_language": "en",
-        "using_ollama": true
+        "": true
     }
     """
     try:
@@ -353,8 +344,7 @@ def translate_comment():
                 'error': 'text is required'
             }), 400
         
-        ollama = get_ollama_client()
-        
+                
         # Mapeo de códigos de idioma a nombres
         language_names = {
             'es': 'español',
@@ -366,8 +356,7 @@ def translate_comment():
         
         target_name = language_names.get(target_lang, target_lang)
         
-        # Si Ollama está disponible, traducir con IA
-        if ollama.is_available():
+                if ollama.is_available():
             logger.info(f"Translating text to {target_lang} with Ollama")
             
             # Detectar idioma fuente si es 'auto'
@@ -400,7 +389,7 @@ def translate_comment():
                     'translated_text': translated_text,
                     'source_language': source_lang,
                     'target_language': target_lang,
-                    'using_ollama': True
+                    '': True
                 })
         
         # Fallback - traducción básica (solo para demo)

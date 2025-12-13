@@ -170,8 +170,6 @@ class SLAMonitor {
     `;
   }
 
-
-
   /**
    * Setup auto-refresh interval
    */
@@ -214,8 +212,6 @@ class SLAMonitor {
       console.error(`Failed to refresh SLA for ${issueKey}:`, error);
     }
   }
-
-
 
   /**
    * Cleanup and stop monitoring

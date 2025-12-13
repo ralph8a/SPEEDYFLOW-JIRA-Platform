@@ -11,7 +11,6 @@ from typing import Optional, List, Dict, Tuple, Any
 
 logger = logging.getLogger(__name__)
 
-
 # ============================================================================
 # GENERIC DATA EXTRACTION
 # ============================================================================
@@ -61,7 +60,6 @@ def get_unique_values(
     # Sort if requested
     return sorted(str_values) if sort else str_values
 
-
 # ============================================================================
 # GENERIC FILTERING
 # ============================================================================
@@ -107,7 +105,6 @@ def filter_by_column(
     except (AttributeError, KeyError, TypeError) as e:
         logger.warning(f"Error filtering by {col}: {e}")
         return df
-
 
 # ============================================================================
 # GENERIC DISTRIBUTION
@@ -155,7 +152,6 @@ def get_distribution(
         logger.warning(f"Error getting distribution for {col}: {e}")
         return {}
 
-
 # ============================================================================
 # GENERIC MULTI-FILTER
 # ============================================================================
@@ -195,7 +191,6 @@ def apply_column_filters(
                 break
     
     return df
-
 
 # ============================================================================
 # COLUMN DETECTION
@@ -237,7 +232,6 @@ def find_column(
     
     return None
 
-
 # ============================================================================
 # VALIDATION HELPERS
 # ============================================================================
@@ -256,7 +250,6 @@ def is_valid_dataframe(df: Any) -> bool:
         return isinstance(df, pd.DataFrame) and not df.empty
     except (AttributeError, TypeError):
         return False
-
 
 def get_dataframe_info(df: pd.DataFrame) -> Dict[str, Any]:
     """

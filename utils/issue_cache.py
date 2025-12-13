@@ -26,7 +26,6 @@ from utils.common import _make_request, JiraApiError
 
 logger = logging.getLogger(__name__)
 
-
 class IssueCacheManager:
     """Manages caching and analysis of JIRA issues using JSON files"""
     
@@ -445,10 +444,8 @@ class IssueCacheManager:
             return patterns.get(field_type, {})
         return patterns
 
-
 # Global instance
 _cache_manager = None
-
 
 def get_cache_manager() -> IssueCacheManager:
     """Get global cache manager instance"""

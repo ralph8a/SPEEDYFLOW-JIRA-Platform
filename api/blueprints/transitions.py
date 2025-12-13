@@ -47,7 +47,6 @@ def api_get_available_transitions(issue_key):
     ]
     return {'transitions': out, 'count': len(out)}
 
-
 @transitions_bp.route('/api/issues/<issue_key>/transitions', methods=['POST'])
 @handle_api_error
 @json_response

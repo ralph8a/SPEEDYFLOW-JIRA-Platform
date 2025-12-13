@@ -257,6 +257,5 @@ class SimpleAIEngine:
             'timestamp': datetime.now().isoformat()
         }
 
-
 # Singleton instance
 ai_engine = SimpleAIEngine()

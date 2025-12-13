@@ -16,7 +16,6 @@ _RATE_LIMIT_STATE: dict[tuple[str, str], list] = {}
 
 logger = logging.getLogger(__name__)
 
-
 def handle_api_error(f):
     """
     Decorator to handle API errors consistently
@@ -54,7 +53,6 @@ def handle_api_error(f):
             }), 500
     return decorated_function
 
-
 def require_params(*param_names):
     """
     Decorator to validate required query/form parameters
@@ -85,7 +83,6 @@ def require_params(*param_names):
         return decorated_function
     return decorator
 
-
 def log_request(level=logging.INFO):
     """
     Decorator to log API requests
@@ -103,7 +100,6 @@ def log_request(level=logging.INFO):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
 
 def json_response(f):
     """
@@ -129,7 +125,6 @@ def json_response(f):
             'timestamp': datetime.now().isoformat()
         }), 200
     return decorated_function
-
 
 def require_credentials(f):
     """Decorator to ensure JIRA credentials are configured.
@@ -159,7 +154,6 @@ def require_credentials(f):
             kwargs.setdefault('api_token', api_token)
         return f(*args, **kwargs)
     return decorated_function
-
 
 def rate_limited(max_calls: int = 60, period: int = 60, identifier_header: str | None = None):
     """Fixed-window rate limiting decorator.

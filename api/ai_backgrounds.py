@@ -1117,10 +1117,8 @@ class EnhancedBackgroundGenerator:
         
         return svg
 
-
 # Global instance
 enhanced_generator = EnhancedBackgroundGenerator()
-
 
 def get_ai_backgrounds(theme: str = 'dark') -> Dict:
     """Enhanced API endpoint - get all backgrounds with advanced generation"""
@@ -1150,6 +1148,4 @@ def get_ai_backgrounds(theme: str = 'dark') -> Dict:
     except Exception as e:
         logger.error(f"Error in enhanced background generation: {e}")
         return {'success': False, 'error': str(e), 'enhanced': False}
-
-
 

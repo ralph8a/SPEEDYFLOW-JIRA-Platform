@@ -86,7 +86,6 @@ def get_db() -> sqlite3.Connection:
         _connection.row_factory = sqlite3.Row
     return _connection
 
-
 def init_db() -> None:
     conn = get_db()
     with _DB_LOCK:
@@ -120,11 +119,9 @@ def init_db() -> None:
             # Columns might already exist, that's OK
             pass
 
-
 def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
     """Convert sqlite3.Row to dict. Generic version for any table."""
     return dict(row)
-
 
 def create_notification(
     ntype: str, 
@@ -152,14 +149,12 @@ def create_notification(
         row = conn.execute("SELECT * FROM notifications WHERE id=?", (nid,)).fetchone()
     return _row_to_dict(row)
 
-
 def list_notifications() -> List[Dict[str, Any]]:
     """List all notifications (admin view)."""
     conn = get_db()
     with _DB_LOCK:
         rows = conn.execute("SELECT * FROM notifications ORDER BY id DESC").fetchall()
     return [_row_to_dict(r) for r in rows]
-
 
 def list_notifications_for_user(user_id: str = None) -> List[Dict[str, Any]]:
     """List notifications for specific user + global notifications (user_id IS NULL)."""
@@ -180,7 +175,6 @@ def list_notifications_for_user(user_id: str = None) -> List[Dict[str, Any]]:
             ).fetchall()
     return [_row_to_dict(r) for r in rows]
 
-
 def mark_notification_read(nid: int) -> Optional[Dict[str, Any]]:
     conn = get_db()
     with _DB_LOCK:
@@ -189,14 +183,12 @@ def mark_notification_read(nid: int) -> Optional[Dict[str, Any]]:
         row = conn.execute("SELECT * FROM notifications WHERE id=?", (nid,)).fetchone()
     return _row_to_dict(row) if row else None
 
-
 def delete_notification(nid: int) -> bool:
     conn = get_db()
     with _DB_LOCK:
         cur = conn.execute("DELETE FROM notifications WHERE id=?", (nid,))
         conn.commit()
     return cur.rowcount > 0
-
 
 # ============================================================================
 # Users Management
@@ -246,7 +238,6 @@ def upsert_users(users: List[Dict[str, Any]], service_desk_id: str = None) -> in
         conn.commit()
     
     return count
-
 
 def get_users_from_db(service_desk_id: str = None, query: str = None, max_age_hours: int = 24) -> List[Dict[str, Any]]:
     """
@@ -299,7 +290,6 @@ def get_users_from_db(service_desk_id: str = None, query: str = None, max_age_ho
     
     return users
 
-
 def clear_old_users(days: int = 30) -> int:
     """Delete users older than specified days."""
     conn = get_db()
@@ -310,7 +300,6 @@ def clear_old_users(days: int = 30) -> int:
         conn.commit()
     
     return cur.rowcount
-
 
 # ============================================================================
 # SLA Database Functions
@@ -391,7 +380,6 @@ def upsert_sla(issue_key: str, sla_data: Dict[str, Any], ttl_minutes: int = 60) 
         logger.error(f"Failed to upsert SLA for {issue_key}: {e}")
         return False
 
-
 def get_sla_from_db(issue_key: str) -> Optional[List[Dict[str, Any]]]:
     """
     DEPRECATED: No longer used. Always returns None.
@@ -408,7 +396,6 @@ def get_sla_from_db(issue_key: str) -> Optional[List[Dict[str, Any]]]:
     # Always return None - database SLA caching disabled
     return None
 
-
 def clear_expired_slas() -> int:
     """
     DEPRECATED: No longer used. Always returns 0.
@@ -416,7 +403,6 @@ def clear_expired_slas() -> int:
     """
     # Database SLA caching disabled - nothing to clear
     return 0
-
 
 def get_breached_slas(service_desk_id: str = None) -> List[Dict[str, Any]]:
     """

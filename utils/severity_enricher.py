@@ -13,7 +13,6 @@ from utils.config import config
 
 logger = logging.getLogger(__name__)
 
-
 class SeverityEnricher:
     """Enriquece tickets con severidad desde JIRA Service Desk"""
     
@@ -176,7 +175,6 @@ class SeverityEnricher:
         
         return [SeverityEnricher.enrich_issue(issue) for issue in issues]
 
-
 def test_severity_enricher():
     """Test de la función de enriquecimiento"""
     
@@ -212,7 +210,6 @@ def test_severity_enricher():
     
     for issue in enriched:
         print(f"{issue['key']}: severity = {issue['severity']}")
-
 
 if __name__ == '__main__':
     test_severity_enricher()

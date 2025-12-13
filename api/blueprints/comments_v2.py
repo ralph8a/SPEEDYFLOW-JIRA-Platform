@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 comments_v2_bp = Blueprint('comments_v2', __name__)
 
-
 # ============================================================================
 # MENTION DETECTION
 # ============================================================================
@@ -81,7 +80,6 @@ class MentionDetector:
             return f'<span class="mention" data-user="{username}">@{username}</span>'
         
         return re.sub(MentionDetector.MENTION_PATTERN, replace_mention, text)
-
 
 # ============================================================================
 # IMAGE PARSING FOR PREVIEW
@@ -143,7 +141,6 @@ class ImageParser:
             return match.group(0)  # Return original if not found
         
         return re.sub(ImageParser.IMAGE_PATTERN, replace_image, text)
-
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -225,7 +222,6 @@ def convert_text_to_adf(text: str) -> Dict[str, Any]:
         "content": content
     }
 
-
 def convert_adf_to_text(adf: Dict[str, Any]) -> str:
     """
     Convert JIRA ADF format to plain text.
@@ -256,7 +252,6 @@ def convert_adf_to_text(adf: Dict[str, Any]) -> str:
         return '\n\n'.join(paragraphs)
     
     return str(adf)
-
 
 def notify_mentioned_users(
     issue_key: str,
@@ -315,7 +310,6 @@ def notify_mentioned_users(
             logger.error(
                 f"❌ Failed to notify @{username}: {e}"
             )
-
 
 def parse_comment_for_display(
     raw_comment: Dict,
@@ -387,7 +381,6 @@ def parse_comment_for_display(
         'edited': updated != created if (updated and created) else False,
         'visibility': 'public' if visibility else 'internal'
     }
-
 
 # ============================================================================
 # API ENDPOINTS
@@ -496,7 +489,6 @@ def get_comments_v2(issue_key):
         'issue_key': issue_key,
         'total': response.get('total', len(parsed_comments))
     }
-
 
 @comments_v2_bp.route('/api/v2/issues/<issue_key>/comments', methods=['POST'])
 @handle_api_error
@@ -615,7 +607,6 @@ def add_comment_v2(issue_key):
         'timestamp': datetime.now().isoformat()
     }
 
-
 @comments_v2_bp.route('/api/v2/issues/<issue_key>/comments/<comment_id>', methods=['PUT'])
 @handle_api_error
 @json_response
@@ -684,7 +675,6 @@ def update_comment_v2(issue_key, comment_id):
         'message': 'Comment updated successfully'
     }
 
-
 @comments_v2_bp.route('/api/v2/issues/<issue_key>/comments/<comment_id>', methods=['DELETE'])
 @handle_api_error
 @json_response
@@ -716,7 +706,6 @@ def delete_comment_v2(issue_key, comment_id):
         'comment_id': comment_id,
         'message': 'Comment deleted successfully'
     }
-
 
 @comments_v2_bp.route('/api/v2/issues/<issue_key>/comments/count', methods=['GET'])
 @handle_api_error
@@ -759,7 +748,6 @@ def get_comment_count_v2(issue_key):
         'count': total,
         'issue_key': issue_key
     }
-
 
 @comments_v2_bp.route(
     '/api/v2/issues/<issue_key>/mentions/users',

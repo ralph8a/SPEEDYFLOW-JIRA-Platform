@@ -109,7 +109,6 @@ def api_get_issues_by_queue(queue_id):
         'limit': limit
     }
 
-
 def _inject_sla_stub(issue: dict) -> dict:
     """Attach SLA data to issue using simplified SLA service"""
     if not isinstance(issue, dict) or 'sla_agreements' in issue:
@@ -129,7 +128,6 @@ def _inject_sla_stub(issue: dict) -> dict:
         pass
     
     return issue
-
 
 def _sanitize_for_json(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Sanitize records for JSON serialization (remove NaN, convert dates, etc.)"""
@@ -158,7 +156,6 @@ def _sanitize_for_json(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         {k: sanitize_value(v) for k, v in record.items()}
         for record in records
     ]
-
 
 def _optimize_payload(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
@@ -203,7 +200,6 @@ def _optimize_payload(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     
     return optimized
 
-
 def _batch_inject_sla(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Batch SLA enrichment using simplified SLA service"""
     if not records:
@@ -214,7 +210,6 @@ def _batch_inject_sla(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.warning(f"Batch SLA enrichment failed: {e}")
         return records
-
 
 @issues_bp.route('/api/issues/<issue_key>/activity', methods=['GET'])
 @handle_api_error
@@ -278,7 +273,6 @@ def api_get_issue_activity(issue_key):
     except Exception as e:
         logger.error(f"Error getting activity for {issue_key}: {e}")
         return {'error': str(e), 'issue_key': issue_key}, 500
-
 
 @issues_bp.route('/api/servicedesk/request/<issue_key>', methods=['GET'])
 @handle_api_error
@@ -349,7 +343,6 @@ def api_get_servicedesk_request(issue_key):
     except Exception as e:
         logger.error(f"Error getting Service Desk request {issue_key}: {e}")
         return {'error': str(e), 'issue_key': issue_key}, 500
-
 
 @issues_bp.route('/api/issues/<issue_key>', methods=['PUT'])
 @handle_api_error
@@ -440,7 +433,6 @@ def api_update_issue(issue_key):
     except Exception as e:
         logger.error(f"Error updating issue {issue_key}: {e}")
         return {'error': str(e), 'issue_key': issue_key}, 500
-
 
 @issues_bp.route('/api/search/issues', methods=['GET'])
 @handle_api_error

@@ -24,7 +24,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class SmartRangeFetcher:
     """Fetcher inteligente que detecta rangos de IDs por proyecto"""
     
@@ -259,7 +258,6 @@ class SmartRangeFetcher:
         logger.info(f"  ⚡ Velocidad: {grand_total/elapsed:.1f} tickets/s")
         logger.info(f"  📁 Directorio: {Path(output_dir).absolute()}")
         logger.info("="*70)
-
 
 if __name__ == "__main__":
     import argparse
