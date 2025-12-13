@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 sync_bp = Blueprint('sync', __name__)
 
-
 @sync_bp.route('/api/sync/project/<project_key>', methods=['POST'])
 @handle_api_error
 @json_response
@@ -58,7 +57,6 @@ def api_sync_project(project_key):
         logger.error(f"Sync failed for {project_key}: {e}")
         return {'error': str(e), 'project_key': project_key}, 500
 
-
 @sync_bp.route('/api/sync/status/<project_key>', methods=['GET'])
 @handle_api_error
 @json_response
@@ -86,7 +84,6 @@ def api_sync_status(project_key):
     except Exception as e:
         logger.error(f"Failed to get sync status: {e}")
         return {'error': str(e)}, 500
-
 
 @sync_bp.route('/api/sync/patterns/<project_key>', methods=['GET'])
 @handle_api_error

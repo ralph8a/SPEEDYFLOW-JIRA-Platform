@@ -12,7 +12,6 @@ import base64
 
 logger = logging.getLogger(__name__)
 
-
 def _get_auth_header(email: str, api_token: str) -> Dict[str, str]:
     """Generate Basic auth header for JIRA API"""
     if not email or not api_token:
@@ -24,7 +23,6 @@ def _get_auth_header(email: str, api_token: str) -> Dict[str, str]:
         "Authorization": f"Basic {encoded}",
         "Accept": "application/json"
     }
-
 
 def extract_tickets_from_queue_api(
     project_key: str, 
@@ -79,7 +77,6 @@ def extract_tickets_from_queue_api(
     
     return tickets
 
-
 def _get_service_desk_id(
     site: str,
     project_key: str,
@@ -106,10 +103,6 @@ def _get_service_desk_id(
     except Exception as e:
         logger.error(f"Error getting service desk ID: {e}")
         return None
-
-
-
-
 
 if __name__ == "__main__":
     # Test

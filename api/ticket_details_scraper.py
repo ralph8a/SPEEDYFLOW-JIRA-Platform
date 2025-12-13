@@ -14,7 +14,6 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-
 class TicketDetailsScraper:
     """Extract detailed ticket information from JIRA HTML"""
     
@@ -281,12 +280,10 @@ class TicketDetailsScraper:
             logger.error(f"❌ Error en get_ticket_as_form: {e}")
             return {'error': str(e)}
 
-
 def scrape_ticket_details(issue_key: str, site_url: str, email: str, api_token: str) -> Dict[str, Any]:
     """Convenience function para scrappear detalles del ticket"""
     scraper = TicketDetailsScraper(email, api_token)
     return scraper.get_ticket_details(issue_key, site_url)
-
 
 def get_ticket_form(issue_key: str, site_url: str, email: str, api_token: str) -> Dict[str, Any]:
     """Convenience function para obtener ticket como formulario"""

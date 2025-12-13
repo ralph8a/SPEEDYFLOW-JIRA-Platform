@@ -42,7 +42,6 @@ app.add_middleware(
 start_time = time.time()
 predictor = None
 
-
 def get_uptime() -> float:
     """Obtener uptime en segundos"""
     return time.time() - start_time

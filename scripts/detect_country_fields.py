@@ -46,7 +46,6 @@ def extract_country_code(field_value):
     
     return ''
 
-
 def analyze_sample_data():
     """Analiza datos de ejemplo para validar la extracción"""
     
@@ -161,7 +160,6 @@ function extractCountryCode(fieldValue) {
     print("   2. Código actual en app.js línea ~2150 necesita actualización")
     print("   3. Ver implementación sugerida arriba")
     print()
-
 
 if __name__ == '__main__':
     analyze_sample_data()

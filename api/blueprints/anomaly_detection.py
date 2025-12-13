@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 anomaly_detection_bp = Blueprint('anomaly_detection', __name__, url_prefix='/api/ml/anomalies')
 
-
 @anomaly_detection_bp.route('/dashboard', methods=['GET'])
 def get_dashboard():
     """
@@ -48,7 +47,6 @@ def get_dashboard():
     except Exception as e:
         logger.error(f"Error getting dashboard: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-
 
 @anomaly_detection_bp.route('/current', methods=['GET'])
 def get_current_anomalies():
@@ -82,7 +80,6 @@ def get_current_anomalies():
         logger.error(f"Error getting anomalies: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @anomaly_detection_bp.route('/train', methods=['POST'])
 def train_engine():
     """
@@ -109,7 +106,6 @@ def train_engine():
         logger.error(f"Error training engine: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @anomaly_detection_bp.route('/baseline', methods=['GET'])
 def get_baseline():
     """Get baseline statistics used for anomaly detection"""
@@ -131,7 +127,6 @@ def get_baseline():
         logger.error(f"Error getting baseline: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @anomaly_detection_bp.route('/status', methods=['GET'])
 def get_status():
     """Get the current status of the anomaly detection engine"""
@@ -151,7 +146,6 @@ def get_status():
     except Exception as e:
         logger.error(f"Error getting status: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
-
 
 @anomaly_detection_bp.route('/types', methods=['GET'])
 def get_anomaly_types():
@@ -186,7 +180,6 @@ def get_anomaly_types():
             }
         ]
     })
-
 
 @anomaly_detection_bp.route('/health', methods=['GET'])
 def health_check():

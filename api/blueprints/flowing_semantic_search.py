@@ -6,13 +6,11 @@ Uses Ollama embeddings for intelligent issue matching
 
 from flask import Blueprint, request, jsonify
 from utils.embedding_manager import get_embedding_manager, search_similar_issues
-from utils.ollama_client import get_ollama_client
 import logging
 
 logger = logging.getLogger(__name__)
 
 flowing_semantic_bp = Blueprint('flowing_semantic', __name__, url_prefix='/api/flowing')
-
 
 @flowing_semantic_bp.route('/semantic-search', methods=['POST'])
 def semantic_search():
@@ -63,7 +61,6 @@ def semantic_search():
     except Exception as e:
         logger.error(f"Error in semantic_search: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
-
 
 @flowing_semantic_bp.route('/detect-duplicates', methods=['POST'])
 def detect_duplicates():
@@ -128,7 +125,6 @@ def detect_duplicates():
     except Exception as e:
         logger.error(f"Error in detect_duplicates: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
-
 
 @flowing_semantic_bp.route('/contextual-suggestions', methods=['POST'])
 def contextual_suggestions():

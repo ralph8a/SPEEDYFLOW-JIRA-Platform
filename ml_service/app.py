@@ -25,12 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Models
 class PredictRequest(BaseModel):
     summary: str
     description: Optional[str] = None
-
 
 class PredictionResponse(BaseModel):
     priority: str
@@ -39,11 +37,9 @@ class PredictionResponse(BaseModel):
     suggested_labels: List[str] = []
     sla_risk: str
 
-
 @app.on_event("startup")
 async def startup():
     logger.info("🚀 SPEEDYFLOW ML Service iniciado en puerto 5001")
-
 
 @app.get("/")
 async def root():
@@ -53,11 +49,9 @@ async def root():
         "status": "operativo"
     }
 
-
 @app.get("/health")
 async def health():
     return {"status": "healthy", "service": "ml-service"}
-
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictRequest):
@@ -78,7 +72,6 @@ async def predict(request: PredictRequest):
         sla_risk="HIGH" if priority == "High" else "MEDIUM"
     )
 
-
 @app.post("/predict-batch")
 async def predict_batch(requests: List[PredictRequest]):
     """
@@ -89,7 +82,6 @@ async def predict_batch(requests: List[PredictRequest]):
         result = await predict(req)
         results.append(result)
     return results
-
 
 if __name__ == "__main__":
     import uvicorn

@@ -27,7 +27,6 @@ TYPE_LABELS = {
 
 logger = logging.getLogger(__name__)
 
-
 # Custom exception for JIRA API errors
 class JiraApiError(Exception):
     """Custom exception for JIRA API errors"""
@@ -36,7 +35,6 @@ class JiraApiError(Exception):
         self.status_code = status_code
         self.response = response
         super().__init__(self.message)
-
 
 def invalidate_api_cache():
     """
@@ -48,7 +46,6 @@ def invalidate_api_cache():
         logging.info("All API caches cleared successfully")
     except Exception as e:
         logging.error(f"Error clearing cache: {e}")
-
 
 def api_error_handler(func):
     """
@@ -97,7 +94,6 @@ def _normalize_url(u: str) -> str:
         u = "https://" + u
     return u
 
-
 def _get_credentials(config) -> Tuple[str, str, str]:
     """
     Get JIRA credentials from config
@@ -112,7 +108,6 @@ def _get_credentials(config) -> Tuple[str, str, str]:
     email = config.jira.email or ""
     api_token = config.jira.api_token or ""
     return site, email, api_token
-
 
 def _get_auth_header(email: str, api_token: str) -> Dict[str, str]:
     """
@@ -242,7 +237,6 @@ def _label_tipo(type_key: Optional[str]) -> str:
         return TYPE_LABELS[tk]
     return tk.capitalize() if tk else "N/D"
 
-
 def _icono_proyecto(avatar_urls: Optional[Dict[str, str]]) -> str:
     """
     Get the best available project icon URL
@@ -255,7 +249,6 @@ def _icono_proyecto(avatar_urls: Optional[Dict[str, str]]) -> str:
     """
     au = avatar_urls or {}
     return au.get("24x24") or au.get("16x16") or au.get("32x32") or au.get("48x48") or ""
-
 
 def find_column(df: pd.DataFrame, *names: str) -> Optional[str]:
     """
@@ -272,7 +265,6 @@ def find_column(df: pd.DataFrame, *names: str) -> Optional[str]:
         if name in df.columns:
             return name
     return None
-
 
 def extract_project_key(url: str) -> str:
     """

@@ -8,7 +8,6 @@ from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
-
 class FlowingContextualSuggestions:
     """
     Gestor de sugerencias contextuales para Flowing MVP
@@ -258,7 +257,6 @@ class FlowingContextualSuggestions:
             'queue_analysis': '/api/ml/analyze-queue'  # ML Analyzer existente
         }
         return action_to_endpoint.get(action, '/api/flowing/semantic-search')
-
 
 def get_contextual_suggestions(context: str, issue_key: str = None, **kwargs) -> Dict:
     """

@@ -517,7 +517,6 @@ function setupCommentEventListeners(issueKey) {
   });
 }
 
-
 // ===== POST COMMENT =====
 function postComment(issueKey) {
   const textarea = document.getElementById('commentText');
@@ -1342,7 +1341,6 @@ function renderAttachments(issue) {
   html += '</div>';
   attachmentsContainer.innerHTML = html;
 }
-
 
 // ===== INTEGRATION WITH KANBAN CARDS =====
 function setupIssueCardClickHandlers() {

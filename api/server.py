@@ -720,7 +720,6 @@ def api_refresh_users():
         'result': result
     }
 
-
 @app.route('/api/users/cleanup', methods=['POST'])
 @handle_api_error
 @json_response
@@ -738,7 +737,6 @@ def api_cleanup_users():
         'deleted': deleted_count,
         'message': f'Deleted {deleted_count} users older than {days} days'
     }
-
 
 @app.route('/api/projects', methods=['GET'])
 @handle_api_error
@@ -1105,65 +1103,10 @@ def internal_error(error):
     logger.error(f"Internal error: {error}")
     return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
-def start_ollama_service():
-    """Start Ollama service if not already running"""
-    import subprocess
-    import time
-    import requests
-    
-    # Check if Ollama is already running
-    try:
-        response = requests.get('http://localhost:11434/api/tags', timeout=2)
-        if response.status_code == 200:
-            logger.info('✅ Ollama already running')
-            return True
-    except:
-        pass
-    
-    # Try to start Ollama
-    logger.info('🤖 Starting Ollama service...')
-    try:
-        # Start Ollama in background
-        if sys.platform == 'win32':
-            # Windows
-            subprocess.Popen(['ollama', 'serve'], 
-                           creationflags=subprocess.CREATE_NO_WINDOW,
-                           stdout=subprocess.DEVNULL, 
-                           stderr=subprocess.DEVNULL)
-        else:
-            # Linux/Mac
-            subprocess.Popen(['ollama', 'serve'],
-                           stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL,
-                           start_new_session=True)
-        
-        # Wait for Ollama to start (max 5 seconds)
-        for i in range(10):
-            time.sleep(0.5)
-            try:
-                response = requests.get('http://localhost:11434/api/tags', timeout=1)
-                if response.status_code == 200:
-                    logger.info('✅ Ollama service started successfully')
-                    return True
-            except:
-                continue
-        
-        logger.warning('⚠️ Ollama started but not responding yet (may need more time)')
-        return False
-        
-    except FileNotFoundError:
-        logger.warning('⚠️ Ollama not installed. Install from: https://ollama.ai')
-        logger.warning('   Comment Suggestions will show installation prompt')
-        return False
-    except Exception as e:
-        logger.error(f'❌ Error starting Ollama: {e}')
-        return False
-
 if __name__ == '__main__':
     PORT = 5005
     
-    # Try to start Ollama service
-    start_ollama_service()
+        start_ollama_service()
     
     logger.info(f"🚀 Starting Stable API Server on {PORT}")
     app.run(host='127.0.0.1', port=PORT, debug=False, threaded=True, use_reloader=False)

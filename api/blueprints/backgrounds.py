@@ -28,7 +28,6 @@ backgrounds_bp = Blueprint('backgrounds', __name__)
 def list_backgrounds():
     return {'backgrounds': [], 'count': 0, 'message': 'Background assets not yet implemented'}
 
-
 @backgrounds_bp.route('/api/backgrounds/generate', methods=['POST'])
 @handle_api_error
 @log_decorator(logging.INFO)
@@ -50,8 +49,7 @@ def generate_backgrounds():
         # Generate backgrounds (returns dict with success, variants, etc)
         result = get_ai_backgrounds(theme)
         
-        # Add ollama_available flag for frontend compatibility
-        result['ollama_available'] = False
+                result[''] = False
         
         return jsonify(result), 200
         
@@ -64,7 +62,7 @@ def generate_backgrounds():
             'error': str(e),
             'variants': [],
             'count': 0,
-            'ollama_available': False,
+            '': False,
             'theme': theme,
             'timestamp': timestamp
         }), 500

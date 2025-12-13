@@ -14,7 +14,6 @@ import base64
 
 logger = logging.getLogger(__name__)
 
-
 def generate_solid_variants(theme: str = "dark", count: int = 3) -> List[Dict]:
     variants: List[Dict] = []
     if theme == "light":
@@ -46,16 +45,11 @@ def generate_solid_variants(theme: str = "dark", count: int = 3) -> List[Dict]:
         })
     return variants
 
-
 def generate_variants(theme: str = "dark", count: int = 7) -> List[Dict]:
     variants: List[Dict] = []
     try:
-        from api.ai_ollama import ollama_engine  # type: ignore
-        ollama_available = bool(getattr(ollama_engine, "is_available", False))
-    except Exception:
-        ollama_engine = None
-        ollama_available = False
-    solid_pool = generate_solid_variants(theme, count=3)
+                    except Exception:
+                    solid_pool = generate_solid_variants(theme, count=3)
     if not ollama_available:
         logger.info("Ollama not available — returning solid fallbacks")
         return solid_pool
@@ -91,7 +85,6 @@ def generate_variants(theme: str = "dark", count: int = 7) -> List[Dict]:
             "timestamp": datetime.now().isoformat(),
         })
     return variants
-
 
 def get_ai_backgrounds(theme: str = "dark") -> Dict:
     try:

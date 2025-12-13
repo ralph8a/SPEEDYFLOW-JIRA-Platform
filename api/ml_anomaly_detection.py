@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 # Default cache path - absolute path from project root
 DEFAULT_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "msm_issues.json.gz"
 
-
 class AnomalyDetectionEngine:
     """
     Detects anomalies in ticket operations:
@@ -481,10 +480,8 @@ class AnomalyDetectionEngine:
             "timestamp": datetime.now().isoformat()
         }
 
-
 # Singleton instance
 _anomaly_engine_instance: Optional[AnomalyDetectionEngine] = None
-
 
 def get_anomaly_engine() -> AnomalyDetectionEngine:
     """Get or create the global anomaly detection engine instance"""
@@ -493,12 +490,10 @@ def get_anomaly_engine() -> AnomalyDetectionEngine:
         _anomaly_engine_instance = AnomalyDetectionEngine()
     return _anomaly_engine_instance
 
-
 def train_anomaly_engine() -> Dict[str, any]:
     """Train the anomaly detection engine (convenience function)"""
     engine = get_anomaly_engine()
     return engine.train()
-
 
 def get_anomalies() -> List[Dict]:
     """Get current anomalies (convenience function)"""
@@ -510,7 +505,6 @@ def get_anomalies() -> List[Dict]:
         train_anomaly_engine()
     
     return engine.get_current_anomalies()
-
 
 def get_anomaly_dashboard() -> Dict:
     """Get dashboard data (convenience function)"""
