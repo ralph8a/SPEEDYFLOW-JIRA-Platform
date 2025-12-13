@@ -2133,6 +2133,53 @@ body.sidebar-collapsed .flowing-footer { left: calc(var(--sidebar-collapsed-widt
   border-radius: 4px;
 }
 
+/* Footer color variables and consistency overrides */
+.flowing-footer, .ml-footer, .footer-two-columns {
+  --ff-text-primary: var(--text-primary, #1f2937);
+  --ff-text-muted: var(--text-muted, #6b7280);
+  --ff-accent: var(--accent-primary, #6366f1);
+  --ff-accent-strong: var(--accent-strong, #4c1d95);
+}
+
+[data-theme="dark"] .flowing-footer, body.theme-dark .ml-footer, [data-theme="dark"] .footer-two-columns {
+  --ff-text-primary: var(--text-primary, #e5e7eb);
+  --ff-text-muted: var(--text-muted, #9ca3af);
+  --ff-accent: var(--accent-primary, #818cf8);
+  --ff-accent-strong: var(--accent-strong, #8b5cf6);
+}
+
+/* Use primary text for main content and muted for secondary text; accents for keys/titles */
+.flowing-footer, .ml-footer {
+  color: var(--ff-text-primary);
+}
+.flowing-title-text h3,
+.footer-title,
+.ticket-key,
+.ticket-key-header,
+.ticket-summary-header {
+  color: var(--ff-accent-strong) !important;
+}
+.flowing-subtitle,
+.flowing-suggestion,
+.message-content p,
+.message-content li,
+.ticket-summary,
+.ticket-meta,
+.flowing-label,
+.context-text {
+  color: var(--ff-text-muted) !important;
+}
+.flowing-header,
+.flowing-content,
+.message-content,
+.footer-header-center {
+  color: var(--ff-text-primary) !important;
+}
+
+/* Context badge accent */
+.flowing-context-badge { color: var(--ff-accent) !important; border-color: color-mix(in srgb, var(--ff-accent) 20%, transparent); background: color-mix(in srgb, var(--ff-accent) 8%, transparent); }
+
+
 /* Comments area styles */
 .comments-section .comment {
   display: flex;
