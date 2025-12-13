@@ -24,6 +24,17 @@ class AICopilot {
     this.suggestions = [];
     this.currentSuggestionIndex = 0;
     this.suggestionInterval = null;
+    this.thinkingInterval = null;
+    this.thinkingIndex = 0;
+    this.thinkingThoughts = [
+      'Pensando en un buen café de Veracruz...',
+      'Soñando con volovanes y tamalitos...',
+      'Repasando los logs entre sorbo y sorbo...',
+      'Recordando el aroma del café del puerto...',
+      'Imaginando que el servidor trae puesto el sombrero...',
+      'Contando historias de deploys valientes...',
+      'Masticando una idea y pidiendo más café...'
+    ];
     
     this.init();
   }
@@ -325,6 +336,19 @@ class AICopilot {
     this.sendBtn.disabled = true;
     const loadingMsg = this.addMessage('assistant', '', true);
 
+    // Start rotating Veracruzian "thinking" thoughts while loading
+    if (loadingMsg) {
+      const contentNode = loadingMsg.querySelector('.message-content');
+      if (contentNode) {
+        let idx = 0;
+        contentNode.innerHTML = `<p><em>${this.thinkingThoughts[idx]}</em></p>`;
+        this.thinkingInterval = setInterval(() => {
+          idx = (idx + 1) % this.thinkingThoughts.length;
+          contentNode.innerHTML = `<p><em>${this.thinkingThoughts[idx]}</em></p>`;
+        }, 700);
+      }
+    }
+
     try {
       // Background intent detection: if user message implies docs extraction/ingest,
       // call the relevant endpoints in background without requiring slash-commands.
@@ -345,19 +369,7 @@ class AICopilot {
         }).then(r => r.json()).then(j => ({type: 'playbooks', data: j})).catch(() => null));
       }
 
-      // detect ingest-like intents if a path or url is present
-      if (/\.pdf\b|https?:\/\//i.test(message) || /\b(ingest|ingesta|indexar|cargar)\b/.test(msgLower)) {
-        // try to extract a URL or local path from the message
-        const urlMatch = message.match(/https?:\/\/\S+/i);
-        const windowsPathMatch = message.match(/[A-Za-z]:\\\\[\S ]+/);
-        const unixPathMatch = message.match(/\/(?:[\w-]+\/)*[\w-]+\.pdf/);
-        const path = urlMatch ? urlMatch[0] : (windowsPathMatch ? windowsPathMatch[0] : (unixPathMatch ? unixPathMatch[0] : null));
-        if (path) {
-          intents.push(fetch('/api/copilot/docs/ingest', {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({path})
-          }).then(r => r.json()).then(j => ({type: 'ingest', data: j})).catch(() => null));
-        }
-      }
+      // (Ingest functionality removed) — we no longer auto-ingest documents
 
       // Execute intents in background and show lightweight notifications when they finish
       if (intents.length > 0) {
@@ -371,9 +383,6 @@ class AICopilot {
             if (res.type === 'playbooks' && res.data) {
               const count = (res.data.playbooks || []).length || 0;
               this.addMessage('assistant', `He extraído playbooks en segundo plano: ${count} encontrados.`);
-            }
-            if (res.type === 'ingest' && res.data) {
-              this.addMessage('assistant', `Ingesta en segundo plano completada: ${JSON.stringify(res.data)}`);
             }
           });
         }).catch(() => {});
@@ -395,7 +404,11 @@ class AICopilot {
 
       const data = await response.json();
 
-      // Remove loading message
+      // Remove loading message and stop thinking rotation
+      if (this.thinkingInterval) {
+        clearInterval(this.thinkingInterval);
+        this.thinkingInterval = null;
+      }
       loadingMsg?.remove();
 
       // Add assistant response with Veracruzian signature
