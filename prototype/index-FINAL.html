@@ -10,6 +10,18 @@
         /* Balanced view hidden by default */
         #balancedView {
             display: none;
+            width: 100%;
+            max-width: 100%;
+            position: relative;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+        
+        /* Ensure balanced content stays inside footer */
+        #balancedView .ticket-description-section,
+        #balancedView .footer-two-columns {
+            position: relative;
+            width: 100%;
         }
     </style>
 </head>
