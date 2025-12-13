@@ -973,6 +973,21 @@ class FlowingFooter {
                   document.documentElement.style.setProperty('--flowing-footer-height', h + 'px');
                   document.documentElement.style.setProperty('--flowing-footer-translate', used + 'px');
                   if (used > 0) document.body.classList.add('flowing-footer-expanded'); else document.body.classList.remove('flowing-footer-expanded');
+                  // Also apply inline transforms as a fallback so header/filter/board reliably move
+                  try {
+                    const selectors = ['#kanbanView', '.board-wrapper', '#listView', '.list-wrapper', '.header-enhanced', '.filter-bar-enhanced'];
+                    selectors.forEach(sel => {
+                      const el = document.querySelector(sel);
+                      if (el) {
+                        if (used > 0) {
+                          el.style.transform = `translateY(-${used}px)`;
+                          el.style.transition = 'transform 0.28s ease';
+                        } else {
+                          el.style.transform = '';
+                        }
+                      }
+                    });
+                  } catch(e) { /* ignore */ }
                 } catch (err) { /* ignore */ }
               }, 100);
             } catch (err) { /* ignore */ }
