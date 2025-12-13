@@ -11,6 +11,7 @@ from chat import ChatEngine
 from comment_suggester import CommentSuggester
 import utils.api_migration as api_migration
 from ingest_onenote import ingest_pdf_to_docs
+from docs_parser import extract_endpoints_from_text, extract_playbooks_from_text
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -266,6 +267,42 @@ async def docs_search(q: str):
     if not chat:
         raise HTTPException(status_code=503, detail='chat engine not available')
     return chat.answer(q, top_k=5)
+
+
+@app.post('/docs/extract-endpoints')
+async def docs_extract_endpoints(file: Optional[str] = None):
+    docs_dir = Path(__file__).resolve().parent / 'docs'
+    texts = []
+    if file:
+        p = docs_dir / file
+        if not p.exists():
+            raise HTTPException(status_code=404, detail='file not found')
+        texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+    else:
+        for p in docs_dir.glob('*.txt'):
+            texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+
+    full = '\n\n'.join(texts)
+    endpoints = extract_endpoints_from_text(full)
+    return {'endpoints': endpoints}
+
+
+@app.post('/docs/extract-playbooks')
+async def docs_extract_playbooks(file: Optional[str] = None):
+    docs_dir = Path(__file__).resolve().parent / 'docs'
+    texts = []
+    if file:
+        p = docs_dir / file
+        if not p.exists():
+            raise HTTPException(status_code=404, detail='file not found')
+        texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+    else:
+        for p in docs_dir.glob('*.txt'):
+            texts.append(p.read_text(encoding='utf-8', errors='ignore'))
+
+    full = '\n\n'.join(texts)
+    playbooks = extract_playbooks_from_text(full)
+    return {'playbooks': playbooks}
 
 @app.post("/predict-batch")
 async def predict_batch(requests: List[PredictRequest]):
