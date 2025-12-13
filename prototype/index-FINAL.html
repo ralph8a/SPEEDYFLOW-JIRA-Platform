@@ -505,6 +505,376 @@
             </div>
         </div>
     </div></div>
+            </div>
+
+            <div class="footer-two-columns">
+                <!-- LEFT COLUMN: Essential Fields + ML Suggestions (60%) -->
+                <div class="left-column">
+                    <!-- ML Suggestions Banner -->
+                    <div class="ml-suggestions-banner">
+                        <div class="banner-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div class="banner-content">
+                            <h4>Analicé el ticket y tengo algunas sugerencias</h4>
+                            <p>Selecciona las que se acoplen mejor y presiona "Apply Selected"</p>
+                        </div>
+                    </div>
+
+                    <!-- Essential Fields (3 columns) -->
+                    <div class="essential-fields-grid">
+                        <!-- Priority -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-flag"></i> Priority
+                            </label>
+                            <select class="field-input" id="priorityField">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high" selected>High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                            <!-- ML Suggestion with Checkbox -->
+                            <div class="ml-suggestion-checkbox" data-field="priority" data-value="high">
+                                <input type="checkbox" id="cb-priority" class="ml-cb" checked>
+                                <label for="cb-priority">
+                                    <span class="ml-icon">✨</span>
+                                    <span class="ml-text">ML: <strong>High</strong></span>
+                                    <span class="ml-conf">95%</span>
+                                </label>
+                                <div class="ml-detail">
+                                    <div class="ml-explain">Detected keywords: "login", "auth", frequent failures after deploy.</div>
+                                    <div class="ml-source">Model: priority-v2</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Platform -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-mobile-alt"></i> Platform
+                            </label>
+                            <input type="text" class="field-input" value="Mobile iOS" readonly>
+                        </div>
+
+                        <!-- Reporter Area -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-map-marker-alt"></i> Reporter Area
+                            </label>
+                            <input type="text" class="field-input" value="Customer Support" readonly>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-tasks"></i> Status
+                            </label>
+                            <select class="field-input" id="statusField">
+                                <option value="open" selected>Open</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
+                            </select>
+                        </div>
+
+                        <!-- Reporter -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-user-circle"></i> Reporter
+                            </label>
+                            <input type="text" class="field-input" value="Juan Pérez" readonly>
+                        </div>
+
+                        <!-- Reporter Phone -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-phone"></i> Reporter Phone
+                            </label>
+                            <input type="text" class="field-input" value="+1 555-0123" readonly>
+                        </div>
+
+                        <!-- Assignee -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-user"></i> Assignee
+                            </label>
+                            <select class="field-input" id="assigneeField">
+                                <option value="">Unassigned</option>
+                                <option value="carlos">Carlos Q.</option>
+                                <option value="ana">Ana M.</option>
+                                <option value="luis">Luis P.</option>
+                            </select>
+                            <!-- ML Suggestion with Checkbox -->
+                            <div class="ml-suggestion-checkbox" data-field="assignee" data-value="carlos">
+                                <input type="checkbox" id="cb-assignee" class="ml-cb" checked>
+                                <label for="cb-assignee">
+                                    <span class="ml-icon">✨</span>
+                                    <span class="ml-text">ML: <strong>Carlos Q.</strong></span>
+                                    <span class="ml-conf">78%</span>
+                                </label>
+                                <div class="ml-detail">
+                                    <div class="ml-explain">Previous fixes and ownership on auth module.</div>
+                                    <div class="ml-source">Model: assignee-v1</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tipo de solicitud -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-clipboard-list"></i> Tipo de solicitud
+                            </label>
+                            <input type="text" class="field-input" value="Bug" readonly>
+                        </div>
+
+                        <!-- Reporter Email -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-envelope"></i> Reporter Email
+                            </label>
+                            <input type="text" class="field-input" value="juan.perez@example.com" readonly>
+                        </div>
+
+                        <!-- Labels -->
+                        <div class="field-wrapper">
+                            <label class="field-label">
+                                <i class="fas fa-tags"></i> Labels
+                            </label>
+                            <div class="labels-container">
+                                <span class="label-tag">backend</span>
+                                <span class="label-tag">api</span>
+                                <button class="btn-add-label"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <!-- ML Suggestion with Checkbox -->
+                            <div class="ml-suggestion-checkbox" data-field="labels" data-value="auth">
+                                <input type="checkbox" id="cb-labels" class="ml-cb" checked>
+                                <label for="cb-labels">
+                                    <span class="ml-icon">✨</span>
+                                    <span class="ml-text">ML: <strong>+auth</strong></span>
+                                    <span class="ml-conf">82%</span>
+                                </label>
+                                <div class="ml-detail">
+                                    <div class="ml-explain">Logs indicate auth-related stacktraces and endpoints.</div>
+                                    <div class="ml-source">Model: labels-v1</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SLA Monitor + Breach Risk (combined) -->
+                    <div class="sla-combined-section">
+                        <div class="sla-card">
+                            <div class="sla-header">
+                                <div class="sla-icon-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <h4>SLA Monitor & Breach Risk</h4>
+                            </div>
+                            <div class="sla-body">
+                                <div class="sla-metric">
+                                    <span class="sla-label">Progress:</span>
+                                    <div class="sla-bar">
+                                        <div class="sla-bar-fill" style="width: 92%"></div>
+                                    </div>
+                                    <span class="sla-prob">92% probability of breach</span>
+                                </div>
+                                <div class="sla-risk">
+                                    <span class="risk-badge critical">⚠️ HIGH RISK</span>
+                                    <button class="btn-sla-details" >Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Extra Details (3 columns) -->
+                    <div class="extra-details">
+                        <button class="btn-toggle-details" >
+                            <i class="fas fa-chevron-down" id="detailsChevron"></i>
+                            <span id="detailsText">Show More Details</span>
+                        </button>
+                        <div class="extra-details-content" id="extraDetailsContent" style="display: none;">
+                            <div class="details-grid-3col">
+                                <div class="detail-item">
+                                    <label><i class="fas fa-calendar"></i> Created</label>
+                                    <input type="text" value="2025-12-09 14:30" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-calendar-check"></i> Updated</label>
+                                    <input type="text" value="2025-12-10 09:15" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-eye"></i> Watchers</label>
+                                    <input type="text" value="3 watching" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-hashtag"></i> Issue Type</label>
+                                    <input type="text" value="Bug" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-folder"></i> Component</label>
+                                    <input type="text" value="Authentication" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-code-branch"></i> Affects Version</label>
+                                    <input type="text" value="2.3.4" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-bullseye"></i> Fix Version</label>
+                                    <input type="text" value="2.3.5" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-layer-group"></i> Environment</label>
+                                    <input type="text" value="Production" readonly>
+                                </div>
+                                <div class="detail-item">
+                                    <label><i class="fas fa-users"></i> Team</label>
+                                    <input type="text" value="Backend Team" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons-container">
+                        <button class="btn-apply-selected" >
+                            <i class="fas fa-check-double"></i> Apply Selected
+                        </button>
+                        <button class="btn-cancel" >
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button class="btn-resuggest" >
+                            <i class="fas fa-sync-alt"></i> Volver a sugerir
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Comments/AI Toggle (40%) -->
+                <div class="right-column">
+                    <div class="comments-ai-container">
+                            <!-- ML Actions & Suggested Comments (moved above chat) -->
+                            <div class="ml-actions-section" id="mlActionsRight">
+                                <h4><i class="fas fa-lightbulb"></i> ML Actions & Suggested Comments</h4>
+                                <div class="suggested-comments">
+                                    <div class="suggestion-item" >
+                                        <span class="suggestion-text">Investigando el problema, parece estar relacionado con la configuración de OAuth.</span>
+                                        <button class="btn-copy"><i class="fas fa-copy"></i></button>
+                                    </div>
+                                    <div class="suggestion-item" >
+                                        <span class="suggestion-text">Requiere revisión del equipo de backend para validar los endpoints de autenticación.</span>
+                                        <button class="btn-copy"><i class="fas fa-copy"></i></button>
+                                    </div>
+                                    <div class="suggestion-item" >
+                                        <span class="suggestion-text">Verificando logs del servidor para identificar la causa raíz del problema.</span>
+                                        <button class="btn-copy"><i class="fas fa-copy"></i></button>
+                                    </div>
+                                </div>
+                                <div class="quick-actions">
+                                    <button class="action-btn" >
+                                        <i class="fas fa-clone"></i> Find Duplicates
+                                    </button>
+                                    <button class="action-btn" >
+                                        <i class="fas fa-clock"></i> Estimate Time
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Toggle Tabs -->
+                            <div class="mode-tabs">
+                            <button class="mode-tab active" data-mode="comments">
+                                <i class="fas fa-comments"></i> Comments
+                            </button>
+                            <button class="mode-tab" data-mode="ai">
+                                <i class="fas fa-robot"></i> AI Chat
+                            </button>
+                        </div>
+
+                        <!-- Content Area -->
+                        <div class="mode-content">
+                            <!-- Comments Mode -->
+                            <div class="mode-panel active" data-panel="comments">
+                                <div class="comments-list" id="commentsList">
+                                    <div class="comment-item">
+                                        <div class="comment-avatar">CQ</div>
+                                        <div class="comment-body">
+                                            <div class="comment-header">
+                                                <span class="comment-author">Carlos Q.</span>
+                                                <span class="comment-time">2h ago</span>
+                                            </div>
+                                            <div class="comment-text">
+                                                Investigando el problema, parece relacionado con OAuth.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="comment-item">
+                                        <div class="comment-avatar">AM</div>
+                                        <div class="comment-body">
+                                            <div class="comment-header">
+                                                <span class="comment-author">Ana M.</span>
+                                                <span class="comment-time">1h ago</span>
+                                            </div>
+                                            <div class="comment-text">
+                                                ¿Revisaron los logs del servidor?
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Mode -->
+                            <div class="mode-panel" data-panel="ai">
+                                <div class="ai-messages" id="aiMessages">
+                                    <div class="ai-message">
+                                        <div class="ai-avatar">
+                                            <i class="fas fa-robot"></i>
+                                        </div>
+                                        <div class="ai-text">
+                                            ¿En qué puedo ayudarte con este ticket? Puedo:
+                                            <ul>
+                                                <li>Analizar prioridad y SLA</li>
+                                                <li>Sugerir próximos pasos</li>
+                                                <li>Generar respuestas</li>
+                                                <li>Buscar tickets similares</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unified Input -->
+                        <div class="input-area">
+                            <div class="input-mode-badge" id="modeBadge">
+                                💬 Comment mode
+                            </div>
+                            <div class="input-toolbar" id="inputToolbar">
+                                <button class="tool-btn" title="Attach"><i class="fas fa-paperclip"></i></button>
+                                <button class="tool-btn" title="Mention"><i class="fas fa-at"></i></button>
+                                <div class="visibility-toggle">
+                                    <input type="checkbox" id="visibilityCheck">
+                                    <label for="visibilityCheck">
+                                        <span class="vis-icon">🔓</span>
+                                        <span class="vis-text">Public</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="input-wrapper">
+                                <textarea 
+                                    id="unifiedInput" 
+                                    placeholder="Write a comment... (@ to mention)"
+                                    rows="3"
+                                    onkeydown="handleInputKey(event)"
+                                ></textarea>
+                                <button class="btn-send" id="sendBtn" >
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span id="sendBtnText">Post</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div></div>
         </div>
       </div>
     </div>
