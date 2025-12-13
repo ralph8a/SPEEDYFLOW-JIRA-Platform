@@ -9,13 +9,11 @@ from pathlib import Path
 import json
 import random
 
-# Optional integrations with ml_service utilities
+# Optional integrations with ml_service utilities (ingest removed)
 try:
-    from ml_service.ingest_onenote import ingest_pdf_to_docs
     from ml_service.docs_parser import extract_endpoints_from_text, extract_playbooks_from_text
     from ml_service.predictor import UnifiedMLPredictor
 except Exception:
-    ingest_pdf_to_docs = None
     extract_endpoints_from_text = None
     extract_playbooks_from_text = None
     UnifiedMLPredictor = None
@@ -107,20 +105,7 @@ def generate_response(message: str, context: dict) -> str:
         return handle_general_query(message_lower)
 
 
-@copilot_bp.route('/docs/ingest', methods=['POST'])
-def docs_ingest():
-    data = request.get_json() or {}
-    path = data.get('path')
-    if not path:
-        return jsonify({'error': 'path required'}), 400
-    if not ingest_pdf_to_docs:
-        return jsonify({'error': 'ingest handler not available on server'}), 500
-    try:
-        out = ingest_pdf_to_docs(path)
-        return jsonify({'status': 'ingested', 'path': out})
-    except Exception as e:
-        logger.error(f"Docs ingest error: {e}")
-        return jsonify({'error': str(e)}), 500
+# Ingest endpoint removed — ingestion is disabled by request
 
 
 @copilot_bp.route('/docs/extract-endpoints', methods=['POST'])
