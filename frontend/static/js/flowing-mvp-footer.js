@@ -338,14 +338,16 @@ class FlowingFooter {
     // Adjust content padding for expanded footer
     this.adjustContentPadding(false);
     // Increase footer max-height to give more space when expanded
-    try { if (this.footer) this.footer.style.maxHeight = '420px'; } catch(e){}
+    try { if (this.footer) this.footer.style.maxHeight = '640px'; } catch(e){}
 
     // After layout, compute footer height and set CSS var so page can be translated up
     try {
       setTimeout(() => {
         try {
           const h = this.footer ? Math.round(this.footer.getBoundingClientRect().height) : 420;
-          document.documentElement.style.setProperty('--flowing-footer-height', h + 'px');
+          // ensure measured height is at least the requested expanded height
+          const measured = Math.max(h, 640);
+          document.documentElement.style.setProperty('--flowing-footer-height', measured + 'px');
           document.body.classList.add('flowing-footer-expanded');
         } catch (err) { /* ignore */ }
       }, 80);
