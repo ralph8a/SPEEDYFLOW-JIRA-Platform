@@ -5,6 +5,7 @@ Handles chat interactions with context awareness
 
 from flask import Blueprint, request, jsonify
 import logging
+import os
 from pathlib import Path
 import json
 import random
@@ -64,14 +65,22 @@ def reload_resources():
     except Exception as e:
         results['jokes_error'] = str(e)
 
-    # Try to call ML service reload endpoint if available
+    # Try to call ML service reload endpoint if available (configurable via ML_SERVICE_URL)
     try:
+        from utils.config import config as app_config
+        ml_url = os.getenv('ML_SERVICE_URL') or getattr(app_config, 'env_label', None)
+        # prefer explicit ML_SERVICE_URL env var; fallback to localhost:5001
+        if not ml_url or ml_url.startswith('PROD'):
+            ml_base = os.getenv('ML_SERVICE_URL', 'http://localhost:5001')
+        else:
+            ml_base = ml_url
         import requests
-        resp = requests.post('http://localhost:5001/models/reload', timeout=5)
+        reload_url = ml_base.rstrip('/') + '/models/reload'
+        resp = requests.post(reload_url, timeout=5)
         if resp.ok:
             results['ml_reload'] = resp.json()
         else:
-            results['ml_reload_error'] = f"HTTP {resp.status_code}"
+            results['ml_reload_error'] = f"HTTP {resp.status_code} ({reload_url})"
     except Exception as e:
         results['ml_reload_error'] = str(e)
 
