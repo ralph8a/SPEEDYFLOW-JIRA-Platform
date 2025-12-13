@@ -1644,9 +1644,8 @@ body.sidebar-collapsed .flowing-footer {
   flex: 1;
   opacity: 1;
   transition: all 0.3s ease;
-  overflow: auto; /* allow inner scrolling */
+  overflow: hidden;
   min-height: 0;
-  padding-top: var(--flowing-header-height, 72px); /* reserve space for absolute header */
 }
 
 /* Copilot Header */
@@ -1673,22 +1672,13 @@ body.sidebar-collapsed .flowing-footer {
   backdrop-filter: blur(10px) saturate(1.04);
 }
 
-.flowing-title {
+.flowing-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
-
-.flowing-avatar {
-  font-size: 32px;
-}
-
-.flowing-avatar.flowing-sf-logo {
-  font-size: 28px;
-  font-weight: 900;
-  letter-spacing: 1px;
-}
-
 .flowing-title-text h3 {
   margin: 0;
   font-size: 18px;
