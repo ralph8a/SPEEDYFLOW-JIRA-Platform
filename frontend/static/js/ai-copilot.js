@@ -326,7 +326,49 @@ class AICopilot {
     const loadingMsg = this.addMessage('assistant', '', true);
 
     try {
-      // Send to backend
+      // Support admin slash-commands for docs endpoints
+      const parts = message.split(' ');
+      const cmd = parts[0].toLowerCase();
+
+      if (cmd === '/ingest') {
+        const path = parts.slice(1).join(' ');
+        if (!path) {
+          loadingMsg?.remove();
+          this.addMessage('assistant', 'Usage: /ingest C:\\path\\to\\file.pdf');
+        } else {
+          const resp = await fetch('/api/copilot/docs/ingest', {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({path})
+          });
+          const j = await resp.json();
+          loadingMsg?.remove();
+          this.addMessage('assistant', `Ingest result: ${JSON.stringify(j)}`);
+        }
+        return;
+      }
+
+      if (cmd === '/extract-endpoints') {
+        const file = parts.slice(1).join(' ') || undefined;
+        const resp = await fetch('/api/copilot/docs/extract-endpoints', {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({file})
+        });
+        const j = await resp.json();
+        loadingMsg?.remove();
+        this.addMessage('assistant', `Extracted endpoints: ${JSON.stringify(j.endpoints || j)}`);
+        return;
+      }
+
+      if (cmd === '/extract-playbooks') {
+        const file = parts.slice(1).join(' ') || undefined;
+        const resp = await fetch('/api/copilot/docs/extract-playbooks', {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({file})
+        });
+        const j = await resp.json();
+        loadingMsg?.remove();
+        this.addMessage('assistant', `Extracted playbooks: ${JSON.stringify(j.playbooks || j)}`);
+        return;
+      }
+
+      // Default: send to chat endpoint
       const response = await fetch('/api/copilot/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -341,13 +383,16 @@ class AICopilot {
       }
 
       const data = await response.json();
-      
+
       // Remove loading message
       loadingMsg?.remove();
-      
-      // Add assistant response
-      this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
-      
+
+      // Add assistant response with Veracruzian signature
+      const veracruzNames = ['Güero','Güera','Pachi','Chuy','Toño'];
+      const rand = veracruzNames[Math.floor(Math.random()*veracruzNames.length)];
+      const assistantText = (data.response || 'Sorry, I encountered an error.') + `\n\n— ${rand}`;
+      this.addMessage('assistant', assistantText);
+
       // If a ticket is selected, fetch ML comment suggestions and show them
       if (this.context.selectedIssue) {
         try {
@@ -360,7 +405,7 @@ class AICopilot {
             const sdata = await suggestResp.json();
             if (sdata && (sdata.labels || sdata.probabilities)) {
               const sugText = `Suggested comment labels: ${ (sdata.labels || []).join(', ') }`;
-              this.addMessage('assistant', `💡 ML suggestions: ${sugText}`);
+              this.addMessage('assistant', `💡 ML suggestions: ${sugText} — ${rand}`);
             }
           }
         } catch (e) {
