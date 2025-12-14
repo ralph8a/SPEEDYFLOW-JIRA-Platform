@@ -1523,7 +1523,7 @@ class FlowingFooter {
           </div>
           
           <!-- SLA Monitor & Breach Risk (2 columns grid) -->
-          <div class="footer-two-columns" style="margin-top: 16px;">
+          <div class="footer-two-columns equal-heights" style="margin-top: 16px;">
             <!-- SLA Monitor (Column 1) -->
             <div class="sla-monitor-wrapper">
               <div class="sla-monitor-container">
@@ -1647,6 +1647,23 @@ class FlowingFooter {
             <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
               <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> ML Actions & Suggested Comments
             </h4>
+            <!-- ML Endpoint configuration -->
+            <div class="ml-endpoint-config" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+              <label style="font-size:11px; color:#6b7280; font-weight:600;">ML Endpoint URL</label>
+              <input id="mlEndpointUrl" type="text" placeholder="http://ml-service:5001/predict" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; width:100%;">
+
+              <label style="font-size:11px; color:#6b7280; font-weight:600;">Model Name / Path</label>
+              <input id="mlModelName" type="text" placeholder="breach_predictor.keras" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; width:100%;">
+
+              <label style="font-size:11px; color:#6b7280; font-weight:600;">API Key (optional)</label>
+              <input id="mlApiKey" type="password" placeholder="••••••" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; width:100%;">
+
+              <div style="display:flex; gap:8px;">
+                <button id="mlApplyBtn" style="flex:1; padding:8px; background: linear-gradient(135deg,#6366f1,#4f46e5); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Apply</button>
+                <button id="mlClearBtn" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; cursor:pointer;">Clear</button>
+              </div>
+              <div id="mlConfigSaved" style="font-size:12px; color:#059669; display:none; margin-top:6px;">Saved</div>
+            </div>
             <div class="suggested-comments" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
               <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
                 <span style="flex: 1;">Investigating issue, analyzing logs...</span>
@@ -2158,4 +2175,48 @@ if (typeof FlowingContext !== 'undefined') {
 document.addEventListener('DOMContentLoaded', () => {
   window.flowingFooter = new FlowingFooter();
   console.log('✅ Flowing MVP Footer loaded');
+
+  // ML endpoint Apply/Clear handlers (uses localStorage to persist)
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!target) return;
+    // Apply
+    if (target.id === 'mlApplyBtn' || target.closest && target.closest('#mlApplyBtn')) {
+      const url = document.getElementById('mlEndpointUrl')?.value || '';
+      const model = document.getElementById('mlModelName')?.value || '';
+      const key = document.getElementById('mlApiKey')?.value || '';
+      try {
+        localStorage.setItem('ml_endpoint_url', url);
+        localStorage.setItem('ml_model_name', model);
+        localStorage.setItem('ml_api_key', key);
+        const saved = document.getElementById('mlConfigSaved');
+        if (saved) { saved.style.display = 'block'; saved.textContent = 'Saved'; setTimeout(()=>saved.style.display='none',2000); }
+        console.log('✅ ML config saved');
+      } catch (err) { console.warn('Could not save ML config', err); }
+    }
+    // Clear
+    if (target.id === 'mlClearBtn' || target.closest && target.closest('#mlClearBtn')) {
+      try {
+        localStorage.removeItem('ml_endpoint_url');
+        localStorage.removeItem('ml_model_name');
+        localStorage.removeItem('ml_api_key');
+        const urlEl = document.getElementById('mlEndpointUrl'); if (urlEl) urlEl.value = '';
+        const modelEl = document.getElementById('mlModelName'); if (modelEl) modelEl.value = '';
+        const keyEl = document.getElementById('mlApiKey'); if (keyEl) keyEl.value = '';
+        const saved = document.getElementById('mlConfigSaved'); if (saved) { saved.style.display='block'; saved.textContent='Cleared'; setTimeout(()=>saved.style.display='none',1200); }
+      } catch (err) { console.warn('Could not clear ML config', err); }
+    }
+  });
+
+  // On load, populate fields from localStorage
+  setTimeout(() => {
+    try {
+      const url = localStorage.getItem('ml_endpoint_url');
+      const model = localStorage.getItem('ml_model_name');
+      const key = localStorage.getItem('ml_api_key');
+      if (url) document.getElementById('mlEndpointUrl')?.setAttribute('value', url);
+      if (model) document.getElementById('mlModelName')?.setAttribute('value', model);
+      if (key) document.getElementById('mlApiKey')?.setAttribute('value', key);
+    } catch (e) { /* ignore */ }
+  }, 500);
 });

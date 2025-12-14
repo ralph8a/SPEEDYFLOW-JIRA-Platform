@@ -169,7 +169,8 @@ background: var(--card-bg, rgba(10, 10, 10, 0.95));
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  --flowing-header-height: 92px;
+  padding: 20px 24px;
   cursor: pointer;
   transition: all var(--transition-base, 0.25s) ease;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -190,10 +191,10 @@ border-bottom-color: rgba(255,255,255,0.06);
 padding-top: var(--flowing-header-height, 72px);
 }
 .flowing-header-left {
-display:flex; align-items:center; gap:12px;
+  display:flex; align-items:center; gap:16px;
 }
 .flowing-header-right {
-display:flex; align-items:center; gap:8px;
+  display:flex; align-items:center; gap:12px;
 }
 .flowing-subtitle {
 font-size:12px; color:var(--ff-text-muted,#9ca3af);
@@ -1456,6 +1457,11 @@ font-weight: 800;
   animation: flowWave 3s ease-in-out infinite;
   text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
   filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.4));
+  font-size: 20px; /* larger logo text */
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 @keyframes flowWave {
 0%, 100% {
