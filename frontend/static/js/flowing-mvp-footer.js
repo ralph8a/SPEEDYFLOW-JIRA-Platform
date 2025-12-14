@@ -2283,6 +2283,65 @@ document.addEventListener('DOMContentLoaded', () => {
   window.flowingFooter = new FlowingFooter();
   console.log('✅ Flowing MVP Footer loaded');
 
+  // Robust integration: attach direct handlers to issue details buttons and toggle button.
+  // This guards against cases where delegated capture-phase listeners are blocked by overlays.
+  const attachDirectHandlers = () => {
+    try {
+      // Toggle button direct handler (idempotent)
+      const toggleBtn = document.getElementById('flowingToggleBtn');
+      if (toggleBtn && !toggleBtn.dataset.ffHandler) {
+        toggleBtn.addEventListener('click', (ev) => {
+          try { ev.preventDefault(); ev.stopPropagation(); } catch(e){}
+          if (window.flowingFooter) window.flowingFooter.toggle();
+        });
+        toggleBtn.dataset.ffHandler = '1';
+      }
+
+      // Issue details buttons (existing cards)
+      const attachToDetailsBtn = (btn) => {
+        if (!btn || btn.dataset.ffHandler) return;
+        btn.addEventListener('click', (ev) => {
+          try { ev.preventDefault(); ev.stopPropagation(); } catch(e){}
+          const issueKey = btn.dataset.issueKey || btn.dataset.key;
+          if (issueKey && window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+            if (!window.flowingFooter.isExpanded) window.flowingFooter.expand();
+            window.flowingFooter.switchToBalancedView(issueKey);
+          } else {
+            // fallback to global handler
+            if (typeof showTicketDetails === 'function') showTicketDetails(issueKey);
+          }
+        }, false);
+        btn.dataset.ffHandler = '1';
+      };
+
+      document.querySelectorAll('.issue-details-btn').forEach(attachToDetailsBtn);
+
+      // Observe future additions of issue-details-btn (cards can be rendered dynamically)
+      if (!document.body.dataset.ffObserver) {
+        const mo = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            if (m.addedNodes && m.addedNodes.length) {
+              m.addedNodes.forEach(node => {
+                try {
+                  if (node.querySelectorAll) {
+                    node.querySelectorAll('.issue-details-btn').forEach(attachToDetailsBtn);
+                  }
+                } catch(e){}
+              });
+            }
+          }
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+        document.body.dataset.ffObserver = '1';
+      }
+    } catch (error) {
+      console.warn('FlowingFooter: failed to attach direct handlers', error);
+    }
+  };
+
+  // Run once to attach existing elements
+  attachDirectHandlers();
+
   // ML endpoint Apply/Clear handlers (uses localStorage to persist)
   document.addEventListener('click', (e) => {
     const target = e.target;
