@@ -2344,6 +2344,32 @@ width: 36px;
   color:white;
   background: linear-gradient(135deg, #6d28d9, #8b5cf6);
 }
+  /* Utilities added during dedupe refactor */
+  .not-found { padding: 40px; text-align: center; }
+  .not-found .error-text { color: #ef4444; margin-bottom: 16px; }
+  .loading-wrap { padding: 40px; text-align: center; }
+  .loading-text { margin-top: 16px; color: #6b7280; }
+  .attachment-img { max-width:120px; max-height:90px; border-radius:6px; display:block; }
+  .attachment-link { display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none; }
+  .attachment-download-btn { margin-left:6px; text-decoration:none; }
+  .context-badges { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+  .ml-suggestion-checkbox { margin-top:6px; padding:6px 8px; font-size:10px; border-radius:6px; background: linear-gradient(135deg,#f8f9ff,#ffffff); border:1px solid #e3e8ff; display:flex; align-items:center; gap:6px; opacity:0.7; }
+  .ml-suggestion-emoji { font-size:11px; }
+  .ml-suggestion-text { flex:1; color:#6b7280; }
+  .suggested-comments { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .suggestion-item { padding:8px 10px; background: var(--card-bg); border:1px solid var(--card-border); border-radius:6px; font-size:11px; color:var(--field-text); cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; }
+  .suggestion-text { flex:1; }
+  .suggestion-copy-btn { padding:4px 8px; background:#f3f4f6; border:none; border-radius:4px; cursor:pointer; font-size:10px; }
+  .comments-section { flex:1; background: transparent; border-radius:10px; padding:14px; max-height:280px; overflow-y:auto; }
+  .attachments-preview-footer { margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .comments-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .comments-header h4 { font-size:13px; font-weight:600; color:#374151; margin:0; display:flex; align-items:center; gap:6px; }
+  .comment-icon { color:#6d28d9; }
+  .comment-count { font-size:12px; color:#6b7280; }
+  .comment-composer { display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0; }
+  .comment-composer textarea { flex:1; resize:vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px; }
+  .comment-toolbar-btn { padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; }
+  .ff-modal-actions { display:flex; gap:8px; margin-top:8px; }
 .comments-section .comment-content .comment-header {
 display:flex;
   gap:8px;
