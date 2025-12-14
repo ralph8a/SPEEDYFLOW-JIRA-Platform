@@ -2282,6 +2282,23 @@ body.theme-dark .footer-two-columns .panel-card {
 .flowing-toggle-btn { padding: 10px; display:inline-flex; align-items:center; justify-content:center; background: transparent; border: none; }
 .flowing-toggle-btn .flowing-chevron { font-size: 14px; color: var(--ff-text-primary); }
 
+/* Stronger positioning for the header toggle — place it above content and centered */
+#flowingFooter > #flowingToggleBtn, .flowing-footer > #flowingToggleBtn {
+  position: absolute !important;
+  top: 8px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  z-index: calc(var(--flowing-footer-z, 500) + 100) !important;
+  pointer-events: auto !important;
+  background: transparent !important;
+}
+
+/* Ensure button clickable area doesn't stretch full width and covers chevron only */
+#flowingFooter > #flowingToggleBtn .flowing-chevron { display:inline-block; }
+
 .footer-two-columns .breach-risk-content .risk-card .risk-info,
 .flowing-footer .breach-risk-content .risk-card .risk-info {
   display: block !important;

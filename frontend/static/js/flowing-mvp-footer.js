@@ -119,20 +119,22 @@ class FlowingFooter {
   }
 
   attachEventListeners() {
-    // Toggle button - Integrado con FlowingContext para sugerencias de IA
-    this.toggleBtn?.addEventListener('click', () => {
-      this.toggle();
-      // Si FlowingContext está disponible, mostrar sugerencias contextuales
-      if (window.FlowingContext && this.isExpanded) {
-        this.showContextualSuggestions();
-      }
-    });
-    
-    // Chevron click: ensure toggle works even if header area becomes covered by expanded content
-    this.chevron?.addEventListener('click', (e) => {
-      try { e.stopPropagation(); } catch (err) {}
-      this.toggle();
-    });
+    // Toggle button - use delegated listener on document to survive DOM replacements
+    // and ensure both the button and the inner chevron will toggle reliably.
+    if (!this._toggleHandler) {
+      this._toggleHandler = (e) => {
+        const btn = e.target.closest && e.target.closest('#flowingToggleBtn');
+        if (btn) {
+          try { e.stopPropagation(); e.preventDefault(); } catch (err) {}
+          this.toggle();
+          // If FlowingContext is available, show contextual suggestions when expanded
+          if (window.FlowingContext && this.isExpanded) {
+            this.showContextualSuggestions();
+          }
+        }
+      };
+      document.addEventListener('click', this._toggleHandler, true);
+    }
 
     // header close button removed — 'Back to Chat' in balanced view replaces it
     
