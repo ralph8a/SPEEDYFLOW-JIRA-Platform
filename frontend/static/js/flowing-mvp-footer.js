@@ -64,23 +64,14 @@ class FlowingFooter {
   }
 
   createMLConfigModal() {
+    // Create a small modal using CSS utility classes instead of inline styles
     const modal = document.createElement('div');
     modal.id = 'mlConfigModal';
-    modal.style.position = 'fixed';
-    modal.style.right = '20px';
-    modal.style.bottom = '90px';
-    modal.style.width = '360px';
-    modal.style.zIndex = 99999;
-    modal.style.background = 'var(--card-bg)';
-    modal.style.border = '1px solid var(--card-border)';
-    modal.style.borderRadius = '10px';
-    modal.style.boxShadow = '0 6px 20px rgba(16,24,40,0.08)';
-    modal.style.padding = '12px';
-    modal.style.display = 'none';
+    modal.className = 'ff-ml-modal ff-hidden';
     modal.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
-        <strong style="font-size:13px">ML Settings</strong>
-        <button id="mlConfigClose" style="background:transparent;border:none;cursor:pointer;font-size:16px;">&times;</button>
+      <div class="ff-ml-modal-header">
+        <strong>ML Settings</strong>
+        <button id="mlConfigClose" class="ff-ml-modal-close" aria-label="Close">&times;</button>
       </div>
       <label class="ff-field-label">ML Endpoint URL</label>
       <input id="mlEndpointUrl" class="ff-field-input" type="text" placeholder="http://ml-service:5001/predict">
@@ -88,39 +79,39 @@ class FlowingFooter {
       <input id="mlModelName" class="ff-field-input" type="text" placeholder="breach_predictor.keras">
       <label class="ff-field-label">API Key (optional)</label>
       <input id="mlApiKey" class="ff-field-input" type="password" placeholder="••••••">
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button id="mlApplyBtnModal" class="ff-btn ff-btn-primary" style="flex:1">Apply</button>
+      <div class="ff-modal-actions">
+        <button id="mlApplyBtnModal" class="ff-btn ff-btn-primary">Apply</button>
         <button id="mlClearBtnModal" class="ff-btn ff-btn-ghost">Clear</button>
       </div>
-      <div id="mlConfigSavedModal" style="font-size:12px; color:#059669; display:none; margin-top:6px;">Saved</div>
+      <div id="mlConfigSavedModal" class="ff-ml-saved">Saved</div>
     `;
     document.body.appendChild(modal);
 
-    // Hook up buttons (these delegate to the existing document click handlers)
-    document.getElementById('mlConfigClose')?.addEventListener('click', () => { modal.style.display = 'none'; });
+    // Hook up buttons
+    document.getElementById('mlConfigClose')?.addEventListener('click', () => { modal.classList.add('ff-hidden'); });
     document.getElementById('mlApplyBtnModal')?.addEventListener('click', () => {
-      // copy values into global inputs and trigger existing handler
       const url = document.getElementById('mlEndpointUrl')?.value || '';
       const model = document.getElementById('mlModelName')?.value || '';
       const key = document.getElementById('mlApiKey')?.value || '';
       try { localStorage.setItem('ml_endpoint_url', url); localStorage.setItem('ml_model_name', model); localStorage.setItem('ml_api_key', key); }
       catch(e){}
-      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.style.display='block'; setTimeout(()=>saved.style.display='none',1600); }
+      const saved = document.getElementById('mlConfigSavedModal');
+      if (saved) { saved.classList.add('visible'); setTimeout(()=>saved.classList.remove('visible'),1600); }
     });
     document.getElementById('mlClearBtnModal')?.addEventListener('click', () => {
       try { localStorage.removeItem('ml_endpoint_url'); localStorage.removeItem('ml_model_name'); localStorage.removeItem('ml_api_key'); }
       catch(e){}
-      document.getElementById('mlEndpointUrl')?.setAttribute('value','');
-      document.getElementById('mlModelName')?.setAttribute('value','');
-      document.getElementById('mlApiKey')?.setAttribute('value','');
-      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.style.display='block'; saved.textContent='Cleared'; setTimeout(()=>saved.style.display='none',1200); }
+      const inpUrl = document.getElementById('mlEndpointUrl'); if (inpUrl) inpUrl.value = '';
+      const inpModel = document.getElementById('mlModelName'); if (inpModel) inpModel.value = '';
+      const inpKey = document.getElementById('mlApiKey'); if (inpKey) inpKey.value = '';
+      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.classList.add('visible'); saved.textContent='Cleared'; setTimeout(()=>saved.classList.remove('visible'),1200); }
     });
   }
 
   toggleMLConfigModal() {
     const modal = document.getElementById('mlConfigModal');
     if (!modal) return;
-    modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+    modal.classList.toggle('ff-hidden');
   }
 
   // Utility: strip HTML tags and normalize whitespace for stable comparisons
@@ -175,6 +166,8 @@ class FlowingFooter {
     this.startSuggestionRotation();
     // Ensure ML config UI is available (adds header button + modal) so fields can be populated in Chat-Only
     try { this.ensureMLConfigUI?.(); } catch (e) { console.warn('Could not ensure ML config UI', e); }
+    // Ensure suggestion element exists in header so header suggestions appear
+    try { this.ensureSuggestionElement?.(); } catch (e) { console.warn('Could not ensure suggestion element', e); }
 
     // Ensure footer responds to sidebar collapse/expand events
     try {
@@ -220,6 +213,35 @@ class FlowingFooter {
       };
       document.addEventListener('click', this._toggleHandler, true);
     }
+
+    // Defensive: remove accidental duplicate ML config containers created elsewhere
+    const dup = document.querySelectorAll('#mlConfigOpenBtn');
+    if (dup && dup.length > 1) {
+      // keep the first, remove the rest
+      for (let i = 1; i < dup.length; i++) try { dup[i].remove(); } catch(e){}
+    }
+
+  ensureSuggestionElement() {
+    // Place a flowingSuggestion element into the header if missing so header suggestions are visible
+    try {
+      const header = this.footer ? this.footer.querySelector('.flowing-header') : document.querySelector('.flowing-header');
+      if (!header) return;
+      let el = header.querySelector('#flowingSuggestion');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'flowingSuggestion';
+        el.className = 'flowing-suggestion';
+        el.setAttribute('aria-live', 'polite');
+        el.textContent = '';
+        // Insert before any header controls on the right so it appears left-aligned
+        const right = header.querySelector('.flowing-header-right') || header.querySelector('.header-controls') || null;
+        if (right) header.insertBefore(el, right);
+        else header.appendChild(el);
+      }
+      // Keep reference
+      this.suggestionElement = el;
+    } catch (e) { console.warn('ensureSuggestionElement error', e); }
+  }
 
     // header close button removed — 'Back to Chat' in balanced view replaces it
     
@@ -519,6 +541,9 @@ class FlowingFooter {
     if (chatView) chatView.style.display = 'block';
     if (balancedView) balancedView.style.display = 'none';
     
+    // Set view-specific body class for padding/height adjustments
+    try { document.body.classList.add('flowing-footer-chat'); document.body.classList.remove('flowing-footer-balanced'); } catch(e){}
+
     // Reset context
     this.context.selectedIssue = null;
     this.updateContextBadge();
@@ -544,6 +569,9 @@ class FlowingFooter {
       this.loadTicketIntoBalancedView(issueKey);
     }
     
+    // Set view-specific body class for padding/height adjustments
+    try { document.body.classList.add('flowing-footer-balanced'); document.body.classList.remove('flowing-footer-chat'); } catch(e){}
+
     // Update context
     this.context.selectedIssue = issueKey;
     this.updateContextBadge();
@@ -583,10 +611,10 @@ class FlowingFooter {
     if (!issue) {
       console.error('❌ Issue not found:', issueKey);
       container.innerHTML = `
-        <div style="padding: 40px; text-align: center;">
-          <p style="color: #ef4444; margin-bottom: 16px;">❌ Issue not found in current queue</p>
-          <button onclick="window.flowingFooter.switchToChatView()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Chat
+        <div class="not-found">
+          <p class="error-text">❌ Issue not found in current queue</p>
+          <button onclick="window.flowingFooter.switchToChatView()" class="ff-btn ff-btn-primary">
+            <i class="fas fa-arrow-left inline-icon"></i> Back to Chat
           </button>
         </div>
       `;
@@ -595,9 +623,9 @@ class FlowingFooter {
     
     // Show loading state
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center;">
-        <div class="loading-spinner" style="border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-        <p style="margin-top: 16px; color: #6b7280;">Loading complete ticket details...</p>
+      <div class="loading-wrap">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading complete ticket details...</p>
       </div>
     `;
     
@@ -1362,30 +1390,30 @@ class FlowingFooter {
           </span>
           <span style="margin-left:auto;">${SVGIcons.chevronDown({size:14,className:'inline-icon'})}</span>
         </summary>
-        <div id="ticketDescriptionContent" class="ticket-description-content" style="padding: 0 20px 16px 20px; color: #4b5563; line-height:1.6; font-size:13px;">
-          ${description ? `<p style="margin:0 0 8px 0;">${description}</p>` : ''}
+        <div id="ticketDescriptionContent" class="ticket-description-content">
+          ${description ? `<p>${description}</p>` : ''}
         </div>
       </details>
       ` : ''}
       
-      <div class="purple-divider" style="margin:0"></div>
+          <div class="purple-divider"></div>
       
       <!-- TWO COLUMNS LAYOUT -->
-      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(var(--flowing-footer-max, 700px) - var(--flowing-header-height, 72px) - 80px); overflow-y: auto; align-items:start; position:relative;">
+      <div class="footer-two-columns">
         
         <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
-        <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="left-column">
           
           <!-- ML Suggestions Banner -->
-          <div class="ml-suggestions-banner" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
-            <div class="banner-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
-              <i class="fas fa-magic"></i>
-            </div>
-            <div class="banner-content" style="flex: 1;">
-              <h4 style="color: #374151; font-size: 13px; margin: 0; font-weight: 600;">
-                Analicé el ticket y tengo sugerencias 
-                <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">— Próximamente: ML predictions</span>
-              </h4>
+              <div class="ml-suggestions-banner ff-banner">
+                <div class="banner-icon">
+                  <i class="fas fa-magic"></i>
+                </div>
+                <div class="banner-content">
+                  <h4>
+                    Analicé el ticket y tengo sugerencias
+                    <span class="banner-sub">— Próximamente: ML predictions</span>
+                  </h4>
               <!-- Context badges (queue-level summary) -->
               ${(() => {
                 try {
@@ -1409,7 +1437,7 @@ class FlowingFooter {
                   if (counts.overdue) badges.push(`<span class="context-badge badge-overdue">⏳ ${counts.overdue} overdue</span>`);
                   if (counts.unassigned) badges.push(`<span class="context-badge badge-unassigned">👤 ${counts.unassigned} unassigned</span>`);
                   if (counts.nearBreach) badges.push(`<span class="context-badge badge-near">⌛ ${counts.nearBreach} near breach</span>`);
-                  return `<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">${badges.join('')}</div>`;
+                  return `<div class="context-badges">${badges.join('')}</div>`;
                 } catch(e) { return ''; }
               })()}
             </div>
@@ -1418,21 +1446,21 @@ class FlowingFooter {
           ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
           
           <!-- Essential Fields Grid (3 columns) -->
-          <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <div class="essential-fields-grid">
             
             <!-- Priority -->
             ${priority ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+              <label class="field-label">
                 <i class="fas fa-flag" style="color: #ef4444;"></i> Priority
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${priority}
               </div>
               <!-- ML Suggestion Inline (placeholder) -->
-              <div class="ml-suggestion-checkbox" style="margin-top: 6px; padding: 6px 8px; font-size: 10px; border-radius: 6px; background: linear-gradient(135deg, #f8f9ff, #ffffff); border: 1px solid #e3e8ff; display: flex; align-items: center; gap: 6px; opacity: 0.7;">
-                <span style="font-size: 11px;">✨</span>
-                <span style="flex: 1; color: #6b7280;">ML suggestions coming soon</span>
+              <div class="ml-suggestion-checkbox">
+                <span class="ml-suggestion-emoji">✨</span>
+                <span class="ml-suggestion-text">ML suggestions coming soon</span>
               </div>
             </div>
             ` : ''}
@@ -1440,10 +1468,10 @@ class FlowingFooter {
             <!-- Assignee -->
             ${assignee || !assignee ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+              <label class="field-label">
                 <i class="fas fa-user" style="color: #3b82f6;"></i> Assignee
               </label>
-                <div id="balanced-assignee-value" class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+                <div id="balanced-assignee-value" class="field-input">
                   ${assignee || 'Unassigned'}
                 </div>
                 <div id="balanced-assignee-suggestions" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
@@ -1453,10 +1481,10 @@ class FlowingFooter {
             <!-- Status -->
             ${status ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
+              <label class="field-label">
                 <i class="fas fa-tasks" style="color: #10b981;"></i> Status
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${status}
               </div>
             </div>
@@ -1608,7 +1636,7 @@ class FlowingFooter {
           </div>
           
           <!-- SLA Monitor & Breach Risk (2 columns grid) -->
-          <div class="footer-two-columns equal-heights" style="margin-top: 16px;">
+            <div class="footer-two-columns equal-heights" style="margin-top: 16px;">
             <!-- SLA Monitor (Column 1) -->
             <div class="sla-monitor-wrapper">
               <div class="sla-monitor-container">
@@ -1733,7 +1761,7 @@ class FlowingFooter {
               <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> ML Actions & Suggested Comments
             </h4>
             <!-- ML Endpoint configuration -->
-            <div class="ml-endpoint-config" style="margin-bottom:12px;">
+              <div class="ml-endpoint-config">
               <label class="ff-field-label">ML Endpoint URL</label>
               <input id="mlEndpointUrl" type="text" placeholder="http://ml-service:5001/predict" class="ff-field-input">
 
@@ -1743,26 +1771,22 @@ class FlowingFooter {
               <label class="ff-field-label">API Key (optional)</label>
               <input id="mlApiKey" type="password" placeholder="••••••" class="ff-field-input">
 
-              <div style="display:flex; gap:8px;">
+              <div class="ff-modal-actions">
                 <button id="mlApplyBtn" class="ff-btn ff-btn-primary" style="flex:1">Apply</button>
                 <button id="mlClearBtn" class="ff-btn ff-btn-ghost">Clear</button>
               </div>
               <div id="mlConfigSaved" style="font-size:12px; color:#059669; display:none; margin-top:6px;">Saved</div>
             </div>
-            <div class="suggested-comments" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-              <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                <span style="flex: 1;">Investigating issue, analyzing logs...</span>
-                <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
-                  <i class="fas fa-copy"></i>
-                </button>
+              <div class="suggested-comments">
+                <div class="suggestion-item">
+                  <span class="suggestion-text">Investigating issue, analyzing logs...</span>
+                  <button class="suggestion-copy-btn">${SVGIcons.copy ? SVGIcons.copy({size:14,className:'inline-icon'}) : '<i class="fas fa-copy"></i>'}</button>
+                </div>
+                <div class="suggestion-item">
+                  <span class="suggestion-text">Escalating to backend team...</span>
+                  <button class="suggestion-copy-btn">${SVGIcons.copy ? SVGIcons.copy({size:14,className:'inline-icon'}) : '<i class="fas fa-copy"></i>'}</button>
+                </div>
               </div>
-              <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                <span style="flex: 1;">Escalating to backend team...</span>
-                <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
-                  <i class="fas fa-copy"></i>
-                </button>
-              </div>
-            </div>
             <div class="quick-actions" style="display: flex; gap: 8px;">
               <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
                 <i class="fas fa-clone" style="margin-right: 4px;"></i> Find Duplicates
@@ -1776,25 +1800,23 @@ class FlowingFooter {
           <div class="purple-divider"></div>
           
           <!-- Comments Section (Placeholder) -->
-          <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; max-height: 280px; overflow-y: auto;">
+            <div class="comments-section">
             <!-- Attachments preview (balanced/footer) -->
-            <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <div class="attachments-preview-footer" id="attachmentsPreviewFooter">
               <div class="attachments-list" id="attachmentsListFooter"></div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-              <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-comments" style="color: #6d28d9;"></i> Comments
-              </h4>
-              <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
+            <div class="comments-header">
+              <h4> <i class="fas fa-comments comment-icon"></i> Comments</h4>
+              <span id="commentCountFooter" class="comment-count">(0)</span>
             </div>
 
             <!-- Comment composer (balanced/footer view) -->
             <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
-              <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" style="flex:1; resize: vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
+              <textarea id="footerCommentText" placeholder="Write a comment..." rows="2"></textarea>
               <div style="display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; gap:8px;">
-                  <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip({size:14,className:'inline-icon'})}</button>
-                  <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
+                  <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file">${SVGIcons.paperclip({size:14,className:'inline-icon'})}</button>
+                  <button class="btn-add-comment-footer ff-btn ff-btn-primary">Send</button>
                 </div>
                 <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
               </div>

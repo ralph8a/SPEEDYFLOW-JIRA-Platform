@@ -15,6 +15,16 @@ const ThemeManager = {
   currentTheme: null,
   isInitialized: false,
   
+  /*
+   * Safe DOM helpers: return null / empty list instead of throwing when elements are missing
+   */
+  _getById(id) {
+    try { return document.getElementById(id) || null; } catch (e) { return null; }
+  },
+  _queryAll(selector) {
+    try { return Array.from(document.querySelectorAll(selector || '')) || []; } catch (e) { return []; }
+  },
+  
   /**
    * Initialize theme manager on page load
    * MUST be called BEFORE other theme scripts
@@ -148,21 +158,28 @@ const ThemeManager = {
    * Update theme button state
    */
   updateThemeButton() {
-    const btn = document.getElementById('themeToggleBtn');
-    if (!btn) return;
-    
+    const btn = this._getById('themeToggleBtn');
+    if (!btn) {
+      // Missing in some layouts — skip silently but useful for debugging
+      console.debug('ThemeManager: themeToggleBtn not found, skipping updateThemeButton');
+      return;
+    }
+
     const theme = this.currentTheme;
-    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-    
-    // Update theme bubble options
-    const options = document.querySelectorAll('.theme-option');
+    try { btn.textContent = theme === 'dark' ? '☀️' : '🌙'; } catch (e) { /* ignore write errors */ }
+
+    // Update theme bubble options (safe query)
+    const options = this._queryAll('.theme-option');
+    if (!options || options.length === 0) return;
     options.forEach(opt => {
-      const optTheme = opt.dataset.theme;
-      if (optTheme === 'auto') {
-        opt.classList.toggle('active', localStorage.getItem('currentTheme') === 'auto');
-      } else {
-        opt.classList.toggle('active', optTheme === theme);
-      }
+      try {
+        const optTheme = opt.dataset.theme;
+        if (optTheme === 'auto') {
+          opt.classList.toggle('active', localStorage.getItem('currentTheme') === 'auto');
+        } else {
+          opt.classList.toggle('active', optTheme === theme);
+        }
+      } catch (e) { /* skip problematic option */ }
     });
   },
   

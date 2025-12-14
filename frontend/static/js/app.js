@@ -2614,7 +2614,7 @@ function renderList() {
       <div class="list-header">
         <div class="list-stats">
           <span class="stat-badge">${SVGIcons.chart({size:14,className:'inline-icon'})} ${totalIssues} tickets loaded</span>
-          ${hasMoreServerPages ? `<span class="stat-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">${SVGIcons.clipboard({size:14,className:'inline-icon'})} More available</span>` : ''}
+          ${hasMoreServerPages ? `<span class="stat-badge stat-badge--accent">${SVGIcons.clipboard({size:14,className:'inline-icon'})} More available</span>` : ''}
           ${state.listView.searchTerm ? `<span class="stat-badge">${SVGIcons.search({size:14,className:'inline-icon'})} Filtered</span>` : ''}
           <span class="stat-badge">${SVGIcons.file({size:14,className:'inline-icon'})} Page ${state.listView.currentPage}/${totalPages}</span>
           <label class="assignee-edit-toggle" title="Enable assignee editing">
@@ -2760,15 +2760,14 @@ function renderList() {
       
       <!-- Load More from Server -->
       ${hasMoreServerPages ? `
-        <div class="load-more-container" style="text-align: center; padding: 20px;">
+        <div class="load-more-container">
           <button 
             class="load-more-btn" 
             id="loadMoreServerBtn"
-            style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;"
           >
             📦 Load More Tickets (100 more)
           </button>
-          <p style="margin-top: 8px; color: #64748b; font-size: 13px;">
+          <p class="load-more-info">
             ${loadedFromServer} tickets loaded from server
           </p>
         </div>

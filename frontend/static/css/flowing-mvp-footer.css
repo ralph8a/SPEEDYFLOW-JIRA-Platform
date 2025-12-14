@@ -32,6 +32,19 @@ transition: max-height 0.28s ease, box-shadow 0.2s ease;
 --flowing-footer-max: 700px;
   --flowing-footer-z: 500;
 }
+
+/* Per-view header/footer height overrides
+   - chat view: slightly smaller header (compact)
+   - balanced view: larger header to accommodate summary + badges
+*/
+body.flowing-footer-chat {
+  --flowing-header-height: 64px;
+  --flowing-footer-max: 560px;
+}
+body.flowing-footer-balanced {
+  --flowing-header-height: 92px;
+  --flowing-footer-max: 700px;
+}
 /* ===================================
    FLOWING MVP - FOOTER ML ASSISTANT V2
    Diseño optimizado con checkboxes
@@ -1355,40 +1368,24 @@ background: var(--accent-primary, #6366f1);
 padding-bottom: 70px !important;
   transition: padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* Main Footer Container */
+/* Legacy compatibility block for older markup — canonical flowing-footer styles live later in this file.
+   Keep only minimal positioning/width fallback here to avoid duplicating visual properties.
+*/
 .flowing-footer {
-position: fixed;
+  position: fixed;
   bottom: 0;
   left: 0;
-  z-index: 900; /* Below modals (1000+), above kanban board */
-  /* Glassmorphism background */
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 -8px 32px rgba(31, 38, 135, 0.15),
-    0 -4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  max-height: 60vh;
-  display: flex;
-  flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  
-  /* Floating element styling */
+  /* minimal layout fallback — visual/background handled by canonical rules later */
+  width: calc(100% - 280px - 32px);
+  left: 280px;
+  margin: 0 16px;
   border-radius: 16px 16px 0 0;
-  
-  /* Align with main-content/board-wrapper (sidebar 280px + 16px padding) */
-  width: calc(100% - 280px - 32px) !important;
-  left: 280px !important;
-  margin: 0 16px !important;
 }
-/* When sidebar is collapsed (60px width) */
+/* When sidebar is collapsed (60px width) — minimal override to keep alignment */
 body.sidebar-collapsed .flowing-footer {
-width: calc(100% - 60px - 32px) !important;
-  left: 60px !important;
-  margin: 0 16px !important;
+  width: calc(100% - 60px - 32px);
+  left: 60px;
+  margin: 0 16px;
 }
 /* Collapsed State */
 .flowing-footer.collapsed {
@@ -1496,6 +1493,8 @@ font-size: 13px;
   white-space: nowrap;
   transition: opacity 0.6s ease, transform 0.6s ease;
   transform: translateY(3px);
+  margin-left: 12px; /* ensure left alignment in header */
+  min-width: 0;
 }
 .flowing-suggestion.visible {
 opacity: 0.75;
@@ -1857,29 +1856,7 @@ content: '●●●';
     gap: 10px;
   }
 
-  .flowing-label {
-    font-size: 14px;
-  }
-
-  .flowing-suggestion {
-    font-size: 12px;
-  }
-
-  .flowing-header {
-    padding: 12px 16px;
-  }
-
-  .flowing-messages {
-    padding: 16px;
-  }
-
-  .flowing-input-area {
-    padding: 12px 16px;
-  }
-
-  .message-content {
-    max-width: 85%;
-  }
+  /* Consolidated small overrides removed - properties moved to main blocks to avoid duplication */
 
   .flowing-context-badge {
     margin: 0 16px;
@@ -2162,36 +2139,8 @@ display: flex;
   align-items: stretch;
   justify-content: flex-start;
 }
-.footer-two-columns .sla-monitor-wrapper .sla-monitor-container,
-.footer-two-columns .sla-breach-risk .breach-risk-content {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
-  min-height: 120px; /* baseline height while SLA loads */
-  /* remove max-height so grid controls heights and inner content can scroll if needed */
-  overflow: auto;
-}
-
-/* Enforce a controlled equal height for SLA pair to avoid one panel growing too tall
-   (use !important to override other layout-specific rules). Inner content will scroll. */
-.footer-two-columns {
-  --sla-pair-height: 160px;
-}
-.footer-two-columns .sla-monitor-wrapper,
-.footer-two-columns .sla-breach-risk {
-  height: var(--sla-pair-height) !important;
-  max-height: var(--sla-pair-height) !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-.footer-two-columns .sla-monitor-wrapper .sla-monitor-container,
-.footer-two-columns .sla-breach-risk .breach-risk-content {
-  /* allow inner scrolling while keeping parent height fixed */
-  max-height: 100% !important;
-  overflow: auto !important;
-}
+/* Duplicate SLA pair rules removed (canonical definition exists earlier). */
+/* See canonical block around line ~1950 for definitive SLA/breach sizing and scrolling rules. */
 .footer-two-columns .breach-risk-content .risk-card {
 width: 100%;
   display: flex;
@@ -2257,6 +2206,48 @@ height: 2px;
 /* Header / logo sizing fixes */
 .flowing-header { min-height: 84px; padding: 14px 18px; display:flex; align-items:center; gap:12px; }
 .flowing-header .flowing-sf-logo { width: 48px; height: 48px; font-size: 18px; border-radius: 8px; display:flex; align-items:center; justify-content:center; }
+
+/* Small utilities for ML modal and helpers */
+.ff-hidden { display: none !important; }
+.ff-ml-modal {
+  position: fixed;
+  right: 20px;
+  bottom: 90px;
+  width: 360px;
+  z-index: 99999;
+  background: var(--card-bg, rgba(255,255,255,0.95));
+  border: 1px solid var(--card-border, rgba(0,0,0,0.06));
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(16,24,40,0.08);
+  padding: 12px;
+  box-sizing: border-box;
+}
+.ff-ml-modal-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.ff-ml-modal-close { background:transparent; border:none; cursor:pointer; font-size:16px; }
+.ff-ml-saved { font-size:12px; color:#059669; display:none; margin-top:6px; }
+.ff-ml-saved.visible { display:block; }
+.ff-modal-actions { display:flex; gap:8px; margin-top:8px; }
+/* App list utilities used across templates */
+.stat-badge--accent { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.load-more-container { text-align: center; padding: 20px; }
+.load-more-btn { padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+.load-more-info { margin-top: 8px; color: #64748b; font-size: 13px; }
+
+/* Background selector utilities */
+.bg-error { text-align: center; padding: 30px; color: #ef4444; }
+.bg-placeholder { display:flex; align-items:center; justify-content:center; height:100%; font-size:24px; }
+.ff-modal-actions .ff-btn { flex:1; }
+
+/* Canonical scrollbar utility (apply as .ff-scrollbar to containers) */
+.ff-scrollbar::-webkit-scrollbar { width: 8px; }
+.ff-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.04); border-radius: 4px; }
+.ff-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 4px; }
+
+/* header/logo compact utility to reduce spread of duplicate sizing rules */
+.ff-header-logo { width:48px; height:48px; font-size:18px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+
+/* small helpers used by modal and small controls */
+.ff-compact { padding:6px 8px; font-size:13px; }
 .flowing-header .flowing-title-text h3 { font-size:20px; }
 
 /* Ensure conversation area scrolls and textbox remains visible in chat-only */
@@ -2362,6 +2353,32 @@ width: 36px;
   color:white;
   background: linear-gradient(135deg, #6d28d9, #8b5cf6);
 }
+  /* Utilities added during dedupe refactor */
+  .not-found { padding: 40px; text-align: center; }
+  .not-found .error-text { color: #ef4444; margin-bottom: 16px; }
+  .loading-wrap { padding: 40px; text-align: center; }
+  .loading-text { margin-top: 16px; color: #6b7280; }
+  .attachment-img { max-width:120px; max-height:90px; border-radius:6px; display:block; }
+  .attachment-link { display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none; }
+  .attachment-download-btn { margin-left:6px; text-decoration:none; }
+  .context-badges { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+  .ml-suggestion-checkbox { margin-top:6px; padding:6px 8px; font-size:10px; border-radius:6px; background: linear-gradient(135deg,#f8f9ff,#ffffff); border:1px solid #e3e8ff; display:flex; align-items:center; gap:6px; opacity:0.7; }
+  .ml-suggestion-emoji { font-size:11px; }
+  .ml-suggestion-text { flex:1; color:#6b7280; }
+  .suggested-comments { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .suggestion-item { padding:8px 10px; background: var(--card-bg); border:1px solid var(--card-border); border-radius:6px; font-size:11px; color:var(--field-text); cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px; }
+  .suggestion-text { flex:1; }
+  .suggestion-copy-btn { padding:4px 8px; background:#f3f4f6; border:none; border-radius:4px; cursor:pointer; font-size:10px; }
+  .comments-section { flex:1; background: transparent; border-radius:10px; padding:14px; max-height:280px; overflow-y:auto; }
+  .attachments-preview-footer { margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .comments-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .comments-header h4 { font-size:13px; font-weight:600; color:#374151; margin:0; display:flex; align-items:center; gap:6px; }
+  .comment-icon { color:#6d28d9; }
+  .comment-count { font-size:12px; color:#6b7280; }
+  .comment-composer { display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0; }
+  .comment-composer textarea { flex:1; resize:vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px; }
+  .comment-toolbar-btn { padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; }
+  .ff-modal-actions { display:flex; gap:8px; margin-top:8px; }
 .comments-section .comment-content .comment-header {
 display:flex;
   gap:8px;
