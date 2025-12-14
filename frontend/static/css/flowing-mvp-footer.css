@@ -1957,12 +1957,13 @@ background: transparent !important;
 .footer-two-columns .sla-monitor-container > .sla-monitor,
 .footer-two-columns .sla-breach-risk,
 .footer-two-columns .breach-risk-content {
-/* consistent card look but semi-transparent to respect footer glass */
+  /* consistent card look but semi-transparent to respect footer glass */
   background: rgba(255,255,255,0.04) !important;
   border: 1px solid rgba(0,0,0,0.06) !important;
   border-radius: 10px;
   padding: 12px;
-  min-height: 140px;
+  /* baseline height for SLA/Breach panels — keep consistent across both */
+  min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1988,8 +1989,8 @@ height: 100%;
 }
 /* Force equal-height behaviour for two-column SLA area (monitor + breach) */
 .footer-two-columns {
-/* when used as the SLA pair container we ensure rows stretch equally */
-  grid-auto-rows: 1fr;
+  /* when used as the SLA pair container we ensure rows stretch equally; keep a sensible min */
+  grid-auto-rows: minmax(120px, 1fr);
 }
 .footer-two-columns > .sla-monitor-wrapper,
 .footer-two-columns > .sla-breach-risk {
@@ -2157,13 +2158,13 @@ display: flex;
 }
 .footer-two-columns .sla-monitor-wrapper .sla-monitor-container,
 .footer-two-columns .sla-breach-risk .breach-risk-content {
-flex: 1 1 auto;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
-  min-height: 100px; /* baseline height while SLA loads */
-  max-height: 100px; /* cap to avoid overflowing whole column */
+  min-height: 120px; /* baseline height while SLA loads */
+  /* remove max-height so grid controls heights and inner content can scroll if needed */
   overflow: auto;
 }
 .footer-two-columns .breach-risk-content .risk-card {
