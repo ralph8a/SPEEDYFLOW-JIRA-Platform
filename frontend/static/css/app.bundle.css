@@ -58,13 +58,11 @@
 @import url('../views/list/list-view.css');     /* List view table styling */
 @import url('components/cards-responsive.css');      /* Responsive card styling */
 @import url('components/issue-details-btn.css');     /* Issue details button - Edge-style */
-@import url('components/right-sidebar.css');         /* Right sidebar with ticket details & comments */
 @import url('components/comments.css');      /* Comments & mentions system (includes v2) */
 @import url('components/comment-attachments.css'); /* Comment attachment styling */
 @import url('components/notifications.css'); /* Notification display */
 @import url('components/sidebar-actions.css');  /* Sidebar actions, toasts & notifications panel */
-@import url('components/sidebar-inline-editor.css'); /* AI-powered inline editor for fields */
-@import url('components/ai-suggestions.css');  /* AI field suggestions modal */
+/* Removed legacy AI sidebar CSS imports: sidebar-inline-editor.css, ai-suggestions.css */
 @import url('components/ai-queue-analyzer.css');  /* AI queue analyzer global button & modal */
 @import url('components/font-preset-selector.css');  /* Font family customization selector */
 @import url('../views/board/transition-bar-vertical.css');  /* Vertical transition bar for kanban drag & drop */

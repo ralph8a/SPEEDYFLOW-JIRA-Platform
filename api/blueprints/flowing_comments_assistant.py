@@ -41,13 +41,12 @@ def suggest_response():
         if not issue_key:
             return jsonify({'error': 'issueKey is required'}), 400
         
-        ollama = get_ollama_client()
-        
-        if not ollama.is_available():
-            return jsonify({
-                'error': 'AI service not available',
-                'suggestion': 'Ollama service is not running'
-            }), 503
+        # AI features (Ollama) have been disabled in this deployment.
+        # Return a clear response so callers know the feature is unavailable.
+        return jsonify({
+            'error': 'AI features disabled',
+            'suggestion': 'AI comment suggestions are disabled on this instance'
+        }), 503
         
         # Build conversation context
         conversation = "\n".join([
@@ -115,10 +114,8 @@ def summarize_conversation():
         if not comments:
             return jsonify({'error': 'No comments to summarize'}), 400
         
-        ollama = get_ollama_client()
-        
-        if not ollama.is_available():
-            return jsonify({'error': 'AI service not available'}), 503
+        # AI features disabled — summarization not available
+        return jsonify({'error': 'AI features disabled', 'summary': None}), 503
         
         conversation = "\n".join([
             f"{c.get('author', 'Unknown')} ({c.get('created', '')}): {c.get('body', '')}"
@@ -186,10 +183,8 @@ def translate_comment():
         if not text:
             return jsonify({'error': 'Text is required'}), 400
         
-        ollama = get_ollama_client()
-        
-        if not ollama.is_available():
-            return jsonify({'error': 'AI service not available'}), 503
+        # AI features disabled — translation not available
+        return jsonify({'error': 'AI features disabled', 'translation': None}), 503
         
         lang_names = {
             'es': 'Spanish',

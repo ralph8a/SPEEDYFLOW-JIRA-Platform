@@ -2624,7 +2624,7 @@ Enhanced the notification system to provide clearer messages and enable clicking
 
 #### 🎯 User Requirements
 - **Clearer Messages**: Notifications should clearly explain what happened (e.g., "commented on", "assigned to you")
-- **Clickable**: Clicking a notification should open the issue details in the right sidebar
+- **Clickable**: Clicking a notification should open the issue details in the Balanced View
 
 #### ✨ Implemented Changes
 
@@ -4551,7 +4551,7 @@ Tickets detectados:
 | **Comment Suggestions CSS** | ~80 líneas | ml-features.css |
 | **Suggestions Database** | +200 líneas | suggestions_db.py (nuevo) |
 | **API Endpoints** | +60 líneas | comment_suggestions.py |
-| **Comment Suggestions JS** | +30 líneas | ml-comment-suggestions.js |
+| **Comment Suggestions JS** | +30 líneas | (internal) |
 | **Anomaly Detection ML** | ~40 líneas | ml_anomaly_detection.py |
 | **Anomaly Dashboard JS** | +50 líneas | ml-anomaly-dashboard.js |
 | **Anomaly Dashboard CSS** | +80 líneas | ml-features.css |
@@ -4629,7 +4629,7 @@ GET /api/ml/comments/stats
 
 ##### Modificados
 - ✅ `frontend/static/css/ml-features.css` - Colores invertidos + tema
-- ✅ `frontend/static/js/modules/ml-comment-suggestions.js` - Save to DB
+- ✅ `frontend/static/js/modules/comment-suggestions` - Save to DB
 - ✅ `api/blueprints/comment_suggestions.py` - Nuevos endpoints
 - ✅ `api/ml_anomaly_detection.py` - Tickets detectados
 - ✅ `frontend/static/js/modules/ml-anomaly-dashboard.js` - ThemeManager

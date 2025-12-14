@@ -18,7 +18,6 @@ class AnomalyDashboard {
    */
   init() {
     console.log('🚨 Initializing Anomaly Detection Dashboard...');
-    this.createModal();
     this.createSidebarButton();
     // Check for anomalies immediately on load
     this.checkForNewAnomalies();

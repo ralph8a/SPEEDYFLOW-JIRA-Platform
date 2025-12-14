@@ -302,7 +302,7 @@ Las sugerencias se limpian de la UI.
 ##### Investigación Realizada
 
 ###### ✅ Sistema de Caché (3 capas)
-1. **Frontend Cache**: `ml-comment-suggestions.js`
+1. **Frontend Cache**: comment suggestions UI (frontend cache layer)
    - TTL: 3 horas
    - Storage: `this.cachedSuggestions[ticketKey]`
    - ✅ Funciona correctamente
@@ -561,7 +561,7 @@ git commit -m "fix: Extract country code from JIRA customfield_10167 object form
 - ✅ `frontend/static/js/app.js` (extractCountryCode + formatPhoneNumber)
 - ✅ `scripts/detect_country_fields.py` (nuevo)
 - ⏳ `api/ai_ollama.py` (pendiente: timeout + retry)
-- ⏳ `frontend/static/js/modules/ml-comment-suggestions.js` (pendiente: debounce)
+-- ⏳ comment suggestions frontend module (pendiente: debounce)
 
 ---
 

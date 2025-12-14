@@ -401,13 +401,15 @@ class AIQueueAnalyzer {
         // Close AI modal
         this.close();
         
-        // Open ticket details
+        // Open ticket details (use unified handler)
         if (typeof showTicketDetails === 'function') {
           showTicketDetails(issueKey);
         } else if (typeof openIssueDetails === 'function') {
           openIssueDetails(issueKey);
-        } else if (window.rightSidebar) {
-          window.rightSidebar.open(issueKey);
+        } else if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+          window.flowingFooter.switchToBalancedView(issueKey);
+        } else {
+          console.warn('No handler available to open ticket details for', issueKey);
         }
       });
     });

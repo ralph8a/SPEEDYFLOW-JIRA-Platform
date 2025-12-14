@@ -46,44 +46,12 @@ def generate_solid_variants(theme: str = "dark", count: int = 3) -> List[Dict]:
     return variants
 
 def generate_variants(theme: str = "dark", count: int = 7) -> List[Dict]:
-    variants: List[Dict] = []
-    try:
-                    except Exception:
-                    solid_pool = generate_solid_variants(theme, count=3)
-    if not ollama_available:
-        logger.info("Ollama not available — returning solid fallbacks")
-        return solid_pool
-    for i in range(count):
-        svg_data = None
-        try:
-            prompt = (
-                f"Generate a unique SVG background in an abstract vector style. "
-                f"Variant {i+1} of {count} for the {theme} theme. "
-                f"Output only raw SVG XML (no explanation). Canvas: 1920x1080."
-            )
-            try:
-                response = ollama_engine._call_ollama(prompt, max_tokens=2000, timeout=30)
-                if response and isinstance(response, str) and response.strip().startswith("<svg"):
-                    svg_data = response.strip()
-            except Exception:
-                logger.debug("Ollama call failed for variant %d", i)
-        except Exception:
-            logger.debug("Prepare prompt failed")
-        if not svg_data:
-            fallback = solid_pool[i % len(solid_pool)]
-            svg_data = fallback["svg"]
-        svg_b64 = base64.b64encode(svg_data.encode()).decode()
-        data_uri = f"data:image/svg+xml;base64,{svg_b64}"
-        variants.append({
-            "id": f"{theme}-variant-{i}",
-            "index": i,
-            "theme": theme,
-            "description": f"Variant {i+1}",
-            "data_uri": data_uri,
-            "svg": svg_data,
-            "style": "OLLAMA_OR_SOLID",
-            "timestamp": datetime.now().isoformat(),
-        })
+    # Ollama-based generation has been disabled for this deployment.
+    # Return lightweight solid/gradient variants only.
+    variants: List[Dict] = generate_solid_variants(theme, count=count)
+    # Mark style as SOLID_ONLY to make UI behavior explicit
+    for v in variants:
+        v['style'] = 'SOLID_ONLY'
     return variants
 
 def get_ai_backgrounds(theme: str = "dark") -> Dict:

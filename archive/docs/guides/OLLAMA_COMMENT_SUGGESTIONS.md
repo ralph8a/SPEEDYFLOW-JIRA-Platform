@@ -1,4 +1,4 @@
-
+ignorem
 **Fecha**: 7 de Diciembre, 2025  
 **Cambios**: Eliminación de sugerencias default + Integración Ollama AI + Colores sólidos por tema
 

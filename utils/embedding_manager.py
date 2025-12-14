@@ -18,10 +18,16 @@ EMBEDDINGS_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "embed
 ISSUES_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "msm_issues.json.gz"  # Compressed cache
 
 class EmbeddingManager:
-    """Gestor de embeddings con cache persistente"""
-    
+    """Gestor de embeddings con cache persistente.
+
+    NOTE: Ollama/embedding provider has been disabled in this deployment.
+    All embedding-related methods will log a warning and return empty/None.
+    """
+
     def __init__(self):
-        self.        self.embeddings_cache: Dict[str, Dict] = {}
+        # embeddings feature disabled flag
+        self.embeddings_enabled = False
+        self.embeddings_cache: Dict[str, Dict] = {}
         self.load_cache()
     
     def load_cache(self):
@@ -117,23 +123,8 @@ class EmbeddingManager:
         if not text:
             logger.warning(f"No text extracted for {issue_key}")
             return None
-        
-        if not self.ollama.is_available():
-            logger.warning("Ollama not available, cannot generate embedding")
-            return None
-        
-        embedding = self.ollama.generate_embedding(text)
-        
-        if embedding:
-            # Guardar en cache
-            self.embeddings_cache[issue_key] = {
-                'embedding': embedding,
-                'text': text[:200],  # Preview
-                'generated_at': datetime.now().isoformat()
-            }
-            logger.info(f"✅ Generated embedding for {issue_key}")
-            return embedding
-        
+
+        # Embedding provider disabled — do not attempt generation
         return None
     
     def find_issue_in_cache(self, issue_key: str) -> Optional[Dict]:
@@ -194,15 +185,8 @@ class EmbeddingManager:
         Returns:
             Lista de issues similares con scores
         """
-        if not self.ollama.is_available():
-            logger.warning("Ollama not available, returning empty results")
-            return []
-        
-        # Generar embedding para query
-        query_embedding = self.ollama.generate_embedding(query_text)
-        if not query_embedding:
-            logger.error("Failed to generate query embedding")
-            return []
+        # Embeddings disabled — return empty results
+        return []
         
         # Calcular similitudes
         results = []
@@ -239,9 +223,8 @@ class EmbeddingManager:
             logger.error("Issues cache not found")
             return
         
-        if not self.ollama.is_available():
-            logger.error("Ollama not available")
-            return
+        # Embeddings disabled — nothing to do
+        return
         
         try:
             with open(ISSUES_CACHE_PATH, 'r', encoding='utf-8') as f:

@@ -209,9 +209,14 @@ async function initApp() {
     console.error('❌ BackgroundSelectorUI class not found - did not initialize');
   }
   
-  // Initialize right sidebar
-  if (typeof initRightSidebar === 'function') {
-    initRightSidebar();
+  // Initialize Flowing Footer / Balanced View integration (replaces right sidebar)
+  if (window.flowingFooter && typeof window.flowingFooter.init === 'function') {
+    try {
+      window.flowingFooter.init();
+      console.log('✅ Flowing footer initialized');
+    } catch (e) {
+      console.warn('⚠️ Flowing footer init failed:', e);
+    }
   }
   
   // Fetch current user FIRST
@@ -563,11 +568,8 @@ function closeAllModals() {
     searchPanel.style.display = 'none';
   }
   
-  // Close AI Field Suggestions modal
-  const aiSuggestionsModal = document.querySelector('.ai-suggestions-modal');
-  if (aiSuggestionsModal && aiSuggestionsModal.parentElement) {
-    aiSuggestionsModal.parentElement.remove();
-  }
+  // Close any AI suggestions modal left in DOM (legacy) — module removed
+  // (noop if not present)
   
   // Close any other modal with class 'modal' or 'modal-container'
   document.querySelectorAll('.modal:not(#rightSidebar), .modal-container:not(.right-sidebar)').forEach(modal => {
@@ -584,20 +586,25 @@ function closeAllModals() {
  * Mostrar detalles del ticket en el sidebar derecho
  */
 function showTicketDetails(issueKey) {
-  console.log(`👁️ Opening ticket details: ${issueKey}`);
-  
-  // Trigger right sidebar to show details
-  if (window.rightSidebar) {
-    window.rightSidebar.open(issueKey);
-  } else if (typeof initRightSidebar === 'function') {
-    // Fallback: reinitialize right sidebar
-    initRightSidebar();
-    if (window.rightSidebar) {
-      window.rightSidebar.open(issueKey);
+  console.log(`👁️ Opening ticket details (balanced view): ${issueKey}`);
+
+  // Prefer Flowing Footer / Balanced View
+  if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+    try {
+      window.flowingFooter.switchToBalancedView(issueKey);
+      return;
+    } catch (e) {
+      console.warn('⚠️ flowingFooter.switchToBalancedView failed:', e);
     }
-  } else {
-    console.warn('⚠️ Right sidebar not available');
   }
+
+  // Fallback: support legacy rightSidebar if still present
+  if (window.rightSidebar && typeof window.rightSidebar.open === 'function') {
+    window.rightSidebar.open(issueKey);
+    return;
+  }
+
+  console.warn('⚠️ No UI handler available to open ticket details');
 }
 
 async function loadCurrentUser() {

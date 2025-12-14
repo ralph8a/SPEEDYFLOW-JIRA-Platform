@@ -1,0 +1,79 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Editor/OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Git
+.git
+
+# Logs and runtime files
+logs/
+*.log
+*.sqlite
+*.db
+
+# Tests / build
+tests/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+
+# ML models / large data (do NOT include models in image)
+ml_models/
+models/
+ml_service/models/
+data/
+archive/
+archive/*
+comments_dataset*.csv
+
+# Model artifact extensions
+*.pt
+*.bin
+*.ckpt
+*.onnx
+*.h5
+*.tflite
+
+# Caches
+.cache/
+pip-wheel-metadata/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python packaging
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node (if present)
+node_modules/
+
+# Environment files with secrets
+.env
+.env.*
+
+# Large generated files
+*.tar
+*.zip
+*.gz
+
+# Dockerfile local overrides
+docker-compose.override.yml
+
+# Optional: exclude any other large dirs you mount at runtime
+# e.g. /mnt/models

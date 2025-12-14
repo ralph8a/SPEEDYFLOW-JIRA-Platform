@@ -283,7 +283,7 @@ const backgroundManager = {
       if (data.success && Array.isArray(data.variants) && data.variants.length > 0) {
         this.backgrounds = data.variants;
         console.log(`✅ Generated ${data.variants.length} backgrounds for ${theme}`);
-        console.log(`📊 OLLAMA: ${data.ollama_available ? 'Available' : 'Fallback'}`);
+        console.log(`📊 AI Engine: ${data.ollama_available ? 'Available' : 'Fallback'}`);
         
         // Save to cache
         this.saveBackgroundsToCache(theme);

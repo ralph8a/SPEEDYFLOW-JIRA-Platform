@@ -1,43 +1,34 @@
-/**
- * SPEEDYFLOW - Right Sidebar Controller
- * Manejo de detalles de tickets, comentarios y actividad
- */
+// RIGHT SIDEBAR REMOVED
+// The legacy right-sidebar controller has been removed in favor of the
+// Flowing MVP balanced view. This file now provides a minimal no-op
+// fallback so other modules that reference `window.rightSidebar` or
+// `initRightSidebar` don't throw runtime errors.
 
-console.log('📥 [Load] right-sidebar.js loading...');
+console.warn('right-sidebar.js: legacy right sidebar removed. Use Flowing MVP balanced view.');
 
-const sidebarState = {
-  isOpen: false,
-  currentIssue: null,
-  currentPanel: 'detailsPanel'
+// Minimal fallback implementation
+window.rightSidebar = window.rightSidebar || {
+  init: function() {
+    console.warn('rightSidebar.init() called - legacy sidebar is disabled.');
+  },
+  open: function(issueKey) {
+    console.warn('rightSidebar.open() called for', issueKey, '- legacy sidebar disabled.');
+    // Try to delegate to flowingFooter if available
+    if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+      try { window.flowingFooter.switchToBalancedView(issueKey); return; } catch (e) {}
+    }
+  },
+  close: function() {
+    console.warn('rightSidebar.close() called - no-op (legacy disabled)');
+  }
 };
 
-// ===== INITIALIZE RIGHT SIDEBAR =====
-function initRightSidebar() {
-  setupSidebarEventListeners();
-  setupPanelTabs();
-  console.log('✅ [Right Sidebar] Base initialization complete - interaction systems will load when sidebar opens');
-}
-
-// ===== SETUP EVENT LISTENERS =====
-function setupSidebarEventListeners() {
-  const rightSidebar = document.getElementById('rightSidebar');
-  const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-  
-  if (!closeSidebarBtn) return;
-
-  // Close button
-  closeSidebarBtn.addEventListener('click', closeSidebar);
-
-  // Close on ESC key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && sidebarState.isOpen) {
-      closeSidebar();
-    }
-  });
-}
-
-// ===== SETUP PANEL TABS =====
-function processCommentText(text) {
+// Also expose initRightSidebar for backward compatibility
+window.initRightSidebar = function() {
+  if (window.rightSidebar && typeof window.rightSidebar.init === 'function') {
+    window.rightSidebar.init();
+  }
+};
   if (window.commentsModule && typeof window.commentsModule.processCommentText === 'function') {
     return window.commentsModule.processCommentText(text);
   }
@@ -58,10 +49,7 @@ function processCommentText(text) {
         renderAttachments(sidebarState.currentIssue);
       }
 
-      // Initialize inline editor with AI suggestions
-      if (window.sidebarEditor) {
-        window.sidebarEditor.initForIssue(issueKey);
-      }
+      // Inline editor integration removed (sidebar inline editor module deleted)
     }, 100);
   });
 

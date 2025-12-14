@@ -71,8 +71,6 @@ from api.blueprints.sync import sync_bp  # noqa: E402
 from api.blueprints.sla import sla_bp  # noqa: E402
 from api.blueprints.copilot import copilot_bp  # noqa: E402
 from api.blueprints.reports import reports_bp  # noqa: E402
-from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
-from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
 from api.blueprints.comment_suggestions import comment_suggestions_bp  # noqa: E402
 from api.blueprints.anomaly_detection import anomaly_detection_bp  # noqa: E402
 
@@ -146,8 +144,6 @@ app.register_blueprint(ai_suggestions_bp)
 app.register_blueprint(sla_bp)
 app.register_blueprint(copilot_bp)
 app.register_blueprint(reports_bp)
-app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & duplicates
-app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
 app.register_blueprint(comment_suggestions_bp)  # ML: Smart comment suggestions
 app.register_blueprint(anomaly_detection_bp)  # ML: Anomaly detection dashboard
 

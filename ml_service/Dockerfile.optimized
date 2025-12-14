@@ -1,0 +1,64 @@
+# Multi-stage optimized Dockerfile for ml_service
+# Goals: smaller final image, avoid keeping build tools and caches,
+# avoid bundling large model/data files inside the image.
+
+# Stage 1: build wheels (contains compilers/build deps)
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Install build dependencies only in builder
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential gcc g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and build wheels to avoid rebuilding packages on code change
+COPY requirements.txt ./
+RUN python -m pip install --upgrade pip setuptools wheel \
+    && python -m pip wheel --wheel-dir /wheels -r requirements.txt
+
+# Stage 2: runtime image (smaller)
+FROM python:3.11-slim AS runtime
+
+WORKDIR /app
+
+# Install minimal system deps needed at runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy wheels from builder and install them
+COPY --from=builder /wheels /wheels
+RUN python -m pip install --no-cache-dir /wheels/* \
+    && rm -rf /wheels
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash appuser
+USER appuser
+
+# Copy application source (respect .dockerignore to skip models/data)
+COPY --chown=appuser:appuser . /app
+
+# Ensure models dir exists (mounted at runtime preferably)
+RUN mkdir -p /app/models && chmod -R 755 /app/models
+
+ENV PYTHONUNBUFFERED=1
+ENV MODELS_DIR=/app/models
+
+# Expose port and healthcheck using curl (no requests dependency required)
+EXPOSE 5001
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:5001/health || exit 1
+
+# Start command
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001"]
+
+# Notes / recommendations:
+# - Do NOT download language models (spaCy) or large ML artifacts during image build.
+#   Instead: store model artifacts in an external volume, object storage (S3), or a dedicated model image.
+# - If you must include a spaCy model, prefer installing the model as a wheel in requirements (if available)
+#   or add a separate stage that downloads the model wheel and copies only the wheel into the final image.
+# - Use the provided `.dockerignore` (created in repo root) to avoid copying `models/`, `data/`,
+#   `archive/`, and other large directories into the image.
+# - Build the image with: docker build -t speedyflow-ml:optimized -f ml_service/Dockerfile.optimized .
+# - To ensure no leftover layers from previous builds, rebuild with --no-cache when testing: --no-cache

@@ -442,7 +442,7 @@ GET /api/ml/dashboard/sla-metrics
 
 ##### UI Integration
 
-**Location**: Right sidebar of ticket detail view
+**Location**: Balanced View of ticket detail view
 
 **Display**:
 - Shows top 3 suggestions
@@ -7376,11 +7376,7 @@ frontend/templates/index.html (líneas 550-660)
 - `POST /api/ml/comments/train` - Entrenar engine
 - `GET /api/ml/comments/status` - Estado del engine
 
-**UI:** (`frontend/static/js/modules/ml-comment-suggestions.js`)
-- Panel integrado en sidebar del ticket
-- Muestra 3 sugerencias por ticket
-- Botones: "Usar" (inserta en comment box) y "Copiar"
-- Badges de tipo (Resolución, Acción, Diagnóstico) y confidence%
+**UI:** (Comment suggestions UI documented in frontend files)
 
 ---
 
@@ -7425,7 +7421,6 @@ frontend/templates/index.html (líneas 550-660)
 - `api/blueprints/anomaly_detection.py` - API anomalías
 
 ##### Frontend
-- `frontend/static/js/modules/ml-comment-suggestions.js` - UI sugerencias
 - `frontend/static/js/modules/ml-anomaly-dashboard.js` - UI dashboard
 - `frontend/static/css/ml-features.css` - Estilos completos
 

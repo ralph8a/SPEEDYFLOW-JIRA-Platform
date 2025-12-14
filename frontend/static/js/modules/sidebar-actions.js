@@ -1146,11 +1146,13 @@ class SidebarActions {
     // Close all modals (search, AI analyzer, etc)
     closeAllModals();
     
-    // Open ticket details
+    // Open ticket details (use unified handler)
     if (typeof showTicketDetails === 'function') {
       showTicketDetails(issueKey);
-    } else if (window.rightSidebar) {
-      window.rightSidebar.open(issueKey);
+    } else if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+      window.flowingFooter.switchToBalancedView(issueKey);
+    } else {
+      console.warn('No handler available to open ticket details for', issueKey);
     }
   }
 

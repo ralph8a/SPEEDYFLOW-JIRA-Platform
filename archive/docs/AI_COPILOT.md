@@ -2067,16 +2067,6 @@ UI muestra:
 #### 📦 Archivos Modificados
 
 ##### Frontend
-- ✅ `frontend/static/js/modules/ml-comment-suggestions.js`
-  - `getRecentComments()` → `getAllComments()`
-  - `renderSuggestions()` con botón "Mostrar más"
-  - `displayedCount` tracking
-  - Evento click para expandir
-
-- ✅ `frontend/static/css/ml-features.css`
-  - Estilos `.show-more-container`
-  - Estilos `.show-more-btn`
-  - Animación `bounce-arrow`
 
 ##### Backend
 - ✅ `api/blueprints/comment_suggestions.py`
@@ -2189,11 +2179,11 @@ Si las sugerencias no detectan cierre:
 
 ### 📍 Comment Suggestions - Nueva Ubicación en UI
 
-#### Estructura Visual del Right Sidebar
+#### Estructura Visual del Balanced View
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
-║                         RIGHT SIDEBAR (Ticket Details)                    ║
+║                         BALANCED VIEW (Ticket Details)                    ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║                                                                           ║
 ║  ╔═══════════════════════╗  ╔════════════════════════════════════════╗  ║
