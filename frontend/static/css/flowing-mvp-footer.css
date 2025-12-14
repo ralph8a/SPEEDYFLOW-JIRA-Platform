@@ -2301,11 +2301,11 @@ body.sidebar-collapsed .flowing-footer { left: calc(var(--sidebar-collapsed-widt
 .flowing-footer {
   color: var(--ff-text-primary);
 }
-.flowing-title-text h3,
-.footer-title,
-.ticket-key,
-.ticket-key-header,
-.ticket-summary-header {
+.flowing-footer .flowing-title-text h3,
+.flowing-footer .footer-title,
+.flowing-footer .ticket-key,
+.flowing-footer .ticket-key-header,
+.flowing-footer .ticket-summary-header {
   color: var(--ff-accent-strong) !important;
 }
 .flowing-subtitle,

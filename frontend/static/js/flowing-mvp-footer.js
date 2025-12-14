@@ -24,6 +24,16 @@ class FlowingFooter {
     this.suggestions = [];
     this.currentSuggestionIndex = 0;
     this.suggestionInterval = null;
+    this.thinkingInterval = null;
+    this.thinkingThoughts = [
+      'Pensando en un buen café de Veracruz...',
+      'Soñando con volovanes y tamalitos...',
+      'Repasando los logs entre sorbo y sorbo...',
+      'Recordando el aroma del café del puerto...',
+      'Imaginando que el servidor trae puesto el sombrero...',
+      'Contando historias de deploys valientes...',
+      'Masticando una idea y pidiendo más café...'
+    ];
     this.lastAnalyzeAt = 0;
     this.suggestionPaused = false;
     
@@ -43,6 +53,7 @@ class FlowingFooter {
     // Get DOM elements
     this.footer = document.getElementById('flowingFooter');
     this.toggleBtn = document.getElementById('flowingToggleBtn');
+    this.closeBtn = document.getElementById('flowingCloseBtn');
     this.messagesContainer = document.getElementById('flowingMessages');
     this.input = document.getElementById('flowingInput');
     this.sendBtn = document.getElementById('flowingSendBtn');
@@ -114,7 +125,11 @@ class FlowingFooter {
       }
     });
     
-    // Close button removed - use 'Back to Chat' control instead
+    // Close button (header) - collapse footer when clicked
+    this.closeBtn?.addEventListener('click', (e) => {
+      try { e.stopPropagation(); } catch(err){}
+      this.collapse();
+    });
     
     // Send button
     this.sendBtn?.addEventListener('click', () => this.sendMessage());
@@ -519,6 +534,8 @@ class FlowingFooter {
       
       // Render ticket details in balanced view
       this.renderBalancedContent(completeIssue);
+      // Inject ML suggestions (assignee, labels...) inline in balanced view
+      try { await this.initBalancedMLSuggestions(completeIssue); } catch(e){ console.warn('Could not init ML suggestions:', e); }
       // Render attachments preview for balanced view
       try { this.renderAttachmentsForBalanced(completeIssue); } catch(e) { console.warn('Could not render attachments for balanced view', e); }
       try { this.renderFooterAttachments(completeIssue); } catch(e) { /* ignore */ }
@@ -1308,9 +1325,10 @@ class FlowingFooter {
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-user" style="color: #3b82f6;"></i> Assignee
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${assignee || 'Unassigned'}
-              </div>
+                <div id="balanced-assignee-value" class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+                  ${assignee || 'Unassigned'}
+                </div>
+                <div id="balanced-assignee-suggestions" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
             </div>
             ` : ''}
             
@@ -1695,14 +1713,24 @@ class FlowingFooter {
     const loadingMsg = this.addMessage('assistant', '', true);
 
     try {
+      // Start rotating Veracruzian "thinking" thoughts while loading
+      if (loadingMsg) {
+        const contentNode = loadingMsg.querySelector('.message-content');
+        if (contentNode) {
+          let idx = 0;
+          contentNode.innerHTML = `<p><em>${this.thinkingThoughts[idx]}</em></p>`;
+          this.thinkingInterval = setInterval(() => {
+            idx = (idx + 1) % this.thinkingThoughts.length;
+            try { contentNode.innerHTML = `<p><em>${this.thinkingThoughts[idx]}</em></p>`; } catch (e) {}
+          }, 700);
+        }
+      }
+
       // Send to backend
       const response = await fetch('/api/copilot/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: message,
-          context: this.context
-        })
+        body: JSON.stringify({ message: message, context: this.context })
       });
 
       if (!response.ok) {
@@ -1710,21 +1738,272 @@ class FlowingFooter {
       }
 
       const data = await response.json();
-      
-      // Remove loading message
+
+      // Stop thinking rotation and remove loading message
+      if (this.thinkingInterval) { clearInterval(this.thinkingInterval); this.thinkingInterval = null; }
       loadingMsg?.remove();
-      
-      // Add assistant response
-      this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
-      
+
+      // Add assistant response with Veracruzian signature
+      const veracruzNames = ['Güero','Güera','Pachi','Chuy','Toño'];
+      const rand = veracruzNames[Math.floor(Math.random()*veracruzNames.length)];
+      const assistantText = (data.response || 'Sorry, I encountered an error.') + `\n\n— ${rand}`;
+      this.addMessage('assistant', assistantText);
+
     } catch (error) {
       console.error('❌ Flowing MVP error:', error);
+      if (this.thinkingInterval) { clearInterval(this.thinkingInterval); this.thinkingInterval = null; }
       loadingMsg?.remove();
-      this.addMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
+      // include a light Veracruzian signature on errors too
+      const veracruzNames = ['Güero','Güera','Pachi','Chuy','Toño'];
+      const rand = veracruzNames[Math.floor(Math.random()*veracruzNames.length)];
+      this.addMessage('assistant', `❌ Sorry, I encountered an error. Please try again.\n\n— ${rand}`);
     } finally {
       this.isLoading = false;
       this.sendBtn.disabled = false;
     }
+  }
+
+  /**
+   * Initialize ML suggestions inside the balanced view for a given issue
+   */
+  async initBalancedMLSuggestions(issue) {
+    if (!window.mlClient) return;
+    try {
+      const summary = issue.summary || '';
+      const description = (issue.description || '') + '\n' + (issue.fields?.description || '');
+
+      // Request assignee suggestions from ML service
+      let resp = null;
+      try {
+        resp = await window.mlClient.suggestAssignee(summary, description, 3);
+      } catch (e) {
+        console.warn('ML suggestAssignee failed:', e);
+        return;
+      }
+
+      const suggestions = resp?.suggestions || resp?.suggested_assignees || [];
+      if (!suggestions || suggestions.length === 0) return;
+
+      // Ensure we have users cache to resolve displayName -> accountId
+      let users = window.state?.users || null;
+      if (!users) {
+        try {
+          const r = await fetch('/api/users');
+          if (r.ok) users = (await r.json()).users || [];
+        } catch (e) { users = null; }
+      }
+
+      const container = document.getElementById('balanced-assignee-suggestions');
+      const valueEl = document.getElementById('balanced-assignee-value');
+      if (!container || !valueEl) return;
+
+      container.innerHTML = '';
+
+      const esc = (str) => String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      // action bar for batch apply
+      const actionBar = document.createElement('div');
+      actionBar.style.display = 'flex';
+      actionBar.style.gap = '8px';
+      actionBar.style.marginBottom = '8px';
+
+      const applySelectedBtn = document.createElement('button');
+      applySelectedBtn.textContent = 'Apply selected';
+      applySelectedBtn.style.padding = '6px 10px';
+      applySelectedBtn.style.background = '#3b82f6';
+      applySelectedBtn.style.color = 'white';
+      applySelectedBtn.style.border = 'none';
+      applySelectedBtn.style.borderRadius = '6px';
+      applySelectedBtn.style.cursor = 'pointer';
+      applySelectedBtn.disabled = true;
+
+      const clearBtn = document.createElement('button');
+      clearBtn.textContent = 'Clear';
+      clearBtn.style.padding = '6px 10px';
+      clearBtn.style.background = 'white';
+      clearBtn.style.border = '1px solid #e5e7eb';
+      clearBtn.style.borderRadius = '6px';
+      clearBtn.style.cursor = 'pointer';
+
+      container.appendChild(actionBar);
+      actionBar.appendChild(applySelectedBtn);
+      actionBar.appendChild(clearBtn);
+
+      const selectedSet = new Set();
+
+      for (const s of suggestions) {
+        const name = s.assignee || s.displayName || s;
+        const confidence = (s.confidence !== undefined) ? (s.confidence) : (s.score || 0);
+
+        // Try to resolve accountId from users cache
+        let accountId = null;
+        if (users && users.length) {
+          const found = users.find(u => (u.displayName || u.name || '').toLowerCase() === String(name).toLowerCase());
+          if (found) accountId = found.accountId;
+        }
+
+        const badge = document.createElement('div');
+        badge.className = 'ml-assignee-badge';
+        badge.style.padding = '6px 8px';
+        badge.style.background = 'white';
+        badge.style.border = '1px solid #e5e7eb';
+        badge.style.borderRadius = '8px';
+        badge.style.fontSize = '12px';
+        badge.style.display = 'flex';
+        badge.style.alignItems = 'center';
+        badge.style.gap = '8px';
+
+        badge.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <strong style="font-size:12px;">${esc(name)}</strong>
+            <small style="color:#6b7280;">Conf: ${(confidence * 100).toFixed(0)}%</small>
+          </div>
+        `;
+
+        // checkbox for batch apply
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.style.marginLeft = '8px';
+        chk.addEventListener('change', () => {
+          if (chk.checked) selectedSet.add(name); else selectedSet.delete(name);
+          applySelectedBtn.disabled = selectedSet.size === 0;
+        });
+
+        badge.appendChild(chk);
+        container.appendChild(badge);
+      }
+
+      // clear action
+      clearBtn.addEventListener('click', () => {
+        selectedSet.clear();
+        applySelectedBtn.disabled = true;
+        // uncheck all checkboxes
+        container.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+      });
+
+      // batch apply handler: queue selections (do NOT PUT immediately). Emit event for global apply button.
+      applySelectedBtn.addEventListener('click', async () => {
+        if (selectedSet.size === 0) return;
+        applySelectedBtn.disabled = true;
+        applySelectedBtn.textContent = 'Queuing...';
+
+        const selections = Array.from(selectedSet);
+        window.pendingMLAssignments = window.pendingMLAssignments || [];
+
+        for (const selName of selections) {
+          // find suggestion object
+          const sObj = suggestions.find(x => (x.assignee||x.displayName||x) && ((x.assignee||x.displayName||x).toLowerCase() === selName.toLowerCase()));
+          if (!sObj) continue;
+
+          let aid = null;
+          // try cached resolution
+          if (users && users.length) {
+            const found = users.find(u => (u.displayName||u.name||'').toLowerCase() === selName.toLowerCase());
+            if (found) aid = found.accountId;
+          }
+
+          if (!aid) {
+            try {
+              const qr = await fetch(`/api/users?query=${encodeURIComponent(selName)}`);
+              if (qr.ok) {
+                const jr = await qr.json();
+                const user = jr.users?.find(u => (u.displayName||'').toLowerCase() === selName.toLowerCase()) || jr.users?.[0];
+                if (user) aid = user.accountId;
+              }
+            } catch (e) { /* ignore */ }
+          }
+
+          if (!aid) {
+            console.warn('Could not resolve accountId for', selName);
+            continue;
+          }
+
+          // add to pending changes (avoid duplicates)
+          const exists = window.pendingMLAssignments.find(p => p.issueKey === issue.key && p.accountId === aid);
+          if (!exists) {
+            window.pendingMLAssignments.push({ issueKey: issue.key, accountId: aid, displayName: selName });
+
+            // visually mark badge as queued
+            container.querySelectorAll('.ml-assignee-badge').forEach(b => {
+              if ((b.querySelector('strong')||{}).textContent.toLowerCase() === selName.toLowerCase()) {
+                b.dataset.queued = 'true';
+                b.style.boxShadow = 'inset 0 0 0 2px rgba(59,130,246,0.08)';
+              }
+            });
+
+            // update displayed assignee locally (preview only)
+            try { valueEl.textContent = selName; } catch(e){}
+          }
+        }
+
+        // clear selection UI
+        selectedSet.clear();
+        container.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+        applySelectedBtn.textContent = 'Applied to queue';
+        setTimeout(() => { applySelectedBtn.textContent = 'Apply selected'; applySelectedBtn.disabled = true; }, 1200);
+
+        // notify other parts of the app (footer/global apply button)
+        try {
+          document.dispatchEvent(new CustomEvent('mlPendingAssignmentsChanged', { detail: { count: window.pendingMLAssignments.length, items: window.pendingMLAssignments } }));
+        } catch (e) { console.warn('Could not dispatch mlPendingAssignmentsChanged', e); }
+
+        // expose apply function globally so the existing footer button can call it
+        try { window.applyPendingMLAssignments = async () => await this.applyPendingMLAssignments(); } catch(e){}
+      });
+
+    } catch (err) {
+      console.warn('initBalancedMLSuggestions error', err);
+    }
+  }
+
+  /**
+   * Apply all queued pending ML assignments (called by global footer apply button)
+   */
+  async applyPendingMLAssignments() {
+    if (!window.pendingMLAssignments || window.pendingMLAssignments.length === 0) return { applied: 0 };
+    const items = [...window.pendingMLAssignments];
+    let applied = 0;
+
+    for (const it of items) {
+      try {
+        const r = await fetch(`/api/issues/${it.issueKey}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ fields: { assignee: { accountId: it.accountId } } })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+
+        // update UI badges & state
+        try {
+          // find any balanced view badges and mark applied
+          document.querySelectorAll('.ml-assignee-badge').forEach(b => {
+            if ((b.querySelector('strong')||{}).textContent.toLowerCase() === (it.displayName||'').toLowerCase()) {
+              b.style.opacity = '0.6';
+              b.style.filter = 'grayscale(20%)';
+              b.dataset.applied = 'true';
+            }
+          });
+
+          // update issue in state
+          const stIssue = window.state?.issues?.find(i => i.key === it.issueKey);
+          if (stIssue) {
+            stIssue.assignee = it.displayName;
+            if (!stIssue.fields) stIssue.fields = {};
+            stIssue.fields.assignee = { displayName: it.displayName, accountId: it.accountId };
+          }
+        } catch (e) { /* ignore UI update errors */ }
+
+        // remove item from pending list
+        window.pendingMLAssignments = window.pendingMLAssignments.filter(p => !(p.issueKey === it.issueKey && p.accountId === it.accountId));
+        applied += 1;
+      } catch (err) {
+        console.error('applyPendingMLAssignments: failed for', it, err);
+      }
+    }
+
+    // dispatch update
+    try { document.dispatchEvent(new CustomEvent('mlPendingAssignmentsChanged', { detail: { count: window.pendingMLAssignments.length, items: window.pendingMLAssignments } })); } catch(e){}
+
+    return { applied };
   }
 
   addMessage(role, content, isLoading = false) {
