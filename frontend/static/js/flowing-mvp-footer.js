@@ -1390,8 +1390,8 @@ class FlowingFooter {
           </span>
           <span style="margin-left:auto;">${SVGIcons.chevronDown({size:14,className:'inline-icon'})}</span>
         </summary>
-        <div id="ticketDescriptionContent" class="ticket-description-content" style="padding: 0 20px 16px 20px; color: #4b5563; line-height:1.6; font-size:13px;">
-          ${description ? `<p style="margin:0 0 8px 0;">${description}</p>` : ''}
+        <div id="ticketDescriptionContent" class="ticket-description-content">
+          ${description ? `<p>${description}</p>` : ''}
         </div>
       </details>
       ` : ''}
@@ -1399,20 +1399,20 @@ class FlowingFooter {
       <div class="purple-divider" style="margin:0"></div>
       
       <!-- TWO COLUMNS LAYOUT -->
-      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(var(--flowing-footer-max, 700px) - var(--flowing-header-height, 72px) - 80px); overflow-y: auto; align-items:start; position:relative;">
+      <div class="footer-two-columns">
         
         <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
-        <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="left-column">
           
           <!-- ML Suggestions Banner -->
-          <div class="ml-suggestions-banner" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
-            <div class="banner-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+          <div class="ml-suggestions-banner ff-banner">
+            <div class="banner-icon">
               <i class="fas fa-magic"></i>
             </div>
-            <div class="banner-content" style="flex: 1;">
-              <h4 style="color: #374151; font-size: 13px; margin: 0; font-weight: 600;">
-                Analicé el ticket y tengo sugerencias 
-                <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">— Próximamente: ML predictions</span>
+            <div class="banner-content">
+              <h4>
+                Analicé el ticket y tengo sugerencias
+                <span class="banner-sub">— Próximamente: ML predictions</span>
               </h4>
               <!-- Context badges (queue-level summary) -->
               ${(() => {

@@ -2139,36 +2139,8 @@ display: flex;
   align-items: stretch;
   justify-content: flex-start;
 }
-.footer-two-columns .sla-monitor-wrapper .sla-monitor-container,
-.footer-two-columns .sla-breach-risk .breach-risk-content {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
-  min-height: 120px; /* baseline height while SLA loads */
-  /* remove max-height so grid controls heights and inner content can scroll if needed */
-  overflow: auto;
-}
-
-/* Enforce a controlled equal height for SLA pair to avoid one panel growing too tall
-   (use !important to override other layout-specific rules). Inner content will scroll. */
-.footer-two-columns {
-  --sla-pair-height: 160px;
-}
-.footer-two-columns .sla-monitor-wrapper,
-.footer-two-columns .sla-breach-risk {
-  height: var(--sla-pair-height) !important;
-  max-height: var(--sla-pair-height) !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-.footer-two-columns .sla-monitor-wrapper .sla-monitor-container,
-.footer-two-columns .sla-breach-risk .breach-risk-content {
-  /* allow inner scrolling while keeping parent height fixed */
-  max-height: 100% !important;
-  overflow: auto !important;
-}
+/* Duplicate SLA pair rules removed (canonical definition exists earlier). */
+/* See canonical block around line ~1950 for definitive SLA/breach sizing and scrolling rules. */
 .footer-two-columns .breach-risk-content .risk-card {
 width: 100%;
   display: flex;
