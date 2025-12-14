@@ -388,6 +388,11 @@ details.ticket-description-section .ticket-description-content { padding: 0 20px
 details.ticket-description-section summary > :last-child { transform: rotate(180deg); transition: transform 180ms ease; }
 details.ticket-description-section[open] summary > :last-child { transform: rotate(0deg); }
 
+/* Force description text color to footer primary to avoid accidental purple overrides */
+.flowing-footer .ticket-description-content {
+  color: var(--ff-text-primary, var(--text-primary, #374151)) !important;
+}
+
 /* Two Columns Layout: consolidated later in file (keep single canonical definition near bottom) */
 
 /* LEFT COLUMN */

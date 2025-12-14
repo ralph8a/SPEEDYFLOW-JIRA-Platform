@@ -60,6 +60,8 @@ class FlowingFooter {
     this.sendBtn = document.getElementById('flowingSendBtn');
     this.contextBadge = document.getElementById('flowingContextBadge');
     this.suggestionElement = document.getElementById('flowingSuggestion');
+    // Chevron inside the toggle button — ensure we can toggle even when other layers overlap
+    this.chevron = this.footer ? this.footer.querySelector('.flowing-chevron') : null;
 
     if (!this.footer) {
       // Backward-compat: some older/prototype markup uses `ml-footer` or id `mlFooter`.
@@ -126,6 +128,12 @@ class FlowingFooter {
       }
     });
     
+    // Chevron click: ensure toggle works even if header area becomes covered by expanded content
+    this.chevron?.addEventListener('click', (e) => {
+      try { e.stopPropagation(); } catch (err) {}
+      this.toggle();
+    });
+
     // header close button removed — 'Back to Chat' in balanced view replaces it
     
     // Send button
