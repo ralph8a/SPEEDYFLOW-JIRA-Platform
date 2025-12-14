@@ -25,7 +25,13 @@ body.sidebar-collapsed.flowing-footer-expanded .filter-bar-enhanced {
 /* Expanded state visual: allow taller footer with smooth transition */
 .flowing-footer:not(.collapsed) {
   transition: max-height 0.28s ease, box-shadow 0.2s ease;
-  max-height: 640px;
+  max-height: 700px; /* adjusted per request */
+}
+
+/* CSS variables for footer sizing and stacking */
+:root {
+  --flowing-footer-max: 700px;
+  --flowing-footer-z: 500;
 }
 
 
@@ -129,9 +135,10 @@ body:has(.flowing-footer.collapsed) #listView {
         0 -8px 32px rgba(31, 38, 135, 0.15),
         0 -4px 16px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    z-index: var(--z-modal, 1000);
+    /* Use a dedicated footer z-index variable so Flowing MVP can be aligned with other UI layers */
+    z-index: var(--flowing-footer-z, 500);
     transition: all 0.4s var(--transition-ease, cubic-bezier(0.4, 0, 0.2, 1));
-    max-height: 60vh;
+    max-height: var(--flowing-footer-max, 700px);
     display: flex;
     flex-direction: column;
     
@@ -258,6 +265,28 @@ body.theme-dark .footer-title {
 body.theme-dark .ticket-summary-header {
     color: var(--text-primary, #ffffff);
 }
+
+/* Description collapse behavior: collapse upwards (transform-origin: bottom) */
+.ticket-description-section { position: relative; overflow: visible; }
+.ticket-description-section .ticket-description-content {
+  max-height: 420px; /* when open */
+  overflow: hidden;
+  transition: max-height 0.32s ease, transform 0.32s ease, padding 0.32s ease;
+  transform-origin: bottom;
+}
+.ticket-description-section:not([open]) .ticket-description-content {
+  max-height: 0;
+  padding-bottom: 0 !important;
+}
+.ticket-description-section summary.section-label { user-select: none; }
+
+/* Context badge styles used in ML banner */
+.context-badge { font-size: 12px; padding: 6px 8px; border-radius: 8px; background: rgba(0,0,0,0.04); color: #374151; border: 1px solid rgba(0,0,0,0.04); }
+.badge-critical { background: rgba(239,68,68,0.08); color: #991b1b; border-color: rgba(239,68,68,0.12); }
+.badge-high { background: rgba(245,158,11,0.08); color: #92400e; border-color: rgba(245,158,11,0.12); }
+.badge-overdue { background: rgba(59,130,246,0.06); color: #1e40af; border-color: rgba(59,130,246,0.12); }
+.badge-unassigned { background: rgba(156,163,175,0.06); color: #374151; border-color: rgba(156,163,175,0.12); }
+.badge-near { background: rgba(245,158,11,0.06); color: #92400e; border-color: rgba(245,158,11,0.12); }
 
 .footer-header-right {
     display: flex;

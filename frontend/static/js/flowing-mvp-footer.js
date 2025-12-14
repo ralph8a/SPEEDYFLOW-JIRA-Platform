@@ -1276,7 +1276,7 @@ class FlowingFooter {
       <div class="purple-divider" style="margin:0"></div>
       
       <!-- TWO COLUMNS LAYOUT -->
-      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(var(--flowing-footer-max, 700px) - var(--flowing-header-height, 72px) - 80px); overflow-y: auto; align-items:start; position:relative;">
         
         <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
         <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
@@ -1291,6 +1291,32 @@ class FlowingFooter {
                 Analicé el ticket y tengo sugerencias 
                 <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">— Próximamente: ML predictions</span>
               </h4>
+              <!-- Context badges (queue-level summary) -->
+              ${(() => {
+                try {
+                  const allIssues = window.app?.issuesCache ? Array.from(window.app.issuesCache.values()) : (Array.isArray(window.state?.issues) ? window.state.issues : []);
+                  const counts = { critical:0, high:0, overdue:0, unassigned:0, nearBreach:0 };
+                  const now = new Date();
+                  allIssues.forEach(it => {
+                    if (!it) return;
+                    const sev = (it.severity || '').toLowerCase();
+                    if (sev.includes('crit')) counts.critical++;
+                    if (sev === 'alto' || sev === 'high') counts.high++;
+                    const lastChange = new Date(it.last_real_change || it.updated || it.created || null);
+                    const days = isNaN(lastChange) ? 0 : Math.floor((now - lastChange)/(1000*60*60*24));
+                    if (days >= 7) counts.overdue++;
+                    if (!it.assignee || it.assignee === 'Unassigned' || it.assignee === 'No assignee') counts.unassigned++;
+                    if (days >=3 && days < 7) counts.nearBreach++;
+                  });
+                  const badges = [];
+                  if (counts.critical) badges.push(`<span class="context-badge badge-critical">🔥 ${counts.critical} critical</span>`);
+                  if (counts.high) badges.push(`<span class="context-badge badge-high">⚠️ ${counts.high} high</span>`);
+                  if (counts.overdue) badges.push(`<span class="context-badge badge-overdue">⏳ ${counts.overdue} overdue</span>`);
+                  if (counts.unassigned) badges.push(`<span class="context-badge badge-unassigned">👤 ${counts.unassigned} unassigned</span>`);
+                  if (counts.nearBreach) badges.push(`<span class="context-badge badge-near">⌛ ${counts.nearBreach} near breach</span>`);
+                  return `<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">${badges.join('')}</div>`;
+                } catch(e) { return ''; }
+              })()}
             </div>
           </div>
           
