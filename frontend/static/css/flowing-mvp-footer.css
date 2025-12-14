@@ -2167,6 +2167,25 @@ display: flex;
   /* remove max-height so grid controls heights and inner content can scroll if needed */
   overflow: auto;
 }
+
+/* Enforce a controlled equal height for SLA pair to avoid one panel growing too tall
+   (use !important to override other layout-specific rules). Inner content will scroll. */
+.footer-two-columns {
+  --sla-pair-height: 160px;
+}
+.footer-two-columns .sla-monitor-wrapper,
+.footer-two-columns .sla-breach-risk {
+  height: var(--sla-pair-height) !important;
+  max-height: var(--sla-pair-height) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+.footer-two-columns .sla-monitor-wrapper .sla-monitor-container,
+.footer-two-columns .sla-breach-risk .breach-risk-content {
+  /* allow inner scrolling while keeping parent height fixed */
+  max-height: 100% !important;
+  overflow: auto !important;
+}
 .footer-two-columns .breach-risk-content .risk-card {
 width: 100%;
   display: flex;
@@ -2216,8 +2235,39 @@ height: 1px;
 /* Stronger accent variant */
 .purple-divider-strong {
 height: 2px;
-  background: linear-gradient(90deg, rgba(76,29,149,0), rgba(76,29,149,0.9), rgba(76,29,149,0));
-  border-radius: 4px;
+}
+
+/* === FIX: cap SLA pair height and ensure inner scrolling so buttons stay visible === */
+/* This targets the footer SLA pair when rendered with the 'equal-heights' helper class. */
+.flowing-footer .footer-two-columns.equal-heights {
+  --sla-pair-height: 180px; /* tuned height to match design */
+  grid-auto-rows: auto; /* let explicit heights on children control size */
+}
+.flowing-footer .footer-two-columns.equal-heights > .sla-monitor-wrapper,
+.flowing-footer .footer-two-columns.equal-heights > .sla-breach-risk {
+  height: var(--sla-pair-height) !important;
+  max-height: var(--sla-pair-height) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important; /* parent fixed, inner scrolls */
+}
+.flowing-footer .footer-two-columns.equal-heights .sla-monitor-container,
+.flowing-footer .footer-two-columns.equal-heights .breach-risk-content {
+  max-height: 100% !important;
+  overflow: auto !important; /* allow internal scrolling instead of expanding page */
+}
+
+/* Defensive: ensure any earlier 'height:100%' rules don't override the cap */
+.flowing-footer .footer-two-columns.equal-heights .sla-monitor-wrapper,
+.flowing-footer .footer-two-columns.equal-heights .sla-breach-risk {
+  height: var(--sla-pair-height) !important;
+}
+
+/* If the breach panel contains very little content, vertically center it but don't stretch */
+.flowing-footer .footer-two-columns.equal-heights .breach-risk-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 12px !important;
 }
 /* Footer color variables and consistency overrides */
 .flowing-footer, .footer-two-columns {
