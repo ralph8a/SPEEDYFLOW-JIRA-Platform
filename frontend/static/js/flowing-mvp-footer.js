@@ -40,6 +40,89 @@ class FlowingFooter {
     this.init();
   }
 
+  ensureMLConfigUI() {
+    // add a settings button to the header and create modal if missing
+    const header = this.footer ? this.footer.querySelector('.flowing-header') : null;
+    if (header && !document.getElementById('mlConfigOpenBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'mlConfigOpenBtn';
+      btn.className = 'flowing-toggle-btn';
+      btn.style.marginLeft = 'auto';
+      btn.title = 'ML Settings';
+      btn.innerHTML = '<i class="fas fa-cog" style="font-size:14px"></i>';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleMLConfigModal();
+      });
+      header.appendChild(btn);
+    }
+
+    // Create modal if not present (uses same field IDs as balanced view so handlers work)
+    if (!document.getElementById('mlConfigModal')) {
+      this.createMLConfigModal();
+    }
+  }
+
+  createMLConfigModal() {
+    const modal = document.createElement('div');
+    modal.id = 'mlConfigModal';
+    modal.style.position = 'fixed';
+    modal.style.right = '20px';
+    modal.style.bottom = '90px';
+    modal.style.width = '360px';
+    modal.style.zIndex = 99999;
+    modal.style.background = 'var(--card-bg)';
+    modal.style.border = '1px solid var(--card-border)';
+    modal.style.borderRadius = '10px';
+    modal.style.boxShadow = '0 6px 20px rgba(16,24,40,0.08)';
+    modal.style.padding = '12px';
+    modal.style.display = 'none';
+    modal.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+        <strong style="font-size:13px">ML Settings</strong>
+        <button id="mlConfigClose" style="background:transparent;border:none;cursor:pointer;font-size:16px;">&times;</button>
+      </div>
+      <label class="ff-field-label">ML Endpoint URL</label>
+      <input id="mlEndpointUrl" class="ff-field-input" type="text" placeholder="http://ml-service:5001/predict">
+      <label class="ff-field-label">Model Name / Path</label>
+      <input id="mlModelName" class="ff-field-input" type="text" placeholder="breach_predictor.keras">
+      <label class="ff-field-label">API Key (optional)</label>
+      <input id="mlApiKey" class="ff-field-input" type="password" placeholder="••••••">
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button id="mlApplyBtnModal" class="ff-btn ff-btn-primary" style="flex:1">Apply</button>
+        <button id="mlClearBtnModal" class="ff-btn ff-btn-ghost">Clear</button>
+      </div>
+      <div id="mlConfigSavedModal" style="font-size:12px; color:#059669; display:none; margin-top:6px;">Saved</div>
+    `;
+    document.body.appendChild(modal);
+
+    // Hook up buttons (these delegate to the existing document click handlers)
+    document.getElementById('mlConfigClose')?.addEventListener('click', () => { modal.style.display = 'none'; });
+    document.getElementById('mlApplyBtnModal')?.addEventListener('click', () => {
+      // copy values into global inputs and trigger existing handler
+      const url = document.getElementById('mlEndpointUrl')?.value || '';
+      const model = document.getElementById('mlModelName')?.value || '';
+      const key = document.getElementById('mlApiKey')?.value || '';
+      try { localStorage.setItem('ml_endpoint_url', url); localStorage.setItem('ml_model_name', model); localStorage.setItem('ml_api_key', key); }
+      catch(e){}
+      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.style.display='block'; setTimeout(()=>saved.style.display='none',1600); }
+    });
+    document.getElementById('mlClearBtnModal')?.addEventListener('click', () => {
+      try { localStorage.removeItem('ml_endpoint_url'); localStorage.removeItem('ml_model_name'); localStorage.removeItem('ml_api_key'); }
+      catch(e){}
+      document.getElementById('mlEndpointUrl')?.setAttribute('value','');
+      document.getElementById('mlModelName')?.setAttribute('value','');
+      document.getElementById('mlApiKey')?.setAttribute('value','');
+      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.style.display='block'; saved.textContent='Cleared'; setTimeout(()=>saved.style.display='none',1200); }
+    });
+  }
+
+  toggleMLConfigModal() {
+    const modal = document.getElementById('mlConfigModal');
+    if (!modal) return;
+    modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+  }
+
   // Utility: strip HTML tags and normalize whitespace for stable comparisons
   _stripHTML(text = '') {
     try {
@@ -90,6 +173,8 @@ class FlowingFooter {
     this.updateContext();
     this.setupContextWatcher();
     this.startSuggestionRotation();
+    // Ensure ML config UI is available (adds header button + modal) so fields can be populated in Chat-Only
+    try { this.ensureMLConfigUI?.(); } catch (e) { console.warn('Could not ensure ML config UI', e); }
 
     // Ensure footer responds to sidebar collapse/expand events
     try {
@@ -1648,19 +1733,19 @@ class FlowingFooter {
               <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> ML Actions & Suggested Comments
             </h4>
             <!-- ML Endpoint configuration -->
-            <div class="ml-endpoint-config" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
-              <label style="font-size:11px; color:#6b7280; font-weight:600;">ML Endpoint URL</label>
-              <input id="mlEndpointUrl" type="text" placeholder="http://ml-service:5001/predict" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; width:100%;">
+            <div class="ml-endpoint-config" style="margin-bottom:12px;">
+              <label class="ff-field-label">ML Endpoint URL</label>
+              <input id="mlEndpointUrl" type="text" placeholder="http://ml-service:5001/predict" class="ff-field-input">
 
-              <label style="font-size:11px; color:#6b7280; font-weight:600;">Model Name / Path</label>
-              <input id="mlModelName" type="text" placeholder="breach_predictor.keras" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; width:100%;">
+              <label class="ff-field-label">Model Name / Path</label>
+              <input id="mlModelName" type="text" placeholder="breach_predictor.keras" class="ff-field-input">
 
-              <label style="font-size:11px; color:#6b7280; font-weight:600;">API Key (optional)</label>
-              <input id="mlApiKey" type="password" placeholder="••••••" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; width:100%;">
+              <label class="ff-field-label">API Key (optional)</label>
+              <input id="mlApiKey" type="password" placeholder="••••••" class="ff-field-input">
 
               <div style="display:flex; gap:8px;">
-                <button id="mlApplyBtn" style="flex:1; padding:8px; background: linear-gradient(135deg,#6366f1,#4f46e5); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Apply</button>
-                <button id="mlClearBtn" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:6px; cursor:pointer;">Clear</button>
+                <button id="mlApplyBtn" class="ff-btn ff-btn-primary" style="flex:1">Apply</button>
+                <button id="mlClearBtn" class="ff-btn ff-btn-ghost">Clear</button>
               </div>
               <div id="mlConfigSaved" style="font-size:12px; color:#059669; display:none; margin-top:6px;">Saved</div>
             </div>
