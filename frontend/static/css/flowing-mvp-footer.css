@@ -2206,6 +2206,25 @@ body.theme-dark .footer-two-columns .panel-card {
 .footer-two-columns { align-items: stretch; }
 .footer-two-columns .sla-monitor-wrapper, .footer-two-columns .sla-breach-risk { height: 100%; }
 
+/* Force equal-height behaviour for two-column SLA area (monitor + breach) */
+.footer-two-columns {
+  /* when used as the SLA pair container we ensure rows stretch equally */
+  grid-auto-rows: 1fr;
+}
+.footer-two-columns > .sla-monitor-wrapper,
+.footer-two-columns > .sla-breach-risk {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+.footer-two-columns .sla-monitor-container,
+.footer-two-columns .breach-risk-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* center small content like spinner */
+}
+
 /* Adjust small elements inside SLA panels for a cleaner prototype look */
 .footer-two-columns .cycle-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .footer-two-columns .cycle-name { font-weight:600; color:var(--ff-accent-strong,#4c1d95); }
@@ -2279,11 +2298,8 @@ body.theme-dark .footer-two-columns .panel-card {
 /* Make breach area more colorful depending on risk - badges from JS will use inline bg/color but provide default look */
 .risk-badge { background: rgba(255,255,255,0.04); padding:4px 8px; border-radius:999px; }
 
-/* Ensure header is minimal: only chevron visible in large/small view */
-.flowing-toggle-btn { padding: 10px; display:inline-flex; align-items:center; justify-content:center; background: transparent; border: none; }
-.flowing-toggle-btn .flowing-chevron { font-size: 14px; color: var(--ff-text-primary); }
-
-/* Ensure button clickable area doesn't stretch full width and covers chevron only */
+/* Ensure header is minimal: only chevron visible in large/small view
+  (Consolidated: primary definition lives earlier; small contextual overrides remain elsewhere) */
 #flowingFooter > #flowingToggleBtn .flowing-chevron { display:inline-block; }
 
 .footer-two-columns .breach-risk-content .risk-card .risk-info,
@@ -2307,6 +2323,37 @@ body.theme-dark .footer-two-columns .panel-card {
   margin-bottom: 6px;
   border-radius: 6px;
 }
+
+/* Ensure SLA monitor and breach-risk columns have equal height and the breach card
+   doesn't occupy entire column - make both containers stretch within the same row */
+.footer-two-columns {
+  align-items: stretch; /* make grid items stretch to same height */
+}
+.footer-two-columns .sla-monitor-wrapper,
+.footer-two-columns .sla-breach-risk {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.footer-two-columns .sla-monitor-wrapper .sla-monitor-container,
+.footer-two-columns .sla-breach-risk .breach-risk-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 100px; /* baseline height while SLA loads */
+  max-height: 100px; /* cap to avoid overflowing whole column */
+  overflow: auto;
+}
+.footer-two-columns .breach-risk-content .risk-card {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 
 /* Make form controls and buttons in right column very compact */
 .footer-two-columns .right-column .btn,
