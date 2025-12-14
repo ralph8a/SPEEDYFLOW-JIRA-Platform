@@ -32,6 +32,19 @@ transition: max-height 0.28s ease, box-shadow 0.2s ease;
 --flowing-footer-max: 700px;
   --flowing-footer-z: 500;
 }
+
+/* Per-view header/footer height overrides
+   - chat view: slightly smaller header (compact)
+   - balanced view: larger header to accommodate summary + badges
+*/
+body.flowing-footer-chat {
+  --flowing-header-height: 64px;
+  --flowing-footer-max: 560px;
+}
+body.flowing-footer-balanced {
+  --flowing-header-height: 92px;
+  --flowing-footer-max: 700px;
+}
 /* ===================================
    FLOWING MVP - FOOTER ML ASSISTANT V2
    Diseño optimizado con checkboxes
@@ -1496,6 +1509,8 @@ font-size: 13px;
   white-space: nowrap;
   transition: opacity 0.6s ease, transform 0.6s ease;
   transform: translateY(3px);
+  margin-left: 12px; /* ensure left alignment in header */
+  min-width: 0;
 }
 .flowing-suggestion.visible {
 opacity: 0.75;
@@ -1857,29 +1872,7 @@ content: '●●●';
     gap: 10px;
   }
 
-  .flowing-label {
-    font-size: 14px;
-  }
-
-  .flowing-suggestion {
-    font-size: 12px;
-  }
-
-  .flowing-header {
-    padding: 12px 16px;
-  }
-
-  .flowing-messages {
-    padding: 16px;
-  }
-
-  .flowing-input-area {
-    padding: 12px 16px;
-  }
-
-  .message-content {
-    max-width: 85%;
-  }
+  /* Consolidated small overrides removed - properties moved to main blocks to avoid duplication */
 
   .flowing-context-badge {
     margin: 0 16px;
@@ -2257,6 +2250,39 @@ height: 2px;
 /* Header / logo sizing fixes */
 .flowing-header { min-height: 84px; padding: 14px 18px; display:flex; align-items:center; gap:12px; }
 .flowing-header .flowing-sf-logo { width: 48px; height: 48px; font-size: 18px; border-radius: 8px; display:flex; align-items:center; justify-content:center; }
+
+/* Small utilities for ML modal and helpers */
+.ff-hidden { display: none !important; }
+.ff-ml-modal {
+  position: fixed;
+  right: 20px;
+  bottom: 90px;
+  width: 360px;
+  z-index: 99999;
+  background: var(--card-bg, rgba(255,255,255,0.95));
+  border: 1px solid var(--card-border, rgba(0,0,0,0.06));
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(16,24,40,0.08);
+  padding: 12px;
+  box-sizing: border-box;
+}
+.ff-ml-modal-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.ff-ml-modal-close { background:transparent; border:none; cursor:pointer; font-size:16px; }
+.ff-ml-saved { font-size:12px; color:#059669; display:none; margin-top:6px; }
+.ff-ml-saved.visible { display:block; }
+.ff-modal-actions { display:flex; gap:8px; margin-top:8px; }
+.ff-modal-actions .ff-btn { flex:1; }
+
+/* Canonical scrollbar utility (apply as .ff-scrollbar to containers) */
+.ff-scrollbar::-webkit-scrollbar { width: 8px; }
+.ff-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.04); border-radius: 4px; }
+.ff-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 4px; }
+
+/* header/logo compact utility to reduce spread of duplicate sizing rules */
+.ff-header-logo { width:48px; height:48px; font-size:18px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+
+/* small helpers used by modal and small controls */
+.ff-compact { padding:6px 8px; font-size:13px; }
 .flowing-header .flowing-title-text h3 { font-size:20px; }
 
 /* Ensure conversation area scrolls and textbox remains visible in chat-only */

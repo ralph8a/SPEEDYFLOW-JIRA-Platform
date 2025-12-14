@@ -64,23 +64,14 @@ class FlowingFooter {
   }
 
   createMLConfigModal() {
+    // Create a small modal using CSS utility classes instead of inline styles
     const modal = document.createElement('div');
     modal.id = 'mlConfigModal';
-    modal.style.position = 'fixed';
-    modal.style.right = '20px';
-    modal.style.bottom = '90px';
-    modal.style.width = '360px';
-    modal.style.zIndex = 99999;
-    modal.style.background = 'var(--card-bg)';
-    modal.style.border = '1px solid var(--card-border)';
-    modal.style.borderRadius = '10px';
-    modal.style.boxShadow = '0 6px 20px rgba(16,24,40,0.08)';
-    modal.style.padding = '12px';
-    modal.style.display = 'none';
+    modal.className = 'ff-ml-modal ff-hidden';
     modal.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
-        <strong style="font-size:13px">ML Settings</strong>
-        <button id="mlConfigClose" style="background:transparent;border:none;cursor:pointer;font-size:16px;">&times;</button>
+      <div class="ff-ml-modal-header">
+        <strong>ML Settings</strong>
+        <button id="mlConfigClose" class="ff-ml-modal-close" aria-label="Close">&times;</button>
       </div>
       <label class="ff-field-label">ML Endpoint URL</label>
       <input id="mlEndpointUrl" class="ff-field-input" type="text" placeholder="http://ml-service:5001/predict">
@@ -88,39 +79,39 @@ class FlowingFooter {
       <input id="mlModelName" class="ff-field-input" type="text" placeholder="breach_predictor.keras">
       <label class="ff-field-label">API Key (optional)</label>
       <input id="mlApiKey" class="ff-field-input" type="password" placeholder="••••••">
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button id="mlApplyBtnModal" class="ff-btn ff-btn-primary" style="flex:1">Apply</button>
+      <div class="ff-modal-actions">
+        <button id="mlApplyBtnModal" class="ff-btn ff-btn-primary">Apply</button>
         <button id="mlClearBtnModal" class="ff-btn ff-btn-ghost">Clear</button>
       </div>
-      <div id="mlConfigSavedModal" style="font-size:12px; color:#059669; display:none; margin-top:6px;">Saved</div>
+      <div id="mlConfigSavedModal" class="ff-ml-saved">Saved</div>
     `;
     document.body.appendChild(modal);
 
-    // Hook up buttons (these delegate to the existing document click handlers)
-    document.getElementById('mlConfigClose')?.addEventListener('click', () => { modal.style.display = 'none'; });
+    // Hook up buttons
+    document.getElementById('mlConfigClose')?.addEventListener('click', () => { modal.classList.add('ff-hidden'); });
     document.getElementById('mlApplyBtnModal')?.addEventListener('click', () => {
-      // copy values into global inputs and trigger existing handler
       const url = document.getElementById('mlEndpointUrl')?.value || '';
       const model = document.getElementById('mlModelName')?.value || '';
       const key = document.getElementById('mlApiKey')?.value || '';
       try { localStorage.setItem('ml_endpoint_url', url); localStorage.setItem('ml_model_name', model); localStorage.setItem('ml_api_key', key); }
       catch(e){}
-      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.style.display='block'; setTimeout(()=>saved.style.display='none',1600); }
+      const saved = document.getElementById('mlConfigSavedModal');
+      if (saved) { saved.classList.add('visible'); setTimeout(()=>saved.classList.remove('visible'),1600); }
     });
     document.getElementById('mlClearBtnModal')?.addEventListener('click', () => {
       try { localStorage.removeItem('ml_endpoint_url'); localStorage.removeItem('ml_model_name'); localStorage.removeItem('ml_api_key'); }
       catch(e){}
-      document.getElementById('mlEndpointUrl')?.setAttribute('value','');
-      document.getElementById('mlModelName')?.setAttribute('value','');
-      document.getElementById('mlApiKey')?.setAttribute('value','');
-      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.style.display='block'; saved.textContent='Cleared'; setTimeout(()=>saved.style.display='none',1200); }
+      const inpUrl = document.getElementById('mlEndpointUrl'); if (inpUrl) inpUrl.value = '';
+      const inpModel = document.getElementById('mlModelName'); if (inpModel) inpModel.value = '';
+      const inpKey = document.getElementById('mlApiKey'); if (inpKey) inpKey.value = '';
+      const saved = document.getElementById('mlConfigSavedModal'); if (saved) { saved.classList.add('visible'); saved.textContent='Cleared'; setTimeout(()=>saved.classList.remove('visible'),1200); }
     });
   }
 
   toggleMLConfigModal() {
     const modal = document.getElementById('mlConfigModal');
     if (!modal) return;
-    modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+    modal.classList.toggle('ff-hidden');
   }
 
   // Utility: strip HTML tags and normalize whitespace for stable comparisons
@@ -175,6 +166,8 @@ class FlowingFooter {
     this.startSuggestionRotation();
     // Ensure ML config UI is available (adds header button + modal) so fields can be populated in Chat-Only
     try { this.ensureMLConfigUI?.(); } catch (e) { console.warn('Could not ensure ML config UI', e); }
+    // Ensure suggestion element exists in header so header suggestions appear
+    try { this.ensureSuggestionElement?.(); } catch (e) { console.warn('Could not ensure suggestion element', e); }
 
     // Ensure footer responds to sidebar collapse/expand events
     try {
@@ -220,6 +213,35 @@ class FlowingFooter {
       };
       document.addEventListener('click', this._toggleHandler, true);
     }
+
+    // Defensive: remove accidental duplicate ML config containers created elsewhere
+    const dup = document.querySelectorAll('#mlConfigOpenBtn');
+    if (dup && dup.length > 1) {
+      // keep the first, remove the rest
+      for (let i = 1; i < dup.length; i++) try { dup[i].remove(); } catch(e){}
+    }
+
+  ensureSuggestionElement() {
+    // Place a flowingSuggestion element into the header if missing so header suggestions are visible
+    try {
+      const header = this.footer ? this.footer.querySelector('.flowing-header') : document.querySelector('.flowing-header');
+      if (!header) return;
+      let el = header.querySelector('#flowingSuggestion');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'flowingSuggestion';
+        el.className = 'flowing-suggestion';
+        el.setAttribute('aria-live', 'polite');
+        el.textContent = '';
+        // Insert before any header controls on the right so it appears left-aligned
+        const right = header.querySelector('.flowing-header-right') || header.querySelector('.header-controls') || null;
+        if (right) header.insertBefore(el, right);
+        else header.appendChild(el);
+      }
+      // Keep reference
+      this.suggestionElement = el;
+    } catch (e) { console.warn('ensureSuggestionElement error', e); }
+  }
 
     // header close button removed — 'Back to Chat' in balanced view replaces it
     
@@ -519,6 +541,9 @@ class FlowingFooter {
     if (chatView) chatView.style.display = 'block';
     if (balancedView) balancedView.style.display = 'none';
     
+    // Set view-specific body class for padding/height adjustments
+    try { document.body.classList.add('flowing-footer-chat'); document.body.classList.remove('flowing-footer-balanced'); } catch(e){}
+
     // Reset context
     this.context.selectedIssue = null;
     this.updateContextBadge();
@@ -544,6 +569,9 @@ class FlowingFooter {
       this.loadTicketIntoBalancedView(issueKey);
     }
     
+    // Set view-specific body class for padding/height adjustments
+    try { document.body.classList.add('flowing-footer-balanced'); document.body.classList.remove('flowing-footer-chat'); } catch(e){}
+
     // Update context
     this.context.selectedIssue = issueKey;
     this.updateContextBadge();
