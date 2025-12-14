@@ -53,7 +53,8 @@ class FlowingFooter {
     // Get DOM elements
     this.footer = document.getElementById('flowingFooter');
     this.toggleBtn = document.getElementById('flowingToggleBtn');
-    this.closeBtn = document.getElementById('flowingCloseBtn');
+    // header close button removed from template; keep reference null
+    this.closeBtn = null;
     this.messagesContainer = document.getElementById('flowingMessages');
     this.input = document.getElementById('flowingInput');
     this.sendBtn = document.getElementById('flowingSendBtn');
@@ -125,11 +126,7 @@ class FlowingFooter {
       }
     });
     
-    // Close button (header) - collapse footer when clicked
-    this.closeBtn?.addEventListener('click', (e) => {
-      try { e.stopPropagation(); } catch(err){}
-      this.collapse();
-    });
+    // header close button removed — 'Back to Chat' in balanced view replaces it
     
     // Send button
     this.sendBtn?.addEventListener('click', () => this.sendMessage());
