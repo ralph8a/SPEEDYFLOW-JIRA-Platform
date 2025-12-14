@@ -1521,29 +1521,26 @@ class FlowingFooter {
           </div>
           
           <!-- SLA Monitor & Breach Risk (2 columns grid) -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px;">
+          <div class="footer-two-columns" style="margin-top: 16px;">
             <!-- SLA Monitor (Column 1) -->
             <div class="sla-monitor-wrapper">
-              <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-                <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
-                  <i class="fas fa-spinner fa-spin" style="margin-bottom: 6px; font-size: 14px;"></i><br>
-                  Loading SLA...
+              <div class="sla-monitor-container">
+                <div class="sla-monitor-loading">
+                  <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                  <div class="sla-monitor-loading-text">Loading SLA...</div>
                 </div>
               </div>
             </div>
-            
+
             <!-- Breach Risk Analytics (Column 2) -->
-            <div class="sla-breach-risk" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="fas fa-shield-alt" style="font-size: 13px;"></i>
-                </div>
-                <h4 style="font-size: 12px; font-weight: 600; color: #374151; margin: 0;">Breach Risk</h4>
+            <div class="sla-breach-risk">
+              <div class="sla-breach-header">
+                <div class="breach-icon" aria-hidden="true"><i class="fas fa-shield-alt"></i></div>
+                <h4>Breach Risk</h4>
               </div>
-              
-              <div class="breach-risk-content" style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
-                <i class="fas fa-spinner fa-spin" style="margin-bottom: 6px; font-size: 14px;"></i><br>
-                Analyzing...
+              <div class="breach-risk-content">
+                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                <div class="breach-loading-text">Analyzing...</div>
               </div>
             </div>
           </div>

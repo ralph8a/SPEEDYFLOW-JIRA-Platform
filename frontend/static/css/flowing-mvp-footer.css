@@ -2250,6 +2250,24 @@ body.theme-dark .footer-two-columns .panel-card {
   align-items: center !important;
 }
 
+/* SLA breach header and icon styles */
+.sla-breach-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.sla-breach-header h4 { font-size:13px; margin:0; color:var(--ff-text-primary); font-weight:700; }
+.sla-breach-header .breach-icon { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:white; background: linear-gradient(135deg, #f59e0b, #ef4444); flex-shrink:0; }
+.sla-breach-header .breach-icon i { font-size:13px; }
+
+.sla-monitor-loading, .sla-monitor-loading-text, .breach-loading-text { display:flex; align-items:center; justify-content:center; }
+.sla-monitor-loading { gap:8px; padding:12px 8px; color:var(--ff-text-muted,#9ca3af); font-size:12px; }
+.sla-monitor-loading .fa-spinner, .breach-risk-content .fa-spinner { font-size:14px; }
+.breach-risk-content { text-align:center; padding:12px; color:var(--ff-text-muted,#9ca3af); font-size:13px; }
+
+/* Make breach area more colorful depending on risk - badges from JS will use inline bg/color but provide default look */
+.risk-badge { background: rgba(255,255,255,0.04); padding:4px 8px; border-radius:999px; }
+
+/* Ensure header is minimal: only chevron visible in large/small view */
+.flowing-toggle-btn { padding: 10px; display:inline-flex; align-items:center; justify-content:center; background: transparent; border: none; }
+.flowing-toggle-btn .flowing-chevron { font-size: 14px; color: var(--ff-text-primary); }
+
 .footer-two-columns .breach-risk-content .risk-card .risk-info,
 .flowing-footer .breach-risk-content .risk-card .risk-info {
   display: block !important;
