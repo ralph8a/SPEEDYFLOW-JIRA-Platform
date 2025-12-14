@@ -2232,6 +2232,10 @@ height: 2px;
 .load-more-container { text-align: center; padding: 20px; }
 .load-more-btn { padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
 .load-more-info { margin-top: 8px; color: #64748b; font-size: 13px; }
+
+/* Background selector utilities */
+.bg-error { text-align: center; padding: 30px; color: #ef4444; }
+.bg-placeholder { display:flex; align-items:center; justify-content:center; height:100%; font-size:24px; }
 .ff-modal-actions .ff-btn { flex:1; }
 
 /* Canonical scrollbar utility (apply as .ff-scrollbar to containers) */
