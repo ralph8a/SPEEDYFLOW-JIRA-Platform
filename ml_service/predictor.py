@@ -43,6 +43,17 @@ class UnifiedMLPredictor:
         """Cargar todos los modelos disponibles"""
         logger.info("Cargando modelos ML...")
         
+        # Prepare list of keras model filenames (defined even if TF not available)
+        keras_models = {
+            'duplicate_detector': 'duplicate_detector.keras',
+            'priority_classifier': 'priority_classifier.keras',
+            'breach_predictor': 'breach_predictor.keras',
+            'assignee_suggester': 'assignee_suggester.keras',
+            'labels_suggester': 'labels_suggester.keras',
+            'status_suggester': 'status_suggester.keras',
+            'comment_suggester': 'comment_suggester.keras',
+        }
+
         # 1. Cargar spaCy (necesario para embeddings)
         try:
             import spacy
@@ -80,16 +91,6 @@ class UnifiedMLPredictor:
             import tensorflow as tf
             from tensorflow import keras
             
-            # Lista de modelos a cargar
-            keras_models = {
-                'duplicate_detector': 'duplicate_detector.keras',
-                'priority_classifier': 'priority_classifier.keras',
-                'breach_predictor': 'breach_predictor.keras',
-                'assignee_suggester': 'assignee_suggester.keras',
-                'labels_suggester': 'labels_suggester.keras',
-                'status_suggester': 'status_suggester.keras',
-                'comment_suggester': 'comment_suggester.keras',
-            }
             
             for name, filename in keras_models.items():
                 path = self.models_dir / filename

@@ -13,6 +13,13 @@ const sidebarState = {
 
 // ===== INITIALIZE RIGHT SIDEBAR =====
 function initRightSidebar() {
+  // If FlowingContext is active, the right sidebar is used for context-aware suggestions
+  if (window.FlowingContext) {
+    console.log('ℹ️ [Right Sidebar] FlowingContext detected — deferring rendering to context-aware module');
+    setupSidebarEventListeners();
+    return;
+  }
+
   setupSidebarEventListeners();
   setupPanelTabs();
   console.log('✅ [Right Sidebar] Base initialization complete - interaction systems will load when sidebar opens');
@@ -22,7 +29,7 @@ function initRightSidebar() {
 function setupSidebarEventListeners() {
   const rightSidebar = document.getElementById('rightSidebar');
   const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-  
+
   if (!closeSidebarBtn) return;
 
   // Close button
@@ -43,209 +50,144 @@ function processCommentText(text) {
   }
   return text || '';
 }
-  // Wait for next paint cycle to ensure DOM is fully visible
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      console.log('⏱️ [Right Sidebar] DOM settled, setting up systems...');
-      // Mention system is now automatic via mentions-system.js (type @ in textarea)
-      // setupMentionSystem(); // Disabled: button removed, auto-mention works better
-      setupAttachmentsSystem();
-      setupCommentShortcuts();
-      
-      // Now render attachments (DOM is ready and visible)
-      if (sidebarState.currentIssue) {
-        console.log('🎨 [Right Sidebar] Rendering attachments for:', sidebarState.currentIssue.key);
-        renderAttachments(sidebarState.currentIssue);
-      }
+// Wait for next paint cycle to ensure DOM is fully visible
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    console.log('⏱️ [Right Sidebar] DOM settled, setting up systems...');
+    // Mention system is now automatic via mentions-system.js (type @ in textarea)
+    // setupMentionSystem(); // Disabled: button removed, auto-mention works better
+    setupAttachmentsSystem();
+    setupCommentShortcuts();
 
-      // Initialize inline editor with AI suggestions
-      if (window.sidebarEditor) {
-        window.sidebarEditor.initForIssue(issueKey);
-      }
-    }, 100);
+    // Now render attachments (DOM is ready and visible)
+    if (sidebarState.currentIssue) {
+      console.log('🎨 [Right Sidebar] Rendering attachments for:', sidebarState.currentIssue.key);
+      renderAttachments(sidebarState.currentIssue);
+    }
+
+    // Initialize inline editor with AI suggestions
+    if (window.sidebarEditor) {
+      window.sidebarEditor.initForIssue(issueKey);
+    }
+  }, 100);
+});
+
+// Setup comment button and mentions
+const commentBtn = document.querySelector('.btn-add-comment');
+const commentTextarea = document.getElementById('commentText');
+const visibilityToggle = document.getElementById('commentInternal');
+const visibilityLabel = document.querySelector('.visibility-label');
+
+if (commentBtn) {
+  // Remove previous listeners
+  const newBtn = commentBtn.cloneNode(true);
+  commentBtn.parentNode.replaceChild(newBtn, commentBtn);
+
+  // Add new listener
+  newBtn.addEventListener('click', () => postComment(issueKey));
+}
+
+// Setup visibility toggle
+if (visibilityToggle && visibilityLabel) {
+  visibilityToggle.checked = false; // Reset to public
+  visibilityToggle.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      visibilityLabel.textContent = '🔒 Internal';
+    } else {
+      visibilityLabel.textContent = '🔓 Public';
+    }
   });
+}
 
-  // Setup comment button and mentions
-  const commentBtn = document.querySelector('.btn-add-comment');
-  const commentTextarea = document.getElementById('commentText');
-  const visibilityToggle = document.getElementById('commentInternal');
-  const visibilityLabel = document.querySelector('.visibility-label');
-  
-  if (commentBtn) {
-    // Remove previous listeners
-    const newBtn = commentBtn.cloneNode(true);
-    commentBtn.parentNode.replaceChild(newBtn, commentBtn);
-    
-    // Add new listener
-    newBtn.addEventListener('click', () => postComment(issueKey));
-  }
-  
-  // Setup visibility toggle
-  if (visibilityToggle && visibilityLabel) {
-    visibilityToggle.checked = false; // Reset to public
-    visibilityToggle.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        visibilityLabel.textContent = '🔒 Internal';
+// Attach mentions autocomplete to textarea
+if (commentTextarea && window.mentionsAutocomplete) {
+  // Small delay to ensure textarea is ready
+  setTimeout(() => {
+    window.mentionsAutocomplete.attachTo(commentTextarea, issueKey);
+  }, 100);
+}
+// If mentionsAutocomplete is not present, try loading it dynamically
+else if (commentTextarea && !window.mentionsAutocomplete) {
+  (async () => {
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = '/static/js/modules/mentions-autocomplete.js?v=' + Date.now();
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      if (window.mentionsAutocomplete) {
+        setTimeout(() => window.mentionsAutocomplete.attachTo(commentTextarea, issueKey), 120);
+      }
+    } catch (e) {
+      console.warn('Failed to dynamically load mentions-autocomplete:', e);
+    }
+  })();
+}
+
+// Initialize SLA Monitor if available
+if (window.slaMonitor && typeof window.slaMonitor.init === 'function') {
+  window.slaMonitor.init(issueKey).then(() => {
+    // Render SLA panel only if real data exists
+    const slaContainer = document.getElementById('slaMonitorContainer');
+    if (slaContainer) {
+      if (window.slaMonitor.slaData[issueKey]) {
+        const slaPanel = window.slaMonitor.renderSLAPanel(issueKey);
+        slaContainer.innerHTML = '';
+        slaContainer.appendChild(slaPanel);
       } else {
-        visibilityLabel.textContent = '🔓 Public';
+        // Hide SLA container if no real data
+        slaContainer.style.display = 'none';
       }
-    });
-  }
-  
-  // Attach mentions autocomplete to textarea
-  if (commentTextarea && window.mentionsAutocomplete) {
-    // Small delay to ensure textarea is ready
-    setTimeout(() => {
-      window.mentionsAutocomplete.attachTo(commentTextarea, issueKey);
-    }, 100);
-  }
-  // If mentionsAutocomplete is not present, try loading it dynamically
-  else if (commentTextarea && !window.mentionsAutocomplete) {
-    (async () => {
-      try {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = '/static/js/modules/mentions-autocomplete.js?v=' + Date.now();
-          s.onload = resolve;
-          s.onerror = reject;
-          document.head.appendChild(s);
-        });
-        if (window.mentionsAutocomplete) {
-          setTimeout(() => window.mentionsAutocomplete.attachTo(commentTextarea, issueKey), 120);
-        }
-      } catch (e) {
-        console.warn('Failed to dynamically load mentions-autocomplete:', e);
-      }
-    })();
-  }
-  
-  // Initialize SLA Monitor if available
-  if (window.slaMonitor && typeof window.slaMonitor.init === 'function') {
-    window.slaMonitor.init(issueKey).then(() => {
-      // Render SLA panel only if real data exists
-      const slaContainer = document.getElementById('slaMonitorContainer');
-      if (slaContainer) {
-        if (window.slaMonitor.slaData[issueKey]) {
-          const slaPanel = window.slaMonitor.renderSLAPanel(issueKey);
-          slaContainer.innerHTML = '';
-          slaContainer.appendChild(slaPanel);
-        } else {
-          // Hide SLA container if no real data
-          slaContainer.style.display = 'none';
-        }
-      }
-    }).catch(err => {
-      console.error('SLA Monitor initialization failed:', err);
-    });
-  }
+    }
+  }).catch(err => {
+    console.error('SLA Monitor initialization failed:', err);
+  });
 }
 
 // ===== POPULATE ISSUE DETAILS =====
 function populateIssueDetails(issue) {
+  // Delegated: When Flowing Footer / FlowingContext is active we delegate details rendering
   if (!issue) return;
-  
-  // Get cached data once (avoid duplicate lookups)
-  const cachedIssue = window.app?.issuesCache?.get(issue.key);
-  
-  // Pre-populate with cached data if available
-  if (cachedIssue) {
-    console.log(`💾 Pre-populating with cached data for ${issue.key}`);
-    
-    const tempIssue = { ...issue, ...cachedIssue };
-    sidebarState.currentIssue = tempIssue;
-    
-    // Show cached attachments immediately
-    if (cachedIssue.fields?.attachment || cachedIssue.attachment) {
-      requestAnimationFrame(() => {
-        setTimeout(() => renderAttachments(tempIssue), 100);
-      });
+
+  if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+    try {
+      // Ensure the footer is visible with the selected issue
+      window.flowingFooter.switchToBalancedView(issue.key || issue);
+      sidebarState.currentIssue = issue;
+      sidebarState.isOpen = false; // Right-sidebar remains used for Flowing Context suggestions
+      return;
+    } catch (e) {
+      console.warn('Delegation to FlowingFooter failed, falling back to legacy renderer:', e);
     }
   }
-  
-  // Fetch complete field structure from Service Desk API
-  // (Kanban data is flat, Service Desk API has nested issue.fields.* needed for All Fields)
-  console.log(`📡 Fetching complete field structure for ${issue.key}`);
-  fetchServiceDeskRequestDetails(issue.key);
-  
-  // Initialize SLA Monitor
-  if (window.slaMonitor) {
-    window.slaMonitor.init(issue.key).then(() => {
-      const slaContainer = document.getElementById('slaMonitorContainer');
-      if (slaContainer) {
-        if (window.slaMonitor.slaData[issue.key]) {
-          const slaPanel = window.slaMonitor.renderSLAPanel(issue.key);
-          const existingSLA = slaContainer.querySelector('.sla-panel');
-          if (existingSLA) existingSLA.remove();
-          slaContainer.appendChild(slaPanel);
-          slaContainer.style.display = 'block';
-        } else {
-          // Hide SLA container if no real data
-          slaContainer.style.display = 'none';
-        }
-      }
-    }).catch(err => {
-      console.error('SLA Monitor initialization failed:', err);
-    });
-  }
+
+  // If FlowingFooter not available, keep minimal legacy behavior: store current issue and trigger fetch
+  sidebarState.currentIssue = issue;
+  console.log('⚠️ FlowingFooter not available - falling back to legacy right-sidebar minimal fetch for', issue.key || issue);
+  if (issue.key) fetchServiceDeskRequestDetails(issue.key);
 }
 
 // ===== FETCH SERVICE DESK REQUEST DETAILS =====
 function fetchServiceDeskRequestDetails(issueKey) {
-  console.log('🔍 Fetching Service Desk details for:', issueKey);
-  
-  // Show loading state in active tab
-  const activeTab = document.querySelector('.fields-tab-content.active');
-  if (activeTab) {
-    activeTab.innerHTML = '<p style="text-align: center; padding: 20px; color: #999;">⏳ Loading all fields...</p>';
+  // Delegated: FlowingFooter handles fetching and rendering complete ticket details
+  console.log('🔁 Delegating Service Desk details fetch to FlowingFooter for:', issueKey);
+  if (window.flowingFooter && typeof window.flowingFooter.loadTicketIntoBalancedView === 'function') {
+    window.flowingFooter.loadTicketIntoBalancedView(issueKey).catch(err => console.warn('FlowingFooter failed to load ticket:', err));
+    return;
   }
-  
-  // Fetch from Service Desk API endpoint
+
+  // Legacy fallback: perform basic fetch and store result (minimal behavior)
+  console.warn('⚠️ FlowingFooter not available - performing legacy fetch');
   fetch(`/api/servicedesk/request/${issueKey}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return response.json();
+    .then(r => r.json())
+    .then(data => {
+      const payload = data.data || data;
+      sidebarState.currentIssue = { ...(sidebarState.currentIssue || {}), ...payload };
+      try { renderAttachments(sidebarState.currentIssue); } catch (e) { }
     })
-    .then(response => {
-      console.log('✅ Service Desk data received:', response);
-      
-      // Extract data from wrapper if present
-      const data = response.data || response;
-      
-      // Merge Service Desk data with existing issue data
-      const completeIssue = {
-        ...sidebarState.currentIssue,
-        ...data,
-        fields: {
-          ...sidebarState.currentIssue?.fields,
-          ...data.fields
-        }
-      };
-      
-      // Data merged successfully
-      
-      // Update state and render
-      sidebarState.currentIssue = completeIssue;
-      populateAllFields(completeIssue);
-      renderAttachments(completeIssue);
-    })
-    .catch(error => {
-      console.error('❌ Error fetching Service Desk details:', error);
-      
-      // Fallback to existing issue data
-      if (sidebarState.currentIssue) {
-        populateAllFields(sidebarState.currentIssue);
-      } else {
-        const activeTab = document.querySelector('.fields-tab-content.active');
-        if (activeTab) {
-          const errorIcon = typeof SVGIcons !== 'undefined' 
-            ? SVGIcons.alert({ size: 16, className: 'inline-icon' })
-            : '⚠️';
-          activeTab.innerHTML = `<p style="text-align: center; padding: 20px; color: #f00;">${errorIcon} Error loading fields</p>`;
-        }
-      }
-    });
+    .catch(err => console.error('Legacy fetch failed:', err));
 }
 
 // ===== LOAD COMMENTS =====
@@ -259,9 +201,9 @@ function loadIssueComments(issueKey) {
 // ===== GET ISSUE ATTACHMENTS =====
 function getIssueAttachments(issue) {
   if (!issue) return [];
-  
+
   let attachments = [];
-  
+
   if (issue.fields && Array.isArray(issue.fields.attachment)) {
     attachments = issue.fields.attachment;
   } else if (Array.isArray(issue.attachment)) {
@@ -269,18 +211,31 @@ function getIssueAttachments(issue) {
   } else if (Array.isArray(issue.attachments)) {
     attachments = issue.attachments;
   }
-  
+
   return attachments || [];
+}
+
+// ===== RENDER ATTACHMENTS =====
+// Stubbed: delegate to FlowingContext or FlowingFooter to avoid duplicating UI rendering
+function renderAttachments(issue) {
+  if (window.FlowingContext && typeof window.FlowingContext.renderAttachmentsInBar === 'function') {
+    try { return window.FlowingContext.renderAttachmentsInBar(issue); } catch (e) { console.warn('FlowingContext.renderAttachmentsInBar failed', e); }
+  }
+  if (window.flowingFooter && typeof window.flowingFooter.renderAttachmentsForBalanced === 'function') {
+    try { return window.flowingFooter.renderAttachmentsForBalanced(issue); } catch (e) { console.warn('flowingFooter.renderAttachmentsForBalanced failed', e); }
+  }
+  // No-op minimal fallback: do nothing to avoid DOM conflicts
+  return;
 }
 
 // ===== FORMAT FILE SIZE =====
 function formatFileSize(bytes) {
   if (!bytes || bytes === 0) return '0 B';
-  
+
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
@@ -296,61 +251,14 @@ function getFileIcon(filename) {
 }
 
 // ===== PROCESS COMMENT TEXT =====
+// Stubbed: FlowingContext handles comment formatting for the balanced view.
 function processCommentText(text) {
-  if (!text) return '';
-  
-  // Check if it's plain text (needs escaping) or already HTML
-  const isHtml = text.includes('<') && (text.includes('</') || text.includes('/>'));
-  if (!isHtml) {
-    // Escape plain text but preserve newlines
-    text = text.replace(/&/g, '&amp;')
-               .replace(/</g, '&lt;')
-               .replace(/>/g, '&gt;')
-               .replace(/\n/g, '<br>');
+  if (window.FlowingContext && typeof window.FlowingContext.processCommentText === 'function') {
+    return window.FlowingContext.processCommentText(text);
   }
-  
-  // Remove attachment references from comment text since they are shown in dedicated section
-  // Remove JIRA-style attachment references like !image-123.png!, !document.pdf!, etc.
-  text = text.replace(/!([^!]*\.(png|jpg|jpeg|gif|webp|pdf|doc|docx|xls|xlsx|txt|zip|rar|7z|svg))[^!]*!/gi, 
-    (match) => {
-      // Simply remove the reference - attachments are shown separately
-      return '';
-    });
-  
-  // Process markdown-style image links ![alt](url) - keep these as they are legitimate markdown  
-  text = text.replace(/!\[([^\]]+)\]\(([^)]+)\)/g, 
-    (match, altText, url) => {
-      const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
-      if (isImage) {
-        return `<img src="${url}" alt="${altText}" style="max-width: 100%; cursor: pointer;" onclick="window.open('${url}', '_blank')" />`;
-      } else {
-        return `<a href="${url}" target="_blank">${altText}</a>`;
-      }
-    });
-  
-  // Clean up duplicate user initials/names that appear on separate lines
-  // Remove standalone initials (2-3 uppercase letters on their own line)
-  text = text.replace(/^[A-Z]{2,3}(\s*<br\s*\/?>|\s*$)/gm, '');
-  
-  // Remove standalone full names that might be duplicated
-  text = text.replace(/^[A-Z][a-z]+ [A-Z][a-z]+(\s*<br\s*\/?>|\s*$)/gm, '');
-  
-  // Remove lines that are just email addresses or usernames
-  text = text.replace(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\s*<br\s*\/?>|\s*$)/gm, '');
-  
-  // Clean up "SC" or similar service initials that might appear
-  text = text.replace(/^(SC|SG|Admin|User)(\s*<br\s*\/?>|\s*$)/gm, '');
-  
-  // Clean up multiple consecutive <br> tags
-  text = text.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
-  
-  // Remove leading/trailing <br> tags
-  text = text.replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, '');
-  
-  // Remove empty lines at start/end
-  text = text.trim();
-  
-  return text;
+  // Minimal fallback: escape HTML and preserve newlines
+  if (!text) return '';
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 }
 
 // ===== SETUP COMMENT EVENT LISTENERS =====
@@ -396,11 +304,11 @@ function closeSidebar() {
 // ===== EXTRACT FIELD VALUE FROM NESTED PATHS =====
 function extractFieldValue(obj, paths) {
   if (!obj) return null;
-  
+
   for (const path of paths) {
     const parts = path.split('.');
     let value = obj;
-    
+
     for (const part of parts) {
       if (value && typeof value === 'object' && part in value) {
         value = value[part];
@@ -409,155 +317,24 @@ function extractFieldValue(obj, paths) {
         break;
       }
     }
-    
+
     // Extract value from object if needed
     if (value && typeof value === 'object') {
       value = value.value || value.name || null;
     }
-    
+
     if (value !== null && value !== undefined && value !== '') {
       return value;
     }
   }
-  
+
   return null;
 }
-
-// ===== POPULATE ALL FIELDS DYNAMICALLY =====
-function populateAllFields(issue) {
-  const fields = extractAllFields(issue);
-  
-  if (fields.length === 0) {
-    document.getElementById('tab-essential').innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No fields</p>';
-    return;
-  }
-  
-  // Categorize fields by importance
-  const essentialFields = [];
-  const detailFields = [];
-  const technicalFields = [];
-  
-  fields.forEach(field => {
-    const priority = getFieldPriority(field.label);
-    if (priority <= 15) {
-      essentialFields.push(field);
-    } else if (priority <= 100) {
-      detailFields.push(field);
-    } else {
-      technicalFields.push(field);
-    }
-  });
-  
-  // Render each tab
-  renderFieldsInTab('tab-essential', essentialFields);
-  renderFieldsInTab('tab-details', detailFields);
-  renderFieldsInTab('tab-technical', technicalFields);
-  
-  // Setup tab switching (ensure it's called)
-  console.log('🎨 Setting up tab switching after render...');
-  setTimeout(() => setupTabSwitching(), 100);
-}
-
-function renderFieldsInTab(tabId, fields) {
-  const container = document.getElementById(tabId);
-  if (!container) return;
-  
-  if (fields.length === 0) {
-    container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No fields in this category</p>';
-    return;
-  }
-  
-  let html = '<div class="all-fields-grid">';
-  
-  fields.forEach(field => {
-    // Detectar si es campo con texto largo (expandible con click)
-    // Incluye description, notas, análisis, y cualquier texto > 200 caracteres
-    const isLongTextField = field.key === 'description' || 
-                           field.key === 'customfield_10149' || 
-                           field.key === 'customfield_10151' || 
-                           field.label.toLowerCase().includes('description') ||
-                           field.label.toLowerCase().includes('descripcion') ||
-                           field.label.toLowerCase().includes('summary') ||
-                           field.label.toLowerCase().includes('notes') ||
-                           field.label.toLowerCase().includes('notas') ||
-                           field.label.toLowerCase().includes('comments') ||
-                           field.label.toLowerCase().includes('details') ||
-                           field.label.toLowerCase().includes('análisis') ||
-                           field.label.toLowerCase().includes('resolución') ||
-                           (field.type === 'text' && String(field.value).length > 200);
-    
-    let itemClass = 'field-item';
-    let valueClass = 'field-value';
-    
-    // Todos los campos largos usan el mismo sistema (full-width + expandible)
-    if (isLongTextField) {
-      itemClass += ' field-item-full';
-      valueClass += ' field-value-long';
-    }
-    
-    html += `
-      <div class="${itemClass}" data-field="${field.key}">
-        <div class="field-label">${field.label}</div>
-        <div class="${valueClass}">${formatFieldValue(field.value, field.type, field.issueKey)}</div>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-function setupTabSwitching() {
-  const tabs = document.querySelectorAll('.fields-tab');
-  const contents = document.querySelectorAll('.fields-tab-content');
-  
-  // Remove old listeners by cloning (prevent duplicate listeners)
-  tabs.forEach((tab, index) => {
-    const newTab = tab.cloneNode(true);
-    tab.parentNode.replaceChild(newTab, tab);
-    
-    newTab.addEventListener('click', () => {
-      const targetTab = newTab.dataset.tab;
-      
-      console.log('🔄 Switching to tab:', targetTab);
-      
-      // Remove active class from all tabs and contents
-      document.querySelectorAll('.fields-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.fields-tab-content').forEach(c => c.classList.remove('active'));
-      
-      // Add active to selected
-      newTab.classList.add('active');
-      const targetContent = document.getElementById(`tab-${targetTab}`);
-      if (targetContent) {
-        targetContent.classList.add('active');
-        console.log('✅ Tab activated:', targetTab);
-      } else {
-        console.error('❌ Tab content not found:', `tab-${targetTab}`);
-      }
-    });
-  });
-  
-  console.log('✅ Tab switching initialized for', tabs.length, 'tabs');
-}
-
-function getFieldPriority(label) {
-  const priorityMap = {
-    'Description': 0, '📝 Description': 0,
-    '🚨 Criticidad': 1, '🎫 Tipo de Solicitud': 2, '📂 Área': 3,
-    '💻 Plataforma': 4, '🏢 Empresa': 5, '📦 Producto': 6,
-    '✉️ Email': 10, '📱 Phone': 11, '🌎 País': 12, '📞 País/Código': 13,
-    '⚡ Priority': 20, '✔️ Resolution': 21, '📅 Due Date': 22, '✅ Resolution Date': 23,
-    '📝 Notas/Análisis': 30, '✅ Resolución': 31,
-    '🎯 Request Type': 200, '🌐 Language': 201, '📁 Issue Category': 202,
-  };
-  return priorityMap[label] || 100;
-}
-
 // ===== EXTRACT ALL RELEVANT FIELDS =====
 function extractAllFields(issue) {
   const fields = [];
   const seenKeys = new Set(); // Track already added fields
-  
+
   const excludeFields = new Set([
     // Technical/structural fields to hide (keep everything else visible in All Fields)
     'transitions', 'comments', 'attachment', 'worklog',
@@ -566,11 +343,11 @@ function extractAllFields(issue) {
     'issuelinks', 'subtasks', 'parent', 'aggregatetimespent', 'aggregatetimeoriginalestimate',
     'aggregatetimeestimate', 'aggregateprogress', 'progress', 'workratio', 'avatarUrls',
     'timetracking', 'security', 'votes',
-    
+
     // Redundant fields (already shown in kanban card or sidebar header)
     'key', 'summary', 'status', 'assignee', 'reporter', 'created', 'updated',
     'issuetype',
-    
+
     // Numeric fields that are always 0.0 (unused SLA/tracking fields)
     'customfield_10027', 'customfield_10028', 'customfield_10029', 'customfield_10030',
     'customfield_10041', 'customfield_10042', 'customfield_10196', 'customfield_10197',
@@ -582,12 +359,12 @@ function extractAllFields(issue) {
     'customfield_10292', 'customfield_10295', 'customfield_10301', 'customfield_10341',
     'customfield_10677', 'customfield_10717', 'customfield_10718', 'customfield_10719',
     'customfield_10720', 'customfield_10733', 'customfield_10734',
-    
+
     // Empty/unused system fields
     'customfield_10002', 'customfield_10019', 'customfield_10124',
     'customfield_10148', 'customfield_10157', 'customfield_10159'
   ]);
-  
+
   // Check if value is meaningful (not null, empty, or just structural)
   const hasValue = (val) => {
     if (val === null || val === undefined) return false;
@@ -610,7 +387,7 @@ function extractAllFields(issue) {
     if (typeof val === 'number' && val === 0) return false;
     return true;
   };
-  
+
   // Field mappings from CUSTOM_FIELDS_REFERENCE.json
   const fieldMappings = {
     // Standard JIRA fields
@@ -629,7 +406,7 @@ function extractAllFields(issue) {
     'project': '📁 Project',
     'creator': '👤 Creator',
     'resolution': '✔️ Resolution',
-    
+
     // Form fields (Request-type form fields)
     'customfield_10125': '🚨 Criticidad',
     'customfield_10156': '🎫 Tipo de Solicitud',
@@ -641,12 +418,12 @@ function extractAllFields(issue) {
     'customfield_10151': '✅ Resolución',
     'customfield_10165': '🌎 País',
     'customfield_10167': '📞 País/Código',
-    
+
     // Contact info fields
     'customfield_10141': '✉️ Email',
     'customfield_10142': '📱 Phone',
     'customfield_10111': '👤 Reporter/Informador',
-    
+
     // System fields
     'customfield_10010': '🎯 Request Type',
     'customfield_10061': '📋 Status Transition Log',
@@ -654,7 +431,7 @@ function extractAllFields(issue) {
     'customfield_10115': '🌐 Language',
     'customfield_10166': '🌍 Country (Alternative)',
     'customfield_10024': '🕐 Timestamp',
-    
+
     // SLA fields (links to SLA definitions)
     'customfield_10170': '⏱️ SLA\'s Incidente HUB',
     'customfield_10176': '🔒 Cierre Ticket',
@@ -668,13 +445,13 @@ function extractAllFields(issue) {
     'customfield_10190': '🛠️ SLA\'s Soporte Aplicaciones',
     'customfield_10259': '🚨 SLA War Room',
     'customfield_11957': '💚 Salud de Servicios',
-    
+
     // Other common fields
     'customfield_10020': '🏃 Sprint',
     'customfield_10016': '📊 Story Points',
     'customfield_10037': '📖 Epic Link'
   };
-  
+
   // SLA custom field IDs (primary and secondary)
   const slaFieldIds = [
     'customfield_10170', // SLA's Incidente HUB
@@ -690,13 +467,13 @@ function extractAllFields(issue) {
     'customfield_10259', // SLA War Room
     'customfield_11957'  // Salud de Servicios
   ];
-  
+
   // Helper to extract fields from an object
   const extractFields = (obj, checkExcluded = false) => {
     if (!obj) return;
     Object.entries(obj).forEach(([key, value]) => {
       if ((checkExcluded && excludeFields.has(key)) || !hasValue(value) || seenKeys.has(key)) return;
-      
+
       // 🔍 FILTER SLA FIELDS: Only show SLAs with active ongoingCycle
       if (slaFieldIds.includes(key)) {
         // Skip SLA fields that don't have an ongoingCycle
@@ -705,23 +482,23 @@ function extractAllFields(issue) {
           return;
         }
         console.log(`✅ Including ${key} - has active ongoingCycle:`, value.name);
-        
+
         // Mark secondary SLA (Cierre Ticket - customfield_10176)
         if (key === 'customfield_10176') {
           value._isSecondarySLA = true;
         }
       }
-      
-      fields.push({ 
+
+      fields.push({
         label: fieldMappings[key] || humanizeFieldName(key),
-        value, 
-        type: detectFieldType(value), 
-        key 
+        value,
+        type: detectFieldType(value),
+        key
       });
       seenKeys.add(key);
     });
   };
-  
+
   // Add description explicitly first (priority 0)
   if (issue.fields?.description || issue.description) {
     const desc = issue.fields?.description || issue.description;
@@ -735,12 +512,12 @@ function extractAllFields(issue) {
       seenKeys.add('description');
     }
   }
-  
+
   // Extract from multiple sources
   extractFields(issue.fields, true); // Check excluded fields
   extractFields(issue.custom_fields);
   extractFields(issue.serviceDesk?.requestFieldValues);
-  
+
   // Extract from Service Desk currentStatus
   if (issue.serviceDesk && issue.serviceDesk.currentStatus) {
     const status = issue.serviceDesk.currentStatus;
@@ -754,15 +531,15 @@ function extractAllFields(issue) {
       seenKeys.add('serviceDesk.currentStatus');
     }
   }
-  
+
   // Extract SLA data with millis
   if (issue.slaData && Array.isArray(issue.slaData)) {
     issue.slaData.forEach((sla, idx) => {
       if (!sla || !sla.name) return;
-      
+
       const key = `sla_${idx}_${sla.name}`;
       if (seenKeys.has(key)) return;
-      
+
       fields.push({
         label: `⏱️ ${sla.name}`,
         value: sla,
@@ -772,15 +549,15 @@ function extractAllFields(issue) {
       seenKeys.add(key);
     });
   }
-  
+
   // Total: ${fields.length} fields extracted
-  
+
   // Define priority order for important fields
   const priorityOrder = {
     // Tier 0: Description (most important, full width)
     'Description': 0,
     '📝 Description': 0,
-    
+
     // Tier 1: Critical business info (top)
     '🚨 Criticidad': 1,
     '🎫 Tipo de Solicitud': 2,
@@ -788,45 +565,45 @@ function extractAllFields(issue) {
     '💻 Plataforma': 4,
     '🏢 Empresa': 5,
     '📦 Producto': 6,
-    
+
     // Tier 2: Contact & location
     '✉️ Email': 10,
     '📱 Phone': 11,
     '🌎 País': 12,
     '📞 País/Código': 13,
-    
+
     // Tier 3: Status & resolution
     '⚡ Priority': 20,
     '✔️ Resolution': 21,
     '📅 Due Date': 22,
     '✅ Resolution Date': 23,
-    
+
     // Tier 4: Notes & analysis (show full width)
     '📝 Notas/Análisis': 30,
     '✅ Resolución': 31,
-    
+
     // Tier 5: Other fields
     // (unlisted fields get 100)
-    
+
     // Tier 6: System/technical fields (bottom)
     '🎯 Request Type': 200,
     '🌐 Language': 201,
     '📁 Issue Category': 202,
   };
-  
+
   // Sort by priority
   fields.sort((a, b) => {
     const aPriority = priorityOrder[a.label] || 100;
     const bPriority = priorityOrder[b.label] || 100;
-    
+
     if (aPriority !== bPriority) {
       return aPriority - bPriority;
     }
-    
+
     // Same priority: alphabetical
     return a.label.localeCompare(b.label);
   });
-  
+
   return fields;
 }
 
@@ -877,7 +654,7 @@ function detectFieldType(value) {
 // ===== FORMAT FIELD VALUE =====
 function formatFieldValue(value, type, issueKey) {
   if (!value && value !== 0 && value !== false) return '—';
-  
+
   switch (type) {
     case 'description':
       // Atlassian Document Format (ADF) - extract text content
@@ -899,7 +676,7 @@ function formatFieldValue(value, type, issueKey) {
         return `<div class="field-text-long">${escaped || '—'}</div>`;
       }
       return String(value);
-    
+
     case 'request_type':
       // Request Type - create button to customer portal
       const requestTypeName = value.name || 'View Request';
@@ -909,7 +686,7 @@ function formatFieldValue(value, type, issueKey) {
                 <span class="text">${requestTypeName}</span>
                 <span class="external">↗</span>
               </a>`;
-    
+
     case 'sla':
       // SLA objects with ongoing cycle - show elapsed and remaining millis
       if (value.ongoingCycle) {
@@ -917,24 +694,24 @@ function formatFieldValue(value, type, issueKey) {
         const remaining = value.ongoingCycle.remainingTime;
         const paused = value.ongoingCycle.paused || false;
         const breached = value.ongoingCycle.breached || false;
-        
+
         const elapsedMs = elapsed?.millis || 0;
         const remainingMs = remaining?.millis || 0;
-        
+
         const elapsedHrs = (elapsedMs / (1000 * 60 * 60)).toFixed(1);
         const remainingHrs = (remainingMs / (1000 * 60 * 60)).toFixed(1);
-        
+
         // Check if this is marked as secondary SLA (by field ID customfield_10176)
         const slaName = value.name || 'SLA';
         const isSecondarySLA = value._isSecondarySLA === true;
-        
+
         const pausedBadge = paused ? '<span style="color: #f59e0b; font-weight: bold;"> ⏸️ PAUSED</span>' : '';
         const secondaryBadge = isSecondarySLA ? '<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; margin-left: 4px;">⚠️ FALLBACK</span>' : '';
         const breachedBadge = breached ? '<span style="color: #ef4444; font-weight: bold;"> 🔴 BREACHED</span>' : '';
-        
+
         const statusColor = breached ? '#ef4444' : (remainingMs < 0 ? '#ef4444' : '#10b981');
         const nameColor = isSecondarySLA ? '#f59e0b' : (breached ? '#ef4444' : '#1e293b');
-        
+
         return `<div style="font-size: 11px;">
           <strong style="color: ${nameColor};">${slaName}</strong>${secondaryBadge}${pausedBadge}${breachedBadge}<br>
           <span style="color: #3b82f6;">⏱️ Elapsed: ${elapsedHrs}h (${elapsedMs.toLocaleString()}ms)</span><br>
@@ -943,17 +720,17 @@ function formatFieldValue(value, type, issueKey) {
         </div>`;
       }
       return value.name || 'SLA Object';
-    
+
     case 'sla_empty':
       // Empty SLA structure - skip
       return '—';
-    
+
     case 'user':
       return value.displayName || value.name || value.emailAddress || '—';
-    
+
     case 'select':
       return value.value || value.name || '—';
-    
+
     case 'array':
       if (value.length === 0) return '—';
       return value.map(item => {
@@ -962,16 +739,16 @@ function formatFieldValue(value, type, issueKey) {
         }
         return item;
       }).join(', ');
-    
+
     case 'date':
       return formatDate(value);
-    
+
     case 'boolean':
       return value ? '✅ Yes' : '❌ No';
-    
+
     case 'number':
       return value.toLocaleString();
-    
+
     case 'text':
       // Mostrar TODO el texto sin truncar
       const escaped = String(value)
@@ -979,7 +756,7 @@ function formatFieldValue(value, type, issueKey) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
       return escaped;
-    
+
     case 'object':
       if (value.name) return value.name;
       if (value.displayName) return value.displayName;
@@ -988,7 +765,7 @@ function formatFieldValue(value, type, issueKey) {
       const str = JSON.stringify(value);
       if (str.length < 50) return str;
       return str.substring(0, 80) + '...';
-    
+
     default:
       return String(value);
   }
@@ -997,7 +774,7 @@ function formatFieldValue(value, type, issueKey) {
 // ===== FORMAT DATE =====
 function formatDate(dateString) {
   if (!dateString || dateString === '—') return '—';
-  
+
   try {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US', {
@@ -1024,117 +801,53 @@ function formatCommentTime(dateString) {
 }
 
 // ===== RENDER ATTACHMENTS =====
+// Stub: delegate attachments rendering to FlowingContext/FlowingFooter to avoid duplicate UI
 function renderAttachments(issue) {
-  const attachmentsSection = document.getElementById('attachmentsSection');
-  const attachmentsContainer = document.getElementById('existingAttachmentsContainer');
-  const attachmentCountLabel = document.getElementById('attachmentCountLabel');
-  
-  if (!attachmentsSection || !attachmentsContainer) return;
-  
-  // Extract attachments from issue.fields.attachment (JIRA API v3 standard location)
-  let attachments = [];
-  
-  if (issue.fields && Array.isArray(issue.fields.attachment)) {
-    attachments = issue.fields.attachment;
-  } else if (Array.isArray(issue.attachment)) {
-    attachments = issue.attachment;
-  } else if (Array.isArray(issue.attachments)) {
-    attachments = issue.attachments;
+  if (window.FlowingContext && typeof window.FlowingContext.renderAttachmentsInBar === 'function') {
+    try { return window.FlowingContext.renderAttachmentsInBar(issue); } catch (e) { console.warn('FlowingContext.renderAttachmentsInBar failed', e); }
   }
-  
-  if (!attachments || attachments.length === 0) {
-    attachmentsSection.style.display = 'none';
-    return;
+  if (window.flowingFooter && typeof window.flowingFooter.renderAttachmentsForBalanced === 'function') {
+    try { return window.flowingFooter.renderAttachmentsForBalanced(issue); } catch (e) { console.warn('flowingFooter.renderAttachmentsForBalanced failed', e); }
   }
-  
-  // Show section and update count
-  attachmentsSection.style.display = 'block';
-  attachmentCountLabel.textContent = `(${attachments.length})`;
-  
-  // Render attachments list
-  let html = '<div class="attachments-grid">';
-  
-  attachments.forEach((attachment, index) => {
-    const filename = attachment.filename || attachment.name || `attachment_${index}`;
-    const size = formatFileSize(attachment.size);
-    const created = formatDate(attachment.created);
-    const author = attachment.author?.displayName || attachment.author || 'Unknown';
-    const url = attachment.content || attachment.url || '#';
-    const thumbnail = attachment.thumbnail || null;
-    const mimeType = attachment.mimeType || 'application/octet-stream';
-    
-    // Determine if it's an image and should show preview
-    const isImage = mimeType.startsWith('image/');
-    
-    // Determine icon based on MIME type (only for non-images)
-    let icon = SVGIcons.file({size:18,className:'attachment-icon-svg'});
-    // Future: map specific mime -> different icons; fallback to file icon
-    
-    html += `
-      <div class="attachment-card">
-        <div class="attachment-icon">
-          ${isImage && thumbnail ? 
-            `<img src="${thumbnail}" alt="${filename}" class="attachment-thumbnail" onclick="window.open('${url}', '_blank')" style="cursor: pointer;">` : 
-            icon
-          }
-        </div>
-        <div class="attachment-details">
-          <a href="${url}" target="_blank" class="attachment-filename" title="${filename}">
-            ${filename}
-          </a>
-          <div class="attachment-meta">
-            <span class="attachment-size">${size}</span>
-            <span class="attachment-separator">•</span>
-            <span class="attachment-author">${author}</span>
-          </div>
-          <div class="attachment-date">${created}</div>
-        </div>
-        <a href="${url}" download="${filename}" class="attachment-download" title="Download">
-          ${SVGIcons.download({size:18,className:'attachment-download-svg'})}
-        </a>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  attachmentsContainer.innerHTML = html;
+  // No-op fallback
+  return;
 }
 
 // ===== INTEGRATION WITH KANBAN CARDS =====
 function setupIssueCardClickHandlers() {
   console.log('🔧 [Setup] ===== EXECUTING setupIssueCardClickHandlers =====');
-  
+
   // Setup details buttons with proper drag and drop compatibility
   const detailsButtons = document.querySelectorAll('.issue-details-btn');
   console.log('📋 [Setup] Found', detailsButtons.length, 'details buttons');
-  
+
   detailsButtons.forEach((btn, index) => {
     const issueKey = btn.getAttribute('data-issue-key');
     console.log(`🔧 [Setup] Configuring button ${index + 1}:`, issueKey);
-    
+
     // Force styling
     btn.style.cursor = 'pointer';
     btn.style.pointerEvents = 'auto';
     btn.style.zIndex = '9999';
     btn.style.position = 'relative';
-    
+
     // Remove any existing listeners
     btn.onclick = null;
-    
+
     // Use click with delay to avoid conflict with drag events
-    btn.addEventListener('click', function(e) {
+    btn.addEventListener('click', function (e) {
       console.log('🎯 [CLICK] Details button clicked for:', issueKey);
-      
+
       // Check if we're in the middle of a drag operation
       if (window.dragTransitionVertical && window.dragTransitionVertical.isDragging) {
         console.log('⚠️ [CLICK] Drag in progress, ignoring button click');
         return;
       }
-      
+
       // Stop propagation to prevent card events
       e.stopPropagation();
       e.preventDefault();
-      
+
       // Small delay to ensure it's a deliberate click, not part of drag
       setTimeout(() => {
         if (typeof openIssueDetails === 'function') {
@@ -1145,7 +858,7 @@ function setupIssueCardClickHandlers() {
         }
       }, 50);
     });
-    
+
     console.log('✅ [Setup] Button configured with mousedown handler for:', issueKey);
   });
 }
@@ -1153,11 +866,11 @@ function setupIssueCardClickHandlers() {
 // ===== SETUP MENTIONS SYSTEM =====
 function setupMentionSystem() {
   console.log('🔧 [Mentions] Setting up mention system...');
-  
+
   // Check if sidebar exists
   const rightSidebar = document.getElementById('rightSidebar');
   console.log('📍 [Mentions] rightSidebar exists:', !!rightSidebar);
-  
+
   // Search for elements globally
   const mentionBtn = document.getElementById('mentionBtn');
   const mentionsDropdown = document.getElementById('mentionsDropdown');
@@ -1170,13 +883,13 @@ function setupMentionSystem() {
   console.log('📍 [Mentions] mentionsSearch found:', !!mentionsSearch);
   console.log('📍 [Mentions] mentionsList found:', !!mentionsList);
   console.log('📍 [Mentions] commentText found:', !!commentText);
-  
+
   // List all elements in the sidebar
   if (rightSidebar) {
     const allIds = rightSidebar.querySelectorAll('[id]');
     console.log('📊 [Mentions] IDs in sidebar:', Array.from(allIds).map(el => el.id));
   }
-  
+
   // Also try searching within sidebar specifically
   if (rightSidebar && !mentionBtn) {
     console.log('🔍 [Mentions] Searching within sidebar...');
@@ -1189,7 +902,7 @@ function setupMentionSystem() {
     console.log('Full document structure check:');
     console.log('mentionBtn in doc:', document.getElementById('mentionBtn'));
     console.log('mentionsDropdown in doc:', document.getElementById('mentionsDropdown'));
-    
+
     // Debug: check if they're maybe in the sidebar but with different query
     if (rightSidebar) {
       console.log('🔍 [Mentions] Attempting querySelectorAll...');
@@ -1206,7 +919,7 @@ function setupMentionSystem() {
   // Clone the button to remove all previous event listeners
   const newMentionBtn = mentionBtn.cloneNode(true);
   mentionBtn.parentNode.replaceChild(newMentionBtn, mentionBtn);
-  
+
   // Get reference to the new button
   const freshMentionBtn = document.getElementById('mentionBtn');
   const mentionsDropdownFresh = document.getElementById('mentionsDropdown');
@@ -1233,21 +946,21 @@ function setupMentionSystem() {
       mentionsDropdownFresh.classList.remove('show');
     }
   });
-  
+
   console.log('✅ [Mentions] Setup complete');
 }
 
 function loadAvailableUsers() {
   const mentionsList = document.getElementById('mentionsList');
-  
+
   if (!sidebarState.currentIssue) {
     console.warn('⚠️ [Mentions] No current issue - cannot load users');
     return;
   }
-  
+
   const issueKey = sidebarState.currentIssue.key;
   console.log('🔄 [Mentions] Fetching users for issue:', issueKey);
-  
+
   // Fetch from API endpoint
   fetch(`/api/v2/issues/${issueKey}/mentions/users`)
     .then(r => {
@@ -1256,19 +969,19 @@ function loadAvailableUsers() {
     })
     .then(data => {
       console.log('✅ [Mentions] Loaded users:', data.users?.length || 0);
-      
+
       if (!data.users || data.users.length === 0) {
         mentionsList.innerHTML = '<div class="mention-item" style="color: #999; padding: 8px;">No users available</div>';
         return;
       }
-      
+
       // Map API users to display format
       const users = data.users.map(user => ({
         id: user.accountId || user.username,
         name: user.displayName || user.username || 'Unknown',
         email: user.emailAddress || ''
       }));
-      
+
       mentionsList.innerHTML = users.map((user, idx) => `
         <div class="mention-item" data-mention="${user.name}" data-id="${user.id}" data-index="${idx}">
           <strong>${user.name}</strong>
@@ -1307,10 +1020,10 @@ function filterMentions(query) {
 // ===== SETUP ATTACHMENTS SYSTEM =====
 function setupAttachmentsSystem() {
   console.log('🔧 [Attachments] Setting up attachments system...');
-  
+
   const rightSidebar = document.getElementById('rightSidebar');
   console.log('📍 [Attachments] rightSidebar exists:', !!rightSidebar);
-  
+
   const attachBtn = document.getElementById('attachBtn');
   const attachmentsPreview = document.getElementById('attachmentsPreview');
   const attachmentsList = document.getElementById('attachmentsList');
@@ -1318,7 +1031,7 @@ function setupAttachmentsSystem() {
   console.log('📍 [Attachments] attachBtn found:', !!attachBtn);
   console.log('📍 [Attachments] attachmentsPreview found:', !!attachmentsPreview);
   console.log('📍 [Attachments] attachmentsList found:', !!attachmentsList);
-  
+
   // Try searching within sidebar
   if (rightSidebar && !attachBtn) {
     console.log('🔍 [Attachments] Searching within sidebar...');
@@ -1333,7 +1046,7 @@ function setupAttachmentsSystem() {
     console.log('Full document structure check:');
     console.log('attachBtn in doc:', document.getElementById('attachBtn'));
     console.log('attachmentsPreview in doc:', document.getElementById('attachmentsPreview'));
-    
+
     // Debug: try finding by class
     if (rightSidebar) {
       console.log('🔍 [Attachments] Attempting querySelectorAll...');
@@ -1351,7 +1064,7 @@ function setupAttachmentsSystem() {
   // Clone the button to remove all previous event listeners
   const newAttachBtn = attachBtn.cloneNode(true);
   attachBtn.parentNode.replaceChild(newAttachBtn, attachBtn);
-  
+
   // Get reference to the new button
   const freshAttachBtn = document.getElementById('attachBtn');
 
@@ -1362,7 +1075,7 @@ function setupAttachmentsSystem() {
     fileInput.type = 'file';
     fileInput.multiple = true;
     fileInput.accept = '*/*';
-    
+
     fileInput.addEventListener('change', (e) => {
       const files = Array.from(e.target.files);
       console.log('📂 [Attachments] Files selected:', files.length);
@@ -1372,7 +1085,7 @@ function setupAttachmentsSystem() {
 
     fileInput.click();
   });
-  
+
   console.log('✅ [Attachments] Setup complete');
 }
 
@@ -1431,6 +1144,30 @@ function setupCommentShortcuts() {
   }
 }
 
+// ===== OPEN ISSUE DETAILS (delegator) =====
+function openIssueDetails(issueKey) {
+  if (!issueKey) return;
+  // Prefer FlowingFooter balanced view
+  if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+    try {
+      window.flowingFooter.switchToBalancedView(issueKey);
+      return;
+    } catch (e) {
+      console.warn('FlowingFooter.switchToBalancedView failed:', e);
+    }
+  }
+
+  // Fallback: open legacy right sidebar and fetch minimal data
+  const rightSidebar = document.getElementById('rightSidebar');
+  if (rightSidebar) {
+    rightSidebar.style.display = 'block';
+    document.querySelector('.main-wrapper')?.classList.add('sidebar-open');
+    sidebarState.isOpen = true;
+  }
+  sidebarState.currentIssue = { key: issueKey };
+  try { fetchServiceDeskRequestDetails(issueKey); } catch (e) { console.warn('Fallback fetch failed', e); }
+}
+
 // ===== EXPORT FOR USE =====
 window.rightSidebar = {
   init: initRightSidebar,
@@ -1457,9 +1194,15 @@ console.log('✅ [Global] Functions exported:', {
 window.setupAttachmentsSystem = setupAttachmentsSystem;
 window.setupCommentShortcuts = setupCommentShortcuts;
 
+// Alias for FlowingContext bar (do not rename DOM id; provide JS alias)
+if (window.FlowingContext) {
+  window.FlowingContextBar = window.FlowingContextBar || window.rightSidebar || null;
+  console.log('ℹ️ [Right Sidebar] FlowingContext detected — aliasing as FlowingContextBar');
+}
+
 // Hook into app.js render functions
 const originalRenderKanban = window.renderKanban;
-window.renderKanban = function() {
+window.renderKanban = function () {
   originalRenderKanban?.call(this);
   setupIssueCardClickHandlers();
 };
@@ -1470,21 +1213,21 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🔧 [Right Sidebar] DOMContentLoaded - Initializing...');
     initRightSidebar();
     console.log('✅ [Right Sidebar] initRightSidebar() completed');
-    
+
     // Initialize mentions system
     if (window.MentionSystem && !window.mentionSystem) {
       window.mentionSystem = new MentionSystem();
     }
-    
+
     // Simple global backup (no stopPropagation)
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
       const btn = e.target.closest('.issue-details-btn');
       if (btn && !btn.onclick) { // Only if no onclick set
         const issueKey = btn.getAttribute('data-issue-key');
-        
+
         if (issueKey) {
           console.log('🎯 [Global Backup] Click on details button:', issueKey);
-          
+
           if (typeof openIssueDetails === 'function') {
             openIssueDetails(issueKey);
           } else {
@@ -1493,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
-    
+
   }, 100);
 });
 
@@ -1512,7 +1255,7 @@ if (document.readyState !== 'loading') {
   setTimeout(() => {
     initRightSidebar();
     console.log('✅ [Right Sidebar] Immediate init completed');
-    
+
     // Initialize tab switching after sidebar is ready
     console.log('📋 Initializing tabs immediately...');
     setTimeout(() => setupTabSwitching(), 100);

@@ -47,9 +47,11 @@ body.theme-light {
   /* ==================== LIGHT THEME - SOLO OVERRIDES DE COLOR ==================== */
   /* Todas las variables centralizadas en variables.css */
   /* Este archivo solo debe contener color overrides en selectores específicos */
-  
-  background: transparent; /* Allow app-background-container to show through */
-  color: #312e81; /* Light theme text color */
+
+  background: transparent;
+  /* Allow app-background-container to show through */
+  color: #312e81;
+  /* Light theme text color */
 }
 
 /* ==================== LIGHT THEME COMPONENT STYLES ==================== */
@@ -129,7 +131,8 @@ body.theme-light .right-sidebar .panel-title {
 
 /* Page and body */
 body.theme-light {
-  background: transparent !important; /* Allow app-background-container to show through */
+  background: transparent !important;
+  /* Allow app-background-container to show through */
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -239,6 +242,7 @@ body.theme-light .navbar {
   border-bottom-color: rgba(59, 130, 246, 0.1) !important;
   color: #1f2937;
 }
+
 /* Header background managed by transparency-manager.css */
 
 body.theme-light .header h1,
@@ -256,6 +260,8 @@ body.theme-light .ds-surface {
   color: #1f2937;
   box-shadow: 0 1px 3px rgba(59, 130, 246, 0.05) !important;
 }
+
+/* (notch overrides removed) */
 
 body.theme-light .section {
   background: rgba(255, 255, 255, 0.98) !important;

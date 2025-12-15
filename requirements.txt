@@ -22,11 +22,16 @@ spacy>=3.8.0
 es-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 langdetect>=1.0.9
+## Heavy ML / optional dependencies
+# The ML stack (transformers, torch, tensorflow, spaCy models, etc.) is optional
+# and may require specific Python versions or OS toolchains. Install these in a
+# dedicated environment or via Docker. See `ml_service/requirements.txt` for the
+# recommended ML dependencies used by the microservice.
 
-# Optional: install spaCy medium models for better embeddings
-# python -m spacy download es_core_news_md
-# python -m spacy download en_core_web_md
-PyPDF2>=3.0.0
+# If you need the full ML stack locally, install from the ml_service folder:
+#   cd ml_service
+#   .venv3.12\Scripts\activate  # or source .venv3.12/bin/activate on *nix
+#   python -m pip install -r requirements.txt
 
-# Desktop launcher dependency (optional - needed for running app_window.py)
+# Optional desktop launcher dependency (only needed for app_window.py):
 pywebview>=3.8

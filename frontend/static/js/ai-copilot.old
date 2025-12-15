@@ -1,0 +1,27 @@
+// ai-copilot.old: lightweight compatibility shim
+// Delegates to canonical FlowingFooter (window.flowingFooter) to avoid duplication.
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.flowingFooter) {
+    window.aiCopilot = window.flowingFooter;
+    console.log('✅ aiCopilot (old) aliased to flowingFooter');
+    return;
+  }
+
+  let retries = 0;
+  const t = setInterval(() => {
+    if (window.flowingFooter) {
+      window.aiCopilot = window.flowingFooter;
+      console.log('✅ aiCopilot (old) aliased to flowingFooter (delayed)');
+      clearInterval(t);
+      return;
+    }
+    retries += 1;
+    if (retries > 50) { clearInterval(t); console.warn('aiCopilot (old): FlowingFooter not found'); }
+  }, 100);
+});
+
+window.aiCopilot = window.aiCopilot || {};
+window.aiCopilot.askAboutTicket = window.aiCopilot.askAboutTicket || function (issueKey) { return window.flowingFooter?.askAboutTicket?.(issueKey); };
+window.aiCopilot.suggestActions = window.aiCopilot.suggestActions || function (issueKey) { return window.flowingFooter?.suggestActions?.(issueKey); };
+window.aiCopilot.explainSLA = window.aiCopilot.explainSLA || function (issueKey) { return window.flowingFooter?.explainSLA?.(issueKey); };

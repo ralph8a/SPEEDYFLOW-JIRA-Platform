@@ -442,143 +442,25 @@
         </div>
       </div>
 
-      <!-- RIGHT SIDEBAR (TICKET DETAILS) -->
-      <div class="right-sidebar" id="rightSidebar" style="display: none; padding-bottom: 70px;">
-      <!-- CLOSE BUTTON -->
-      <button class="btn-close-sidebar" id="closeSidebarBtn">✕</button>
+      <!-- RIGHT SIDEBAR (Context-aware suggestions) -->
+      <div class="right-sidebar suggestions-sidebar" id="rightSidebar" style="display: none; padding-bottom: 70px;">
+        <button class="btn-close-sidebar" id="closeSidebarBtn">✕</button>
 
-      <!-- TWO COLUMN LAYOUT -->
-      <div class="sidebar-two-columns">
-        
-        <!-- LEFT COLUMN: DETAILS -->
-        <div class="sidebar-column sidebar-details">
-          <div class="column-header">
-            <h3>Ticket Details</h3>
-          </div>
-          <div class="purple-divider" style="margin:8px 0;"></div>
-
-          <div class="column-content">
-            <!-- SLA MONITOR (First, most important) -->
-            <div id="slaMonitorContainer" style="margin-bottom: 12px;">
-              <!-- SLA Monitor renders here dynamically -->
-            </div>
-
-            <!-- ALL FIELDS (Organized in tabs by importance) -->
-            <div class="detail-group detail-group-all-fields">
-              <div class="detail-label">
-                <span><span id="icon-ticket-info"></span> Ticket Information</span>
-              </div>
-              
-              <!-- TABS NAVIGATION -->
-              <div class="fields-tabs">
-                <button class="fields-tab active" data-tab="essential">
-                  <span id="icon-tab-essential"></span> Essential
-                </button>
-                <button class="fields-tab" data-tab="details">
-                  <span id="icon-tab-details"></span> Details
-                </button>
-                <button class="fields-tab" data-tab="technical">
-                  <span id="icon-tab-technical"></span> Technical
-                </button>
-              </div>
-              
-              <!-- TAB CONTENT -->
-              <div class="fields-tab-content active" id="tab-essential">
-                <!-- Essential fields (populated dynamically) -->
-              </div>
-              <div class="fields-tab-content" id="tab-details">
-                <!-- Detail fields (populated dynamically) -->
-              </div>
-              <div class="fields-tab-content" id="tab-technical">
-                <!-- Technical fields (populated dynamically) -->
-              </div>
-            </div>
-
-            <!-- ATTACHMENTS SECTION -->
-            <div class="detail-group detail-group-attachments" id="attachmentsSection" style="display: none;">
-              <div class="detail-label">
-                <span>📎 Attachments</span>
-                <span class="detail-label-hint" id="attachmentCountLabel">(0)</span>
-              </div>
-              <div id="existingAttachmentsContainer" class="attachments-display-container">
-                <!-- Populated dynamically by right-sidebar.js -->
-              </div>
-            </div>
-          </div>
+        <!-- Context-aware header -->
+        <div class="suggestions-header" id="suggestionsHeader" style="padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-weight:600">💡 Flowing Suggestions</div>
+          <div id="suggestionsContextBadge" style="font-size:12px;opacity:0.8">No context</div>
         </div>
 
-        <!-- RIGHT COLUMN: COMMENTS -->
-        <div class="sidebar-column sidebar-comments">
-          <div class="column-header">
-            <h3>Comments <span class="comment-count" id="commentCount">(0)</span></h3>
-          </div>
-
-          <div class="column-content">
-            <div class="comments-list" id="commentsList">
-              <p class="no-comments">Loading comments...</p>
-            </div>
-          </div>
-
-          <!-- COMMENT INPUT AREA -->
-          <div class="comment-input-container">
-            <!-- ATTACHMENTS TOOLBAR -->
-            <div class="comment-toolbar">
-              <button class="comment-toolbar-btn" id="attachBtn" title="Attach file">
-                <span class="toolbar-icon">📎</span>
-                <span class="toolbar-text">Attach</span>
-              </button>
-              <div class="comment-hint">
-                <span style="opacity: 0.6; font-size: 11px;">💡 Type @ to mention someone</span>
-              </div>
-              <div class="visibility-toggle">
-                <input type="checkbox" id="commentInternal" />
-                <label for="commentInternal" class="visibility-label">🔓 Public</label>
-              </div>
-            </div>
-
-            <!-- MENTIONS DROPDOWN -->
-            <div class="mentions-dropdown" id="mentionsDropdown">
-              <input 
-                type="text" 
-                class="mentions-search" 
-                id="mentionsSearch" 
-                placeholder="Search users..."
-              >
-              <div class="mentions-list" id="mentionsList"></div>
-            </div>
-
-            <!-- ATTACHMENTS PREVIEW -->
-            <div class="attachments-preview" id="attachmentsPreview">
-              <div class="attachments-list" id="attachmentsList"></div>
-            </div>
-
-            <!-- COMMENT TEXTAREA -->
-            <textarea 
-              id="commentText" 
-              class="comment-input" 
-              placeholder="Add a comment... (Press Ctrl+Enter to post)"
-              rows="4">
-            </textarea>
-
-            <!-- POST BUTTON -->
-            <button class="btn-add-comment">Post Comment</button>
-          </div>
+        <!-- Horizontal suggestions strip -->
+        <div id="suggestionsBar" class="suggestions-bar" style="display:flex;gap:8px;padding:12px;overflow:auto;align-items:flex-start;">
+          <!-- Suggestion cards injected here by FlowingContext -->
         </div>
 
-      </div>
-
-      <!-- ACTIVITY PANEL (Hidden by default, switchable) -->
-      <div class="sidebar-panel" id="activityPanel" style="display: none;">
-        <div class="panel-header">
-          <h3 class="panel-title">Activity</h3>
+        <!-- Results / details area -->
+        <div id="suggestionsResults" class="suggestions-results" style="padding:12px;overflow:auto;height:calc(100% - 160px);">
+          <p style="color:#666">Selecciona una sugerencia para ver resultados aquí.</p>
         </div>
-
-        <div class="panel-content">
-          <div class="activity-timeline" id="activityTimeline">
-            <p class="no-activity">No activity yet</p>
-          </div>
-        </div>
-      </div>
       </div>
     </div>
   </div>
@@ -713,46 +595,12 @@
   <script src="/static/js/smart-filters.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-functions-modal.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-analytics.js?v={{ timestamp }}"></script>
-
-  
-  <!-- ===== DIAGNOSTIC SCRIPT ===== -->
-  <script>
-    // Check if new comment elements are loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const mentionBtn = document.getElementById('mentionBtn');
-        const attachBtn = document.getElementById('attachBtn');
-        const commentToolbar = document.querySelector('.comment-toolbar');
-        
-        console.log('=== Right Sidebar Diagnostic ===');
-        console.log('✓ mentionBtn exists:', !!mentionBtn);
-        console.log('✓ attachBtn exists:', !!attachBtn);
-        console.log('✓ comment-toolbar exists:', !!commentToolbar);
-        
-        if (!mentionBtn) {
-          console.warn('⚠️ mentionBtn NOT FOUND - check HTML structure');
-        }
-        if (!attachBtn) {
-          console.warn('⚠️ attachBtn NOT FOUND - check HTML structure');
-        }
-        if (!commentToolbar) {
-          console.warn('⚠️ comment-toolbar NOT FOUND - check CSS loading');
-        }
-        
-        // Check if setupMentionSystem function exists
-        console.log('✓ setupMentionSystem function exists:', typeof window.setupMentionSystem === 'function');
-        console.log('✓ setupAttachmentsSystem function exists:', typeof window.setupAttachmentsSystem === 'function');
-        console.log('✓ window.commentsModule exists:', !!window.commentsModule);
-        console.log('✓ window.mentionsAutocomplete exists:', !!window.mentionsAutocomplete);
-        console.log('✓ window.mentionSystem exists:', !!window.mentionSystem);
-      }, 500);
-    });
-  </script>
-
   <!-- User Setup Modal -->
   <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
   
   <!-- FLOWING MVP FOOTER SCRIPT -->
+  <!-- Flowing Context (context-aware suggestions injected into right sidebar) -->
+  <script src="/static/js/flowing-context-aware.js?v={{ timestamp }}"></script>
   <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
   
   <!-- FLOWING MVP INTEGRATION SCRIPT -->

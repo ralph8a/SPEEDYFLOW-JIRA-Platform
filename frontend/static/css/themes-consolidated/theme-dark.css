@@ -52,9 +52,11 @@ body.theme-dark {
   /* ==================== DARK THEME - SOLO OVERRIDES DE COLOR ==================== */
   /* Todas las variables centralizadas en variables.css */
   /* Este archivo solo debe contener color overrides en selectores específicos */
-  
-  background: transparent !important; /* Always show app-background-container through */
-  color: #ffffff; /* Dark theme text color */
+
+  background: transparent !important;
+  /* Always show app-background-container through */
+  color: #ffffff;
+  /* Dark theme text color */
 }
 
 /* ==================== DARK THEME COMPONENT STYLES ==================== */
@@ -120,7 +122,8 @@ body.theme-dark .btn-primary:hover {
 /* ==================== THEME VISIBILITY ==================== */
 
 body.theme-dark {
-  background: transparent !important; /* Allow app-background-container to show through */
+  background: transparent !important;
+  /* Allow app-background-container to show through */
   background-attachment: fixed;
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: auto;
@@ -177,6 +180,8 @@ body.theme-dark .kanban-column-title {
   color: #cbd5e1;
   font-weight: 700;
 }
+
+/* (notch overrides removed) */
 
 body.theme-dark .kanban-column-count {
   background: rgba(80, 80, 80, 0.15);
@@ -243,7 +248,7 @@ body.theme-dark .kanban-column:nth-child(3) .issue-card:hover {
     font-size: 9px;
     padding: 3px 8px;
   }
-  
+
   body.theme-dark .issue-card {
     padding: var(--spacing-sm);
     border-left-width: 2px;
@@ -476,5 +481,3 @@ body.theme-dark span,
 body.theme-dark div {
   opacity: 1 !important;
 }
-
-

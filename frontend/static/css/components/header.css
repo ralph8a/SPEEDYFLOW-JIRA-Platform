@@ -5,13 +5,17 @@
 
 /* ==================== ENFORCE SOLID TEXT IN HEADER ==================== */
 /* ALL header text must be fully opaque */
-.main-header-pro p, .main-header-pro span, .main-header-pro a, .main-header-pro button,
-.header-title, .header-subtitle,
-.breadcrumb, .breadcrumb-item,
-.search-input, .search-input::placeholder,
-.theme-bubble p, .theme-bubble span,
-.user-menu p, .user-menu span {
-  opacity: 1 !important;
+.main-header-pro p,
+.main-header-pro span,
+.main-header-pro a,
+.main-header-pro button,
+.header-title,
+.header-subtitle,
+.breadcrumb,
+.breadcrumb-item {
+  /* Enforce fully opaque, readable header text */
+  color: var(--text-primary);
+  opacity: 1;
 }
 
 /* ===== HEADER LAYOUT ===== */
@@ -22,32 +26,14 @@
   justify-content: space-between;
   height: auto;
   padding: var(--spacing-md) var(--spacing-lg);
-  position: sticky;
+  position: relative;
   top: 0;
   z-index: 100;
   gap: var(--spacing-lg);
-  min-height: 56px;
+  min-height: 44px;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.brand-icon {
-  font-size: 28px;
-  line-height: 1;
-}
+/* (half-moon notch removed) */
 
 .brand-text {
   font-size: 20px;
@@ -101,19 +87,9 @@
   font-size: 11px;
 }
 
-.breadcrumb-sep {
-  opacity: 0.7;
-  margin: 0 4px;
-}
+/* breadcrumb separator handled by templates using .breadcrumb-separator */
 
-/* ===== HEADER CENTER - REMOVED FOR SIMPLICITY ===== */
-.header-center {
-  display: none;
-}
-
-.search-bar {
-  display: none;
-}
+/* header-center (templates use header-center-section) — removed from this stylesheet */
 
 /* ===== HEADER RIGHT SECTION ===== */
 .header-right {
@@ -123,46 +99,8 @@
   margin-left: auto;
 }
 
-.header-divider {
-  width: 1px;
-  height: 24px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 0 2px;
-}
-
-/* ===== VIEW TOGGLE ===== */
-.view-toggle {
-  display: flex;
-  gap: 2px;
-  background: var(--card-bg);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--border-radius);
-  padding: 2px;
-  /* backdrop-filter: blur(...); */
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-toggle {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  border-radius: var(--border-radius-sm);
-  transition: all var(--transition-base) var(--transition-ease);
-}
-
-.btn-toggle.active {
-  background: var(--card-bg-hover);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-toggle:hover {
-  color: var(--text-primary);
-}
+/* `.view-toggle`/`.btn-toggle` removed — not used in current templates */
+/* header-divider removed; variants defined in other files */
 
 /* ===== ICON BUTTONS ===== */
 .btn-icon {
@@ -214,224 +152,9 @@
   border: 2px solid rgba(26, 26, 26, 0.95);
 }
 
-/* ===== THEME BUBBLE ===== */
-.theme-bubble-container {
-  position: relative;
-}
+/* Theme bubble / options removed — templates use minimal theme icons instead */
 
-.btn-theme-bubble {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(59, 130, 246, 0.1));
-  border: 1.2px solid rgba(99, 102, 241, 0.25);
-  border-radius: 10px;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.08);
-}
-
-.btn-theme-bubble:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(59, 130, 246, 0.2));
-  border-color: rgba(99, 102, 241, 0.5);
-  color: rgba(255, 255, 255, 0.95);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-}
-
-.theme-bubble {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(37, 37, 37, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 12px 8px;
-  min-width: 150px;
-  max-width: calc(100vw - 16px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  /* backdrop-filter: blur(...); */
-  z-index: 999999;
-  animation: slideDownFade 0.2s ease;
-}
-
-.theme-bubble-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  padding: 4px 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.theme-options {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.theme-option {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s ease;
-  text-align: left;
-  width: 100%;
-}
-
-.theme-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.theme-option.active {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
-  border-color: rgba(59, 130, 246, 0.4);
-}
-
-/* ===== USER MENU ===== */
-.user-menu-container {
-  position: relative;
-}
-
-.btn-user-menu {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(217, 70, 239, 0.08) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-primary);
-}
-
-.btn-user-menu:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(217, 70, 239, 0.12) 100%);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.user-avatar {
-  font-size: 16px;
-  line-height: 1;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-name {
-  font-size: 12px;
-  font-weight: 500;
-  max-width: 70px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dropdown-arrow {
-  font-size: 9px;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
-}
-
-.btn-user-menu:hover .dropdown-arrow {
-  transform: translateY(1px);
-}
-
-.user-dropdown {
-  position: fixed;
-  background: linear-gradient(135deg, rgba(20, 20, 35, 0.95) 0%, rgba(15, 15, 30, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  min-width: 240px;
-  max-width: calc(100vw - 16px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 10000;
-  overflow: hidden;
-  animation: slideDownFade 0.2s ease;
-}
-
-.user-dropdown-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.user-avatar-large {
-  font-size: 32px;
-  line-height: 1;
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-full-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-email {
-  font-size: 12px;
-  color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-dropdown-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.user-dropdown-item {
-  display: block;
-  width: 100%;
-  padding: 12px 16px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  text-align: left;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-.user-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  padding-left: 20px;
-}
-
-.user-dropdown-item.logout {
-  color: #ef4444;
-}
-
-.user-dropdown-item.logout:hover {
-  background: rgba(239, 68, 68, 0.1);
-}
+/* User menu styles removed — header uses `header-icon-btn` / `header-account-actions` now */
 
 /* ===== ANIMATIONS ===== */
 @keyframes slideDownFade {
@@ -439,6 +162,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -446,19 +170,10 @@
 }
 
 /* ===== LIGHT THEME ===== */
-/* Header background and borders managed by transparency-manager.css */body:not(.theme-dark) .search-bar {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.1);
-}
+/* Header background and borders managed by transparency-manager.css */
+/* `.search-bar` not present in templates; removed to keep CSS focused on actual elements */
 
-body:not(.theme-dark) .search-bar:focus-within {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.15);
-}
-
-body:not(.theme-dark) .btn-icon,
-body:not(.theme-dark) .btn-toggle {
+body:not(.theme-dark) .btn-icon {
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.1);
   color: #1f2937;
@@ -469,47 +184,7 @@ body:not(.theme-dark) .btn-icon:hover {
   border-color: rgba(0, 0, 0, 0.15);
 }
 
-body:not(.theme-dark) .theme-bubble,
-body:not(.theme-dark) .user-dropdown {
-  background: linear-gradient(135deg, rgba(240, 245, 250, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-body:not(.theme-dark) .theme-option,
-body:not(.theme-dark) .user-dropdown-item {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.1);
-  color: #1f2937;
-}
-
-body:not(.theme-dark) .theme-option:hover,
-body:not(.theme-dark) .user-dropdown-item:hover {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.15);
-}
-
-body:not(.theme-dark) .theme-option.active {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-body:not(.theme-dark) .btn-user-menu {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(217, 70, 239, 0.08) 100%);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-body:not(.theme-dark) .btn-user-menu:hover {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(217, 70, 239, 0.12) 100%);
-}
-
-body:not(.theme-dark) .user-dropdown-header {
-  background: rgba(59, 130, 246, 0.08);
-  border-bottom-color: rgba(0, 0, 0, 0.08);
-}
-
-body:not(.theme-dark) .user-dropdown-divider {
-  background: rgba(0, 0, 0, 0.08);
-}
+/* Light-theme variants for removed theme/user-menu elements cleared */
 
 body:not(.theme-dark) .breadcrumb-item {
   color: #6b7280;
@@ -551,41 +226,25 @@ body:not(.theme-dark) .header-breadcrumb {
     font-size: 12px;
   }
 
-  .btn-icon,
-  .btn-theme-bubble,
-  .btn-user-menu {
+  .btn-icon {
     width: 28px;
     height: 28px;
     font-size: 12px;
   }
 
-  .btn-icon,
-  .btn-theme-bubble {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
-
-  .view-toggle {
-    display: none;
-  }
+  /* .view-toggle handled in other component CSS; removed from header.css */
 
   .header-divider {
     display: none;
   }
 
-  .user-dropdown {
-    min-width: 200px;
-    max-width: calc(100vw - 16px);
-  }
-
-  .btn-user-menu {
-    padding: 4px 8px;
-  }
+  /* user-dropdown / btn-user-menu removed from this stylesheet */
 
   .notification-badge {
     width: 14px;
     height: 14px;
     font-size: 8px;
   }
+
+  /* mobile adjustments: none for notch */
 }

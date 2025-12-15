@@ -1,5 +1,16 @@
 {
+  // Use the project's virtualenv Python as the default interpreter
+  "python.defaultInterpreterPath": "${workspaceFolder}/ml_service/.venv3.12/Scripts/python.exe",
+  // Ensure the Python extension activates the environment automatically in terminals
+  "python.terminal.activateEnvironment": true,
+  // Add venv Scripts to integrated terminal PATH so new terminals default to the venv
+  "terminal.integrated.env.windows": {
+    "VIRTUAL_ENV": "${workspaceFolder}/ml_service/.venv3.12",
+    "PATH": "${workspaceFolder}/ml_service/.venv3.12\\Scripts;${env:PATH}"
+  },
+  // Keep existing non-Python workspace settings
   "javascript.validate.enable": false,
   "eslint.enable": false,
+  // Legacy setting (kept for compatibility) — overridden by python.defaultInterpreterPath
   "python.pythonPath": "C:\\ProgramData\\anaconda3\\python.exe"
 }
