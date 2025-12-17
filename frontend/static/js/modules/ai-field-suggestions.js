@@ -4,61 +4,15 @@
  * Analiza tickets y sugiere actualizaciones de campos
  */
 
-class AIFieldSuggestions {
-  constructor() {
-    this.modal = null;
-    this.currentIssue = null;
-    this.suggestions = [];
-    this.selectedSuggestions = new Set();
-  }
+// Deprecated: AI Field Suggestions removed. Stubbed implementation to avoid network calls.
 
-  /**
-   * Muestra el modal de sugerencias AI para un ticket
-   * @param {string} issueKey - Key del ticket a analizar
-   */
-  async showSuggestionsModal(issueKey) {
-    console.log(`🤖 Analyzing ticket ${issueKey} for field suggestions...`);
-    
-    this.currentIssue = issueKey;
-    this.selectedSuggestions.clear();
-    
-    // Crear modal
-    this.createModal();
-    
-    // Mostrar loading state
-    this.showLoadingState();
-    
-    try {
-      // Llamar al backend para obtener sugerencias
-      const response = await fetch('/api/ai/suggest-updates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          issue_key: issueKey,
-          fields_to_analyze: ['severity', 'priority', 'labels', 'assignee']
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      this.suggestions = data.suggestions || [];
-      
-      console.log(`✅ Received ${this.suggestions.length} suggestions`);
-      
-      // Mostrar sugerencias
-      this.renderSuggestions();
-      
-    } catch (error) {
-      console.error('❌ Error fetching AI suggestions:', error);
-      this.showErrorState(error.message);
-    }
-  }
+if (typeof window !== 'undefined') {
+  window.aiFieldSuggestions = {
+    showSuggestionsModal: (issueKey) => alert('AI field suggestions are disabled in this deployment.'),
+    init: () => console.log('ℹ️ [Deprecated] aiFieldSuggestions.init() called - no-op'),
+    closeModal: () => {}
+  };
+}
 
   /**
    * Crea el modal de sugerencias
