@@ -52,7 +52,7 @@ El microservicio ML está **100% funcional** y listo para integrarse con Flowing
 ### **Archivos Creados**
 
 ```
-✅ ml_service/
+✅ /
    ├── main.py                 # FastAPI app (puerto 5001)
    ├── predictor.py            # Predictor unificado (6 modelos)
    ├── ml_client.js            # Cliente JavaScript
@@ -70,7 +70,7 @@ El microservicio ML está **100% funcional** y listo para integrarse con Flowing
 ✅ docs/
    ├── ML_INTEGRATION_STRATEGY.md
    ├── ML_AI_INVENTORY.md
-   └── ML_SERVICE_READY.md
+   └── _READY.md
 ```
 
 ---

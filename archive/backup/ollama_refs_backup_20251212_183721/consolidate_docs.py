@@ -92,7 +92,7 @@ write_consolidated(
     [
         ("2_ML_AND_AI_FEATURES.md", "ML & AI Features Overview"),
         ("ML_AI_INVENTORY.md", "ML/AI Inventory"),
-        ("ML_SERVICE_READY.md", "ML Service"),
+        ("_READY.md", "ML Service"),
         ("ML_PRIORITY_ENGINE.md", "Priority Engine"),
         ("ML_PREDICTIVE_DASHBOARD.md", "Predictive Dashboard"),
         ("ML_INTERACTIVE_FEATURES.md", "Interactive Features"),

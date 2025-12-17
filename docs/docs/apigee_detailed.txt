@@ -33,7 +33,7 @@ Integration patterns for SPEEDYFLOW
 ---------------------------------
 - Protect JIRA integration endpoints via API gateway: apply OAuth/JWT, rate limiting and JSONThreatProtection.
 - Add a shared flow that logs ticket-related metrics (counts by status/assignee/priority) into Apigee analytics for dashboards.
-- Use ServiceCallout to contact ML microservice (ml_service) for real-time predictions in request flow (e.g., when creating/updating issues, enrich payload with suggested assignee/labels).
+- Use ServiceCallout to contact ML microservice () for real-time predictions in request flow (e.g., when creating/updating issues, enrich payload with suggested assignee/labels).
 
 References
 ----------

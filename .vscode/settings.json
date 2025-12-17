@@ -1,12 +1,12 @@
 {
   // Use the project's virtualenv Python as the default interpreter
-  "python.defaultInterpreterPath": "${workspaceFolder}/ml_service/.venv3.12/Scripts/python.exe",
+  "python.defaultInterpreterPath": "${workspaceFolder}//.venv3.12/Scripts/python.exe",
   // Ensure the Python extension activates the environment automatically in terminals
   "python.terminal.activateEnvironment": true,
   // Add venv Scripts to integrated terminal PATH so new terminals default to the venv
   "terminal.integrated.env.windows": {
-    "VIRTUAL_ENV": "${workspaceFolder}/ml_service/.venv3.12",
-    "PATH": "${workspaceFolder}/ml_service/.venv3.12\\Scripts;${env:PATH}"
+    "VIRTUAL_ENV": "${workspaceFolder}//.venv3.12",
+    "PATH": "${workspaceFolder}//.venv3.12\\Scripts;${env:PATH}"
   },
   // Keep existing non-Python workspace settings
   "javascript.validate.enable": false,

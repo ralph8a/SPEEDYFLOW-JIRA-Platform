@@ -49,8 +49,8 @@ Configuration/Scripts:       400 lines (3%)
 - `utils/config.py`: 280 lines (Configuration)
 
 **ML Service**:
-- `ml_service/main.py`: 380 lines (FastAPI service)
-- `ml_service/predictor.py`: 520 lines (Model manager)
+- `/main.py`: 380 lines (FastAPI service)
+- `/predictor.py`: 520 lines (Model manager)
 - `api/ml_anomaly_detection.py`: 620 lines (Anomaly engine)
 - `api/ml_comment_suggestions.py`: 480 lines (Comment suggester)
 
@@ -106,8 +106,8 @@ Savings: 580 lines (41% reduction)
 **Test Files**:
 - `test_quick.py`: Quick smoke tests
 - `test_full.py`: Comprehensive test suite
-- `ml_service/test_service.py`: ML service tests
-- `ml_service/test_comprehensive.py`: ML model tests
+- `/test_service.py`: ML service tests
+- `/test_comprehensive.py`: ML model tests
 
 ---
 

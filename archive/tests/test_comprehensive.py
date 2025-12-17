@@ -6,7 +6,7 @@ import json
 import time
 from typing import Dict, List
 
-ML_SERVICE_URL = "http://localhost:5001"
+_URL = "http://localhost:5001"
 
 # Casos de prueba reales
 TEST_CASES = [
@@ -54,7 +54,7 @@ def test_health_check():
     print_header("TEST 1: Health Check")
     
     try:
-        response = requests.get(f"{ML_SERVICE_URL}/health", timeout=5)
+        response = requests.get(f"{_URL}/health", timeout=5)
         
         if response.status_code == 200:
             data = response.json()
@@ -84,7 +84,7 @@ def test_predict_all(test_case: Dict):
     try:
         start_time = time.time()
         response = requests.post(
-            f"{ML_SERVICE_URL}/ml/predict/all",
+            f"{_URL}/ml/predict/all",
             json={
                 "summary": test_case['summary'],
                 "description": test_case['description']
@@ -165,7 +165,7 @@ def test_models_status():
     print_header("TEST: Estado de Modelos")
     
     try:
-        response = requests.get(f"{ML_SERVICE_URL}/models/status", timeout=5)
+        response = requests.get(f"{_URL}/models/status", timeout=5)
         
         if response.status_code == 200:
             data = response.json()
@@ -192,12 +192,12 @@ def test_cache_performance():
     
     print("🔄 Primera llamada (sin caché)...")
     start1 = time.time()
-    response1 = requests.post(f"{ML_SERVICE_URL}/ml/predict/all", json=test_data)
+    response1 = requests.post(f"{_URL}/ml/predict/all", json=test_data)
     latency1 = int((time.time() - start1) * 1000)
     
     print("🔄 Segunda llamada (con caché)...")
     start2 = time.time()
-    response2 = requests.post(f"{ML_SERVICE_URL}/ml/predict/all", json=test_data)
+    response2 = requests.post(f"{_URL}/ml/predict/all", json=test_data)
     latency2 = int((time.time() - start2) * 1000)
     
     print(f"\n📊 Resultados:")
@@ -235,7 +235,7 @@ def test_individual_endpoints():
         try:
             start = time.time()
             response = requests.post(
-                f"{ML_SERVICE_URL}{endpoint}",
+                f"{_URL}{endpoint}",
                 json=test_data,
                 timeout=10
             )

@@ -158,7 +158,7 @@ prototype/
 ### **1. Asegurar ML Service Corriendo**
 ```bash
 # Terminal 1: ML Service
-cd C:\Users\rafae\SPEEDYFLOW-JIRA-Platform\ml_service
+cd C:\Users\rafae\SPEEDYFLOW-JIRA-Platform\
 python main.py
 # → http://localhost:5001 ✅
 ```

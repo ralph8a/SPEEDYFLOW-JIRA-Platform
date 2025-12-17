@@ -667,7 +667,7 @@ Service desk teams managing 50+ tickets/day with SLA commitments
 - [ML Killer Features Roadmap](ML_KILLER_FEATURES_ROADMAP.md)
 - [ML Predictive Dashboard](ML_PREDICTIVE_DASHBOARD.md)
 - [ML Priority Engine](ML_PRIORITY_ENGINE.md)
-- [ML Service Ready](ML_SERVICE_READY.md)
+- [ML Service Ready](_READY.md)
 - [Notification Enhancements](NOTIFICATION_ENHANCEMENTS.md)
 - [Performance Optimizations](PERFORMANCE_OPTIMIZATIONS.md)
 - [SVG Icons Usage](SVG_ICONS_USAGE.md)

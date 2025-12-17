@@ -101,8 +101,8 @@ models/
 
 ##### Service Components
 
-**File**: `ml_service/main.py` (FastAPI application)  
-**Predictor**: `ml_service/predictor.py` (Unified model manager)
+**File**: `/main.py` (FastAPI application)  
+**Predictor**: `/predictor.py` (Unified model manager)
 
 ##### Performance Metrics
 
@@ -130,7 +130,7 @@ Response:
 
 ```bash
 ### Build image
-cd ml_service
+cd 
 docker build -t speedyflow-ml:latest .
 
 ### Run container
@@ -1391,20 +1391,20 @@ POST /cache/clear
 
 ##### **Fase 1: Microservicio Base** (1-2 días)
 
-1. Crear `ml_service/` con FastAPI
+1. Crear `/` con FastAPI
 2. Migrar modelos Keras + predictor
 3. Implementar endpoints básicos
 4. Tests unitarios
 
 ##### **Fase 2: Integración Simple AI** (1 día)
 
-1. Integrar SimpleAIEngine en ml_service
+1. Integrar SimpleAIEngine en 
 2. Unificar endpoints `/ai/*`
 3. Deprecar `ai_endpoints.py`
 
 ##### **Fase 3: Migrar ML Suggester** (1 día)
 
-1. Mover ml_suggester a ml_service
+1. Mover ml_suggester a 
 2. Integrar con base de datos de training
 3. API de feedback para mejora continua
 
@@ -1454,7 +1454,7 @@ python utils/ml_predictor.py
 ##### **3. Crear Microservicio**
 ```bash
 ### Ver docs/ML_INTEGRATION_STRATEGY.md
-cd ml_service
+cd 
 pip install -r requirements.txt
 uvicorn main:app --port 5001
 ```
@@ -1514,7 +1514,7 @@ El microservicio ML unificado está **listo y funcionando** para integrarse con 
 
 ##### **1. Microservicio FastAPI** (Puerto 5001)
 ```
-ml_service/
+/
 ├── main.py              ### FastAPI app con 15+ endpoints
 ├── predictor.py         ### Predictor unificado (6 modelos Keras)
 ├── ml_client.js         ### Cliente JavaScript para frontend
@@ -1568,8 +1568,8 @@ services:
 ##### **Opción 1: Desarrollo Local** (Recomendado para testing)
 
 ```bash
-### 1. Navegar a ml_service
-cd C:\Users\rafae\SPEEDYFLOW-JIRA-Platform\ml_service
+### 1. Navegar a 
+cd C:\Users\rafae\SPEEDYFLOW-JIRA-Platform\
 
 ### 2. Instalar dependencias (ya hecho)
 pip install fastapi uvicorn pydantic psutil
@@ -1633,7 +1633,7 @@ INFO:     Application startup complete.
 
 ```bash
 ### Copiar cliente ML al frontend de Flowing
-cp ml_service/ml_client.js api/static/js/ml_client.js
+cp /ml_client.js api/static/js/ml_client.js
 ```
 
 ##### **Paso 2: Incluir en HTML**
@@ -1761,7 +1761,7 @@ Content-Type: application/json
 
 - **API Docs**: http://localhost:5001/docs
 - **ReDoc**: http://localhost:5001/redoc
-- **README**: `ml_service/README.md`
+- **README**: `/README.md`
 - **Estrategia**: `docs/ML_INTEGRATION_STRATEGY.md`
 - **Inventario**: `docs/ML_AI_INVENTORY.md`
 
@@ -4171,7 +4171,7 @@ El microservicio ML está **100% funcional** y listo para integrarse con Flowing
 ##### **Archivos Creados**
 
 ```
-✅ ml_service/
+✅ /
    ├── main.py                 ### FastAPI app (puerto 5001)
    ├── predictor.py            ### Predictor unificado (6 modelos)
    ├── ml_client.js            ### Cliente JavaScript
@@ -4189,7 +4189,7 @@ El microservicio ML está **100% funcional** y listo para integrarse con Flowing
 ✅ docs/
    ├── ML_INTEGRATION_STRATEGY.md
    ├── ML_AI_INVENTORY.md
-   └── ML_SERVICE_READY.md
+   └── _READY.md
 ```
 
 ---
@@ -4511,7 +4511,7 @@ SPEEDYFLOW-JIRA-Platform/
 │   ├── blueprints/
 │   └── ...
 │
-├── ml_service/                   ### ⭐ NUEVO: Microservicio ML (Puerto 5001)
+├── /                   ### ⭐ NUEVO: Microservicio ML (Puerto 5001)
 │   ├── main.py                   ### FastAPI app
 │   ├── predictor.py              ### SpeedyflowMLPredictor
 │   ├── models/                   ### Modelos entrenados
@@ -4617,8 +4617,8 @@ Response:
 #### 🚀 Plan de Implementación (3 Fases)
 
 ##### Fase 1: Setup Microservicio (1 día)
-- [ ] Crear `ml_service/` con FastAPI
-- [ ] Mover modelos a `ml_service/models/`
+- [ ] Crear `/` con FastAPI
+- [ ] Mover modelos a `/models/`
 - [ ] Implementar endpoints básicos
 - [ ] Docker + docker-compose
 - [ ] Pruebas locales
@@ -4640,7 +4640,7 @@ Response:
 
 #### 💻 Código Base del Microservicio
 
-##### `ml_service/main.py` (FastAPI)
+##### `/main.py` (FastAPI)
 ```python
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -4779,7 +4779,7 @@ async function showSLARisk(summary, description) {
 
 #### 🐳 Docker Setup
 
-##### `ml_service/Dockerfile`
+##### `/Dockerfile`
 ```dockerfile
 FROM python:3.11-slim
 
@@ -4813,7 +4813,7 @@ services:
       - ml-service
   
   ml-service:
-    build: ./ml_service
+    build: ./
     ports:
       - "5001:5001"
     environment:

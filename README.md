@@ -89,7 +89,7 @@ SPEEDYFLOW-JIRA-Platform/
 │   ├── implementation/          # Implementation docs
 │   └── reports/                 # Analysis & reports
 ├── logs/                         # Application logs
-├── ml_service/                   # ML service components
+├── /                   # ML service components
 ├── models/                       # Data models
 ├── run_server.py                # 🚀 Entry point
 ├── requirements.txt              # Python dependencies

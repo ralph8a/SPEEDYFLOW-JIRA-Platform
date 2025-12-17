@@ -344,20 +344,20 @@ POST /cache/clear
 
 ### **Fase 1: Microservicio Base** (1-2 días)
 
-1. Crear `ml_service/` con FastAPI
+1. Crear `/` con FastAPI
 2. Migrar modelos Keras + predictor
 3. Implementar endpoints básicos
 4. Tests unitarios
 
 ### **Fase 2: Integración Simple AI** (1 día)
 
-1. Integrar SimpleAIEngine en ml_service
+1. Integrar SimpleAIEngine en 
 2. Unificar endpoints `/ai/*`
 3. Deprecar `ai_endpoints.py`
 
 ### **Fase 3: Migrar ML Suggester** (1 día)
 
-1. Mover ml_suggester a ml_service
+1. Mover ml_suggester a 
 2. Integrar con base de datos de training
 3. API de feedback para mejora continua
 
@@ -409,7 +409,7 @@ python utils/ml_predictor.py
 ### **3. Crear Microservicio**
 ```bash
 # Ver docs/ML_INTEGRATION_STRATEGY.md
-cd ml_service
+cd 
 pip install -r requirements.txt
 uvicorn main:app --port 5001
 ```

@@ -110,8 +110,8 @@ SIDEBAR_CACHE_TTL=3600       ### 1 hour for sidebar
 LARGE_QUEUE_TTL=10800        ### 3 hours for queues ≥50 tickets
 
 ### ML Service (Optional - if using microservice)
-ML_SERVICE_URL=http://localhost:5001
-ML_SERVICE_ENABLED=true
+_URL=http://localhost:5001
+_ENABLED=true
 ```
 
 ##### 2. Get JIRA API Token
@@ -408,7 +408,7 @@ docker run -d \
 ##### ML Service Deployment (Microservice)
 
 ```bash
-cd ml_service
+cd 
 
 ### Build ML service image
 docker build -t speedyflow-ml:latest .

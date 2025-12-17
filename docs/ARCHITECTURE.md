@@ -107,8 +107,8 @@
 **Technology**: FastAPI (Python 3.13+), TensorFlow/Keras
 
 **Key Files**:
-- `ml_service/main.py` - FastAPI app
-- `ml_service/predictor.py` - Model manager
+- `/main.py` - FastAPI app
+- `/predictor.py` - Model manager
 - `models/*.keras` - Trained models
 
 **Responsibilities**:

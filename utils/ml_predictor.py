@@ -12,11 +12,11 @@ class SpeedyflowMLPredictor:
     """Predictor unificado para todos los modelos ML de SPEEDYFLOW"""
     
     def __init__(self, models_dir=None):
-        # Default to repo ml_service/models so models are consistent with ml_service
+        # Default to repo /models so models are consistent with 
         if models_dir:
             self.models_dir = Path(models_dir)
         else:
-            self.models_dir = Path(__file__).resolve().parent.parent / 'ml_service' / 'models'
+            self.models_dir = Path(__file__).resolve().parent.parent / '' / 'models'
         self.models = {}
         self.encoders = {}
         self.nlp = None

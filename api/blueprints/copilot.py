@@ -10,10 +10,10 @@ from pathlib import Path
 import json
 import random
 
-# Optional integrations with ml_service utilities (ingest removed)
+# Optional integrations with  utilities (ingest removed)
 try:
-    from ml_service.docs_parser import extract_endpoints_from_text, extract_playbooks_from_text
-    from ml_service.predictor import UnifiedMLPredictor
+    from .docs_parser import extract_endpoints_from_text, extract_playbooks_from_text
+    from .predictor import UnifiedMLPredictor
 except Exception:
     extract_endpoints_from_text = None
     extract_playbooks_from_text = None
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 copilot_bp = Blueprint('copilot', __name__, url_prefix='/api/copilot')
 
 # Load chat jokes from file (expandable)
-JOKES_FILE = Path(__file__).resolve().parents[1] / 'ml_service' / 'chat_jokes.json'
+JOKES_FILE = Path(__file__).resolve().parents[1] / '' / 'chat_jokes.json'
 CHAT_JOKES = []
 CHAT_NAMES = []
 def load_chat_jokes():
@@ -65,13 +65,13 @@ def reload_resources():
     except Exception as e:
         results['jokes_error'] = str(e)
 
-    # Try to call ML service reload endpoint if available (configurable via ML_SERVICE_URL)
+    # Try to call ML service reload endpoint if available (configurable via _URL)
     try:
         from utils.config import config as app_config
-        ml_url = os.getenv('ML_SERVICE_URL') or getattr(app_config, 'env_label', None)
-        # prefer explicit ML_SERVICE_URL env var; fallback to localhost:5001
+        ml_url = os.getenv('_URL') or getattr(app_config, 'env_label', None)
+        # prefer explicit _URL env var; fallback to localhost:5001
         if not ml_url or ml_url.startswith('PROD'):
-            ml_base = os.getenv('ML_SERVICE_URL', 'http://localhost:5001')
+            ml_base = os.getenv('_URL', 'http://localhost:5001')
         else:
             ml_base = ml_url
         import requests
@@ -156,7 +156,7 @@ def generate_response(message: str, context: dict) -> str:
 def docs_extract_endpoints():
     data = request.get_json() or {}
     filename = data.get('file')
-    docs_dir = Path(__file__).resolve().parents[1] / 'ml_service' / 'docs'
+    docs_dir = Path(__file__).resolve().parents[1] / '' / 'docs'
     texts = []
     if filename:
         p = docs_dir / filename
@@ -177,7 +177,7 @@ def docs_extract_endpoints():
 def docs_extract_playbooks():
     data = request.get_json() or {}
     filename = data.get('file')
-    docs_dir = Path(__file__).resolve().parents[1] / 'ml_service' / 'docs'
+    docs_dir = Path(__file__).resolve().parents[1] / '' / 'docs'
     texts = []
     if filename:
         p = docs_dir / filename
@@ -202,7 +202,7 @@ def suggest_comment():
     if not UnifiedMLPredictor:
         return jsonify({'error': 'predictor not available'}), 500
     try:
-        predictor = UnifiedMLPredictor(models_dir=str(Path(__file__).resolve().parents[1] / 'ml_service' / 'models'))
+        predictor = UnifiedMLPredictor(models_dir=str(Path(__file__).resolve().parents[1] / '' / 'models'))
         res = predictor.suggest_comment_patterns(summary, comments)
         return jsonify(res)
     except Exception as e:

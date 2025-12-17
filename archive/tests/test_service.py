@@ -5,7 +5,7 @@ import requests
 import json
 import time
 
-ML_SERVICE_URL = "http://localhost:5001"
+_URL = "http://localhost:5001"
 
 def test_health():
     """Test health check"""
@@ -13,7 +13,7 @@ def test_health():
     print("TEST 1: Health Check")
     print("="*70)
     
-    response = requests.get(f"{ML_SERVICE_URL}/health")
+    response = requests.get(f"{_URL}/health")
     print(f"Status: {response.status_code}")
     print(json.dumps(response.json(), indent=2))
     return response.status_code == 200
@@ -35,7 +35,7 @@ def test_predict_all():
     
     start = time.time()
     response = requests.post(
-        f"{ML_SERVICE_URL}/ml/predict/all",
+        f"{_URL}/ml/predict/all",
         json=data
     )
     latency = int((time.time() - start) * 1000)
@@ -64,7 +64,7 @@ def test_models_status():
     print("TEST 3: Models Status")
     print("="*70)
     
-    response = requests.get(f"{ML_SERVICE_URL}/models/status")
+    response = requests.get(f"{_URL}/models/status")
     print(f"Status: {response.status_code}")
     
     if response.status_code == 200:
@@ -102,7 +102,7 @@ def test_individual_endpoints():
     for endpoint in endpoints:
         try:
             response = requests.post(
-                f"{ML_SERVICE_URL}{endpoint}",
+                f"{_URL}{endpoint}",
                 json=data,
                 timeout=5
             )

@@ -115,7 +115,7 @@ SPEEDYFLOW-JIRA-Platform/
 │   ├── blueprints/
 │   └── ...
 │
-├── ml_service/                   # ⭐ NUEVO: Microservicio ML (Puerto 5001)
+├── /                   # ⭐ NUEVO: Microservicio ML (Puerto 5001)
 │   ├── main.py                   # FastAPI app
 │   ├── predictor.py              # SpeedyflowMLPredictor
 │   ├── models/                   # Modelos entrenados
@@ -221,8 +221,8 @@ Response:
 ## 🚀 Plan de Implementación (3 Fases)
 
 ### Fase 1: Setup Microservicio (1 día)
-- [ ] Crear `ml_service/` con FastAPI
-- [ ] Mover modelos a `ml_service/models/`
+- [ ] Crear `/` con FastAPI
+- [ ] Mover modelos a `/models/`
 - [ ] Implementar endpoints básicos
 - [ ] Docker + docker-compose
 - [ ] Pruebas locales
@@ -244,7 +244,7 @@ Response:
 
 ## 💻 Código Base del Microservicio
 
-### `ml_service/main.py` (FastAPI)
+### `/main.py` (FastAPI)
 ```python
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -383,7 +383,7 @@ async function showSLARisk(summary, description) {
 
 ## 🐳 Docker Setup
 
-### `ml_service/Dockerfile`
+### `/Dockerfile`
 ```dockerfile
 FROM python:3.11-slim
 
@@ -417,7 +417,7 @@ services:
       - ml-service
   
   ml-service:
-    build: ./ml_service
+    build: ./
     ports:
       - "5001:5001"
     environment:

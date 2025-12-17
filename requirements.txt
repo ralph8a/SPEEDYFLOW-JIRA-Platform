@@ -25,11 +25,11 @@ langdetect>=1.0.9
 ## Heavy ML / optional dependencies
 # The ML stack (transformers, torch, tensorflow, spaCy models, etc.) is optional
 # and may require specific Python versions or OS toolchains. Install these in a
-# dedicated environment or via Docker. See `ml_service/requirements.txt` for the
+# dedicated environment or via Docker. See `/requirements.txt` for the
 # recommended ML dependencies used by the microservice.
 
-# If you need the full ML stack locally, install from the ml_service folder:
-#   cd ml_service
+# If you need the full ML stack locally, install from the  folder:
+#   cd 
 #   .venv3.12\Scripts\activate  # or source .venv3.12/bin/activate on *nix
 #   python -m pip install -r requirements.txt
 

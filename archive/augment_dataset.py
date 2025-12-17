@@ -1,6 +1,6 @@
 """Augment the labeled comments dataset using ingested docs.
 
-Heuristic labeling rules are applied to sentences/paragraphs found in ml_service/docs/*.txt
+Heuristic labeling rules are applied to sentences/paragraphs found in /docs/*.txt
 and appended to existing `data/comments_dataset.csv` to produce `data/comments_dataset_augmented.csv`.
 """
 from pathlib import Path

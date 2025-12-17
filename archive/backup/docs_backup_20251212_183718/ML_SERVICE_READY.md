@@ -10,7 +10,7 @@ El microservicio ML unificado está **listo y funcionando** para integrarse con 
 
 ### **1. Microservicio FastAPI** (Puerto 5001)
 ```
-ml_service/
+/
 ├── main.py              # FastAPI app con 15+ endpoints
 ├── predictor.py         # Predictor unificado (6 modelos Keras)
 ├── ml_client.js         # Cliente JavaScript para frontend
@@ -64,8 +64,8 @@ services:
 ### **Opción 1: Desarrollo Local** (Recomendado para testing)
 
 ```bash
-# 1. Navegar a ml_service
-cd C:\Users\rafae\SPEEDYFLOW-JIRA-Platform\ml_service
+# 1. Navegar a 
+cd C:\Users\rafae\SPEEDYFLOW-JIRA-Platform\
 
 # 2. Instalar dependencias (ya hecho)
 pip install fastapi uvicorn pydantic psutil
@@ -129,7 +129,7 @@ INFO:     Application startup complete.
 
 ```bash
 # Copiar cliente ML al frontend de Flowing
-cp ml_service/ml_client.js api/static/js/ml_client.js
+cp /ml_client.js api/static/js/ml_client.js
 ```
 
 ### **Paso 2: Incluir en HTML**
@@ -257,7 +257,7 @@ Content-Type: application/json
 
 - **API Docs**: http://localhost:5001/docs
 - **ReDoc**: http://localhost:5001/redoc
-- **README**: `ml_service/README.md`
+- **README**: `/README.md`
 - **Estrategia**: `docs/ML_INTEGRATION_STRATEGY.md`
 - **Inventario**: `docs/ML_AI_INVENTORY.md`
 

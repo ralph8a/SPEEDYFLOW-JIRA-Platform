@@ -91,8 +91,8 @@ models/
 
 ### Service Components
 
-**File**: `ml_service/main.py` (FastAPI application)  
-**Predictor**: `ml_service/predictor.py` (Unified model manager)
+**File**: `/main.py` (FastAPI application)  
+**Predictor**: `/predictor.py` (Unified model manager)
 
 ### Performance Metrics
 
@@ -120,7 +120,7 @@ Response:
 
 ```bash
 # Build image
-cd ml_service
+cd 
 docker build -t speedyflow-ml:latest .
 
 # Run container
