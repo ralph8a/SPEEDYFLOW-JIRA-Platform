@@ -1,16 +1,24 @@
 /**
- * SPEEDYFLOW ML Client - Cliente JavaScript para integrar ML Service con Flowing MVP
- * 
- * Uso:
- * const mlClient = new MLClient('http://localhost:5001');
- * const predictions = await mlClient.predictAll(summary, description);
+ * Flowing MVP ML Client - lightweight placeholder for upcoming restructured ML integration
+ *
+ * NOTE: Defaults and embedded configuration have been removed. Call
+ * FlowingMVPMLClient.configure({ baseURL }) before using network methods.
  */
 
-class MLClient {
-    constructor(baseURL = 'http://localhost:5001') {
-        this.baseURL = baseURL;
-        this.cache = new Map();
-        this.cacheTimeout = 5 * 60 * 1000; // 5 minutos
+class FlowingMVPMLClient {
+    constructor() {
+        // No defaults. Call configure() to set baseURL and options.
+        this.baseURL = null;
+        this.configured = false;
+    }
+
+    static configure(opts = {}) {
+        // Provide a global configure entrypoint for simple migration
+        if (!window.flowingMvpMlClient) window.flowingMvpMlClient = new FlowingMVPMLClient();
+        if (opts.baseURL) window.flowingMvpMlClient.baseURL = opts.baseURL;
+        window.flowingMvpMlClient.configured = true;
+        console.log('✅ [FlowingMVP ML] Configured with options', opts);
+        return window.flowingMvpMlClient;
     }
 
     /**
@@ -20,47 +28,33 @@ class MLClient {
      * @returns {Promise<Object>} Predicciones completas
      */
     async predictAll(summary, description = '') {
-        const cacheKey = `${summary}|${description}`;
-        
-        // Verificar caché local
-        if (this.cache.has(cacheKey)) {
-            const cached = this.cache.get(cacheKey);
-            if (Date.now() - cached.timestamp < this.cacheTimeout) {
-                console.log('🚀 [ML] Using cached prediction');
-                return cached.data;
-            }
+        // If not configured, return safe defaults and do not attempt network calls
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] Client not configured. Call FlowingMVPMLClient.configure({baseURL}) to enable network calls. Returning empty predictions.');
+            return {
+                priority: null,
+                duplicate_check: { is_duplicate: false, confidence: 0 },
+                sla_breach: { will_breach: false, breach_probability: 0, risk_level: 'LOW' },
+                assignee: { suggestions: [], top_choice: null },
+                labels: { suggested_labels: [], count: 0 }
+            };
         }
 
-        console.log('📡 [ML] Fetching predictions from server');
+        console.log('📡 [FlowingMVP ML] Fetching predictions from server (configured)');
         const startTime = performance.now();
-
         try {
             const response = await fetch(`${this.baseURL}/ml/predict/all`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({summary, description})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ summary, description })
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             const latency = Math.round(performance.now() - startTime);
-            
-            console.log(`✅ [ML] Predictions received in ${latency}ms`);
-            
-            // Guardar en caché
-            this.cache.set(cacheKey, {
-                data,
-                timestamp: Date.now()
-            });
-
+            console.log(`✅ [FlowingMVP ML] Predictions received in ${latency}ms`);
             return data;
         } catch (error) {
-            console.error('❌ [ML] Error fetching predictions:', error);
+            console.error('❌ [FlowingMVP ML] Error fetching predictions:', error);
             throw error;
         }
     }
@@ -69,16 +63,16 @@ class MLClient {
      * Verificar duplicados
      */
     async checkDuplicate(summary, description = '') {
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] checkDuplicate called but client not configured. Returning default.');
+            return { is_duplicate: false, confidence: 0, similar_tickets: [] };
+        }
         try {
-            const response = await fetch(`${this.baseURL}/ml/predict/duplicate`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
-            });
+            const response = await fetch(`${this.baseURL}/ml/predict/duplicate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary, description }) });
             return await response.json();
         } catch (error) {
-            console.error('❌ [ML] Error checking duplicate:', error);
-            return {is_duplicate: false, confidence: 0, similar_tickets: []};
+            console.error('❌ [FlowingMVP ML] Error checking duplicate:', error);
+            return { is_duplicate: false, confidence: 0, similar_tickets: [] };
         }
     }
 
@@ -86,16 +80,16 @@ class MLClient {
      * Sugerir prioridad
      */
     async suggestPriority(summary, description = '') {
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] suggestPriority called but client not configured. Returning default.');
+            return { suggested_priority: 'Medium', confidence: 0 };
+        }
         try {
-            const response = await fetch(`${this.baseURL}/ml/predict/priority`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
-            });
+            const response = await fetch(`${this.baseURL}/ml/predict/priority`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary, description }) });
             return await response.json();
         } catch (error) {
-            console.error('❌ [ML] Error suggesting priority:', error);
-            return {suggested_priority: 'Medium', confidence: 0};
+            console.error('❌ [FlowingMVP ML] Error suggesting priority:', error);
+            return { suggested_priority: 'Medium', confidence: 0 };
         }
     }
 
@@ -103,16 +97,16 @@ class MLClient {
      * Predecir violación de SLA
      */
     async predictSLABreach(summary, description = '') {
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] predictSLABreach called but client not configured. Returning default.');
+            return { will_breach: false, breach_probability: 0, risk_level: 'LOW' };
+        }
         try {
-            const response = await fetch(`${this.baseURL}/ml/predict/sla-breach`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
-            });
+            const response = await fetch(`${this.baseURL}/ml/predict/sla-breach`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary, description }) });
             return await response.json();
         } catch (error) {
-            console.error('❌ [ML] Error predicting SLA breach:', error);
-            return {will_breach: false, breach_probability: 0, risk_level: 'LOW'};
+            console.error('❌ [FlowingMVP ML] Error predicting SLA breach:', error);
+            return { will_breach: false, breach_probability: 0, risk_level: 'LOW' };
         }
     }
 
@@ -120,16 +114,16 @@ class MLClient {
      * Sugerir asignados
      */
     async suggestAssignee(summary, description = '', topK = 3) {
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] suggestAssignee called but client not configured. Returning default.');
+            return { suggestions: [], top_choice: null };
+        }
         try {
-            const response = await fetch(`${this.baseURL}/ml/suggest/assignee?top_k=${topK}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
-            });
+            const response = await fetch(`${this.baseURL}/ml/suggest/assignee?top_k=${topK}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary, description }) });
             return await response.json();
         } catch (error) {
-            console.error('❌ [ML] Error suggesting assignee:', error);
-            return {suggestions: [], top_choice: null};
+            console.error('❌ [FlowingMVP ML] Error suggesting assignee:', error);
+            return { suggestions: [], top_choice: null };
         }
     }
 
@@ -137,16 +131,16 @@ class MLClient {
      * Sugerir labels
      */
     async suggestLabels(summary, description = '', threshold = 0.3) {
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] suggestLabels called but client not configured. Returning default.');
+            return { suggested_labels: [], count: 0 };
+        }
         try {
-            const response = await fetch(`${this.baseURL}/ml/suggest/labels?threshold=${threshold}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
-            });
+            const response = await fetch(`${this.baseURL}/ml/suggest/labels?threshold=${threshold}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary, description }) });
             return await response.json();
         } catch (error) {
-            console.error('❌ [ML] Error suggesting labels:', error);
-            return {suggested_labels: [], count: 0};
+            console.error('❌ [FlowingMVP ML] Error suggesting labels:', error);
+            return { suggested_labels: [], count: 0 };
         }
     }
 
@@ -154,16 +148,16 @@ class MLClient {
      * Sugerir siguiente estado
      */
     async suggestStatus(summary, description = '') {
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] suggestStatus called but client not configured. Returning default.');
+            return { suggested_status: 'Unknown', confidence: 0 };
+        }
         try {
-            const response = await fetch(`${this.baseURL}/ml/suggest/status`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
-            });
+            const response = await fetch(`${this.baseURL}/ml/suggest/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary, description }) });
             return await response.json();
         } catch (error) {
-            console.error('❌ [ML] Error suggesting status:', error);
-            return {suggested_status: 'Unknown', confidence: 0};
+            console.error('❌ [FlowingMVP ML] Error suggesting status:', error);
+            return { suggested_status: 'Unknown', confidence: 0 };
         }
     }
 
@@ -171,12 +165,16 @@ class MLClient {
      * Health check del servicio
      */
     async healthCheck() {
+        if (!this.configured || !this.baseURL) {
+            console.warn('⚠️ [FlowingMVP ML] healthCheck called but client not configured. Returning unavailable.');
+            return { status: 'unavailable' };
+        }
         try {
             const response = await fetch(`${this.baseURL}/health`);
             return await response.json();
         } catch (error) {
-            console.error('❌ [ML] Service unavailable:', error);
-            return {status: 'unavailable'};
+            console.error('❌ [FlowingMVP ML] Service unavailable:', error);
+            return { status: 'unavailable' };
         }
     }
 
@@ -184,8 +182,8 @@ class MLClient {
      * Limpiar caché local
      */
     clearCache() {
-        this.cache.clear();
-        console.log('🗑️ [ML] Cache cleared');
+        // No-op: cache removed in this restructured client. Keep method for compatibility.
+        console.log('ℹ️ [FlowingMVP ML] clearCache() is a no-op (client cache disabled in restructured mode)');
     }
 }
 
@@ -194,7 +192,7 @@ class MLClient {
 /**
  * Helper para auto-completar campos con sugerencias ML
  */
-class MLUIHelper {
+class FlowingMVPMLUI {
     constructor(mlClient) {
         this.mlClient = mlClient;
         this.suggestionBadges = new Map();
@@ -413,14 +411,14 @@ class MLUIHelper {
 
 // ==================== EXPORT ====================
 
-// Crear instancia global si no existe
+// Crear instancia global (sin configuración) para que el resto de la app pueda migrar
 if (typeof window !== 'undefined') {
-    window.MLClient = MLClient;
-    window.MLUIHelper = MLUIHelper;
-    
-    // Instancia lista para usar
-    window.mlClient = new MLClient();
-    window.mlUIHelper = new MLUIHelper(window.mlClient);
-    
-    console.log('✅ [ML] Client initialized');
+    window.FlowingMVPMLClient = FlowingMVPMLClient;
+    window.FlowingMVPMLUI = FlowingMVPMLUI;
+
+    // Instancia lista para usar (no configurada)
+    window.flowingMvpMlClient = new FlowingMVPMLClient();
+    window.flowingMvpMlUI = new FlowingMVPMLUI(window.flowingMvpMlClient);
+
+    console.log('ℹ️ [FlowingMVP ML] Client stub initialized (call FlowingMVPMLClient.configure({baseURL}) to enable)');
 }
