@@ -253,7 +253,6 @@
   
   <!-- FLOWING MVP FOOTER STYLES -->
   <link rel="stylesheet" href="/static/css/flowing-mvp-footer.css?v={{ timestamp }}">
-  <link rel="stylesheet" href="/static/css/components/ml-deprecated.css?v={{ timestamp }}">
   
 </head>
 <body class="theme-light">
@@ -579,32 +578,7 @@
   <script src="/static/js/loading-state-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/loading-dots.js?v={{ timestamp }}"></script>
 
-  <!-- ===== AI & ML MODULES ===== -->
-  <script src="/static/js/modules/ai-queue-analyzer.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/view-toggle-filters.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/ai-field-suggestions.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/ml-comment-suggestions.js?v={{ timestamp }}"></script>
-  <!-- ML CLIENT (frontend -> ML Service) -->
-  <script src="/static/js/ml-client.js?v={{ timestamp }}"></script>
-        <script>
-          // Auto-init ML UI helper when fields are present (tries common IDs)
-          document.addEventListener('DOMContentLoaded', function() {
-            try {
-              const tryIds = [ ['summary','description'], ['issueSummary','issueDescription'], ['summaryField','descriptionField'] ];
-              for (const ids of tryIds) {
-                const [sId,dId] = ids;
-                if (document.getElementById(sId)) {
-                  if (window.flowingMvpMlUI && typeof window.flowingMvpMlUI.initTicketForm === 'function') {
-                    window.flowingMvpMlUI.initTicketForm(sId, dId);
-                    console.log('✅ [FlowingMVP ML] flowingMvpMlUI initialized with', sId, dId);
-                    break;
-                  }
-                }
-              }
-            } catch(e){ console.warn('⚠️ [ML] Auto-init failed', e); }
-          });
-        </script>
+  <!-- AI/ML modules removed (deprecated). Only chat and balanced view remain. -->
   <!-- DISABLED: ml-anomaly-dashboard.js (obsolete, auto-opens modal) -->
 
   <!-- ===== DRAG & DROP TRANSITIONS ===== -->
