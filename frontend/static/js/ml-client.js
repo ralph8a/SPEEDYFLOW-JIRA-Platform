@@ -6,7 +6,7 @@
  * const predictions = await mlClient.predictAll(summary, description);
  */
 
-class MLClient {
+class FlowingMVPMLClient {
     constructor(baseURL = 'http://localhost:5002') {
         this.baseURL = baseURL;
         this.cache = new Map();
@@ -194,7 +194,7 @@ class MLClient {
 /**
  * Helper para auto-completar campos con sugerencias ML
  */
-class MLUIHelper {
+class FlowingMVPMLUI {
     constructor(mlClient) {
         this.mlClient = mlClient;
         this.suggestionBadges = new Map();
@@ -415,12 +415,12 @@ class MLUIHelper {
 
 // Crear instancia global si no existe
 if (typeof window !== 'undefined') {
-    window.MLClient = MLClient;
-    window.MLUIHelper = MLUIHelper;
+    window.FlowingMVPMLClient = FlowingMVPMLClient;
+    window.FlowingMVPMLUI = FlowingMVPMLUI;
 
-    // Instancia lista para usar
-    window.mlClient = new MLClient();
-    window.mlUIHelper = new MLUIHelper(window.mlClient);
+    // Instancia lista para usar (legacy default kept)
+    window.flowingMvpMlClient = new FlowingMVPMLClient();
+    window.flowingMvpMlUI = new FlowingMVPMLUI(window.flowingMvpMlClient);
 
-    console.log('✅ [ML] Client initialized');
+    console.log('✅ [FlowingMVP ML] Client initialized (frontend copy)');
 }

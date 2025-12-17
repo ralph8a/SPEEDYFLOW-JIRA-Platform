@@ -594,9 +594,9 @@
               for (const ids of tryIds) {
                 const [sId,dId] = ids;
                 if (document.getElementById(sId)) {
-                  if (window.mlUIHelper && typeof window.mlUIHelper.initTicketForm === 'function') {
-                    window.mlUIHelper.initTicketForm(sId, dId);
-                    console.log('✅ [ML] mlUIHelper initialized with', sId, dId);
+                  if (window.flowingMvpMlUI && typeof window.flowingMvpMlUI.initTicketForm === 'function') {
+                    window.flowingMvpMlUI.initTicketForm(sId, dId);
+                    console.log('✅ [FlowingMVP ML] flowingMvpMlUI initialized with', sId, dId);
                     break;
                   }
                 }
