@@ -277,9 +277,9 @@ class FlowingMVPMLUI {
      * Auto-completar prioridad
      */
     autofillPriority(priorityData) {
-        const priorityField = document.getElementById('priority') || 
-                            document.querySelector('[name="priority"]');
-        
+        const priorityField = document.getElementById('priority') ||
+            document.querySelector('[name="priority"]');
+
         if (!priorityField) return;
 
         priorityField.value = priorityData.suggested_priority;
@@ -295,8 +295,8 @@ class FlowingMVPMLUI {
                 <i class="fas fa-exclamation-triangle"></i>
                 <strong>⚠️ Posible ticket duplicado</strong>
                 <p>Confianza: ${(duplicateData.confidence * 100).toFixed(0)}%</p>
-                ${duplicateData.similar_tickets.length > 0 ? 
-                    `<p>Similares: ${duplicateData.similar_tickets.join(', ')}</p>` : ''}
+                ${duplicateData.similar_tickets.length > 0 ?
+                `<p>Similares: ${duplicateData.similar_tickets.join(', ')}</p>` : ''}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
@@ -323,9 +323,9 @@ class FlowingMVPMLUI {
      * Sugerir asignados
      */
     suggestAssignees(assigneeData) {
-        const assigneeField = document.getElementById('assignee') || 
-                             document.querySelector('[name="assignee"]');
-        
+        const assigneeField = document.getElementById('assignee') ||
+            document.querySelector('[name="assignee"]');
+
         if (!assigneeField) return;
 
         // Si es un select, agregar opciones con badges de confianza
@@ -335,7 +335,7 @@ class FlowingMVPMLUI {
                 const option = document.createElement('option');
                 option.value = suggestion.assignee;
                 option.text = `${suggestion.assignee} (${confidence}% ML)`;
-                
+
                 if (index === 0) {
                     assigneeField.prepend(option);
                     option.selected = true;
@@ -352,7 +352,7 @@ class FlowingMVPMLUI {
         if (!labelsContainer) return;
 
         labelsContainer.innerHTML = '<strong>🏷️ Labels sugeridos:</strong><br>';
-        
+
         labelsData.suggested_labels.forEach(label => {
             const confidence = (label.confidence * 100).toFixed(0);
             const badge = document.createElement('span');
@@ -368,8 +368,8 @@ class FlowingMVPMLUI {
      * Agregar label al campo
      */
     addLabel(labelText) {
-        const labelsField = document.getElementById('labels') || 
-                           document.querySelector('[name="labels"]');
+        const labelsField = document.getElementById('labels') ||
+            document.querySelector('[name="labels"]');
         if (!labelsField) return;
 
         const currentLabels = labelsField.value.split(',').map(l => l.trim()).filter(Boolean);
@@ -386,10 +386,10 @@ class FlowingMVPMLUI {
         const badge = document.createElement('span');
         badge.className = 'badge bg-success ms-2';
         badge.innerHTML = `${text} (${(confidence * 100).toFixed(0)}%)`;
-        
+
         // Insertar después del campo
         field.parentNode.insertBefore(badge, field.nextSibling);
-        
+
         // Auto-remover después de 5 segundos
         setTimeout(() => badge.remove(), 5000);
     }
