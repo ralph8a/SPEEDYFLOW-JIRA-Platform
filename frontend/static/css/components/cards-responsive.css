@@ -2,7 +2,6 @@
  * TICKET CARD RESPONSIVENESS FIX
  * Phase 17D - Fixes issue where cards don't expand to fill available space
  */
-
 /* ===== KANBAN BOARD GRID FIX ===== */
 .kanban-board {
   display: grid;
@@ -14,7 +13,6 @@
   width: 100%;
   max-width: 100%;
 }
-
 /* ===== KANBAN COLUMN RESPONSIVE ===== */
 .kanban-column {
   display: flex;
@@ -23,7 +21,6 @@
   width: 100%;
   max-width: 100%;
 }
-
 /* ===== ISSUE CARD RESPONSIVE ===== */
 .issue-card {
   width: 100%;
@@ -31,7 +28,6 @@
   min-width: 0; /* Allows proper flex shrinking */
   box-sizing: border-box;
 }
-
 /* ===== KANBAN CARDS CONTAINER FIX ===== */
 .kanban-cards {
   flex: 1;
@@ -43,7 +39,6 @@
   flex-direction: column;
   gap: var(--spacing-md);
 }
-
 /* ===== TABLET BREAKPOINT (max 1024px) ===== */
 @media (max-width: 1024px) {
   .kanban-board {
@@ -52,18 +47,15 @@
     padding: var(--spacing-md);
     min-height: auto;
   }
-
   .kanban-column {
     min-height: 400px;
     padding: var(--spacing-sm);
   }
-
   .issue-card {
     padding: 12px;
     margin-bottom: 10px;
   }
 }
-
 /* ===== MOBILE BREAKPOINT (max 768px) ===== */
 @media (max-width: 768px) {
   .kanban-board {
@@ -72,12 +64,10 @@
     padding: var(--spacing-sm);
     min-height: auto;
   }
-
   .kanban-column {
     min-height: 250px;
     padding: var(--spacing-xs);
   }
-
   .issue-card {
     width: 100%;
     max-width: 100%;
@@ -85,32 +75,26 @@
     margin-bottom: 6px;
     font-size: 11px;
   }
-
   .issue-card-key {
     font-size: 10px;
   }
-
   .issue-card-summary {
     font-size: 11px;
     max-height: 2em;
   }
-
   .issue-card-meta,
   .issue-card-footer {
     font-size: 10px;
   }
-
   .kanban-cards {
     gap: var(--spacing-xs);
   }
 }
-
 /* ===== ENSURE FLEX GROWS PROPERLY ===== */
 .kanban-cards {
   flex: 1 1 auto;
   min-height: 0; /* Critical for flex containers with overflow */
 }
-
 .issue-card {
   flex-shrink: 0; /* Prevent cards from shrinking below natural size */
 }

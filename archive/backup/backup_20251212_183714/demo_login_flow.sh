@@ -1,10 +1,8 @@
 #!/bin/bash
 # Demo script para mostrar el flujo de login completo
-
 echo "🎬 SPEEDYFLOW LOGIN FLOW DEMO"
 echo "=============================="
 echo ""
-
 echo "📋 Paso 1: Verificar estado actual"
 echo "-----------------------------------"
 if [ -f .env ]; then
@@ -16,7 +14,6 @@ else
     echo "❌ .env no existe"
 fi
 echo ""
-
 echo "📋 Paso 2: Verificar backup en Documents"
 echo "----------------------------------------"
 BACKUP_FILE="$HOME/Documents/SpeedyFlow/credentials.env"
@@ -28,7 +25,6 @@ else
     echo "❌ Backup no existe"
 fi
 echo ""
-
 echo "📋 Paso 3: Archivos del login modal"
 echo "-----------------------------------"
 echo "Frontend JavaScript:"
@@ -37,14 +33,12 @@ if [ -f "frontend/static/js/user-setup-modal.js" ]; then
 else
     echo "   ❌ user-setup-modal.js no encontrado"
 fi
-
 echo "Frontend CSS:"
 if [ -f "frontend/static/css/user-setup-modal.css" ]; then
     echo "   ✅ user-setup-modal.css ($(wc -l < frontend/static/css/user-setup-modal.css) líneas)"
 else
     echo "   ❌ user-setup-modal.css no encontrado"
 fi
-
 echo "Logo SVG:"
 if [ -f "frontend/static/img/speedyflow-logo.svg" ]; then
     echo "   ✅ speedyflow-logo.svg"
@@ -52,7 +46,6 @@ else
     echo "   ❌ speedyflow-logo.svg no encontrado"
 fi
 echo ""
-
 echo "📋 Paso 4: Backend endpoints"
 echo "---------------------------"
 echo "Verificando endpoints en api/server.py..."
@@ -61,14 +54,12 @@ if grep -q "/api/user/login-status" api/server.py; then
 else
     echo "   ❌ GET /api/user/login-status no encontrado"
 fi
-
 if grep -q "/api/user/login" api/server.py; then
     echo "   ✅ POST /api/user/login"
 else
     echo "   ❌ POST /api/user/login no encontrado"
 fi
 echo ""
-
 echo "📋 Paso 5: Funciones en utils/config.py"
 echo "---------------------------------------"
 if grep -q "def save_user_credentials" utils/config.py; then
@@ -76,14 +67,12 @@ if grep -q "def save_user_credentials" utils/config.py; then
 else
     echo "   ❌ save_user_credentials() no encontrada"
 fi
-
 if grep -q "def needs_login" utils/config.py; then
     echo "   ✅ needs_login()"
 else
     echo "   ❌ needs_login() no encontrada"
 fi
 echo ""
-
 echo "📋 Paso 6: Auto-trigger en app.js"
 echo "---------------------------------"
 if grep -q "checkAndApplyInitialFilters" frontend/static/js/app.js; then
@@ -94,7 +83,6 @@ else
     echo "   ❌ checkAndApplyInitialFilters() no encontrada"
 fi
 echo ""
-
 echo "📋 Paso 7: Documentación"
 echo "-----------------------"
 if [ -f "docs/LOGIN_FLOW.md" ]; then
@@ -102,14 +90,12 @@ if [ -f "docs/LOGIN_FLOW.md" ]; then
 else
     echo "   ❌ docs/LOGIN_FLOW.md no encontrada"
 fi
-
 if [ -f "LOGIN_IMPLEMENTATION_SUMMARY.md" ]; then
     echo "   ✅ LOGIN_IMPLEMENTATION_SUMMARY.md ($(wc -l < LOGIN_IMPLEMENTATION_SUMMARY.md) líneas)"
 else
     echo "   ❌ LOGIN_IMPLEMENTATION_SUMMARY.md no encontrada"
 fi
 echo ""
-
 echo "=============================="
 echo "✅ DEMO COMPLETADO"
 echo "=============================="

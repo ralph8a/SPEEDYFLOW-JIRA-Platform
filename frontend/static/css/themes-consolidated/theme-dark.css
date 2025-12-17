@@ -5,14 +5,12 @@
  * 
  * Single source of truth for dark theme colors and styles
  */
-
 /* ==================== ENFORCE SOLID TEXT COLORS ==================== */
 /* ALL text elements must be fully opaque regardless of parent opacity */
 body.theme-dark,
 body.theme-dark * {
   /* Ensure text is never affected by parent transparency */
 }
-
 body.theme-dark p,
 body.theme-dark span,
 body.theme-dark div,
@@ -47,38 +45,30 @@ body.theme-dark .form-group input {
   opacity: 1 !important;
   color: inherit !important;
 }
-
 body.theme-dark {
   /* ==================== DARK THEME - SOLO OVERRIDES DE COLOR ==================== */
   /* Todas las variables centralizadas en variables.css */
   /* Este archivo solo debe contener color overrides en selectores específicos */
-
   background: transparent !important;
   /* Always show app-background-container through */
   color: #ffffff;
   /* Dark theme text color */
 }
-
 /* ==================== DARK THEME COMPONENT STYLES ==================== */
-
 /* Main layout components - Keep sidebars with proper glassmorphic backgrounds */
 /* Sidebar styling managed by transparency-manager.css */
 body.theme-dark .sidebar,
 /* Right sidebar styles consolidated in components/right-sidebar.css */
-
 /* Ensure main content area is transparent to show AI backgrounds */
 body.theme-dark .app-container,
 body.theme-dark .main-content,
 body.theme-dark .board-wrapper {
   background: transparent !important;
 }
-
 body.theme-dark .sidebar {
   border-right: 1px solid var(--border-emphasis);
 }
-
 /* Header background and styles managed centrally by variables.css and transparency-manager.css */
-
 /* Form elements */
 body.theme-dark input,
 body.theme-dark textarea,
@@ -87,7 +77,6 @@ body.theme-dark select {
   border: 1px solid var(--border-light);
   color: var(--text-primary);
 }
-
 body.theme-dark input:focus,
 body.theme-dark textarea:focus,
 body.theme-dark select:focus {
@@ -95,7 +84,6 @@ body.theme-dark select:focus {
   box-shadow: 0 0 0 3px rgba(100, 181, 246, var(--opacity-subtle));
   background: rgba(52, 52, 52, var(--opacity-strong));
 }
-
 /* Modal, dropdown, tooltip - consolidated */
 body.theme-dark .modal,
 body.theme-dark .dropdown,
@@ -105,7 +93,6 @@ body.theme-dark .tooltip {
   border: 1px solid var(--border-emphasis);
   /* backdrop-filter: blur(...); */
 }
-
 /* Primary button */
 body.theme-dark .btn-primary {
   background: var(--accent-primary);
@@ -113,14 +100,11 @@ body.theme-dark .btn-primary {
   border: none;
   font-weight: 600;
 }
-
 body.theme-dark .btn-primary:hover {
   background: var(--accent-secondary);
   color: #000;
 }
-
 /* ==================== THEME VISIBILITY ==================== */
-
 body.theme-dark {
   background: transparent !important;
   /* Allow app-background-container to show through */
@@ -128,13 +112,10 @@ body.theme-dark {
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: auto;
 }
-
 /* ==================== DARK THEME - KANBAN BOARD ==================== */
-
 body.theme-dark .kanban-board {
   background: transparent !important;
 }
-
 body.theme-dark .kanban-column {
   /* Background será controlado por Transparency Manager */
   border: 1px solid rgba(128, 128, 128, 0.3);
@@ -142,66 +123,52 @@ body.theme-dark .kanban-column {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   /* Backdrop-filter será controlado por Transparency Manager */
 }
-
 body.theme-dark .kanban-column:nth-child(1) {
   border-color: rgba(128, 128, 128, 0.2);
   box-shadow: 0 4px 12px rgba(128, 128, 128, 0.15);
 }
-
 body.theme-dark .kanban-column:nth-child(2) {
   border-color: rgba(217, 70, 239, 0.2);
   box-shadow: 0 4px 12px rgba(217, 70, 239, 0.15);
 }
-
 body.theme-dark .kanban-column:nth-child(3) {
   border-color: rgba(6, 182, 212, 0.2);
   box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
 }
-
 /* Hover state */
 body.theme-dark .kanban-column:hover {
   /* Background y backdrop-filter controlados por Transparency Manager */
   box-shadow: 0 2px 8px rgba(128, 128, 128, 0.1);
 }
-
 body.theme-dark .kanban-column:nth-child(2):hover {
   box-shadow: 0 8px 20px rgba(217, 70, 239, 0.2);
 }
-
 body.theme-dark .kanban-column:nth-child(3):hover {
   box-shadow: 0 8px 20px rgba(6, 182, 212, 0.2);
 }
-
 body.theme-dark .kanban-column-header {
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
 }
-
 body.theme-dark .kanban-column-title {
   color: #cbd5e1;
   font-weight: 700;
 }
-
 /* (notch overrides removed) */
-
 body.theme-dark .kanban-column-count {
   background: rgba(80, 80, 80, 0.15);
   border: 1px solid rgba(120, 120, 120, 0.3);
   color: #b0b8c8;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
-
 body.theme-dark .kanban-cards::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.2);
 }
-
 body.theme-dark .kanban-cards::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(100, 100, 100, 0.5) 0%, rgba(80, 80, 80, 0.3) 100%);
 }
-
 body.theme-dark .kanban-cards::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(120, 120, 120, 0.7) 0%, rgba(100, 100, 100, 0.5) 100%);
 }
-
 /* Issue cards in dark theme - base styles */
 body.theme-dark .issue-card {
   background: rgba(30, 30, 30, 0.95) !important;
@@ -211,52 +178,42 @@ body.theme-dark .issue-card {
   box-shadow: var(--shadow-sm);
   color: #e2e8f0;
 }
-
 body.theme-dark .issue-card:hover {
   background: rgba(30, 41, 59, 0.98) !important;
   /* backdrop-filter: blur(12px) saturate(180%); */
   box-shadow: 0 4px 12px rgba(128, 128, 128, 0.3);
   border-color: rgba(128, 128, 128, 0.25);
 }
-
 /* Column 2 cards (purple) in dark theme */
 body.theme-dark .kanban-column:nth-child(2) .issue-card {
   border-left-color: #d946ef;
   border-color: rgba(217, 70, 239, 0.15);
 }
-
 body.theme-dark .kanban-column:nth-child(2) .issue-card:hover {
   box-shadow: 0 4px 12px rgba(217, 70, 239, 0.2);
   border-color: rgba(217, 70, 239, 0.25);
 }
-
 /* Column 3 cards (cyan) in dark theme */
 body.theme-dark .kanban-column:nth-child(3) .issue-card {
   border-left-color: #06b6d4;
   border-color: rgba(6, 182, 212, 0.15);
 }
-
 body.theme-dark .kanban-column:nth-child(3) .issue-card:hover {
   box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
   border-color: rgba(6, 182, 212, 0.25);
 }
-
 /* Responsive optimizations for dark theme */
-
 @media (max-width: 768px) {
   body.theme-dark .kanban-column-count {
     font-size: 9px;
     padding: 3px 8px;
   }
-
   body.theme-dark .issue-card {
     padding: var(--spacing-sm);
     border-left-width: 2px;
   }
 }
-
 /* ==================== DARK THEME - ENHANCED TEXT CONTRAST ==================== */
-
 /* Base badge styling - apply to all badge types */
 body.theme-dark .status-badge,
 body.theme-dark .priority-badge,
@@ -285,23 +242,19 @@ body.theme-dark .sla-paused {
   border: 1px solid;
   font-weight: 700;
 }
-
 /* Status colors with enhanced contrast */
 body.theme-dark .status-open {
   color: #64b5f6;
   border-color: rgba(100, 181, 246, 0.4);
 }
-
 body.theme-dark .status-progress {
   color: #fbbf24;
   border-color: rgba(251, 191, 36, 0.4);
 }
-
 body.theme-dark .status-done {
   color: #4ade80;
   border-color: rgba(74, 222, 128, 0.4);
 }
-
 /* Priority colors with enhanced contrast for dark theme */
 body.theme-dark .priority-highest,
 body.theme-dark .priority-critico {
@@ -310,78 +263,64 @@ body.theme-dark .priority-critico {
   text-shadow: 0 0 8px rgba(100, 181, 246, 0.5);
   border-width: 2px;
 }
-
 body.theme-dark .priority-high {
   color: #fcd34d;
   border-color: rgba(252, 211, 77, 0.5);
   border-width: 2px;
 }
-
 body.theme-dark .priority-medium {
   color: #64b5f6;
   border-color: rgba(100, 181, 246, 0.4);
   border-width: 2px;
 }
-
 body.theme-dark .priority-low {
   color: #86efac;
   border-color: rgba(134, 239, 172, 0.4);
   border-width: 2px;
 }
-
 body.theme-dark .priority-lowest {
   color: #cbd5e1;
   border-color: rgba(203, 213, 225, 0.3);
   border-width: 2px;
 }
-
 /* SLA Badge Colors with Enhanced Contrast */
 body.theme-dark .sla-healthy {
   color: #86efac;
   border-color: rgba(134, 239, 172, 0.4);
 }
-
 body.theme-dark .sla-on-track {
   color: #fcd34d;
   border-color: rgba(252, 211, 77, 0.4);
 }
-
 body.theme-dark .sla-warning {
   color: #fb923c;
   border-color: rgba(251, 146, 60, 0.4);
 }
-
 body.theme-dark .sla-critical {
   color: #ff6b6b;
   border-color: rgba(255, 107, 107, 0.4);
 }
-
 body.theme-dark .sla-breached {
   color: #ff6b6b;
   border-color: rgba(255, 107, 107, 0.5);
 }
-
 body.theme-dark .sla-completed {
   color: #86efac;
   border-color: rgba(134, 239, 172, 0.4);
 }
-
 body.theme-dark .sla-unknown,
 body.theme-dark .sla-na {
   color: #cbd5e1;
   border-color: rgba(203, 213, 225, 0.2);
 }
-
 body.theme-dark .sla-default {
   color: #93c5fd;
   border-color: rgba(147, 197, 253, 0.3);
 }
-
 body.theme-dark .sla-paused {
   color: #d8b4fe;
   border-color: rgba(216, 180, 254, 0.3);
 }
-
 /* Form Elements - Consolidated */
 body.theme-dark .form-group label,
 body.theme-dark .form-label {
@@ -389,7 +328,6 @@ body.theme-dark .form-label {
   font-weight: 600;
   opacity: 1 !important;
 }
-
 body.theme-dark .form-group select,
 body.theme-dark .form-group input,
 body.theme-dark .form-control {
@@ -398,13 +336,11 @@ body.theme-dark .form-control {
   color: #e0e0e0 !important;
   opacity: 1 !important;
 }
-
 body.theme-dark .form-group select::placeholder,
 body.theme-dark .form-group input::placeholder {
   color: #909090 !important;
   opacity: 1 !important;
 }
-
 body.theme-dark .form-group select:focus,
 body.theme-dark .form-group input:focus,
 body.theme-dark .form-control:focus {
@@ -412,64 +348,52 @@ body.theme-dark .form-control:focus {
   border-color: rgba(100, 181, 246, 0.5);
   color: #ffffff;
 }
-
 /* Button text contrast */
 body.theme-dark .btn {
   color: #ffffff;
   font-weight: 600;
 }
-
 body.theme-dark .btn-success,
 body.theme-dark .btn-danger {
   color: #ffffff;
 }
-
 body.theme-dark .btn-warning {
   color: #000000;
 }
-
 /* Text elements in cards and modals */
 body.theme-dark .issue-card h3,
 body.theme-dark .issue-card h4 {
   color: #ffffff;
   font-weight: 600;
 }
-
 body.theme-dark .issue-card p {
   color: #cbd5e1;
 }
-
 body.theme-dark .issue-card .issue-key {
   color: #93c5fd;
   font-weight: 700;
 }
-
 /* Modal and Dropdown Text */
 body.theme-dark .modal h2,
 body.theme-dark .modal h3 {
   color: #ffffff;
   font-weight: 700;
 }
-
 body.theme-dark .modal p,
 body.theme-dark .dropdown p {
   color: #cbd5e1;
 }
-
 /* Tooltip Text */
 body.theme-dark .tooltip::after {
   background: rgba(15, 15, 15, 0.95);
   color: #e0e0e0;
 }
-
 /* Right sidebar styles consolidated in components/right-sidebar.css */
-
 /* ==================== FINAL TRANSPARENCY OVERRIDE ==================== */
 /* Ensure NO text elements have any transparency issues */
 body.theme-dark *:not(.background-overlay):not(.background-image-layer):not([class*="opacity"]) {
   opacity: 1 !important;
 }
-
 body.theme-dark .sidebar *,
 body.theme-dark .header *,
 body.theme-dark .kanban-board *,

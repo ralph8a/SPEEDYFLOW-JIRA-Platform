@@ -4,12 +4,9 @@
 Test Comment Suggestions Engine
 Quick test to verify AI suggestions are working
 """
-
 import requests
 import json
-
 API_URL = "http://127.0.0.1:5005/api/ml/comments/suggestions"
-
 # Test tickets with different scenarios
 test_tickets = [
     {
@@ -46,25 +43,20 @@ test_tickets = [
         }
     }
 ]
-
 def test_suggestions():
     print("=" * 80)
     print("🤖 Testing Comment Suggestions Engine")
     print("=" * 80)
-    
     for test in test_tickets:
         print(f"\n📋 Testing: {test['name']}")
         print("-" * 80)
         print(f"Summary: {test['data']['summary']}")
         print(f"Type: {test['data']['issue_type']} | Priority: {test['data']['priority']}")
-        
         try:
             response = requests.post(API_URL, json=test['data'], timeout=10)
-            
             if response.status_code == 200:
                 result = response.json()
                 suggestions = result.get('suggestions', [])
-                
                 print(f"\n✅ Got {len(suggestions)} suggestions:")
                 for i, sugg in enumerate(suggestions, 1):
                     print(f"\n{i}. [{sugg['type'].upper()}] ({sugg['confidence']:.0%} confidence)")
@@ -72,13 +64,10 @@ def test_suggestions():
             else:
                 print(f"❌ Error: HTTP {response.status_code}")
                 print(f"   {response.text}")
-                
         except Exception as e:
             print(f"❌ Exception: {e}")
-    
     print("\n" + "=" * 80)
     print("✅ Test complete!")
     print("=" * 80)
-
 if __name__ == "__main__":
     test_suggestions()

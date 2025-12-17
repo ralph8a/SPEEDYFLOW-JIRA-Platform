@@ -2,7 +2,6 @@
  * Mentions System - CSS Styles
  * Dropdown styling, highlighting, and animations
  */
-
 /* ===== MENTIONS DROPDOWN ===== */
 .mentions-dropdown {
   background: rgba(20, 25, 45, 0.95);
@@ -14,9 +13,7 @@
   z-index: var(--z-popover);
   animation: slideUp 0.2s ease;
 }
-
 /* Animation slideUp is now imported from core/animations.css */
-
 /* ===== MENTION OPTION ===== */
 .mention-option {
   display: flex;
@@ -27,13 +24,11 @@
   transition: all 0.15s ease;
   border-left: 2px solid transparent;
 }
-
 .mention-option:hover,
 .mention-option.selected {
   background: rgba(128, 128, 128, 0.2);
   border-left-color: var(--ff-accent);
 }
-
 .mention-avatar {
   width: 28px;
   height: 28px;
@@ -45,7 +40,6 @@
   font-size: 14px;
   flex-shrink: 0;
 }
-
 .mention-info {
   flex: 1;
   min-width: 0;
@@ -53,7 +47,6 @@
   flex-direction: column;
   gap: 2px;
 }
-
 .mention-name {
   font-size: 13px;
   font-weight: 600;
@@ -62,7 +55,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .mention-email {
   font-size: 11px;
   color: var(--text-secondary);
@@ -71,7 +63,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 /* ===== MENTION HIGHLIGHTING ===== */
 .mention-highlighted {
   background: rgba(128, 128, 128, 0.2);
@@ -82,12 +73,10 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .mention-highlighted:hover {
   background: rgba(128, 128, 128, 0.3);
   text-decoration: underline;
 }
-
 /* ===== MENTION NOTIFICATION ===== */
 .mention-notification {
   background: rgba(128, 128, 128, 0.1);
@@ -102,38 +91,30 @@
   gap: 8px;
   animation: slideIn 0.3s ease;
 }
-
 /* Animation slideIn is now imported from core/animations.css */
-
 .mention-notification::before {
   content: '👤';
   font-size: 14px;
 }
-
 /* ===== SCROLLBAR STYLING ===== */
 .mentions-dropdown::-webkit-scrollbar {
   width: 6px;
 }
-
 .mentions-dropdown::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .mentions-dropdown::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
-
 .mentions-dropdown::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
-
 /* ===== COMMENT WITH MENTIONS ===== */
 .comment-text-with-mentions {
   line-height: 1.6;
   word-break: break-word;
 }
-
 /* ===== MENTION HELP TEXT ===== */
 .mention-help-text {
   font-size: 11px;
@@ -144,7 +125,6 @@
   align-items: center;
   gap: 4px;
 }
-
 .mention-help-text::before {
   content: 'ℹ️';
 }

@@ -4,7 +4,6 @@
  * This file intentionally keeps a compact surface and isolates legacy ticket-details
  * rendering to the new FlowingContext implementation.
  */
-
 /* Base right-sidebar container - lightweight and glassy */
 .right-sidebar,
 #rightSidebar {
@@ -21,13 +20,11 @@
   box-shadow: -8px 0 30px rgba(2, 6, 23, 0.06);
   overflow: hidden;
 }
-
 body.theme-dark .right-sidebar,
 body.theme-dark #rightSidebar {
   background: rgba(12, 14, 20, 0.6);
   border-left-color: rgba(255, 255, 255, 0.04);
 }
-
 /* Compact modifier used by FlowingContext to shrink the bar */
 .flowing-context-sidebar,
 #rightSidebar.flowing-context-sidebar,
@@ -37,7 +34,6 @@ body.theme-dark #rightSidebar {
   min-width: 240px !important;
   padding: 0;
 }
-
 /* Close button */
 .btn-close-sidebar {
   position: absolute;
@@ -55,46 +51,38 @@ body.theme-dark #rightSidebar {
   cursor: pointer;
   z-index: 40;
 }
-
 body.theme-dark .btn-close-sidebar {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
-
 /* FLOWING SUGGESTIONS HEADER */
 .flowing-suggestions-header {
   padding: 10px 14px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
 }
-
 .flowing-suggestions-header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
-
 .flowing-suggestions-title {
   font-weight: 600;
   font-size: 14px;
   color: #0f172a;
 }
-
 body.theme-dark .flowing-suggestions-title {
   color: #e6f0ff;
 }
-
 .flowing-suggestions-context {
   font-size: 12px;
   color: #475569;
   opacity: 0.9;
 }
-
 body.theme-dark .flowing-suggestions-context {
   color: rgba(255, 255, 255, 0.75);
 }
-
 /* Suggestions bar */
 .flowing-suggestions-bar {
   display: flex;
@@ -103,16 +91,13 @@ body.theme-dark .flowing-suggestions-context {
   overflow: auto;
   align-items: flex-start;
 }
-
 .flowing-suggestions-empty {
   padding: 12px;
   color: #6b7280;
 }
-
 body.theme-dark .flowing-suggestions-empty {
   color: #9ca3af;
 }
-
 .suggestion-card {
   min-width: 200px;
   background: rgba(255, 255, 255, 0.9);
@@ -121,49 +106,40 @@ body.theme-dark .flowing-suggestions-empty {
   box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
-
 body.theme-dark .suggestion-card {
   background: rgba(6, 10, 15, 0.6);
   border-color: rgba(255, 255, 255, 0.04);
 }
-
 .suggestion-card-inner {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
 }
-
 .suggestion-card-title {
   font-weight: 600;
   font-size: 14px;
   color: #0f172a;
 }
-
 body.theme-dark .suggestion-card-title {
   color: #e6f0ff;
 }
-
 .suggestion-card-priority {
   font-size: 12px;
   color: #475569;
   opacity: 0.85;
 }
-
 .suggestion-card-desc {
   margin-top: 8px;
   font-size: 13px;
   color: #374151;
 }
-
 body.theme-dark .suggestion-card-desc {
   color: #d1d5db;
 }
-
 .suggestion-card-footer {
   margin-top: 10px;
   text-align: right;
 }
-
 .flowing-exec-btn {
   background: linear-gradient(90deg, #7c3aed, #06b6d4);
   color: #fff;
@@ -173,73 +149,58 @@ body.theme-dark .suggestion-card-desc {
   cursor: pointer;
   font-weight: 600;
 }
-
 .flowing-exec-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 14px rgba(7, 89, 133, 0.12);
 }
-
 /* Results area */
 .flowing-suggestions-results {
   padding: 12px;
   overflow: auto;
   height: calc(100% - 180px);
 }
-
 .flowing-suggestions-placeholder {
   color: #6b7280;
 }
-
 body.theme-dark .flowing-suggestions-placeholder {
   color: #9ca3af;
 }
-
 .flowing-result-item {
   padding: 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
-
 body.theme-dark .flowing-result-item {
   border-bottom-color: rgba(255, 255, 255, 0.04);
 }
-
 .flowing-result-item-title {
   font-weight: 600;
 }
-
 .flowing-result-item-sim {
   font-weight: 400;
   color: #6b7280;
 }
-
 .flowing-result-item-body {
   color: #111827;
   margin-top: 4px;
 }
-
 body.theme-dark .flowing-result-item-body {
   color: #d1d5db;
 }
-
 .flowing-processing {
   color: #374151;
 }
-
 .flowing-error {
   color: #dc2626;
   font-weight: 700;
 }
-
 .flowing-json {
   white-space: pre-wrap;
   font-size: 13px;
   color: #111827;
 }
-
 body.theme-dark .flowing-json {
   color: #e6eef8;
 }
-
 /* Floating bulb button (FlowingContext namespace to avoid colliding with Flowing MVP) */
 .fc-toggle-btn,
 #fcToggleBtn {
@@ -260,21 +221,17 @@ body.theme-dark .flowing-json {
   justify-content: center;
   font-size: 18px;
 }
-
 @media (max-width:800px) {
-
   .flowing-context-sidebar,
   #rightSidebar.flowing-context-sidebar,
   .right-sidebar.flowing-context-sidebar {
     width: 280px;
     max-width: 60%;
   }
-
   .fc-toggle-btn,
   #fcToggleBtn {
     right: 12px;
     top: 12px;
   }
 }
-
 /* Keep file minimal — legacy ticket-details removed intentionally */

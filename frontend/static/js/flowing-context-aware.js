@@ -1,7 +1,6 @@
 // flowing-context-aware.js
 // Minimal FlowingContext implementation: detects UI context and renders contextual
 // suggestions into the existing right sidebar, replacing its content.
-
 (function () {
     class FlowingContextImpl {
         constructor() {
@@ -11,21 +10,17 @@
             this.suggestions = [];
             // Auto-open flag: when false, suggestions are fetched but sidebar won't open automatically
             this.autoOpen = false;
-
             document.addEventListener('DOMContentLoaded', () => {
                 // Initial detection and a small periodic refresh (fetch suggestions only)
                 this.detectContext();
                 setInterval(() => this.detectContext(), 3000);
-
                 // Create the floating toggle bulb so user can open suggestions on demand
                 this.createToggleButton();
-
                 // Expose API globally
                 window.FlowingContext = this;
                 console.log('✅ FlowingContext initialized (flowing-context-aware.js)');
             });
         }
-
         // Local fallback suggestions (used when server contextual-suggestions fails)
         this.LOCAL_SUGGESTIONS = {
             'kanban_board': [
@@ -42,14 +37,11 @@
                 { id: 'bulk_similar_search', icon: '🔍', title: 'Búsqueda en lote', description: 'Buscar patrones en los tickets visibles', action: 'semantic_search', priority: 1 }
             ]
         };
-
         detectContext() {
             // Heuristics: prefer global app/state if available, fallback to DOM
             const state = window.state || {};
             const app = window.app || {};
-
             const prev = { ctx: this.currentContext, key: this.activeIssueKey };
-
             if (state.currentQueue) {
                 this.currentContext = 'kanban_board';
                 this.contextData.queue = state.currentQueue;
@@ -58,13 +50,10 @@
             } else {
                 this.currentContext = 'kanban_board';
             }
-
             // active selected issue
             this.activeIssueKey = state.selectedIssue || app?.selectedIssue || null;
-
             // additional context data
             this.contextData.issueCount = app?.issuesCache?.size || 0;
-
             // If changed, optionally auto-fetch suggestions
             if (prev.ctx !== this.currentContext || prev.key !== this.activeIssueKey) {
                 // Auto-refresh suggestions when context changes (do not auto-open unless enabled)
@@ -75,7 +64,6 @@
                 }).catch(() => { });
             }
         }
-
         async getSuggestions() {
             try {
                 // Build a minimal, serializable payload to avoid sending complex circular objects
@@ -90,21 +78,17 @@
                 } catch (e) {
                     console.warn('FlowingContext: could not build minimal context_data', e);
                 }
-
                 const payload = {
                     context: this.currentContext,
                     issue_key: this.activeIssueKey,
                     context_data: contextDataMinimal
                 };
-
                 console.debug('FlowingContext.getSuggestions payload:', payload);
-
                 const resp = await fetch('/api/flowing/contextual-suggestions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 if (!resp.ok) {
                     console.warn('FlowingContext.getSuggestions: HTTP', resp.status);
                     // Fallback to local suggestions mapping to keep UI functional
@@ -113,7 +97,6 @@
                     this.suggestionsContext = this.currentContext;
                     return this.suggestions;
                 }
-
                 const data = await resp.json();
                 this.suggestions = data.suggestions || [];
                 this.suggestionsContext = data.context || this.currentContext;
@@ -124,18 +107,14 @@
                 return [];
             }
         }
-
         renderSuggestionsInSidebar(openNow = false) {
             const sidebar = document.getElementById('rightSidebar');
             if (!sidebar) return;
-
             // Apply FlowingContext specific class for compact styling
             sidebar.classList.add('flowing-context-sidebar');
-
             // Replace entire content of sidebar with suggestions strip + results
             if (openNow) sidebar.style.display = 'block';
             sidebar.innerHTML = '';
-
             // Close button
             const closeBtn = document.createElement('button');
             closeBtn.className = 'btn-close-sidebar';
@@ -145,7 +124,6 @@
                 sidebar.style.display = 'none';
             });
             sidebar.appendChild(closeBtn);
-
             // Header area (narrower to match compact sidebar)
             const header = document.createElement('div');
             header.className = 'flowing-suggestions-header';
@@ -154,11 +132,9 @@
                 <div class="flowing-suggestions-context">Context: ${this.suggestionsContext || this.currentContext}</div>
             </div>`;
             sidebar.appendChild(header);
-
             // Suggestions bar (horizontal scrollable)
             const bar = document.createElement('div');
             bar.className = 'flowing-suggestions-bar';
-
             if (!this.suggestions || this.suggestions.length === 0) {
                 const empty = document.createElement('div');
                 empty.className = 'flowing-suggestions-empty';
@@ -182,16 +158,13 @@
                     bar.appendChild(card);
                 });
             }
-
             sidebar.appendChild(bar);
-
             // Results container
             const results = document.createElement('div');
             results.id = 'flowingSuggestionsResults';
             results.className = 'flowing-suggestions-results';
             results.innerHTML = '<p class="flowing-suggestions-placeholder">Ejecuta una sugerencia para ver resultados aquí.</p>';
             sidebar.appendChild(results);
-
             // Wire execute buttons
             // Wire execute and save buttons
             sidebar.querySelectorAll('.flowing-exec-btn').forEach(btn => {
@@ -201,7 +174,6 @@
                     this.executeSuggestion(action, id);
                 });
             });
-
             sidebar.querySelectorAll('.flowing-save-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const card = btn.closest('.suggestion-card');
@@ -222,45 +194,35 @@
                     });
                 });
             });
-
             // Render saved suggestions area after suggestions bar
             const savedHeader = document.createElement('div');
             savedHeader.className = 'flowing-saved-header';
             savedHeader.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><strong>Saved Suggestions</strong><button id="addSavedSuggestionBtn" class="btn-small">+ Add</button></div>`;
             sidebar.appendChild(savedHeader);
-
             const savedList = document.createElement('div');
             savedList.id = 'flowingSavedList';
             savedList.className = 'flowing-saved-list';
             sidebar.appendChild(savedList);
-
             document.getElementById('addSavedSuggestionBtn')?.addEventListener('click', () => this.showNewSavedForm());
-
             // Load saved suggestions
             this.loadSavedSuggestions();
         }
-
         // Create a small floating bulb button that toggles the FlowingContext sidebar
         createToggleButton() {
             if (document.getElementById('fcToggleBtn')) return;
-
             const btn = document.createElement('button');
             btn.id = 'fcToggleBtn';
             btn.title = 'Flowing Suggestions';
             btn.innerHTML = '💡';
             // Move bulb to top-right and make it visually compact via CSS class
             btn.className = 'fc-toggle-btn';
-
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleBar();
             });
-
             document.body.appendChild(btn);
-
             // bulb positioning removed — let CSS/theme manage placement
         }
-
         toggleBar() {
             const sidebar = document.getElementById('rightSidebar');
             if (!sidebar) return;
@@ -272,17 +234,13 @@
                 this.getSuggestions().then(() => this.renderSuggestionsInSidebar(true)).catch(() => this.renderSuggestionsInSidebar(true));
             }
         }
-
         async executeSuggestion(action, suggestionId) {
             const resultsEl = document.getElementById('flowingSuggestionsResults');
             if (!resultsEl) return;
-
             resultsEl.innerHTML = '<p class="flowing-processing">Procesando... ⏳</p>';
-
             try {
                 let endpoint = '';
                 let payload = {};
-
                 // Build mapping for common actions
                 if (action === 'semantic_search') {
                     endpoint = '/api/flowing/semantic-search';
@@ -298,18 +256,15 @@
                     endpoint = `/api/flowing/execute/${encodeURIComponent(action)}`;
                     payload = { issue_key: this.activeIssueKey, suggestion_id: suggestionId };
                 }
-
                 const resp = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
                 if (!resp.ok) {
                     resultsEl.innerHTML = `<p class="flowing-error">Error: HTTP ${resp.status}</p>`;
                     return;
                 }
-
                 const data = await resp.json();
                 // Simple render of JSON or expected shapes
                 if (data.results || data.duplicates || data.suggestions) {
@@ -329,7 +284,6 @@
                 resultsEl.innerHTML = `<p class="flowing-error">Error ejecutando sugerencia</p>`;
             }
         }
-
         // Saved suggestions storage API
         async loadSavedSuggestions() {
             try {
@@ -349,12 +303,10 @@
                         <div class="saved-actions"><button class="saved-edit-btn">Edit</button><button class="saved-delete-btn">Delete</button></div>`;
                     container.appendChild(el);
                 });
-
                 container.querySelectorAll('.saved-edit-btn').forEach(btn => btn.addEventListener('click', (e) => {
                     const id = e.target.closest('.flowing-saved-item').dataset.id;
                     this.showEditSavedForm(id);
                 }));
-
                 container.querySelectorAll('.saved-delete-btn').forEach(btn => btn.addEventListener('click', async (e) => {
                     const id = e.target.closest('.flowing-saved-item').dataset.id;
                     await fetch(`/api/flowing-storage/saved-suggestions/${encodeURIComponent(id)}`, { method: 'DELETE' });
@@ -362,7 +314,6 @@
                 }));
             } catch (e) { console.warn('loadSavedSuggestions error', e); }
         }
-
         async saveSuggestion(payload) {
             try {
                 const resp = await fetch('/api/flowing-storage/saved-suggestions', {
@@ -372,7 +323,6 @@
                 return await resp.json();
             } catch (e) { console.warn('saveSuggestion error', e); return null; }
         }
-
         showNewSavedForm() {
             const sidebar = document.getElementById('rightSidebar');
             if (!sidebar) return;
@@ -401,7 +351,6 @@
                 this.loadSavedSuggestions();
             });
         }
-
         showEditSavedForm(itemId) {
             // load item
             fetch('/api/flowing-storage/saved-suggestions').then(r => r.json()).then(data => {
@@ -437,7 +386,6 @@
             }).catch(e => console.warn(e));
         }
     }
-
     // Instantiate and expose
     window.FlowingContext = window.FlowingContext || new FlowingContextImpl();
 })();

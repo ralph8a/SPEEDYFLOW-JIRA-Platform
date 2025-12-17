@@ -2,19 +2,14 @@
 Flowing MVP - Context-Aware Suggestions
 Sistema inteligente de sugerencias basado en el contexto del componente observado
 """
-
 import logging
 from typing import Dict, List
-
 logger = logging.getLogger(__name__)
-
-
 class FlowingContextualSuggestions:
     """
     Gestor de sugerencias contextuales para Flowing MVP
     Provee sugerencias específicas según el componente que el usuario está viendo
     """
-    
     # Definir sugerencias por contexto
     SUGGESTIONS_BY_CONTEXT = {
         'kanban_board': {
@@ -200,17 +195,14 @@ class FlowingContextualSuggestions:
             ]
         }
     }
-    
     @classmethod
     def get_suggestions_for_context(cls, context: str, issue_key: str = None, additional_data: Dict = None) -> Dict:
         """
         Obtener sugerencias para un contexto específico
-        
         Args:
             context: El contexto actual (kanban_board, kanban_card, list_view, etc.)
             issue_key: Clave del ticket (opcional, usado para contextos de tarjeta)
             additional_data: Datos adicionales del contexto (opcional)
-        
         Returns:
             Dict con título y lista de sugerencias
         """
@@ -218,34 +210,27 @@ class FlowingContextualSuggestions:
             'title': '💡 Sugerencias',
             'suggestions': []
         })
-        
         # Enriquecer sugerencias con datos contextuales
         enriched_suggestions = []
         for suggestion in suggestions_config['suggestions']:
             enriched = suggestion.copy()
-            
             # Agregar issue_key si está disponible
             if issue_key:
                 enriched['issue_key'] = issue_key
-            
             # Agregar datos adicionales
             if additional_data:
                 enriched['context_data'] = additional_data
-            
             enriched_suggestions.append(enriched)
-        
         return {
             'context': context,
             'title': suggestions_config['title'],
             'suggestions': enriched_suggestions,
             'count': len(enriched_suggestions)
         }
-    
     @classmethod
     def get_all_contexts(cls) -> List[str]:
         """Obtener lista de todos los contextos disponibles"""
         return list(cls.SUGGESTIONS_BY_CONTEXT.keys())
-    
     @classmethod
     def get_action_endpoint(cls, action: str) -> str:
         """Mapear acción a endpoint de API"""
@@ -258,19 +243,14 @@ class FlowingContextualSuggestions:
             'queue_analysis': '/api/ml/analyze-queue'  # ML Analyzer existente
         }
         return action_to_endpoint.get(action, '/api/flowing/semantic-search')
-
-
 def get_contextual_suggestions(context: str, issue_key: str = None, **kwargs) -> Dict:
     """
     Función helper para obtener sugerencias contextuales
-    
     Usage:
         # En board view
         suggestions = get_contextual_suggestions('kanban_board')
-        
         # En tarjeta específica
         suggestions = get_contextual_suggestions('kanban_card', issue_key='PROJ-123')
-        
         # En sidebar con datos adicionales
         suggestions = get_contextual_suggestions(
             'right_sidebar',

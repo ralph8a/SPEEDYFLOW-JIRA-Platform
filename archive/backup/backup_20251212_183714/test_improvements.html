@@ -110,11 +110,9 @@
     <div class="container">
         <h1>🧪 Test de Mejoras Implementadas</h1>
         <p class="subtitle">Verificación de caché de 3 horas y modal de anomalías consistente</p>
-
         <!-- TEST 1: CACHÉ DE 3 HORAS -->
         <div class="test-section">
             <h2><span class="emoji">⏰</span> Test 1: Caché de 3 Horas</h2>
-            
             <div class="test-step">
                 <strong>Paso 1: Primer acceso a un ticket</strong>
                 <div class="expected">✅ Esperado: "Analizando ticket con IA..." (~1-2 segundos)</div>
@@ -123,7 +121,6 @@ Console: 🧠 Analizando ticket con IA...<br>
 Tiempo: ~1500ms
                 </div>
             </div>
-
             <div class="test-step">
                 <strong>Paso 2: Cerrar y reabrir el mismo ticket</strong>
                 <div class="expected">✅ Esperado: Respuesta instantánea con mensaje de caché válido</div>
@@ -132,7 +129,6 @@ Console: ✅ Using cached suggestions for MSM-1234 (válido por 2h 59m)<br>
 Tiempo: ~50ms (instantáneo)
                 </div>
             </div>
-
             <div class="test-step">
                 <strong>Paso 3: Reabrir ticket después de 3 horas</strong>
                 <div class="expected">✅ Esperado: Re-análisis automático</div>
@@ -142,18 +138,15 @@ Console: 🧠 Analizando ticket con IA...<br>
 Tiempo: ~1500ms
                 </div>
             </div>
-
             <div class="warning">
                 <strong>⚠️ Para simular caché expirado:</strong><br>
                 Puedes cambiar temporalmente <code>this.CACHE_TTL</code> a 30 segundos:<br>
                 <code>this.CACHE_TTL = 30 * 1000; // 30 segundos para testing</code>
             </div>
         </div>
-
         <!-- TEST 2: MODAL DE ANOMALÍAS -->
         <div class="test-section">
             <h2><span class="emoji">🛡️</span> Test 2: Modal de Anomalías</h2>
-            
             <div class="test-step">
                 <strong>Paso 1: Abrir modal</strong>
                 <div class="expected">✅ Esperado: Fade-in suave + zoom (scale 0.95 → 1.0)</div>
@@ -162,7 +155,6 @@ Click en botón "🛡️ Anomalías" en sidebar izquierdo<br>
 → Modal aparece con animación suave (300ms)
                 </div>
             </div>
-
             <div class="test-step">
                 <strong>Paso 2: Click fuera del modal</strong>
                 <div class="expected">✅ Esperado: Modal se cierra con fade-out</div>
@@ -171,7 +163,6 @@ Click en área oscura (overlay) fuera del modal<br>
 → Modal se cierra con animación (300ms)
                 </div>
             </div>
-
             <div class="test-step">
                 <strong>Paso 3: Presionar ESC</strong>
                 <div class="expected">✅ Esperado: Modal se cierra (comportamiento estándar)</div>
@@ -180,7 +171,6 @@ Presionar tecla ESC con modal abierto<br>
 → Modal se cierra automáticamente
                 </div>
             </div>
-
             <div class="test-step">
                 <strong>Paso 4: Click en botón ✕</strong>
                 <div class="expected">✅ Esperado: Modal se cierra</div>
@@ -189,7 +179,6 @@ Click en botón X (esquina superior derecha)<br>
 → Modal se cierra con animación
                 </div>
             </div>
-
             <div class="success">
                 <strong>✅ Comparación con otros modales:</strong><br>
                 El modal de anomalías ahora funciona idénticamente a:<br>
@@ -198,11 +187,9 @@ Click en botón X (esquina superior derecha)<br>
                 • User Setup modal
             </div>
         </div>
-
         <!-- INSTRUCCIONES -->
         <div class="test-section">
             <h2><span class="emoji">📋</span> Instrucciones de Testing</h2>
-            
             <ol style="line-height: 1.8;">
                 <li>Abre las DevTools de tu navegador (F12)</li>
                 <li>Ve a la pestaña <strong>Console</strong></li>
@@ -211,18 +198,15 @@ Click en botón X (esquina superior derecha)<br>
                 <li>Verifica los mensajes en la consola</li>
                 <li>Observa las animaciones y comportamiento del modal</li>
             </ol>
-
             <div style="margin-top: 20px;">
                 <a href="http://127.0.0.1:5005" class="btn" target="_blank">
                     🚀 Abrir SPEEDYFLOW
                 </a>
             </div>
         </div>
-
         <!-- RESUMEN TÉCNICO -->
         <div class="test-section">
             <h2><span class="emoji">🔧</span> Resumen Técnico</h2>
-            
             <h3>Caché de 3 Horas:</h3>
             <ul>
                 <li><code>this.CACHE_TTL = 3 * 60 * 60 * 1000</code> (10,800,000ms)</li>
@@ -230,7 +214,6 @@ Click en botón X (esquina superior derecha)<br>
                 <li>Limpieza automática al detectar expiración</li>
                 <li>Console logs con tiempo restante de validez</li>
             </ul>
-
             <h3>Modal Consistente:</h3>
             <ul>
                 <li>Estructura HTML estándar: <code>.modal-overlay > .modal-container</code></li>

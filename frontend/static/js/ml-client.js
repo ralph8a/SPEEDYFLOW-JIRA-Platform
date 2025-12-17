@@ -5,14 +5,12 @@
  * const mlClient = new MLClient('http://localhost:5001');
  * const predictions = await mlClient.predictAll(summary, description);
  */
-
 class FlowingMVPMLClient {
     constructor() {
         // no defaults here; call FlowingMVPMLClient.configure({ baseURL }) to enable
         this.baseURL = null;
         this.configured = false;
     }
-
     static configure(opts = {}) {
         if (!window.flowingMvpMlClient) window.flowingMvpMlClient = new FlowingMVPMLClient();
         if (opts.baseURL) window.flowingMvpMlClient.baseURL = opts.baseURL;
@@ -20,7 +18,6 @@ class FlowingMVPMLClient {
         console.log('✅ [FlowingMVP ML] Frontend client configured', opts);
         return window.flowingMvpMlClient;
     }
-
     /**
      * Obtener todas las predicciones en una llamada
      * @param {string} summary - Resumen/título del ticket
@@ -39,7 +36,6 @@ class FlowingMVPMLClient {
                 labels: { suggested_labels: [], count: 0 }
             };
         }
-
         const startTime = performance.now();
         try {
             const response = await fetch(`${this.baseURL}/predict/unified`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary, description }) });
@@ -53,7 +49,6 @@ class FlowingMVPMLClient {
             throw error;
         }
     }
-
     /**
      * Verificar duplicados
      */
@@ -70,7 +65,6 @@ class FlowingMVPMLClient {
             return { is_duplicate: false, confidence: 0, similar_tickets: [] };
         }
     }
-
     /**
      * Sugerir prioridad
      */
@@ -87,7 +81,6 @@ class FlowingMVPMLClient {
             return { suggested_priority: 'Medium', confidence: 0 };
         }
     }
-
     /**
      * Predecir violación de SLA
      */
@@ -104,7 +97,6 @@ class FlowingMVPMLClient {
             return { will_breach: false, breach_probability: 0, risk_level: 'LOW' };
         }
     }
-
     /**
      * Sugerir asignados
      */
@@ -121,7 +113,6 @@ class FlowingMVPMLClient {
             return { suggestions: [], top_choice: null };
         }
     }
-
     /**
      * Sugerir labels
      */
@@ -138,7 +129,6 @@ class FlowingMVPMLClient {
             return { suggested_labels: [], count: 0 };
         }
     }
-
     /**
      * Sugerir siguiente estado
      */
@@ -155,7 +145,6 @@ class FlowingMVPMLClient {
             return { suggested_status: 'Unknown', confidence: 0 };
         }
     }
-
     /**
      * Health check del servicio
      */
@@ -172,7 +161,6 @@ class FlowingMVPMLClient {
             return { status: 'unavailable' };
         }
     }
-
     /**
      * Limpiar caché local
      */
@@ -181,9 +169,7 @@ class FlowingMVPMLClient {
         console.log('ℹ️ [FlowingMVP ML] clearCache() noop (no cache)');
     }
 }
-
 // ==================== UI HELPERS ====================
-
 /**
  * Helper para auto-completar campos con sugerencias ML
  */
@@ -192,7 +178,6 @@ class FlowingMVPMLUI {
         this.mlClient = mlClient;
         this.suggestionBadges = new Map();
     }
-
     /**
      * Inicializar sugerencias ML en formulario de ticket
      * @param {string} summaryFieldId - ID del campo summary
@@ -201,22 +186,17 @@ class FlowingMVPMLUI {
     initTicketForm(summaryFieldId, descriptionFieldId) {
         const summaryField = document.getElementById(summaryFieldId);
         const descriptionField = document.getElementById(descriptionFieldId);
-
         if (!summaryField) {
             console.warn('⚠️ [ML] Summary field not found');
             return;
         }
-
         // Debounce para evitar requests excesivos
         let debounceTimer;
         const debounceDelay = 800;
-
         const fetchSuggestions = async () => {
             const summary = summaryField.value.trim();
             const description = descriptionField ? descriptionField.value.trim() : '';
-
             if (summary.length < 10) return; // Mínimo 10 caracteres
-
             try {
                 const predictions = await this.mlClient.predictAll(summary, description);
                 this.applyPredictions(predictions);
@@ -224,12 +204,10 @@ class FlowingMVPMLUI {
                 console.error('❌ [ML] Error fetching suggestions:', error);
             }
         };
-
         summaryField.addEventListener('blur', () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(fetchSuggestions, debounceDelay);
         });
-
         if (descriptionField) {
             descriptionField.addEventListener('blur', () => {
                 clearTimeout(debounceTimer);
@@ -237,7 +215,6 @@ class FlowingMVPMLUI {
             });
         }
     }
-
     /**
      * Aplicar predicciones ML a la UI
      */
@@ -246,41 +223,33 @@ class FlowingMVPMLUI {
         if (predictions.priority && predictions.priority.confidence > 0.8) {
             this.autofillPriority(predictions.priority);
         }
-
         // 2. Mostrar alerta de duplicados
         if (predictions.duplicate_check && predictions.duplicate_check.is_duplicate) {
             this.showDuplicateAlert(predictions.duplicate_check);
         }
-
         // 3. Alerta de riesgo SLA
         if (predictions.sla_breach && predictions.sla_breach.risk_level === 'HIGH') {
             this.showSLAWarning(predictions.sla_breach);
         }
-
         // 4. Sugerir asignados
         if (predictions.assignee && predictions.assignee.suggestions.length > 0) {
             this.suggestAssignees(predictions.assignee);
         }
-
         // 5. Sugerir labels
         if (predictions.labels && predictions.labels.count > 0) {
             this.suggestLabels(predictions.labels);
         }
     }
-
     /**
      * Auto-completar prioridad
      */
     autofillPriority(priorityData) {
         const priorityField = document.getElementById('priority') ||
             document.querySelector('[name="priority"]');
-
         if (!priorityField) return;
-
         priorityField.value = priorityData.suggested_priority;
         this.showSuggestionBadge(priorityField, '🤖 Sugerido por IA', priorityData.confidence);
     }
-
     /**
      * Mostrar alerta de duplicado
      */
@@ -297,7 +266,6 @@ class FlowingMVPMLUI {
         `;
         this.showAlert(alertHTML);
     }
-
     /**
      * Mostrar advertencia de SLA
      */
@@ -313,16 +281,13 @@ class FlowingMVPMLUI {
         `;
         this.showAlert(warningHTML);
     }
-
     /**
      * Sugerir asignados
      */
     suggestAssignees(assigneeData) {
         const assigneeField = document.getElementById('assignee') ||
             document.querySelector('[name="assignee"]');
-
         if (!assigneeField) return;
-
         // Si es un select, agregar opciones con badges de confianza
         if (assigneeField.tagName === 'SELECT') {
             assigneeData.suggestions.forEach((suggestion, index) => {
@@ -330,7 +295,6 @@ class FlowingMVPMLUI {
                 const option = document.createElement('option');
                 option.value = suggestion.assignee;
                 option.text = `${suggestion.assignee} (${confidence}% ML)`;
-
                 if (index === 0) {
                     assigneeField.prepend(option);
                     option.selected = true;
@@ -338,16 +302,13 @@ class FlowingMVPMLUI {
             });
         }
     }
-
     /**
      * Sugerir labels
      */
     suggestLabels(labelsData) {
         const labelsContainer = document.getElementById('suggested-labels');
         if (!labelsContainer) return;
-
         labelsContainer.innerHTML = '<strong>🏷️ Labels sugeridos:</strong><br>';
-
         labelsData.suggested_labels.forEach(label => {
             const confidence = (label.confidence * 100).toFixed(0);
             const badge = document.createElement('span');
@@ -358,7 +319,6 @@ class FlowingMVPMLUI {
             labelsContainer.appendChild(badge);
         });
     }
-
     /**
      * Agregar label al campo
      */
@@ -366,14 +326,12 @@ class FlowingMVPMLUI {
         const labelsField = document.getElementById('labels') ||
             document.querySelector('[name="labels"]');
         if (!labelsField) return;
-
         const currentLabels = labelsField.value.split(',').map(l => l.trim()).filter(Boolean);
         if (!currentLabels.includes(labelText)) {
             currentLabels.push(labelText);
             labelsField.value = currentLabels.join(', ');
         }
     }
-
     /**
      * Mostrar badge de sugerencia
      */
@@ -381,14 +339,11 @@ class FlowingMVPMLUI {
         const badge = document.createElement('span');
         badge.className = 'badge bg-success ms-2';
         badge.innerHTML = `${text} (${(confidence * 100).toFixed(0)}%)`;
-
         // Insertar después del campo
         field.parentNode.insertBefore(badge, field.nextSibling);
-
         // Auto-remover después de 5 segundos
         setTimeout(() => badge.remove(), 5000);
     }
-
     /**
      * Mostrar alerta
      */
@@ -403,17 +358,13 @@ class FlowingMVPMLUI {
         alertContainer.innerHTML += html;
     }
 }
-
 // ==================== EXPORT ====================
-
 // Crear instancia global si no existe
 if (typeof window !== 'undefined') {
     window.FlowingMVPMLClient = FlowingMVPMLClient;
     window.FlowingMVPMLUI = FlowingMVPMLUI;
-
     // Instancia lista para usar (legacy default kept)
     window.flowingMvpMlClient = new FlowingMVPMLClient();
     window.flowingMvpMlUI = new FlowingMVPMLUI(window.flowingMvpMlClient);
-
     console.log('✅ [FlowingMVP ML] Client initialized (frontend copy)');
 }

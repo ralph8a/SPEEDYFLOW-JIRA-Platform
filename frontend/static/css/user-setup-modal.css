@@ -2,7 +2,6 @@
  * SpeedyFlow Login Modal Styles
  * First-time login and configuration
  */
-
 .setup-modal {
     display: none;
     position: fixed;
@@ -17,7 +16,6 @@
     justify-content: center;
     animation: fadeIn 0.3s ease;
 }
-
 .setup-modal-content {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 24px;
@@ -29,7 +27,6 @@
     padding: 0;
     animation: slideUp 0.4s ease;
 }
-
 .setup-modal-header {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
@@ -37,14 +34,12 @@
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
-
 .setup-logo {
     width: 220px;
     height: auto;
     margin-bottom: 24px;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
 }
-
 .setup-modal-header h2 {
     margin: 0 0 8px 0;
     font-size: 28px;
@@ -52,46 +47,38 @@
     color: #fff;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 .setup-modal-header p {
     margin: 0;
     font-size: 16px;
     color: rgba(255, 255, 255, 0.9);
 }
-
 .setup-modal-body {
     padding: 32px;
     background: #fff;
 }
-
 .setup-form-group {
     margin-bottom: 24px;
 }
-
 .setup-form-group label {
     display: block;
     margin-bottom: 12px;
     color: #2d3748;
     font-size: 14px;
 }
-
 .setup-form-group label strong {
     display: block;
     font-size: 16px;
     margin-bottom: 4px;
 }
-
 .setup-hint {
     color: #718096;
     font-size: 13px;
     font-weight: normal;
 }
-
 .setup-hint.setup-required {
     color: #e53e3e;
     font-weight: 600;
 }
-
 .setup-form-group input {
     width: 100%;
     padding: 14px 16px;
@@ -102,20 +89,17 @@
     font-weight: 600;
     letter-spacing: 0.5px;
 }
-
 .setup-form-group input:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
-
 .setup-help {
     display: block;
     margin-top: 8px;
     color: #718096;
     font-size: 13px;
 }
-
 .setup-help code {
     background: #f7fafc;
     padding: 2px 6px;
@@ -124,7 +108,6 @@
     color: #667eea;
     font-weight: 600;
 }
-
 /* Token Guide Expandable */
 .token-guide {
     margin-top: 12px;
@@ -133,7 +116,6 @@
     overflow: hidden;
     transition: all 0.3s;
 }
-
 .token-guide summary {
     padding: 12px 16px;
     background: #f7fafc;
@@ -144,49 +126,40 @@
     user-select: none;
     transition: all 0.2s;
 }
-
 .token-guide summary:hover {
     background: #edf2f7;
 }
-
 .token-guide[open] summary {
     background: #667eea;
     color: white;
 }
-
 .token-guide-content {
     padding: 20px;
     background: white;
     border-top: 1px solid #e2e8f0;
 }
-
 .token-guide-content h4 {
     margin: 0 0 16px 0;
     font-size: 16px;
     color: #2d3748;
 }
-
 .token-guide-content ol {
     margin: 0 0 16px 0;
     padding-left: 24px;
 }
-
 .token-guide-content li {
     margin-bottom: 8px;
     color: #4a5568;
     line-height: 1.6;
 }
-
 .token-guide-content a {
     color: #667eea;
     text-decoration: underline;
     font-weight: 600;
 }
-
 .token-guide-content strong {
     color: #2d3748;
 }
-
 .token-guide-warning {
     background: #fff3cd;
     border: 2px solid #ffc107;
@@ -196,11 +169,9 @@
     font-size: 13px;
     line-height: 1.5;
 }
-
 .token-guide-warning strong {
     color: #856404;
 }
-
 /* Project Key Warning Note */
 .setup-warning-note {
     margin-top: 12px;
@@ -212,13 +183,11 @@
     color: #856404;
     line-height: 1.5;
 }
-
 .setup-warning-note strong {
     color: #ff6f00;
     display: block;
     margin-bottom: 4px;
 }
-
 /* Error and Success Messages */
 .setup-error {
     background: #fed7d7;
@@ -230,7 +199,6 @@
     font-weight: 600;
     margin-top: 16px;
 }
-
 .setup-success {
     background: #c6f6d5;
     border: 2px solid #68d391;
@@ -241,13 +209,11 @@
     font-weight: 600;
     margin-top: 16px;
 }
-
 .setup-loading {
     text-align: center;
     padding: 24px;
     color: #718096;
 }
-
 .setup-loading .spinner {
     display: inline-block;
     width: 20px;
@@ -258,7 +224,6 @@
     animation: spin 0.8s linear infinite;
     margin-right: 8px;
 }
-
 .setup-no-projects {
     text-align: center;
     padding: 24px;
@@ -266,14 +231,12 @@
     background: #f7fafc;
     border-radius: 8px;
 }
-
 .setup-modal-footer {
     padding: 24px 32px;
     background: #f7fafc;
     border-top: 1px solid #e2e8f0;
     text-align: center;
 }
-
 .setup-btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
@@ -287,25 +250,20 @@
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     min-width: 200px;
 }
-
 .setup-btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
-
 .setup-btn-primary:active {
     transform: translateY(0);
 }
-
 .setup-btn-primary:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
-
 .setup-btn-primary.success {
     background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
 }
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -314,7 +272,6 @@
         opacity: 1;
     }
 }
-
 @keyframes slideUp {
     from {
         transform: translateY(30px);
@@ -325,26 +282,22 @@
         opacity: 1;
     }
 }
-
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
 }
-
 /* Mobile responsive */
 @media (max-width: 600px) {
     .setup-modal-content {
         width: 95%;
         max-width: none;
     }
-
     .setup-modal-header,
     .setup-modal-body,
     .setup-modal-footer {
         padding: 24px;
     }
-
     .setup-projects-grid {
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     }

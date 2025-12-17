@@ -1,6 +1,5 @@
 import requests
 import json
-
 def main():
     url = 'http://127.0.0.1:5002/predict/unified'
     payload = {
@@ -13,6 +12,5 @@ def main():
         print(r.text)
     except Exception as e:
         print('EXCEPTION', e)
-
 if __name__ == '__main__':
     main()

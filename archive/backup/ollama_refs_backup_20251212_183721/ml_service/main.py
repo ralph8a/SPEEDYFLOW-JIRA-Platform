@@ -8,11 +8,9 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import time
 import logging
-
 # Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 # FastAPI app
 app = FastAPI(
     title="SPEEDYFLOW ML Service",
@@ -21,7 +19,6 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
-
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
@@ -36,24 +33,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # ==================== VARIABLES GLOBALES ====================
-
 start_time = time.time()
 predictor = None
-
-
 def get_uptime() -> float:
     """Obtener uptime en segundos"""
     return time.time() - start_time
-
 # ==================== MODELOS DE DATOS ====================
-
 class PredictRequest(BaseModel):
     """Request para predicciones"""
     summary: str = Field(..., description="Título/resumen del ticket")
     description: str = Field(default="", description="Descripción detallada")
-    
     class Config:
         json_schema_extra = {
             "example": {
@@ -61,51 +51,42 @@ class PredictRequest(BaseModel):
                 "description": "Los usuarios no pueden hacer login desde la app móvil"
             }
         }
-
 class DuplicateResponse(BaseModel):
     """Respuesta de detección de duplicados"""
     is_duplicate: bool
     confidence: float
     similar_tickets: List[str] = []
-
 class PriorityResponse(BaseModel):
     """Respuesta de clasificación de prioridad"""
     suggested_priority: str
     confidence: float
     probabilities: Dict[str, float]
-
 class SLABreachResponse(BaseModel):
     """Respuesta de predicción de SLA breach"""
     will_breach: bool
     breach_probability: float
     risk_level: str  # HIGH, MEDIUM, LOW
-
 class AssigneeSuggestion(BaseModel):
     """Sugerencia de asignado"""
     assignee: str
     confidence: float
-
 class AssigneeResponse(BaseModel):
     """Respuesta de sugerencia de asignados"""
     suggestions: List[AssigneeSuggestion]
     top_choice: Optional[AssigneeSuggestion]
-
 class LabelSuggestion(BaseModel):
     """Sugerencia de label"""
     label: str
     confidence: float
-
 class LabelsResponse(BaseModel):
     """Respuesta de sugerencia de labels"""
     suggested_labels: List[LabelSuggestion]
     count: int
-
 class StatusResponse(BaseModel):
     """Respuesta de sugerencia de estado"""
     suggested_status: str
     confidence: float
     probabilities: Dict[str, float]
-
 class UnifiedPredictionResponse(BaseModel):
     """Respuesta unificada con todas las predicciones"""
     duplicate_check: DuplicateResponse
@@ -116,9 +97,7 @@ class UnifiedPredictionResponse(BaseModel):
     status: StatusResponse
     latency_ms: int
     models_used: List[str]
-
 # ==================== ENDPOINTS ====================
-
 @app.get("/", tags=["Root"])
 async def root():
     """Root endpoint"""
@@ -133,13 +112,11 @@ async def root():
             "models_status": "/models/status"
         }
     }
-
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not initialized")
-    
     return {
         "status": "healthy",
         "models_loaded": len(predictor.models),
@@ -147,29 +124,23 @@ async def health_check():
         "memory_usage_mb": predictor.get_memory_usage(),
         "uptime_seconds": int(time.time() - predictor.start_time)
     }
-
 @app.get("/models/status", tags=["Models"])
 async def models_status():
     """Estado de todos los modelos"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not initialized")
-    
     return {
         "loaded_models": predictor.get_loaded_models(),
         "total_predictions": predictor.prediction_count,
         "avg_latency_ms": predictor.avg_latency_ms,
         "cache_size": predictor.get_cache_size()
     }
-
 # ==================== PREDICCIONES UNIFICADAS ====================
-
 @app.post("/ml/predict/all", response_model=UnifiedPredictionResponse, tags=["Predictions"])
 async def predict_all(request: PredictRequest):
     """
     Predicción unificada - Obtiene todas las predicciones en una sola llamada
-    
     **Uso recomendado**: Llamar este endpoint al crear o editar un ticket
-    
     **Retorna**:
     - Detección de duplicados
     - Clasificación de prioridad
@@ -180,123 +151,99 @@ async def predict_all(request: PredictRequest):
     """
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     start_time = time.time()
-    
     try:
         result = predictor.predict_all(request.summary, request.description)
         latency_ms = int((time.time() - start_time) * 1000)
-        
         return {
             **result,
             "latency_ms": latency_ms,
             "models_used": predictor.get_loaded_models()
         }
-    
     except Exception as e:
         logger.error(f"Error en predict_all: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
-
 # ==================== PREDICCIONES INDIVIDUALES ====================
-
 @app.post("/ml/predict/duplicate", response_model=DuplicateResponse, tags=["Predictions"])
 async def predict_duplicate(request: PredictRequest):
     """Detectar si un ticket es duplicado"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     try:
         return predictor.predict_duplicate(request.summary, request.description)
     except Exception as e:
         logger.error(f"Error en predict_duplicate: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/ml/predict/priority", response_model=PriorityResponse, tags=["Predictions"])
 async def predict_priority(request: PredictRequest):
     """Sugerir prioridad del ticket"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     try:
         return predictor.predict_priority(request.summary, request.description)
     except Exception as e:
         logger.error(f"Error en predict_priority: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/ml/predict/sla-breach", response_model=SLABreachResponse, tags=["Predictions"])
 async def predict_sla_breach(request: PredictRequest):
     """Predecir si habrá violación de SLA"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     try:
         return predictor.predict_sla_breach(request.summary, request.description)
     except Exception as e:
         logger.error(f"Error en predict_sla_breach: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/ml/suggest/assignee", response_model=AssigneeResponse, tags=["Suggestions"])
 async def suggest_assignee(request: PredictRequest, top_k: int = 3):
     """Sugerir asignados para el ticket"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     try:
         return predictor.suggest_assignee(request.summary, request.description, top_k=top_k)
     except Exception as e:
         logger.error(f"Error en suggest_assignee: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/ml/suggest/labels", response_model=LabelsResponse, tags=["Suggestions"])
 async def suggest_labels(request: PredictRequest, threshold: float = 0.3):
     """Sugerir labels/etiquetas para el ticket"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     try:
         return predictor.suggest_labels(request.summary, request.description, threshold=threshold)
     except Exception as e:
         logger.error(f"Error en suggest_labels: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/ml/suggest/status", response_model=StatusResponse, tags=["Suggestions"])
 async def suggest_status(request: PredictRequest):
     """Sugerir siguiente estado del ticket"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     try:
         return predictor.suggest_status(request.summary, request.description)
     except Exception as e:
         logger.error(f"Error en suggest_status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 # ==================== CACHE ====================
-
 @app.post("/cache/clear", tags=["Cache"])
 async def clear_cache():
     """Limpiar caché de predicciones"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     predictor.clear_cache()
     return {"message": "Cache cleared", "status": "ok"}
-
 @app.get("/cache/stats", tags=["Cache"])
 async def cache_stats():
     """Estadísticas del caché"""
     if predictor is None:
         raise HTTPException(status_code=503, detail="Predictor not available")
-    
     return {
         "cache_size": predictor.get_cache_size(),
         "cache_hits": predictor.cache_hits,
         "cache_misses": predictor.cache_misses,
         "hit_rate": predictor.cache_hits / (predictor.cache_hits + predictor.cache_misses) if (predictor.cache_hits + predictor.cache_misses) > 0 else 0
     }
-
 # ==================== MAIN ====================
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

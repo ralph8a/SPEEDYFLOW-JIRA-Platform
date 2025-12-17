@@ -5,18 +5,14 @@ Test de endpoints disponibles en JIRA
 """
 import sys
 from pathlib import Path
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.config import config
 from utils.common import _get_credentials, _get_auth_header, _make_request
-
 site, email, token = _get_credentials(config)
 headers = _get_auth_header(email, token)
-
 print("="*70)
 print("🔍 TESTEANDO ENDPOINTS DE JIRA")
 print("="*70 + "\n")
-
 # Test 1: Obtener un issue directo
 print("1️⃣ Test: GET /rest/api/3/issue/{issueKey}")
 result = _make_request("GET", f"{site}/rest/api/3/issue/MSM-1", headers)
@@ -25,9 +21,7 @@ if result:
     print(f"   Summary: {result.get('fields', {}).get('summary', 'N/A')}")
 else:
     print("❌ NO FUNCIONA")
-
 print()
-
 # Test 2: Buscar con JQL
 print("2️⃣ Test: POST /rest/api/3/search (JQL)")
 jql_data = {
@@ -44,9 +38,7 @@ if result:
         print(f"   • {issue.get('key')}: {issue.get('fields', {}).get('summary', 'N/A')}")
 else:
     print("❌ NO FUNCIONA")
-
 print()
-
 # Test 3: Browse issues (pagination)
 print("3️⃣ Test: GET /rest/api/3/search con parámetros")
 params = {
@@ -62,9 +54,7 @@ if result:
     print(f"✅ FUNCIONA - Total: {total}, Retornados: {len(issues)}")
 else:
     print("❌ NO FUNCIONA")
-
 print()
-
 # Test 4: Service Desk requests
 print("4️⃣ Test: GET /rest/servicedeskapi/request")
 result = _make_request("GET", f"{site}/rest/servicedeskapi/request", headers, params={"start": 0, "limit": 5})
@@ -75,9 +65,7 @@ if result:
         print(f"   • {req.get('issueKey')}: {req.get('requestFieldValues', {}).get('summary', 'N/A')}")
 else:
     print("❌ NO FUNCIONA")
-
 print()
-
 # Test 5: My requests
 print("5️⃣ Test: GET /rest/servicedeskapi/request (con serviceDeskId)")
 params = {"serviceDeskId": 4, "start": 0, "limit": 5}
@@ -87,7 +75,6 @@ if result:
     print(f"✅ FUNCIONA - Requests en desk 4: {len(values)}")
 else:
     print("❌ NO FUNCIONA")
-
 print()
 print("="*70)
 print("✅ TEST COMPLETO")

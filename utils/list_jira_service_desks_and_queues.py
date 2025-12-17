@@ -1,6 +1,5 @@
 import logging
 from utils.api_migration import get_api_client
-
 def list_service_desks_and_queues():
     client = get_api_client()
     # List all service desks
@@ -28,7 +27,6 @@ def list_service_desks_and_queues():
             continue
         for queue in queues_resp["values"]:
             print(f"    Queue: {queue.get('name')} (ID: {queue.get('id')})")
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     list_service_desks_and_queues()

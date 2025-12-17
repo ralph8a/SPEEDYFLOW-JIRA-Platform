@@ -3,12 +3,10 @@
  * Centralized design tokens for colors, spacing, typography, etc.
  * SpeedyFlow Application - Modern Design
  */
-
 :root {
   /* ==================== DEFAULT THEME COLORS - LIGHT ==================== */
   /* These are the light theme colors (default on page load) */
   /* Overridden by body.theme-dark when dark mode is active */
-  
   /* Primary Colors - Purple/Blue (Light Theme) */
   --text-primary: #312e81;
   --text-secondary: #6366f1;
@@ -17,7 +15,6 @@
   --bg-secondary: #f3f0ff;
   --bg-tertiary: #ede9fe;
   --border-color: #e9d5ff;
-  
   /* Theme-specific colors that were in light-theme.css */
   --success: #7c3aed;
   --success-light: #f3e8ff;
@@ -31,43 +28,34 @@
   --info: #6366f1;
   --info-light: #ede9fe;
   --info-dark: #3730a3;
-  
   /* Shadows - Purple tinted */
   --shadow-sm: 0 0.125rem 0.25rem rgba(109, 40, 217, 0.08);
   --shadow-md: 0 0.5rem 1rem rgba(109, 40, 217, 0.12);
   --shadow-lg: 0 1rem 3rem rgba(109, 40, 217, 0.15);
-  
   /* Original :root variables */
   --primary: #6d28d9;         /* Bright Purple */
   --primary-dark: #581c87;    /* Deep Purple */
   --primary-light: #a78bfa;   /* Light Purple */
-  
   --accent-red: #ef4444;      /* Bright Red */
   --accent-red-dark: #b91c1c; /* Deep Red */
   --accent-red-light: #fca5a5;/* Light Red */
-  
   /* Background Colors - White with glassmorphism */
   --bg: #ffffff;
   --card-bg: rgba(255, 255, 255, 0.95);     /* Frosted white */
   --card-bg-hover: rgba(255, 255, 255, 0.98);
-  
   /* Glassmorphism backgrounds with pops of color */
   --glass-blue-light: rgba(109, 40, 217, 0.1);     /* 10% purple */
   --glass-red-light: rgba(239, 68, 68, 0.1);       /* 10% red */
   --glass-blue-medium: rgba(109, 40, 217, 0.15);   /* 15% purple */
   --glass-red-medium: rgba(239, 68, 68, 0.15);     /* 15% red */
-  
   /* Text Colors (legacy - use --text-primary, --text-secondary, --text-muted instead) */
   --text: #1f2937;
-  
   /* Border & Dividers - Glassmorphism */
   --border: rgba(59, 130, 246, 0.2);        /* Blue tinted border */
   --border-light: rgba(239, 68, 68, 0.1);   /* Red tinted light border */
-  
   /* ==================== SHADOWS - GLASSMORPHISM ==================== */
   --shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
   --shadow-xl: 0 20px 40px rgba(59, 130, 246, 0.15);
-  
   /* ==================== SPACING ==================== */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -75,11 +63,9 @@
   --spacing-lg: 16px;
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
-  
   /* ==================== TYPOGRAPHY ==================== */
   --font-family: 'Aptos', 'Aptos Display', 'Aptos Mono', sans-serif;
   --font-family-mono: 'Aptos Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
-  
   --font-size-xs: 12px;
   --font-size-sm: 13px;
   --font-size-base: 14px;
@@ -87,39 +73,32 @@
   --font-size-lg: 16px;
   --font-size-xl: 18px;
   --font-size-2xl: 20px;
-  
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
-  
   /* ==================== BORDERS ==================== */
   --border-radius-sm: 4px;
   --border-radius: 6px;
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
   --border-radius-full: 9999px;
-  
   --border-width: 1px;
   --border-width-thick: 2px;
-  
   /* ==================== TRANSITIONS ==================== */
   --transition-fast: 0.15s;
   --transition-base: 0.25s;
   --transition-slow: 0.3s;
   --transition-cubic: cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  
   /* ==================== TRANSFORMS ==================== */
   --transform-hover-lift: translateY(-2px);
   --transform-hover-scale: scale(1.02);
   --transform-active-scale: scale(0.98);
   --transform-sidebar-slide: translateX(3px);
-  
   /* ==================== Z-INDEX ==================== */
   --z-dropdown: 1000;
   --z-sticky: 1020;
@@ -129,17 +108,14 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-ai-preview: 10000;
-  
   /* ==================== LAYOUT ==================== */
   --sidebar-width: 280px;
   --navbar-height: 64px;
   --header-height: 56px;
   --max-content-width: 100%;
-  
   /* ==================== GLASSMORPHISM EFFECTS ==================== */
   --glass-blur: blur(10px);
   --glass-backdrop: rgba(255, 255, 255, 0.8);
-  
   /* Glassmorphism Variables - Centralized Control */
   --glasmorphic-primary-opacity: 0.7;
   --glasmorphic-primary-blur: 20px;
@@ -148,53 +124,43 @@
   --glasmorphic-tertiary-opacity: 0.6;
   --glasmorphic-tertiary-blur: 10px;
   --glasmorphic-overlay-opacity: 0.0;
-  
   /* ==================== OPACITY SYSTEM ==================== */
   --opacity-subtle: 0.1;     /* Hints, borders ligeros */
   --opacity-light: 0.2;      /* Estados, highlights */
   --opacity-medium: 0.5;     /* Overlays, modals */
   --opacity-strong: 0.8;     /* Componentes principales */
   --opacity-solid: 1.0;      /* Texto, elementos críticos */
-  
   /* ==================== ADDITIONAL COLORS - LIGHT THEME ==================== */
   --bg-accent: rgba(99, 102, 241, var(--opacity-subtle));
   --bg-hover: rgba(99, 102, 241, var(--opacity-subtle));
   --text-disabled: rgba(49, 46, 129, 0.5);
   --border-base: rgba(99, 102, 241, 0.12);
   --border-emphasis: rgba(99, 102, 241, var(--opacity-light));
-  
   /* ==================== STATUS COLORS - COMPLETE SET ==================== */
   --status-success: #7c3aed;
   --status-success-bg: rgba(124, 58, 237, var(--opacity-light));
   --status-success-hover: rgba(124, 58, 237, var(--opacity-strong));
-  
   --status-warning: #6366f1;
   --status-warning-bg: rgba(99, 102, 241, var(--opacity-light));
   --status-warning-hover: rgba(99, 102, 241, var(--opacity-strong));
-  
   --status-danger: #5b21b6;
   --status-danger-bg: rgba(91, 33, 182, var(--opacity-light));
   --status-danger-hover: rgba(91, 33, 182, var(--opacity-strong));
-  
   --status-info: #6366f1;
   --status-info-bg: rgba(99, 102, 241, var(--opacity-light));
   --status-info-hover: rgba(99, 102, 241, var(--opacity-strong));
-  
   --status-neutral: #a5b4fc;
   --status-neutral-bg: rgba(165, 180, 252, 0.15);
-  
   /* ==================== ACCENT COLORS ==================== */
   --accent-primary: #6d28d9;
   --accent-primary-dark: #581c87;
   --accent-secondary: #8b5cf6;
-  
   /* ==================== SPECIAL EFFECTS ==================== */
   --glow-blue: rgba(109, 40, 217, 0.1);
   --glow-red: rgba(91, 33, 182, 0.06);
   --backdrop-blur: blur(20px);
   --backdrop-blur-light: blur(10px);
 }
-
 /* ==================== DARK THEME OVERRIDES ==================== */
 body.theme-dark {
   /* Glassmorphism Variables - Dark Theme Overrides */
@@ -202,7 +168,6 @@ body.theme-dark {
   --glasmorphic-secondary-opacity: 0.6;
   --glasmorphic-tertiary-opacity: 0.5;
   --glasmorphic-overlay-opacity: 0.0;
-  
   /* Background Colors - Dark Theme */
   --bg: #000000;
   --bg-primary: #0a0a0a;
@@ -212,53 +177,43 @@ body.theme-dark {
   --bg-hover: rgba(50, 50, 50, var(--opacity-subtle));
   --card-bg: rgba(10, 10, 10, 0.95);
   --card-bg-hover: rgba(20, 20, 20, 0.98);
-  
   /* Text Colors - Dark Theme */
   --text: #e0e6f0;
   --text-primary: #ffffff;
   --text-secondary: #e0e0e0;
   --text-muted: #b0b8c8;
   --text-disabled: rgba(176, 184, 200, 0.5);
-  
   /* Border & Dividers - Dark Theme */
   --border: rgba(59, 130, 246, 0.25);
   --border-color: rgba(59, 130, 246, 0.2);
   --border-base: rgba(120, 120, 120, var(--opacity-subtle));
   --border-light: rgba(100, 100, 100, 0.05);
   --border-emphasis: rgba(140, 140, 140, var(--opacity-light));
-  
   /* Status Colors - Dark Theme */
   --status-success: #4ade80;
   --status-success-bg: rgba(74, 222, 128, var(--opacity-light));
   --status-success-hover: rgba(74, 222, 128, var(--opacity-strong));
-  
   --status-warning: #fbbf24;
   --status-warning-bg: rgba(251, 191, 36, var(--opacity-light));
   --status-warning-hover: rgba(251, 191, 36, var(--opacity-strong));
-  
   --status-danger: #ff6b6b;
   --status-danger-bg: rgba(255, 107, 107, var(--opacity-light));
   --status-danger-hover: rgba(255, 107, 107, var(--opacity-strong));
-  
   --status-info: #8a8a8a;
   --status-info-bg: rgba(120, 120, 120, var(--opacity-light));
   --status-info-hover: rgba(140, 140, 140, var(--opacity-strong));
-  
   --status-neutral: #b0b8c8;
   --status-neutral-bg: rgba(176, 184, 200, 0.15);
-  
   /* Accent Colors - Dark Theme */
   --accent-primary: #8a8a8a;
   --accent-primary-dark: #666666;
   --accent-secondary: #b0b0b0;
-  
   /* Shadows - Dark Theme */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, var(--opacity-light));
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.35);
-  
   /* Special Effects - Dark Theme */
   --glow-gray: rgba(120, 120, 120, 0.1);
   --glow-light: rgba(100, 100, 100, 0.06);

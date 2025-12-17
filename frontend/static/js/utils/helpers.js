@@ -3,7 +3,6 @@
  * Pure utility functions without side effects
  * SPEEDYFLOW JIRA Platform
  */
-
 // ============================================================
 // LOGGING UTILITY - Centralized console logging
 // ============================================================
@@ -18,11 +17,9 @@ export const logger = {
   theme: (msg, ...args) => console.log(`🎨 ${msg}`, ...args),
   notification: (msg, ...args) => console.log(`📌 ${msg}`, ...args),
 };
-
 // ============================================================
 // HTML ESCAPING AND STRING UTILITIES
 // ============================================================
-
 /**
  * Escape HTML to prevent XSS attacks
  * @param {string} text - Text to escape
@@ -34,7 +31,6 @@ export function escapeHTML(text) {
   div.textContent = text;
   return div.innerHTML;
 }
-
 /**
  * Truncate text to a maximum length
  * @param {string} text - Text to truncate
@@ -46,7 +42,6 @@ export function truncateText(text, maxLength = 100) {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 }
-
 /**
  * Capitalize first letter of a string
  * @param {string} text - Text to capitalize
@@ -56,7 +51,6 @@ export function capitalize(text) {
   if (!text) return '';
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
-
 /**
  * Convert string to kebab-case
  * @param {string} text - Text to convert
@@ -66,7 +60,6 @@ export function toKebabCase(text) {
   if (!text) return '';
   return text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
-
 /**
  * Convert string to camelCase
  * @param {string} text - Text to convert
@@ -78,11 +71,9 @@ export function toCamelCase(text) {
     .toLowerCase()
     .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
 }
-
 // ============================================================
 // DATE FORMATTING UTILITIES
 // ============================================================
-
 /**
  * Format date to readable string
  * @param {string|Date} dateString - Date to format
@@ -101,7 +92,6 @@ export function formatDate(dateString) {
     return 'Invalid Date';
   }
 }
-
 /**
  * Format date to relative time (e.g., "2 hours ago")
  * @param {string|Date} dateString - Date to format
@@ -117,7 +107,6 @@ export function formatRelativeTime(dateString) {
     const diffMin = Math.floor(diffSec / 60);
     const diffHour = Math.floor(diffMin / 60);
     const diffDay = Math.floor(diffHour / 24);
-
     if (diffSec < 60) return 'Just now';
     if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
     if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
@@ -127,7 +116,6 @@ export function formatRelativeTime(dateString) {
     return 'Invalid Date';
   }
 }
-
 /**
  * Format date and time
  * @param {string|Date} dateString - Date to format
@@ -148,11 +136,9 @@ export function formatDateTime(dateString) {
     return 'Invalid Date';
   }
 }
-
 // ============================================================
 // ARRAY AND OBJECT UTILITIES
 // ============================================================
-
 /**
  * Group array of objects by a key
  * @param {Array} array - Array to group
@@ -170,7 +156,6 @@ export function groupBy(array, key) {
     return result;
   }, {});
 }
-
 /**
  * Sort array of objects by a key
  * @param {Array} array - Array to sort
@@ -188,7 +173,6 @@ export function sortBy(array, key, order = 'asc') {
     return order === 'asc' ? comparison : -comparison;
   });
 }
-
 /**
  * Get unique values from array
  * @param {Array} array - Array to filter
@@ -198,7 +182,6 @@ export function unique(array) {
   if (!array || !Array.isArray(array)) return [];
   return [...new Set(array)];
 }
-
 /**
  * Deep clone an object
  * @param {*} obj - Object to clone
@@ -218,11 +201,9 @@ export function deepClone(obj) {
     return clonedObj;
   }
 }
-
 // ============================================================
 // DOM MANIPULATION UTILITIES
 // ============================================================
-
 /**
  * Simple jQuery-like selector helper
  * @param {string} selector - CSS selector
@@ -250,7 +231,6 @@ export function $(selector) {
       data: () => null,
     };
   }
-
   return {
     on: (event, handler) => el.addEventListener(event, handler),
     html: content => (content !== undefined ? (el.innerHTML = content) : el.innerHTML),
@@ -271,7 +251,6 @@ export function $(selector) {
     get element() { return el; }
   };
 }
-
 /**
  * Select all elements matching selector
  * @param {string} selector - CSS selector
@@ -280,7 +259,6 @@ export function $(selector) {
 export function $$(selector) {
   return document.querySelectorAll(selector);
 }
-
 /**
  * Debounce function execution
  * @param {Function} func - Function to debounce
@@ -298,7 +276,6 @@ export function debounce(func, wait = 300) {
     timeout = setTimeout(later, wait);
   };
 }
-
 /**
  * Throttle function execution
  * @param {Function} func - Function to throttle
@@ -315,11 +292,9 @@ export function throttle(func, limit = 300) {
     }
   };
 }
-
 // ============================================================
 // VALIDATION UTILITIES
 // ============================================================
-
 /**
  * Validate email address
  * @param {string} email - Email to validate
@@ -329,7 +304,6 @@ export function isValidEmail(email) {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(email);
 }
-
 /**
  * Validate URL
  * @param {string} url - URL to validate
@@ -343,11 +317,9 @@ export function isValidURL(url) {
     return false;
   }
 }
-
 // ============================================================
 // LOCAL STORAGE UTILITIES
 // ============================================================
-
 /**
  * Save to local storage with JSON serialization
  * @param {string} key - Storage key
@@ -360,7 +332,6 @@ export function setStorage(key, value) {
     logger.error('Failed to save to localStorage', e);
   }
 }
-
 /**
  * Get from local storage with JSON parsing
  * @param {string} key - Storage key
@@ -376,7 +347,6 @@ export function getStorage(key, defaultValue = null) {
     return defaultValue;
   }
 }
-
 /**
  * Remove from local storage
  * @param {string} key - Storage key
@@ -388,11 +358,9 @@ export function removeStorage(key) {
     logger.error('Failed to remove from localStorage', e);
   }
 }
-
 // ============================================================
 // NUMBER FORMATTING UTILITIES
 // ============================================================
-
 /**
  * Format number with commas
  * @param {number} num - Number to format
@@ -402,7 +370,6 @@ export function formatNumber(num) {
   if (typeof num !== 'number') return '0';
   return num.toLocaleString('en-US');
 }
-
 /**
  * Format bytes to human readable size
  * @param {number} bytes - Bytes to format

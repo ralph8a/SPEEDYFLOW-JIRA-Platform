@@ -3,7 +3,6 @@
  * Inputs, selects, buttons, form groups
  * Part of common.css split - <400 lines
  */
-
 /* ==================== ENFORCE SOLID TEXT IN FORMS ==================== */
 /* ALL form text must be fully opaque */
 .form-group p, .form-group span, .form-group label,
@@ -13,12 +12,10 @@
 select, input, textarea {
   opacity: 1 !important;
 }
-
 /* ==================== FORMS ==================== */
 .form-group {
   margin-bottom: var(--spacing-md);
 }
-
 .form-group label,
 .form-label {
   display: block;
@@ -27,18 +24,14 @@ select, input, textarea {
   font-size: var(--font-size-sm);
   color: var(--text-primary);
 }
-
 /* Form control styles defined in common.css */
-
 /* Form focus styles defined in common.css */
-
 .form-control:disabled {
   background-color: var(--bg-tertiary);
   cursor: not-allowed;
   opacity: 0.5;
   color: rgba(176, 184, 200, 0.7);
 }
-
 /* ==================== BUTTONS ==================== */
 .btn {
   padding: 8px 16px;
@@ -56,131 +49,108 @@ select, input, textarea {
   white-space: nowrap;
   /* backdrop-filter: blur(10px); */
 }
-
 .btn:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%);
   border-color: rgba(59, 130, 246, 0.4);
   transform: translateY(-1px);
   /* backdrop-filter: blur(15px); */
 }
-
 .btn:active {
   transform: translateY(0);
 }
-
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
 }
-
 body.theme-dark .btn {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
   border: 1px solid rgba(59, 130, 246, 0.5);
   color: #ffffff;
 }
-
 body.theme-dark .btn:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.4) 100%);
   border-color: rgba(59, 130, 246, 0.7);
 }
-
 body.theme-light .btn {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
   border: 1px solid rgba(59, 130, 246, 0.3);
   color: var(--text-primary);
 }
-
 body.theme-light .btn:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
   border-color: rgba(59, 130, 246, 0.5);
 }
-
 /* Button Variants */
 .btn-primary {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
   color: var(--text-primary);
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
-
 .btn-primary:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
   border-color: rgba(59, 130, 246, 0.5);
 }
-
 .btn-secondary {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
   color: var(--text-primary);
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
-
 .btn-secondary:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
   border-color: rgba(59, 130, 246, 0.5);
 }
-
 .btn-success {
   background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
   color: white;
   box-shadow: var(--shadow-sm);
 }
-
 .btn-success:hover {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   box-shadow: var(--shadow);
 }
-
 .btn-danger {
   background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
   color: white;
   box-shadow: var(--shadow-sm);
 }
-
 .btn-danger:hover {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   box-shadow: var(--shadow);
 }
-
 .btn-warning {
   background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
   color: white;
   box-shadow: var(--shadow-sm);
 }
-
 .btn-warning:hover {
   background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
   box-shadow: var(--shadow);
 }
-
 .btn-outline {
   background: transparent;
   border: 1px solid var(--primary);
   color: var(--primary);
   font-weight: var(--font-weight-semibold);
 }
-
 .btn-outline:hover {
   background: rgba(37, 99, 235, 0.1);
   border-color: var(--primary);
   box-shadow: var(--shadow-sm);
 }
-
 .btn-small,
 .btn-sm {
   padding: 6px 12px;
   font-size: var(--font-size-sm);
 }
-
 .btn-large,
 .btn-lg {
   padding: 14px 24px;
   font-size: var(--font-size-md);
 }
-
 .btn-full {
   width: 100%;
 }
-
 /* ==================== SELECTS & DROPDOWNS ==================== */
 select,
 .dropdown,
@@ -198,7 +168,6 @@ select,
   /* backdrop-filter: blur(10px); */
   box-shadow: var(--shadow-sm);
 }
-
 select:hover,
 .dropdown:hover,
 [class*="select"]:hover {
@@ -206,7 +175,6 @@ select:hover,
   border-color: var(--border-light);
   transform: var(--transform-hover-scale);
 }
-
 select:focus,
 .dropdown:focus,
 [class*="select"]:focus {
@@ -215,7 +183,6 @@ select:focus,
   box-shadow: var(--shadow-md);
   transform: var(--transform-hover-scale);
 }
-
 body.theme-dark select,
 body.theme-dark .dropdown,
 body.theme-dark [class*="select"] {
@@ -223,7 +190,6 @@ body.theme-dark [class*="select"] {
   border: var(--border-width) solid var(--border);
   color: var(--text-primary);
 }
-
 body.theme-dark select:hover,
 body.theme-dark .dropdown:hover,
 body.theme-dark [class*="select"]:hover {
@@ -231,7 +197,6 @@ body.theme-dark [class*="select"]:hover {
   border-color: var(--border-light);
   transform: var(--transform-hover-scale);
 }
-
 /* ==================== TABS ==================== */
 .tabs {
   display: flex;
@@ -239,7 +204,6 @@ body.theme-dark [class*="select"]:hover {
   border-bottom: var(--border-width-thick) solid var(--border);
   margin-bottom: var(--spacing-lg);
 }
-
 .tab-btn {
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
@@ -253,18 +217,15 @@ body.theme-dark [class*="select"]:hover {
   border-bottom: var(--border-width-thick) solid transparent;
   margin-bottom: calc(var(--border-width-thick) * -1);
 }
-
 .tab-btn:hover {
   color: var(--text-primary);
   background: var(--bg-secondary);
 }
-
 .tab-btn.active {
   background: var(--primary);
   color: white;
   border-bottom-color: var(--primary);
 }
-
 /* ==================== VIEW TOGGLE ==================== */
 .view-toggle {
   display: flex;
@@ -273,7 +234,6 @@ body.theme-dark [class*="select"]:hover {
   padding: var(--spacing-xs);
   border-radius: var(--border-radius);
 }
-
 .view-toggle button {
   padding: 6px 12px;
   border: none;
@@ -283,12 +243,10 @@ body.theme-dark [class*="select"]:hover {
   font-size: var(--font-size-sm);
   transition: all var(--transition-base);
 }
-
 .view-toggle button.active {
   background: white;
   box-shadow: var(--shadow-sm);
 }
-
 /* ==================== FILTERS ==================== */
 .filters {
   background: var(--card-bg);
@@ -300,7 +258,6 @@ body.theme-dark [class*="select"]:hover {
   flex-wrap: wrap;
   box-shadow: var(--shadow-sm);
 }
-
 .filters input,
 .filters select {
   padding: var(--spacing-sm) var(--spacing-md);
@@ -314,14 +271,12 @@ body.theme-dark [class*="select"]:hover {
   box-shadow: var(--shadow-sm);
   font-weight: 500;
 }
-
 .filters input:hover,
 .filters select:hover {
   background: var(--card-bg-hover);
   border-color: var(--border-light);
   transform: var(--transform-hover-scale);
 }
-
 .filters input:focus,
 .filters select:focus {
   outline: none;

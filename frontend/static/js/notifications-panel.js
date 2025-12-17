@@ -3,7 +3,6 @@
  * Real-time notifications with Server-Sent Events (SSE)
  * Clean implementation from scratch
  */
-
 class NotificationsPanel {
   constructor() {
     this.notifications = [];
@@ -13,28 +12,21 @@ class NotificationsPanel {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
   }
-
   /**
    * Initialize notification system
    */
   async init() {
     console.log('🔔 Initializing Notifications System...');
-    
     // Setup click handler
     this.setupButtonHandler();
-    
     // Load existing notifications
     await this.loadNotifications();
-    
     // Connect to SSE stream
     this.connectSSE();
-    
     // Update badge
     this.updateBadge();
-    
     console.log('✅ Notifications System ready');
   }
-
   /**
    * Setup button click handler
    */
@@ -44,16 +36,13 @@ class NotificationsPanel {
       console.warn('⚠️ Notifications button not found');
       return;
     }
-
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       this.togglePanel();
     });
-
     console.log('✅ Button handler attached');
   }
-
   /**
    * Load notifications from API
    */
@@ -62,19 +51,14 @@ class NotificationsPanel {
       console.log('🔄 Fetching notifications from /api/notifications...');
       const response = await fetch('/api/notifications');
       console.log('📡 Response status:', response.status);
-      
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
       const result = await response.json();
       console.log('📦 Response data:', result);
-      
       // Handle wrapped response format: {success, data: {notifications: []}}
       const data = result.data || result;
       this.notifications = data.notifications || [];
       this.unreadCount = this.notifications.filter(n => !n.read).length;
-      
       this.updateBadge();
-      
       console.log(`📬 Loaded ${this.notifications.length} notifications (${this.unreadCount} unread)`);
       console.log('📋 Notifications array:', this.notifications);
     } catch (error) {
@@ -83,7 +67,6 @@ class NotificationsPanel {
       this.unreadCount = 0;
     }
   }
-
   /**
    * Connect to SSE stream for real-time updates
    */
@@ -91,33 +74,25 @@ class NotificationsPanel {
     if (this.eventSource) {
       this.eventSource.close();
     }
-
     console.log('📡 Connecting to SSE stream...');
-    
     try {
       this.eventSource = new EventSource('/api/notifications/stream');
-      
       this.eventSource.onopen = () => {
         console.log('✅ SSE connection established');
         this.reconnectAttempts = 0;
       };
-      
       this.eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          
           if (data.type === 'ping' || data.type === 'connected') {
             return; // Ignore keep-alive messages
           }
-          
           console.log('📬 New notification received:', data);
-          
           // Add to list if not duplicate
           if (!this.notifications.find(n => n.id === data.id)) {
             this.notifications.unshift(data);
             this.unreadCount++;
             this.updateBadge();
-            
             // Update panel if open
             if (this.isOpen) {
               this.renderNotifications();
@@ -127,17 +102,14 @@ class NotificationsPanel {
           console.error('❌ Error parsing SSE message:', e);
         }
       };
-      
       this.eventSource.onerror = (error) => {
         console.error('❌ SSE connection error:', error);
         this.eventSource.close();
-        
         // Attempt reconnection with exponential backoff
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
           const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
           console.log(`🔄 Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-          
           setTimeout(() => this.connectSSE(), delay);
         } else {
           console.error('❌ Max reconnection attempts reached');
@@ -147,7 +119,6 @@ class NotificationsPanel {
       console.error('❌ Failed to create SSE connection:', error);
     }
   }
-
   /**
    * Update notification badge
    */
@@ -158,7 +129,6 @@ class NotificationsPanel {
       badge.style.display = this.unreadCount > 0 ? 'flex' : 'none';
     }
   }
-
   /**
    * Toggle notification panel
    */
@@ -169,7 +139,6 @@ class NotificationsPanel {
       this.openPanel();
     }
   }
-
   /**
    * Open notification panel
    */
@@ -177,11 +146,9 @@ class NotificationsPanel {
     if (document.getElementById('notificationsModal')) {
       return; // Already open
     }
-
     const modal = document.createElement('div');
     modal.id = 'notificationsModal';
     // Note: Styles are defined in cards-modals.css specifically for #notificationsModal
-    
     modal.innerHTML = `
       <div class="bg-modal-overlay"></div>
       <div class="bg-modal-content" style="max-width: 600px;">
@@ -189,7 +156,6 @@ class NotificationsPanel {
           <h3 class="bg-modal-title">🔔 Notifications</h3>
           <button class="bg-modal-close" onclick="window.notificationsPanel.closePanel()">×</button>
         </div>
-        
         <div id="notificationsContent" style="max-height: 70vh; overflow-y: auto; margin-top: 16px;">
           <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
             <div style="font-size: 16px;">Loading...</div>
@@ -197,14 +163,11 @@ class NotificationsPanel {
         </div>
       </div>
     `;
-
     document.body.appendChild(modal);
-    
     // Close on overlay click
     modal.querySelector('.bg-modal-overlay').addEventListener('click', () => {
       this.closePanel();
     });
-    
     // Close on Escape key
     const escapeHandler = (e) => {
       if (e.key === 'Escape') {
@@ -213,16 +176,12 @@ class NotificationsPanel {
       }
     };
     document.addEventListener('keydown', escapeHandler);
-    
     this.isOpen = true;
-    
     // Load notifications before rendering
     await this.loadNotifications();
     this.renderNotifications();
-    
     console.log('✅ Notification panel opened');
   }
-
   /**
    * Close notification panel
    */
@@ -237,7 +196,6 @@ class NotificationsPanel {
     this.isOpen = false;
     console.log('✅ Notification panel closed');
   }
-
   /**
    * Render notifications in panel
    */
@@ -248,7 +206,6 @@ class NotificationsPanel {
       console.error('❌ Container #notificationsContent not found');
       return;
     }
-
     // Empty state
     if (this.notifications.length === 0) {
       console.log('ℹ️ No notifications to display (empty state)');
@@ -263,54 +220,40 @@ class NotificationsPanel {
       `;
       return;
     }
-    
     console.log(`✅ Rendering ${this.notifications.length} notifications`);
-
     // Group by date
     const grouped = this.groupByDate(this.notifications);
-    
     let html = '';
-    
     if (grouped.today.length > 0) {
       html += '<div class="notif-date-header">Today</div>';
       html += grouped.today.map(n => this.renderNotificationCard(n)).join('');
     }
-
     if (grouped.yesterday.length > 0) {
       html += '<div class="notif-date-header">Yesterday</div>';
       html += grouped.yesterday.map(n => this.renderNotificationCard(n)).join('');
     }
-
     if (grouped.older.length > 0) {
       html += '<div class="notif-date-header">Older</div>';
       html += grouped.older.map(n => this.renderNotificationCard(n)).join('');
     }
-
     container.innerHTML = html;
-    
     // Attach click handlers to notification cards
     this.attachNotificationClickHandlers(container);
   }
-  
   /**
    * Attach click handlers to notification cards
    */
   attachNotificationClickHandlers(container) {
     const cards = container.querySelectorAll('.notif-card[data-issue-key]');
     console.log(`🖱️ Attaching click handlers to ${cards.length} notification cards`);
-    
     cards.forEach(card => {
       const issueKey = card.getAttribute('data-issue-key');
       const notifId = card.getAttribute('data-notif-id');
-      
       if (!issueKey) return;
-      
       card.style.cursor = 'pointer';
-      
       card.addEventListener('click', (e) => {
         e.preventDefault();
         console.log(`📍 Notification clicked: ${issueKey}`);
-        
         // Open issue details in right sidebar
         if (window.openIssueDetails) {
           console.log(`🔍 Opening issue details for: ${issueKey}`);
@@ -319,7 +262,6 @@ class NotificationsPanel {
         } else {
           console.warn('⚠️ window.openIssueDetails not available');
         }
-        
         // Mark as read
         if (notifId) {
           this.markAsRead(notifId);
@@ -327,23 +269,18 @@ class NotificationsPanel {
       });
     });
   }
-
   /**
    * Group notifications by date
    */
   groupByDate(notifications) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
     const grouped = { today: [], yesterday: [], older: [] };
-    
     notifications.forEach(notif => {
       const date = new Date(notif.created_at || notif.timestamp);
       date.setHours(0, 0, 0, 0);
-      
       if (date.getTime() === today.getTime()) {
         grouped.today.push(notif);
       } else if (date.getTime() === yesterday.getTime()) {
@@ -352,10 +289,8 @@ class NotificationsPanel {
         grouped.older.push(notif);
       }
     });
-    
     return grouped;
   }
-
   /**
    * Render single notification card
    */
@@ -364,10 +299,8 @@ class NotificationsPanel {
     const time = this.formatTime(notif.created_at || notif.timestamp);
     const isUnread = !notif.read;
     const issueKey = notif.issue_key || notif.key;
-    
     // Build clear message
     const message = this.buildClearMessage(notif);
-    
     const card = `
       <div class="notif-card ${isUnread ? 'unread' : ''}" 
            data-issue-key="${issueKey || ''}"
@@ -392,10 +325,8 @@ class NotificationsPanel {
         </div>
       </div>
     `;
-    
     return card;
   }
-
   /**
    * Build clear notification message
    */
@@ -403,7 +334,6 @@ class NotificationsPanel {
     const user = notif.user || notif.actor || 'Someone';
     const action = notif.action || notif.type || 'updated';
     const summary = notif.summary || notif.title || '';
-    
     // Action verb mapping for clarity
     const actionMap = {
       'mention': 'mentioned you in',
@@ -421,26 +351,20 @@ class NotificationsPanel {
       'resolved': 'resolved',
       'closed': 'closed'
     };
-    
     const verb = actionMap[action.toLowerCase()] || action;
-    
     let msg = `<strong style="color: #1e293b;">${user}</strong> ${verb}`;
-    
     // Add ticket summary if available
     if (summary) {
       msg += ` <span style="color: #64748b; font-style: italic;">"${this.truncate(summary, 50)}"</span>`;
     }
-    
     return msg;
   }
-  
   /**
    * Build notification message (legacy fallback)
    */
   buildMessage(notif) {
     return this.buildClearMessage(notif);
   }
-  
   /**
    * Truncate text with ellipsis
    */
@@ -448,7 +372,6 @@ class NotificationsPanel {
     if (!text || text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   }
-
   /**
    * Get icon for notification type
    */
@@ -468,7 +391,6 @@ class NotificationsPanel {
     };
     return icons[type] || '🔔';
   }
-
   /**
    * Format timestamp to relative time
    */
@@ -479,15 +401,12 @@ class NotificationsPanel {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
-
   /**
    * Mark notification as read
    */
@@ -496,7 +415,6 @@ class NotificationsPanel {
       const response = await fetch(`/api/notifications/${notifId}/read`, {
         method: 'POST'
       });
-      
       if (response.ok) {
         const notif = this.notifications.find(n => n.id == notifId);
         if (notif && !notif.read) {
@@ -511,7 +429,6 @@ class NotificationsPanel {
       console.error('❌ Failed to mark notification as read:', error);
     }
   }
-
   /**
    * Cleanup on destroy
    */
@@ -523,7 +440,6 @@ class NotificationsPanel {
     this.closePanel();
   }
 }
-
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
@@ -534,5 +450,4 @@ if (document.readyState === 'loading') {
   window.notificationsPanel = new NotificationsPanel();
   window.notificationsPanel.init();
 }
-
 console.log('✅ Notifications panel module loaded');

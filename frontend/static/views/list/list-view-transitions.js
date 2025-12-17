@@ -8,23 +8,19 @@
  * - Reutiliza la API de transiciones del sistema vertical
  * - Animación smooth al expandir/colapsar
  */
-
 class ListViewTransitions {
   constructor() {
     this.activeBar = null; // Reference to currently open transition bar
     this.currentIssueKey = null;
     this.availableTransitions = [];
     this.isExecutingTransition = false;
-    
     console.log('🎯 ListViewTransitions: Constructor initialized');
   }
-  
   init() {
     console.log('🚀 ListViewTransitions: Initializing...');
     this.setupEventListeners();
     console.log('✅ ListViewTransitions: Ready');
   }
-  
   /**
    * Setup event listeners for list view
    */
@@ -43,7 +39,6 @@ class ListViewTransitions {
         }
         return;
       }
-      
       // Handle close button
       const closeBtn = e.target.closest('.transition-bar-horizontal-close');
       if (closeBtn) {
@@ -52,7 +47,6 @@ class ListViewTransitions {
         this.closeActiveBar();
         return;
       }
-      
       // Handle transition execution button
       const transitionExecBtn = e.target.closest('.transition-btn-horizontal');
       if (transitionExecBtn && !transitionExecBtn.classList.contains('loading')) {
@@ -66,7 +60,6 @@ class ListViewTransitions {
         return;
       }
     });
-    
     // Close bar when clicking outside
     document.addEventListener('click', (e) => {
       if (this.activeBar && !e.target.closest('.transition-bar-horizontal') && 
@@ -74,7 +67,6 @@ class ListViewTransitions {
         this.closeActiveBar();
       }
     });
-    
     // ESC key closes active bar
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.activeBar) {
@@ -82,52 +74,42 @@ class ListViewTransitions {
       }
     });
   }
-  
   /**
    * Toggle transition bar for a specific issue
    */
   async toggleTransitionBar(issueKey, row) {
     console.log('🔄 Toggling transition bar for:', issueKey);
-    
     // If clicking the same row, just close
     if (this.currentIssueKey === issueKey && this.activeBar) {
       this.closeActiveBar();
       return;
     }
-    
     // Close any existing bar first
     if (this.activeBar) {
       this.closeActiveBar();
     }
-    
     // Store current issue
     this.currentIssueKey = issueKey;
-    
     // Create and show bar with loading state
     this.createTransitionBar(issueKey, row);
-    
     // Fetch transitions
     await this.fetchAndDisplayTransitions(issueKey);
   }
-  
   /**
    * Create the horizontal transition bar DOM
    */
   createTransitionBar(issueKey, row) {
     // Get the number of columns in the table
     const colCount = row.cells.length;
-    
     // Create a new row for the transition bar
     const transitionRow = document.createElement('tr');
     transitionRow.className = 'transition-row';
     transitionRow.dataset.issueKey = issueKey;
-    
     // Create a single cell that spans all columns
     const transitionCell = document.createElement('td');
     transitionCell.colSpan = colCount;
     transitionCell.style.padding = '0';
     transitionCell.style.background = 'transparent';
-    
     // Create the transition bar
     const bar = document.createElement('div');
     bar.className = 'transition-bar-horizontal show';
@@ -147,59 +129,44 @@ class ListViewTransitions {
         </div>
       </div>
     `;
-    
     // Assemble the structure
     transitionCell.appendChild(bar);
     transitionRow.appendChild(transitionCell);
-    
     // Insert the transition row right after the current row
     row.parentNode.insertBefore(transitionRow, row.nextSibling);
-    
     // Store reference
     this.activeBar = { row, transitionRow };
-    
     console.log('✅ Transition bar created below row for:', issueKey);
   }
-  
   /**
    * Fetch transitions from API and display them
    */
   async fetchAndDisplayTransitions(issueKey) {
     try {
       console.log('📡 Fetching transitions for:', issueKey);
-      
       const response = await fetch(`/api/issues/${issueKey}/transitions`);
-      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
       const data = await response.json();
-      
       if (!data.success || !data.data || !data.data.transitions) {
         throw new Error('Invalid response format');
       }
-      
       this.availableTransitions = data.data.transitions;
       console.log(`✅ Loaded ${this.availableTransitions.length} transitions`);
-      
       this.displayTransitions();
-      
     } catch (error) {
       console.error('❌ Error fetching transitions:', error);
       this.displayError(error.message);
     }
   }
-  
   /**
    * Display transitions in the bar
    */
   displayTransitions() {
     if (!this.activeBar || !this.activeBar.transitionRow) return;
-    
     const content = this.activeBar.transitionRow.querySelector('.transition-bar-horizontal-content');
     if (!content) return;
-    
     if (this.availableTransitions.length === 0) {
       content.innerHTML = `
         <div class="transition-bar-horizontal-empty">
@@ -208,7 +175,6 @@ class ListViewTransitions {
       `;
       return;
     }
-    
     // Generate transition buttons
     const buttonsHtml = this.availableTransitions.map(transition => `
       <button 
@@ -222,43 +188,34 @@ class ListViewTransitions {
         </span>
       </button>
     `).join('');
-    
     content.innerHTML = buttonsHtml;
-    
     console.log(`✅ Displayed ${this.availableTransitions.length} transitions`);
   }
-  
   /**
    * Display error message
    */
   displayError(message) {
     if (!this.activeBar || !this.activeBar.transitionRow) return;
-    
     const content = this.activeBar.transitionRow.querySelector('.transition-bar-horizontal-content');
     if (!content) return;
-    
     content.innerHTML = `
       <div class="transition-bar-horizontal-empty" style="color: #ef4444;">
         ⚠️ Error loading transitions: ${message}
       </div>
     `;
   }
-  
   /**
    * Execute a transition
    */
   async executeTransition(transitionId, transitionName, button) {
     console.log('🎯 executeTransition called:', { transitionId, transitionName, issueKey: this.currentIssueKey });
-    
     if (this.isExecutingTransition) {
       console.warn('⚠️ Transition already in progress');
       return;
     }
-    
     // Find transition to check if it has required fields
     const transition = this.availableTransitions.find(t => t.id === transitionId);
     console.log('🔍 Transition found:', transition);
-    
     if (transition?.hasFields) {
       console.log('📋 Transition requires fields - showing modal');
       const formData = await this.showFieldsModal(transition);
@@ -273,18 +230,14 @@ class ListViewTransitions {
       this.performTransition(transitionId, transitionName, button, null);
     }
   }
-  
   async performTransition(transitionId, transitionName, button, formData = null) {
     if (this.isExecutingTransition) {
       console.warn('⚠️ Transition already in progress');
       return;
     }
-    
     this.isExecutingTransition = true;
     button.classList.add('loading');
-    
     console.log(`🚀 Executing transition: ${transitionName} (${transitionId}) for ${this.currentIssueKey}`);
-    
     try {
       const requestBody = { transitionId: transitionId };
       if (formData) {
@@ -297,9 +250,7 @@ class ListViewTransitions {
           requestBody.comments = formData.comments;
         }
       }
-      
       console.log('📤 Request body:', requestBody);
-      
       const response = await fetch(`/api/issues/${this.currentIssueKey}/transitions`, {
         method: 'POST',
         headers: {
@@ -307,30 +258,23 @@ class ListViewTransitions {
         },
         body: JSON.stringify(requestBody)
       });
-      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
-      
       const data = await response.json();
-      
       if (!data.success) {
         throw new Error(data.error || 'Transition failed');
       }
-      
       console.log('✅ Transition executed successfully');
-      
       // Show success state
       button.classList.remove('loading');
       button.classList.add('success');
       button.textContent = `✓ ${transitionName}`;
-      
       // Wait a bit then reload
       setTimeout(() => {
         console.log('🔄 Reloading issues after transition...');
         this.closeActiveBar();
-        
         // Trigger reload of list view
         if (window.renderView) {
           window.renderView();
@@ -338,43 +282,34 @@ class ListViewTransitions {
           window.renderList();
         }
       }, 1000);
-      
     } catch (error) {
       console.error('❌ Transition error:', error);
-      
       button.classList.remove('loading');
       button.classList.add('error');
-      
       // Show error notification
       if (window.showToast) {
         window.showToast(`❌ Transition failed: ${error.message}`, 'error');
       }
-      
       // Reset button after 2 seconds
       setTimeout(() => {
         button.classList.remove('error');
         button.textContent = `${this.getTransitionIcon(transitionName)} ${transitionName}`;
       }, 2000);
-      
     } finally {
       this.isExecutingTransition = false;
     }
   }
-  
   /**
    * Close the active transition bar
    */
   closeActiveBar() {
     if (!this.activeBar) return;
-    
     console.log('🚪 Closing transition bar');
-    
     const bar = this.activeBar.transitionRow?.querySelector('.transition-bar-horizontal');
     if (bar) {
       bar.classList.remove('show');
       bar.style.animation = 'slideUp 0.2s ease';
     }
-    
     setTimeout(() => {
       if (this.activeBar && this.activeBar.transitionRow) {
         // Remove the transition row completely
@@ -385,13 +320,11 @@ class ListViewTransitions {
       this.availableTransitions = [];
     }, 200);
   }
-  
   /**
    * Get icon for transition name
    */
   getTransitionIcon(transitionName) {
     const name = transitionName.toLowerCase();
-    
     if (name.includes('asig') || name.includes('assign')) return '👤';
     if (name.includes('progres') || name.includes('progress')) return '🔄';
     if (name.includes('resu') || name.includes('resolve')) return '✅';
@@ -405,10 +338,8 @@ class ListViewTransitions {
     if (name.includes('pend') || name.includes('wait')) return '⏳';
     if (name.includes('bloq') || name.includes('block')) return '🔒';
     if (name.includes('pausa') || name.includes('pause')) return '⏸️';
-    
     return '➡️'; // Default arrow
   }
-  
   /**
    * Show modal to collect required fields for transition
    */
@@ -432,10 +363,8 @@ class ListViewTransitions {
           </div>
         </div>
       `;
-      
       document.body.appendChild(modal);
       setTimeout(() => modal.classList.add('show'), 10);
-      
       const cancelBtn = modal.querySelector('#cancelFieldsBtn');
       const overlay = modal.querySelector('.transition-fields-overlay');
       const cancelHandler = () => {
@@ -443,10 +372,8 @@ class ListViewTransitions {
         setTimeout(() => modal.remove(), 300);
         resolve(null);
       };
-      
       cancelBtn.addEventListener('click', cancelHandler);
       overlay.addEventListener('click', cancelHandler);
-      
       const submitBtn = modal.querySelector('#submitFieldsBtn');
       submitBtn.addEventListener('click', () => {
         const formData = this.collectFormData(modal);
@@ -456,7 +383,6 @@ class ListViewTransitions {
       });
     });
   }
-  
   /**
    * Render form fields
    */
@@ -467,7 +393,6 @@ class ListViewTransitions {
       const isRequired = field.required;
       const fieldName = field.name || fieldKey;
       const fieldType = field.schema?.type || 'string';
-      
       return `
         <div class="transition-field">
           <label for="field_${fieldKey}">
@@ -479,7 +404,6 @@ class ListViewTransitions {
       `;
     }).join('');
   }
-  
   /**
    * Render field input
    */
@@ -487,11 +411,9 @@ class ListViewTransitions {
     const placeholder = field.required ? 'Campo requerido' : 'Opcional';
     const template = this.getSolutionTemplate(transitionName, field.name || fieldKey);
     const isTextArea = !field.allowedValues || field.allowedValues.length === 0;
-    
     if (isTextArea && fieldType !== 'number' && fieldType !== 'boolean') {
       const hasTemplate = template !== '';
       const rows = hasTemplate ? 12 : 8;
-      
       return `
         <div class="field-input-container">
           <textarea 
@@ -512,7 +434,6 @@ class ListViewTransitions {
         </div>
       `;
     }
-    
     if (field.allowedValues && field.allowedValues.length > 0) {
       return `
         <select id="field_${fieldKey}" name="${fieldKey}" ${field.required ? 'required' : ''}>
@@ -523,7 +444,6 @@ class ListViewTransitions {
         </select>
       `;
     }
-    
     return `
       <input 
         type="text" 
@@ -534,39 +454,30 @@ class ListViewTransitions {
       />
     `;
   }
-  
   /**
    * Get solution template
    */
   getSolutionTemplate(transitionName = '', fieldName = '') {
     const transitionLower = transitionName.toLowerCase();
     const fieldLower = fieldName.toLowerCase();
-    
     if ((transitionLower.includes('resolver') || transitionLower.includes('validaci') || transitionLower.includes('soluci')) &&
         fieldLower.includes('adjunt')) {
       return `📋 DETALLES DE LA SOLUCIÓN
-
 🔍 Problema Identificado:
 [Describe brevemente el problema que se encontró]
-
 ✅ Solución Aplicada:
 [Explica qué se hizo para resolver el problema]
-
 🛠️ Acciones Realizadas:
 1. [Primera acción]
 2. [Segunda acción]
 3. [Tercera acción]
-
 ✓ Resultado:
 [Confirma que el problema está resuelto]
-
 📝 Notas Adicionales:
 [Cualquier información relevante para el cliente o equipo]`;
     }
-    
     return '';
   }
-  
   /**
    * Collect form data
    */
@@ -574,24 +485,20 @@ class ListViewTransitions {
     const form = modal.querySelector('#transitionFieldsForm');
     const fields = {};
     const comments = {};
-    
     form.querySelectorAll('textarea, input[type="text"], select').forEach(input => {
       const fieldKey = input.name;
       if (fieldKey && input.value) {
         fields[fieldKey] = input.value;
       }
     });
-    
     form.querySelectorAll('input[type="checkbox"][id^="comment_"]').forEach(checkbox => {
       if (checkbox.checked) {
         const fieldKey = checkbox.name.replace('comment_', '');
         comments[fieldKey] = true;
       }
     });
-    
     return { fields, comments };
   }
-  
   /**
    * Escape HTML
    */
@@ -601,7 +508,6 @@ class ListViewTransitions {
     return div.innerHTML;
   }
 }
-
 // Animation for closing
 const listHorizontalTransitionStyle = document.createElement('style');
 listHorizontalTransitionStyle.textContent = `
@@ -617,7 +523,6 @@ listHorizontalTransitionStyle.textContent = `
   }
 `;
 document.head.appendChild(listHorizontalTransitionStyle);
-
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
@@ -628,5 +533,4 @@ if (document.readyState === 'loading') {
   window.listViewTransitions = new ListViewTransitions();
   window.listViewTransitions.init();
 }
-
 console.log('📦 ListViewTransitions module loaded');

@@ -1,13 +1,10 @@
 import requests, time, re
-
 FRONTEND_URL = 'http://127.0.0.1:5005/'
 ML_URL = 'http://127.0.0.1:5002'
-
 def fetch_frontend():
     r = requests.get(FRONTEND_URL, timeout=10)
     print('FRONTEND GET', FRONTEND_URL, '->', r.status_code)
     return r.text
-
 def find_ml_client(html):
     # naive search for ml-client.js reference
     m = re.search(r'/static/js/ml-client.js[^\" ]*', html)
@@ -18,14 +15,10 @@ def find_ml_client(html):
             src = 'http://127.0.0.1:5005' + src
         return src
     return None
-
-
 def fetch_js(url):
     r = requests.get(url, timeout=10)
     print('JS GET', url, '->', r.status_code, 'len=', len(r.text))
     return r.text
-
-
 def emulate_ml_call(summary, description):
     url = ML_URL + '/predict/unified'
     payload = {'summary': summary, 'description': description}
@@ -45,8 +38,6 @@ def emulate_ml_call(summary, description):
         print('[CONSOLE] ❌ [ML] Error fetching predictions: HTTP', r.status_code)
     print('\n[RESPONSE]\n', r.text[:1000])
     return r
-
-
 if __name__ == '__main__':
     html = fetch_frontend()
     src = find_ml_client(html)

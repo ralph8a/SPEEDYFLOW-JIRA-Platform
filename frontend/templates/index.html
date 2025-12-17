@@ -6,7 +6,6 @@
   <meta name="description" content="SpeedyFlow - JIRA Service Desk Integration Platform">
   <meta name="theme-color" content="#ffffff">
   <title>SpeedyFlow - Ticket Management</title>
-  
   <!-- ============================================================
        CSS LOADING STRATEGY
        ============================================================
@@ -19,49 +18,37 @@
           - Utilities (interactive features)
           - Fallback (legacy support)
        ============================================================ -->
-  
   <!-- THEME BLOCKER: Prevents flash by applying theme BEFORE CSS renders -->
   <script src="/static/js/theme-blocker.js"></script>
-  
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
   <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
-  
   <!-- SVG ICONS STYLES: Centralized icon styling -->
   <link rel="stylesheet" href="/static/css/utils/svg-icons.css?v={{ timestamp }}">
-  
   <!-- BOARD VIEW STYLING (Kanban) -->
   <link rel="stylesheet" href="/static/views/board/kanban.css?v={{ timestamp }}">
-  
   <!-- LIST VIEW STYLING -->
   <link rel="stylesheet" href="/static/views/list/list-view.css?v={{ timestamp }}">
-  
   <!-- DRAG & DROP TRANSITIONS STYLING -->
   <link rel="stylesheet" href="/static/views/board/transition-bar-vertical.css?v={{ timestamp }}">
   <link rel="stylesheet" href="/static/views/list/transition-bar-horizontal.css?v={{ timestamp }}">
   <link rel="stylesheet" href="/static/css/components/transition-fields-modal.css?v={{ timestamp }}">
-  
   <!-- QUICK ACTIONS STYLING (Quick Triage & Smart Filters) -->
   <link rel="stylesheet" href="/static/css/components/quick-actions.css?v={{ timestamp }}">
-  
   <!-- AUTO-SWITCH NOTIFICATION STYLING -->
   <link rel="stylesheet" href="/static/css/components/auto-switch-notification.css?v={{ timestamp }}">
   <!-- GLOBAL SHADOWS: add depth to UI components -->
   <link rel="stylesheet" href="/static/css/components/shadows.css?v={{ timestamp }}">
   <!-- Purple accents for Flowing MVP -->
   <link rel="stylesheet" href="/static/css/components/purple-accents.css?v={{ timestamp }}">
-  
-  
   <!-- INLINE STYLES FOR SIDEBAR ACTION BUTTON -->
   <style>
     /* PERFECT ALIGNMENT: All sidebar components align with header/filter/board */
-    
     /* Sidebar Header: Align with header-enhanced top */
     .sidebar-header-component {
       top: 16px !important; /* Same as header margin */
       left: 16px !important;
       margin: 0 !important;
     }
-    
     /* Action Button: Position between header and filter */
     #sidebarActionComponent {
       top: 112px !important; /* After header total height (16 + 12 + 56 + 12 + 16) */
@@ -73,7 +60,6 @@
       margin: 0 !important;
       box-sizing: border-box !important;
     }
-    
     /* Quick Action Button: Match sidebar-toggle-btn exactly */
     #quickActionBtn {
       background: linear-gradient(135deg, rgb(59, 130, 246), rgb(37, 99, 235)) !important;
@@ -89,18 +75,15 @@
       justify-content: center !important;
       border: none !important;
     }
-    
     #quickActionBtn .toggle-icon {
       font-size: 22px !important; /* Match button font-size */
       line-height: 1 !important;
       display: block !important;
     }
-    
     #quickActionBtn:hover {
       background: linear-gradient(135deg, rgb(37, 99, 235), rgb(29, 78, 216)) !important;
       transform: scale(1.05) !important;
     }
-    
     /* Sidebar Content: Align with kanban board start */
     .sidebar-content-component {
       top: 206px !important; /* After header (112px) + filter (94px) = 206px */
@@ -109,7 +92,6 @@
       margin: 0 !important;
     }
   </style>
-  
   <!-- DEBUG SCRIPT: Force button visibility -->
   <script>
     console.log('🔍 DEBUG: Initializing sidebar action button...');
@@ -129,28 +111,24 @@
           'icon-refresh': SVGIcons.refresh({ size: 16 }),
           'icon-clear-cache': SVGIcons.trash({ size: 16 })
         };
-        
         Object.keys(iconMappings).forEach(id => {
           const element = document.getElementById(id);
           if (element) {
             element.innerHTML = iconMappings[id];
           }
         });
-        
         // Header icons (18px for header)
         const headerIconMappings = {
           'icon-header-help': SVGIcons.help({ size: 18 }),
           'icon-header-settings': SVGIcons.settings({ size: 18 }),
           'icon-header-user': SVGIcons.user({ size: 18 })
         };
-        
         Object.keys(headerIconMappings).forEach(id => {
           const element = document.getElementById(id);
           if (element) {
             element.innerHTML = headerIconMappings[id];
           }
         });
-        
         // ML Dashboard tab icons (20px for tabs)
         const mlIconMappings = {
           'icon-ml-overview': SVGIcons.chart({ size: 20 }),
@@ -158,14 +136,12 @@
           'icon-ml-trends': SVGIcons.trendUp({ size: 20 }),
           'icon-ml-team': SVGIcons.users({ size: 20 })
         };
-        
         Object.keys(mlIconMappings).forEach(id => {
           const element = document.getElementById(id);
           if (element) {
             element.innerHTML = mlIconMappings[id];
           }
         });
-        
         // Filter bar icons (16px for filter labels)
         const filterIconMappings = {
           'icon-filter-desk': SVGIcons.building({ size: 16 }), // Organization/building icon
@@ -174,14 +150,12 @@
           'icon-view-board': SVGIcons.chart({ size: 18 }),
           'icon-view-list': SVGIcons.list({ size: 18 }) // Proper list icon
         };
-        
         Object.keys(filterIconMappings).forEach(id => {
           const element = document.getElementById(id);
           if (element) {
             element.innerHTML = filterIconMappings[id];
           }
         });
-        
         // Right sidebar detail icons (16px)
         const sidebarDetailIconMappings = {
           'icon-ticket-info': SVGIcons.clipboard({ size: 16 }),
@@ -189,32 +163,26 @@
           'icon-tab-details': SVGIcons.clipboard({ size: 16 }),
           'icon-tab-technical': SVGIcons.settings({ size: 16 })
         };
-        
         Object.keys(sidebarDetailIconMappings).forEach(id => {
           const element = document.getElementById(id);
           if (element) {
             element.innerHTML = sidebarDetailIconMappings[id];
           }
         });
-
         // Flowing MVP send icon
         const flowingSendIconEl = document.getElementById('flowingSendIcon');
         if (flowingSendIconEl) flowingSendIconEl.innerHTML = SVGIcons.send({ size: 14, className: 'svg-assemble' });
-        
         console.log('✅ All SVG icons injected (sidebar, header, ML dashboard, filter bar, right sidebar)');
       } else {
         console.warn('⚠️ SVGIcons not loaded, sidebar icons will not render');
       }
-      
       setTimeout(function() {
         const sidebarContent = document.querySelector('.sidebar-content-component');
         const actionComponent = document.querySelector('.sidebar-action-component');
         const actionBtn = document.getElementById('quickActionBtn');
-        
         console.log('📍 Sidebar content:', sidebarContent);
         console.log('📍 Action component:', actionComponent);
         console.log('🔘 Action button:', actionBtn);
-        
         if (sidebarContent && actionComponent) {
           // Sync collapsed state with sidebar
           if (sidebarContent.classList.contains('collapsed')) {
@@ -225,7 +193,6 @@
             console.log('✅ Sidebar is expanded, action button ready');
           }
         }
-        
         // Listen for sidebar toggle events
         window.addEventListener('sidebarToggled', function() {
           console.log('🔔 Sidebar toggled event received');
@@ -237,30 +204,24 @@
             }
           }
         });
-        
         console.log('✅ Sidebar action button initialized');
       }, 100);
     });
   </script>
-  
   <!-- Chart.js for interactive charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <!-- Emoji -> SVG runtime replacer (uses SVGIcons.render) -->
   <script src="/static/js/utils/emoji-replacer.js?v={{ timestamp }}"></script>
-  
   <!-- USER SETUP MODAL (First-time configuration) -->
   <link rel="stylesheet" href="/static/css/user-setup-modal.css?v={{ timestamp }}">
-  
   <!-- FLOWING MVP FOOTER STYLES -->
   <link rel="stylesheet" href="/static/css/flowing-mvp-footer.css?v={{ timestamp }}">
-  
 </head>
 <body class="theme-light">
   <script>
     console.log('🚀 BODY LOADED - Checking for sidebar-action-component...');
     console.log('📍 Elements in DOM:', document.querySelectorAll('aside').length, 'asides found');
   </script>
-  
   <div class="app-container" role="application" aria-label="SpeedyFlow Ticket Workspace">
     <!-- SIDEBAR (UNIFIED REBUILD) -->
     <!-- SIDEBAR HEADER (Toggle Button) -->
@@ -269,14 +230,12 @@
         <span class="toggle-icon">☰</span>
       </button>
     </aside>
-
     <!-- SIDEBAR ACTION BUTTON (Clone of header style) -->
     <aside class="sidebar-header-component" id="sidebarActionComponent" role="complementary" aria-label="Quick Actions" style="top: 112px !important;">
       <button id="quickActionBtn" class="sidebar-toggle-btn" aria-label="Quick Action" title="Quick Action">
         <span class="toggle-icon">⚡</span>
       </button>
     </aside>
-
     <!-- SIDEBAR CONTENT (Navigation Menu) -->
     <aside class="sidebar-content-component" role="navigation" aria-label="Primary Navigation">
       <div class="sidebar-content">
@@ -307,10 +266,8 @@
         <div class="sidebar-divider" aria-hidden="true"></div>
       </div>
     </aside>
-
     <!-- MAIN WRAPPER -->
     <div class="main-wrapper" role="main">
-
       <header class="header-enhanced" aria-label="Primary">
         <div class="header-left-section">
           <div class="header-brand">
@@ -322,7 +279,6 @@
             <span class="page-title-text">Tickets</span>
           </h1>
         </div>
-        
         <div class="header-center-section">
           <nav aria-label="Breadcrumb" class="breadcrumb-enhanced">
             <span class="breadcrumb-item" id="deskBreadcrumb">Select Desk</span>
@@ -330,7 +286,6 @@
             <span class="breadcrumb-item" id="queueBreadcrumb">Select Queue</span>
           </nav>
         </div>
-        
         <div class="header-right-section">
           <div class="header-status-badge">
             <span class="status-indicator"></span>
@@ -350,7 +305,6 @@
           </div>
         </div>
       </header>
-
       <div class="filter-bar-enhanced" aria-label="Filters">
         <!-- Primary Filters -->
         <div class="filter-section filter-primary">
@@ -366,7 +320,6 @@
                 <span class="filter-dropdown-icon">▼</span>
               </div>
             </div>
-            
             <div class="filter-group">
               <label for="queueSelectFilter" class="filter-label">
                 <span class="filter-icon" id="icon-filter-queue"></span>
@@ -385,10 +338,8 @@
               </div>
             </div>
           </div>
-
           <!-- Divider -->
           <div class="filter-divider"></div>
-
           <!-- View Controls -->
           <div class="filter-section filter-controls">
             <div class="filter-group">
@@ -408,10 +359,8 @@
               </div>
             </div>
           </div>
-
           <!-- Divider -->
           <div class="filter-divider"></div>
-
           <!-- Theme Controls -->
           <div class="filter-section filter-theme">
             <div class="filter-group">
@@ -432,7 +381,6 @@
             </div>
           </div>
         </div>
-
       <div class="board-wrapper" id="boardWrapper">
         <div id="kanbanView" class="kanban-board" aria-live="polite">
           <div class="placeholder-pro" id="kanbanPlaceholder">Loading tickets...</div>
@@ -441,22 +389,18 @@
           <div class="placeholder-pro" id="listPlaceholder">Loading tickets...</div>
         </div>
       </div>
-
       <!-- RIGHT SIDEBAR (Context-aware suggestions) -->
       <div class="right-sidebar suggestions-sidebar" id="rightSidebar" style="display: none; padding-bottom: 70px;">
         <button class="btn-close-sidebar" id="closeSidebarBtn">✕</button>
-
         <!-- Context-aware header -->
         <div class="suggestions-header" id="suggestionsHeader" style="padding:12px 16px;border-bottom:1px solid rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;">
           <div style="font-weight:600">💡 Flowing Suggestions</div>
           <div id="suggestionsContextBadge" style="font-size:12px;opacity:0.8">No context</div>
         </div>
-
         <!-- Horizontal suggestions strip -->
         <div id="suggestionsBar" class="suggestions-bar" style="display:flex;gap:8px;padding:12px;overflow:auto;align-items:flex-start;">
           <!-- Suggestion cards injected here by FlowingContext -->
         </div>
-
         <!-- Results / details area -->
         <div id="suggestionsResults" class="suggestions-results" style="padding:12px;overflow:auto;height:calc(100% - 160px);">
           <p style="color:#666">Selecciona una sugerencia para ver resultados aquí.</p>
@@ -464,7 +408,6 @@
       </div>
     </div>
   </div>
-
   <!-- ===== FLOWING MVP FOOTER (Integrated) ===== -->
   <div id="flowingFooter" class="flowing-footer collapsed">
     <!-- Toggle Button -->
@@ -477,10 +420,8 @@
       <span class="flowing-chevron">▲</span>
       <span id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</span>
     </button>
-
     <!-- Flowing Content -->
     <div class="flowing-content">
-
       <!-- Chat-Only View (Default) -->
       <div id="chatOnlyView">
         <!-- Messages Container -->
@@ -499,7 +440,6 @@
             </div>
           </div>
         </div>
-
         <!-- Input Area -->
         <div class="flowing-input-area">
           <div class="flowing-context-badge" id="flowingContextBadge">
@@ -514,7 +454,6 @@
           </div>
         </div>
       </div>
-
       <!-- Balanced View (Hidden by default, shown when ticket selected) -->
       <div id="balancedView" class="balanced-view" style="display: none;">
         <!-- This will be dynamically populated with ticket details when a ticket is selected -->
@@ -525,7 +464,6 @@
     </div>
   </div>
   <!-- ===== END FLOWING MVP FOOTER ===== -->
-
   <script>
     // Detectar usuario actual desde JIRA
     fetch('/api/user')
@@ -542,14 +480,11 @@
         localStorage.setItem('userEmail', 'user@example.com');
       });
   </script>
-  
   <!-- ===== CORE APPLICATION SCRIPTS ===== -->
   <!-- Constants & Configuration (MUST load first) -->
   <script src="/static/js/constants/card-sizing.js"></script>
-  
   <!-- SVG Icons Module - Centralized icon library -->
   <script src="/static/js/utils/svg-icons.js?v={{ timestamp }}"></script>
-  
   <!-- Theme Manager - Centralized theme control -->
   <script src="/static/js/theme-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/sidebar-toggle.js?v={{ timestamp }}"></script>
@@ -563,28 +498,22 @@
   <script src="/static/js/mentions-system.js?v={{ timestamp }}"></script>
   <script src="/static/js/notifications-panel.js?v={{ timestamp }}"></script>
   <script src="/static/js/sla-monitor.js?v={{ timestamp }}"></script>
-  
   <!-- ===== GLASSMORPHISM & TRANSPARENCY ===== -->
   <script src="/static/js/glassmorphism-opacity-controller.js?v={{ timestamp }}"></script>
-  
   <!-- ===== BACKGROUND & AI EFFECTS ===== -->
   <script src="/static/js/background-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/background-selector-ui.js?v={{ timestamp }}"></script>
-  
   <!-- ===== UI ENHANCEMENTS ===== -->
   <script src="/static/js/app.js?v={{ timestamp }}"></script>
   <script src="/static/js/auto-severity-config.js?v={{ timestamp }}"></script>
   <script src="/static/js/filter-bar-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/loading-state-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/loading-dots.js?v={{ timestamp }}"></script>
-
   <!-- AI/ML modules removed (deprecated). Only chat and balanced view remain. -->
   <!-- DISABLED: ml-anomaly-dashboard.js (obsolete, auto-opens modal) -->
-
   <!-- ===== DRAG & DROP TRANSITIONS ===== -->
   <script src="/static/views/board/drag-transition-vertical.js?v={{ timestamp }}"></script>
   <script src="/static/views/list/list-view-transitions.js?v={{ timestamp }}"></script>
-  
   <!-- ===== QUICK ACTIONS (Quick Triage & Smart Filters) ===== -->
   <script src="/static/js/quick-triage.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-filters.js?v={{ timestamp }}"></script>
@@ -592,18 +521,15 @@
   <script src="/static/js/smart-analytics.js?v={{ timestamp }}"></script>
   <!-- User Setup Modal -->
   <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
-  
   <!-- FLOWING MVP FOOTER SCRIPT -->
   <!-- Flowing Context (context-aware suggestions injected into right sidebar) -->
   <script src="/static/js/flowing-context-aware.js?v={{ timestamp }}"></script>
   <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
-  
   <!-- FLOWING MVP INTEGRATION SCRIPT -->
   <script>
     // Integration script: Connect Flowing MVP with main app
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🔗 Integrating Flowing MVP Footer with main app...');
-      
       // Wait for both app.js and flowing-mvp-footer.js to load
       const initFlowingIntegration = () => {
         if (!window.flowingFooter) {
@@ -611,34 +537,26 @@
           setTimeout(initFlowingIntegration, 100);
           return;
         }
-        
         // CRITICAL: Listen for ticket details button clicks
         document.addEventListener('click', function(e) {
           // Check if click is on a details button (kanban or list view)
           const detailsBtn = e.target.closest('.issue-details-btn, .btn-view-details');
-          
           if (detailsBtn && window.flowingFooter) {
             e.preventDefault(); // Prevent default right sidebar opening
             e.stopPropagation(); // Stop event from bubbling
-            
             const issueKey = detailsBtn.dataset.issueKey || detailsBtn.dataset.key;
-            
             if (issueKey) {
               console.log('🎯 Details button clicked for ticket:', issueKey);
-              
               // Expand footer if collapsed
               if (!window.flowingFooter.isExpanded) {
                 window.flowingFooter.expand();
               }
-              
               // Switch to balanced view with ticket details
               window.flowingFooter.switchToBalancedView(issueKey);
-              
               // Prevent right sidebar from opening
               return false;
             }
           }
-          
           // Alternative: Listen for ticket card clicks (optional fallback)
           const ticketCard = e.target.closest('.ticket-card, .kanban-card, .list-row');
           if (ticketCard && !e.target.closest('.issue-details-btn, .btn-view-details') && window.flowingFooter) {
@@ -649,18 +567,15 @@
             }
           }
         }, true); // Use capture phase to intercept before right-sidebar.js
-        
         // Sync theme changes
         const themeObserver = new MutationObserver(() => {
           const bodyTheme = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
           document.body.setAttribute('data-theme', bodyTheme);
         });
         themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-        
         console.log('✅ Flowing MVP Footer integrated successfully');
         console.log('💡 Click on ticket details buttons to view in Flowing MVP');
       };
-      
       initFlowingIntegration();
     });
   </script>
@@ -675,20 +590,16 @@
           // attempt to find issueKey from dataset or ancestor attributes
           const issueKey = btn.dataset.issueKey || btn.dataset.key || btn.closest('[data-issue-key]')?.dataset.issueKey || btn.closest('[data-key]')?.dataset.key;
           if (!issueKey) return;
-
           // Try to resolve full issue object from window.state or app caches
           let ticket = null;
           try { ticket = window.state?.issues?.find(i => i.key === issueKey) || window.app?.issuesCache?.get(issueKey) || null; } catch(_) { ticket = null; }
           if (!ticket) ticket = { key: issueKey, fields: {} };
-
           // If Flowing Footer supports balanced view, open it
           if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
             try { window.flowingFooter.switchToBalancedView(issueKey); } catch(_) {}
           }
-
           // Dispatch ticketSelected for ML modules
           document.dispatchEvent(new CustomEvent('ticketSelected', { detail: { ticket: ticket } }));
-
           // Also directly invoke the comment suggestions UI if available (force analysis)
           try {
             const tryInvoke = () => {
@@ -699,7 +610,6 @@
               }
               return false;
             };
-
             if (!tryInvoke()) {
               // Retry a few times in case ML module initializes slightly later
               let attempts = 0;
@@ -714,7 +624,6 @@
           } catch (e) { console.warn('Could not call commentSuggestionsUI directly:', e); }
         } catch (err) { console.warn('issueSelectionDetector click handler error', err); }
       }, true);
-
       // Observe balanced view visibility and dispatch when shown
       const balancedEl = document.getElementById('balancedView');
       if (balancedEl) {
@@ -747,10 +656,8 @@
       try {
         const ticket = e.detail?.ticket;
         if (!ticket) return;
-
         const issueKey = ticket.key || ticket.fields?.key || null;
         if (!issueKey) return;
-
         const tryInvoke = () => {
           if (window.commentSuggestionsUI && typeof window.commentSuggestionsUI.showSuggestionsForTicket === 'function') {
             console.log('📣 ticketSelected listener: invoking commentSuggestionsUI for', issueKey);
@@ -759,7 +666,6 @@
           }
           return false;
         };
-
         if (!tryInvoke()) {
           let attempts = 0;
           const maxAttempts = 12;

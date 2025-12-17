@@ -8,7 +8,6 @@
  * - Barra vertical centrada con glassmorphism
  * - Transiciones ejecutadas via API
  */
-
 class DragTransitionVertical {
   constructor() {
     this.transitionBar = null;
@@ -18,17 +17,14 @@ class DragTransitionVertical {
     this.isDragging = false;
     this.isExecutingTransition = false;
     this.dragStartTime = null;
-    
     console.log('🎯 DragTransitionVertical: Constructor initialized');
   }
-  
   init() {
     console.log('🚀 DragTransitionVertical: Initializing...');
     this.setupDragListeners();
     this.createTransitionBar();
     console.log('✅ DragTransitionVertical: Ready');
   }
-  
   /**
    * Setup global drag event listeners
    */
@@ -41,14 +37,11 @@ class DragTransitionVertical {
         this.onDragStart(e, card);
       }
     });
-    
-    
     // Dragend: Cleanup unless executing transition or drag just started
     document.addEventListener('dragend', (e) => {
       const card = e.target.closest('.kanban-card');
       if (card && this.isDragging && !this.isExecutingTransition) {
         const dragDuration = Date.now() - this.dragStartTime;
-        
         // Only cleanup if drag lasted more than 200ms (real drag, not accidental)
         if (dragDuration > 200) {
           console.log('🏁 Drag ended after', dragDuration, 'ms - cleaning up');
@@ -58,15 +51,12 @@ class DragTransitionVertical {
         }
       }
     });
-    
-    
     // Dragover: Allow drop
     document.addEventListener('dragover', (e) => {
       if (this.isDragging) {
         e.preventDefault();
       }
     });
-    
     // Prevent click events during drag
     document.addEventListener('click', (e) => {
       const card = e.target.closest('.kanban-card');
@@ -76,7 +66,6 @@ class DragTransitionVertical {
         return false;
       }
     }, true);
-    
     // ESC key cancels drag
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.isDragging) {
@@ -85,19 +74,15 @@ class DragTransitionVertical {
       }
     });
   }
-  
   /**
    * Create the transition bar DOM element
    */
   createTransitionBar() {
     if (this.transitionBar) return;
-    
     this.transitionBar = document.createElement('div');
     this.transitionBar.className = 'transition-bar-vertical';
-    
     // IMPORTANTE: Asegurar que esté oculto por defecto
     this.transitionBar.style.display = 'none';
-    
     this.transitionBar.innerHTML = `
       <div class="transition-bar-header">
         <span class="icon">${SVGIcons.target({size:16,className:'inline-icon'})}</span>
@@ -112,9 +97,7 @@ class DragTransitionVertical {
         </div>
       </div>
     `;
-    
     document.body.appendChild(this.transitionBar);
-    
     // Close button handler
     const closeBtn = this.transitionBar.querySelector('.close-button');
     if (closeBtn) {
@@ -124,10 +107,8 @@ class DragTransitionVertical {
         this.cancelDrag();
       });
     }
-    
     console.log('✅ Transition bar created');
   }
-  
   /**
    * Handle drag start event
    */
@@ -135,95 +116,74 @@ class DragTransitionVertical {
     // IMPORTANTE: NO llamar e.preventDefault() aquí o el drag no funcionará
     // Solo stopPropagation para evitar que abra los detalles del ticket
     e.stopPropagation();
-    
     // Set drag data (required for drag to work)
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', card.dataset.issueKey || '');
     }
-    
     // Extract issue key from card
     const issueKey = this.extractIssueKey(card);
-    
     if (!issueKey) {
       console.warn('⚠️ No issue key found on card');
       return;
     }
-    
     console.log('🚀 Drag started:', issueKey);
-    
     // Set state with backup storage
     this.isDragging = true;
     this.dragStartTime = Date.now();
     this.currentTicket = { card, issueKey };
     this.currentIssueKey = issueKey;  // Store separately as backup
-    
     // Add visual feedback
     card.classList.add('dragging');
     card.style.opacity = '0.5';
-    
     // Activate board (columns separate)
     this.activateBoard();
-    
     // Show transition bar with loading
     this.showTransitionBar(true);
-    
     // Load and render transitions
     await this.loadTransitions(issueKey);
     this.renderTransitions();
   }
-  
   /**
    * Extract issue key from card element
    */
   extractIssueKey(card) {
     // Try multiple strategies to find issue key
-    
     // Strategy 1: data-issue-key attribute
     if (card.dataset.issueKey) {
       return card.dataset.issueKey;
     }
-    
     // Strategy 2: .issue-key element
     const keyElement = card.querySelector('.issue-key');
     if (keyElement) {
       return keyElement.textContent.trim();
     }
-    
     // Strategy 3: data-key attribute
     if (card.dataset.key) {
       return card.dataset.key;
     }
-    
     // Strategy 4: First text content that matches JIRA key pattern (ABC-123)
     const text = card.textContent;
     const match = text.match(/[A-Z]+-\d+/);
     if (match) {
       return match[0];
     }
-    
     return null;
   }
-  
   /**
    * Fetch available transitions from API
    */
   async loadTransitions(issueKey) {
     try {
       console.log('📡 Fetching transitions for', issueKey);
-      
       const response = await fetch(`/api/issues/${issueKey}/transitions`);
-      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
       const data = await response.json();
       console.log('📦 Raw response:', data);
-      
       // Unwrap if decorated with @json_response
       let transitions = [];
-      
       if (data.transitions) {
         transitions = data.transitions;
       } else if (data.data && data.data.transitions) {
@@ -231,7 +191,6 @@ class DragTransitionVertical {
       } else if (Array.isArray(data)) {
         transitions = data;
       }
-      
       // Map to standardized format including fields
       this.availableTransitions = transitions.map(t => ({
         id: t.id,
@@ -241,44 +200,35 @@ class DragTransitionVertical {
         fields: t.fields || {},
         hasFields: t.fields && Object.keys(t.fields).length > 0
       }));
-      
       console.log('✅ Loaded transitions:', this.availableTransitions.length);
-      
     } catch (error) {
       console.error('❌ Error loading transitions:', error);
       this.availableTransitions = [];
     }
   }
-  
   /**
    * Show transition bar with optional loading state
    */
   showTransitionBar(loading = false) {
     if (!this.transitionBar) return;
-    
     console.log('📊 Showing transition bar');
-    
     // Update issue key in header
     const issueKeyEl = document.getElementById('transitionIssueKey');
     if (issueKeyEl && this.currentTicket) {
       issueKeyEl.textContent = this.currentTicket.issueKey;
     }
-    
     // Remove display:none and show bar with animation
     this.transitionBar.style.display = 'flex';
-    
     setTimeout(() => {
       this.transitionBar.classList.add('show');
     }, 100);
   }
-  
   /**
    * Render transitions in the bar
    */
   renderTransitions() {
     const zonesContainer = document.getElementById('transitionZonesVertical');
     if (!zonesContainer) return;
-    
     // Empty state
     if (this.availableTransitions.length === 0) {
       zonesContainer.innerHTML = `
@@ -290,12 +240,10 @@ class DragTransitionVertical {
       `;
       return;
     }
-    
     // Render transition zones
     zonesContainer.innerHTML = this.availableTransitions.map(t => {
       const pausesSLA = this.transitionPausesSLA(t.name);
       const slaBadge = pausesSLA ? '<span class="sla-pause-badge">⏸️ Pausa SLA</span>' : '';
-      
       return `
         <div class="transition-zone-vertical ${pausesSLA ? 'pauses-sla' : ''}" 
              data-transition-id="${t.id}"
@@ -311,18 +259,15 @@ class DragTransitionVertical {
         </div>
       `;
     }).join('');
-    
     // Attach event listeners to zones
     this.attachZoneListeners();
   }
-  
   /**
    * Attach drag event listeners to transition zones
    */
   attachZoneListeners() {
     const zones = document.querySelectorAll('.transition-zone-vertical');
     console.log(`🎯 Attaching listeners to ${zones.length} transition zones`);
-    
     zones.forEach(zone => {
       zone.setAttribute('data-droppable', 'true');
       zone.addEventListener('dragenter', (e) => this.onZoneDragEnter(e, zone));
@@ -331,7 +276,6 @@ class DragTransitionVertical {
       zone.addEventListener('drop', (e) => this.onZoneDrop(e, zone));
     });
   }
-  
   /**
    * Handle dragenter on transition zone
    */
@@ -341,7 +285,6 @@ class DragTransitionVertical {
     console.log('🎯 Dragenter on zone:', zone.dataset.targetStatus);
     zone.classList.add('drag-over');
   }
-  
   /**
    * Handle dragover on transition zone
    */
@@ -352,7 +295,6 @@ class DragTransitionVertical {
       e.dataTransfer.dropEffect = 'move';
     }
   }
-  
   /**
    * Handle dragleave on transition zone
    */
@@ -362,33 +304,25 @@ class DragTransitionVertical {
       zone.classList.remove('drag-over');
     }
   }
-  
   /**
    * Handle drop on transition zone
    */
   async onZoneDrop(e, zone) {
     e.preventDefault();
     e.stopPropagation();
-    
     const transitionId = zone.dataset.transitionId;
     const targetStatus = zone.dataset.targetStatus;
-    
     console.log('🎯 DROP EVENT FIRED:', { transitionId, targetStatus });
-    
     this.removeDragOverClasses();
-    
     // Store issue key before any async operations
     const issueKey = this.currentTicket?.issueKey;
-    
     if (!issueKey) {
       console.error('❌ No issue key available for drop');
       this.onDragEnd();
       return;
     }
-    
     // Find transition to check if it has required fields
     const transition = this.availableTransitions.find(t => t.id === transitionId);
-    
     if (transition?.hasFields) {
       console.log('📋 Transition requires fields - showing modal');
       await this.showFieldsModal(transition);
@@ -401,20 +335,17 @@ class DragTransitionVertical {
       }
     }
   }
-  
   /**
    * Show modal to collect required fields for transition
    */
   async showFieldsModal(transition) {
     // Store issue key BEFORE showing modal to prevent loss
     const issueKey = this.currentTicket?.issueKey;
-    
     if (!issueKey) {
       console.error('❌ No issue key available for modal');
       this.onDragEnd();
       return null;
     }
-    
     return new Promise((resolve) => {
       // Create modal
       const modal = document.createElement('div');
@@ -435,12 +366,9 @@ class DragTransitionVertical {
           </div>
         </div>
       `;
-      
       document.body.appendChild(modal);
-      
       // Add animation
       setTimeout(() => modal.classList.add('show'), 10);
-      
       // Cancel handler
       const cancelBtn = modal.querySelector('#cancelFieldsBtn');
       const overlay = modal.querySelector('.transition-fields-overlay');
@@ -452,42 +380,34 @@ class DragTransitionVertical {
         }, 300);
         resolve(null);
       };
-      
       cancelBtn.addEventListener('click', cancelHandler);
       overlay.addEventListener('click', cancelHandler);
-      
       // Submit handler
       const submitBtn = modal.querySelector('#submitFieldsBtn');
       submitBtn.addEventListener('click', async () => {
         const formData = this.collectFormData(modal);
-        
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
-        
         try {
           // Pass issueKey explicitly to avoid loss after modal closes
           await this.executeTransition(transition.id, transition.targetStatus, formData, issueKey);
         } finally {
           this.onDragEnd();
         }
-        
         resolve(formData);
       });
     });
   }
-  
   /**
    * Render form fields based on transition field requirements
    */
   renderTransitionFields(fields, transitionName = '') {
     const fieldKeys = Object.keys(fields);
-    
     return fieldKeys.map(fieldKey => {
       const field = fields[fieldKey];
       const isRequired = field.required;
       const fieldName = field.name || fieldKey;
       const fieldType = field.schema?.type || 'string';
-      
       return `
         <div class="transition-field">
           <label for="field_${fieldKey}">
@@ -499,25 +419,20 @@ class DragTransitionVertical {
       `;
     }).join('');
   }
-  
   /**
    * Render appropriate input for field type
    */
   renderFieldInput(fieldKey, field, fieldType, transitionName = '') {
     const placeholder = field.required ? 'Campo requerido' : 'Opcional';
     const fieldName = field.name || fieldKey;
-    
     // Get solution template based on transition name
     const template = this.getSolutionTemplate(transitionName, fieldName);
-    
     // Check if this is a textarea field (not a select with allowedValues)
     const isTextArea = !field.allowedValues || field.allowedValues.length === 0;
-    
     // Text area for ALL non-select fields (hacer todos los campos grandes)
     if (isTextArea && fieldType !== 'number' && fieldType !== 'boolean') {
       const hasTemplate = template !== '';
       const rows = hasTemplate ? 12 : 8;  // More rows for template
-      
       return `
         <div class="field-input-container">
           <textarea 
@@ -545,7 +460,6 @@ class DragTransitionVertical {
         </div>
       `;
     }
-    
     // Select for allowed values
     if (field.allowedValues && field.allowedValues.length > 0) {
       return `
@@ -557,7 +471,6 @@ class DragTransitionVertical {
         </select>
       `;
     }
-    
     // Default: text input (larger)
     return `
       <input 
@@ -570,14 +483,12 @@ class DragTransitionVertical {
       />
     `;
   }
-  
   /**
    * Get solution template based on transition name and field name
    */
   getSolutionTemplate(transitionName = '', fieldName = '') {
     const transitionLower = transitionName.toLowerCase();
     const fieldLower = fieldName.toLowerCase();
-    
     // Plantilla SOLO para campo "Adjunto" en transiciones de resolver/validación
     if ((transitionLower.includes('resolver') || 
          transitionLower.includes('validaci') || 
@@ -585,25 +496,19 @@ class DragTransitionVertical {
          transitionLower.includes('solution')) &&
         fieldLower.includes('adjunt')) {
       return `📋 DETALLES DE LA SOLUCIÓN
-
 🔍 Problema Identificado:
 [Describe brevemente el problema que se encontró]
-
 ✅ Solución Aplicada:
 [Explica qué se hizo para resolver el problema]
-
 🛠️ Acciones Realizadas:
 1. [Primera acción]
 2. [Segunda acción]
 3. [Tercera acción]
-
 ✓ Resultado:
 [Confirma que el problema está resuelto]
-
 📝 Notas Adicionales:
 [Cualquier información relevante para el cliente o equipo]`;
     }
-    
     // Plantilla sencilla para "Acciones de Seguimiento"
     if ((transitionLower.includes('resolver') || 
          transitionLower.includes('validaci') || 
@@ -613,10 +518,8 @@ class DragTransitionVertical {
 🔧 Acciones: [describe brevemente]
 📌 Estado: [resuelto/validado]`;
     }
-    
     return '';
   }
-  
   /**
    * Collect form data from modal
    */
@@ -624,9 +527,7 @@ class DragTransitionVertical {
     const form = modal.querySelector('#transitionFieldsForm');
     const fields = {};
     const comments = {}; // Track which fields should also be comments
-    
     console.log('📋 Collecting form data...');
-    
     // Get all textarea values
     form.querySelectorAll('textarea, input[type="text"], select').forEach(input => {
       const fieldKey = input.name;
@@ -635,7 +536,6 @@ class DragTransitionVertical {
         console.log(`  ✓ Field: ${fieldKey} = ${input.value.substring(0, 50)}...`);
       }
     });
-    
     // Get all comment checkboxes
     form.querySelectorAll('input[type="checkbox"][id^="comment_"]').forEach(checkbox => {
       if (checkbox.checked) {
@@ -644,31 +544,24 @@ class DragTransitionVertical {
         console.log(`  💬 Will post comment for: ${fieldKey}`);
       }
     });
-    
     console.log('📦 Form data collected:', { fields: Object.keys(fields), comments: Object.keys(comments) });
-    
     return { fields, comments };
   }
-  
   /**
    * Execute transition via API
    */
   async executeTransition(transitionId, targetStatus, formData = null, explicitIssueKey = null) {
     this.isExecutingTransition = true;
-    
     // Try multiple sources for issue key (in order of preference)
     const issueKey = explicitIssueKey || this.currentTicket?.issueKey || this.currentIssueKey;
-    
     if (!issueKey) {
       console.error('❌ No issue key available for transition');
       this.isExecutingTransition = false;
       return;
     }
-    
     // Extract fields and comments from formData
     let fields = {};
     let comments = {};
-    
     if (formData && typeof formData === 'object') {
       // If formData has .fields property, use it (new format with comments)
       if (formData.fields) {
@@ -679,7 +572,6 @@ class DragTransitionVertical {
         fields = formData;
       }
     }
-    
     console.log('🚀 Executing transition:', { 
       issueKey,
       transitionId, 
@@ -687,20 +579,16 @@ class DragTransitionVertical {
       fields,
       comments
     });
-    
     try {
       // Show loading state on bar
       this.updateTransitionBarIcon('⏳');
-      
       const body = {
         transition: { id: transitionId }
       };
-      
       // Add fields if provided
       if (Object.keys(fields).length > 0) {
         body.fields = fields;
       }
-      
       const response = await fetch(`/api/issues/${issueKey}/transitions`, {
         method: 'POST',
         headers: { 
@@ -708,14 +596,11 @@ class DragTransitionVertical {
         },
         body: JSON.stringify(body)
       });
-      
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Transition failed: ${response.status} - ${errorText}`);
       }
-      
       console.log('✅ Transition successful');
-      
       // Post comments for fields that have the checkbox checked
       if (comments && Object.keys(comments).length > 0) {
         for (const [fieldKey, shouldComment] of Object.entries(comments)) {
@@ -729,19 +614,15 @@ class DragTransitionVertical {
           }
         }
       }
-      
       // Show success notification
       this.showNotification(`✅ ${issueKey} → ${targetStatus}`, 'success');
-      
       // Animate card to new column
       await this.animateCardTransition(targetStatus);
-      
       // Reload kanban board
       if (window.loadIssues && window.state?.currentQueue) {
         console.log('🔄 Reloading issues...');
         await window.loadIssues(window.state.currentQueue);
       }
-      
     } catch (error) {
       console.error('❌ Transition error:', error);
       this.showNotification(`❌ Error: ${error.message}`, 'error');
@@ -749,14 +630,12 @@ class DragTransitionVertical {
       this.isExecutingTransition = false;
     }
   }
-  
   /**
    * Find target column by status name
    */
   findColumnByStatus(targetStatus) {
     const columns = document.querySelectorAll('.kanban-column');
     const targetStatusLower = targetStatus.toLowerCase();
-    
     for (const col of columns) {
       const colTitle = col.querySelector('.column-title, .kanban-column-title, h2, h3');
       if (colTitle) {
@@ -766,46 +645,35 @@ class DragTransitionVertical {
         }
       }
     }
-    
     return null;
   }
-  
   /**
    * Animate card flying to target column
    */
   async animateCardTransition(targetStatus) {
     if (!this.currentTicket?.card) return;
-    
     const targetColumn = this.findColumnByStatus(targetStatus);
-    
     if (!targetColumn) {
       console.warn('⚠️ Target column not found for status:', targetStatus);
       return;
     }
-    
     console.log('🎬 Animating card to column:', targetColumn);
-    
     const card = this.currentTicket.card;
-    
     // Clone card for animation
     const clone = card.cloneNode(true);
     clone.style.position = 'fixed';
     clone.style.zIndex = '10000';
     clone.style.pointerEvents = 'none';
     clone.style.opacity = '1';
-    
     const startRect = card.getBoundingClientRect();
     clone.style.top = `${startRect.top}px`;
     clone.style.left = `${startRect.left}px`;
     clone.style.width = `${startRect.width}px`;
-    
     document.body.appendChild(clone);
-    
     // Get target position
     const targetRect = targetColumn.getBoundingClientRect();
     const targetTop = targetRect.top + 80; // Below column header
     const targetLeft = targetRect.left + 20;
-    
     // Animate
     const animation = clone.animate([
       {
@@ -824,18 +692,14 @@ class DragTransitionVertical {
       duration: 800,
       easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
     });
-    
     animation.onfinish = () => {
       clone.remove();
     };
-    
     // Fade out original card
     card.style.transition = 'opacity 0.3s ease';
     card.style.opacity = '0';
-    
     await new Promise(resolve => setTimeout(resolve, 400));
   }
-  
   /**
    * Cancel drag operation
    */
@@ -843,13 +707,11 @@ class DragTransitionVertical {
     console.log('❌ Drag cancelled');
     this.onDragEnd();
   }
-  
   /**
    * Handle drag end event - cleanup all drag states
    */
   onDragEnd() {
     console.log('🏁 Drag ended');
-    
     this.cleanupCardState();
     this.hideTransitionBar();
     this.deactivateBoard();
@@ -857,7 +719,6 @@ class DragTransitionVertical {
     this.resetTransitionBarIcon();
     this.clearCurrentTicket();
   }
-  
   /**
    * Activate board for drag operation
    */
@@ -871,7 +732,6 @@ class DragTransitionVertical {
       console.warn('⚠️ Kanban board not found!');
     }
   }
-  
   /**
    * Cleanup card visual state
    */
@@ -883,19 +743,16 @@ class DragTransitionVertical {
     this.isDragging = false;
     this.dragStartTime = null;
   }
-  
   /**
    * Hide transition bar with animation
    */
   hideTransitionBar() {
     if (!this.transitionBar) return;
-    
     this.transitionBar.classList.remove('show');
     setTimeout(() => {
       this.transitionBar.style.display = 'none';
     }, 300);
   }
-  
   /**
    * Deactivate board drag state
    */
@@ -905,7 +762,6 @@ class DragTransitionVertical {
       kanbanBoard.classList.remove('drag-active');
     }
   }
-  
   /**
    * Remove drag-over classes from all zones
    */
@@ -914,7 +770,6 @@ class DragTransitionVertical {
       zone.classList.remove('drag-over');
     });
   }
-  
   /**
    * Update transition bar header icon
    */
@@ -924,14 +779,12 @@ class DragTransitionVertical {
       header.textContent = icon;
     }
   }
-  
   /**
    * Reset transition bar header icon to default
    */
   resetTransitionBarIcon() {
     this.updateTransitionBarIcon('🎯');
   }
-  
   /**
    * Clear current ticket data
    */
@@ -942,7 +795,6 @@ class DragTransitionVertical {
       this.availableTransitions = [];
     }, 500);
   }
-  
   /**
    * Check if transition pauses SLA
    */
@@ -960,11 +812,9 @@ class DragTransitionVertical {
       'awaiting customer',
       'customer action required'
     ];
-    
     const nameLower = transitionName.toLowerCase();
     return pausingTransitions.some(pause => nameLower.includes(pause));
   }
-  
   /**
    * Get icon for transition based on name
    */
@@ -1015,18 +865,14 @@ class DragTransitionVertical {
       'block': '🚫',
       'bloquear': '🚫'
     };
-    
     const name = transitionName.toLowerCase();
-    
     for (const [key, icon] of Object.entries(iconMap)) {
       if (name.includes(key)) {
         return icon;
       }
     }
-    
     return '🔄'; // Default icon
   }
-  
   /**
    * Post field content as a public comment
    */
@@ -1042,11 +888,9 @@ class DragTransitionVertical {
           public: true
         })
       });
-      
       if (!response.ok) {
         throw new Error(`Failed to post comment: ${response.status}`);
       }
-      
       console.log('💬 Comment posted successfully');
       return await response.json();
     } catch (error) {
@@ -1054,7 +898,6 @@ class DragTransitionVertical {
       throw error;
     }
   }
-  
   /**
    * Show notification to user
    */
@@ -1062,7 +905,6 @@ class DragTransitionVertical {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
-    
     notification.style.cssText = `
       position: fixed;
       top: 24px;
@@ -1076,16 +918,13 @@ class DragTransitionVertical {
       z-index: 10001;
       animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     `;
-    
     document.body.appendChild(notification);
-    
     // Auto remove after 3 seconds
     setTimeout(() => {
       notification.style.animation = 'slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
       setTimeout(() => notification.remove(), 300);
     }, 3000);
   }
-  
   /**
    * Escape HTML to prevent XSS
    */
@@ -1095,11 +934,9 @@ class DragTransitionVertical {
     return div.innerHTML;
   }
 }
-
 // ============================================
 // INITIALIZATION
 // ============================================
-
 if (typeof window !== 'undefined') {
   // Wait for DOM to be ready
   if (document.readyState === 'loading') {
@@ -1108,7 +945,6 @@ if (typeof window !== 'undefined') {
     initDragTransition();
   }
 }
-
 function initDragTransition() {
   // Small delay to ensure other modules are loaded
   setTimeout(() => {
@@ -1117,7 +953,6 @@ function initDragTransition() {
     console.log('✅ Drag Transition Vertical Handler initialized');
   }, 500);
 }
-
 // Add keyframe animations to document
 const style = document.createElement('style');
 style.textContent = `
@@ -1131,7 +966,6 @@ style.textContent = `
       opacity: 1;
     }
   }
-  
   @keyframes slideOutRight {
     from {
       transform: translateX(0);

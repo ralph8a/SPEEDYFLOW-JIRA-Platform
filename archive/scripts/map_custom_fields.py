@@ -8,21 +8,15 @@ import gzip
 import json
 from pathlib import Path
 from collections import Counter, defaultdict
-
 cache_dir = Path("C:/Users/rafae/SPEEDYFLOW-JIRA-Platform/data/cache")
 dataset_file = cache_dir / "active_ml_tickets.json.gz"
-
 print("="*70)
 print("🔍 ANÁLISIS DE CUSTOM FIELDS")
 print("="*70 + "\n")
-
 print(f"📂 Cargando: {dataset_file.name}...\n")
-
 with gzip.open(dataset_file, "rt", encoding="utf-8") as f:
     tickets = json.load(f)
-
 print(f"✅ {len(tickets):,} tickets cargados\n")
-
 # Analizar custom fields
 custom_field_analysis = defaultdict(lambda: {
     "count": 0,
@@ -30,21 +24,17 @@ custom_field_analysis = defaultdict(lambda: {
     "samples": [],
     "null_count": 0
 })
-
 print("🔬 Analizando custom fields en primeros 2,000 tickets...\n")
-
 for ticket in tickets[:2000]:
     fields = ticket.get("fields", {})
     for key, value in fields.items():
         if key.startswith("customfield_"):
             custom_field_analysis[key]["count"] += 1
-            
             if value is None:
                 custom_field_analysis[key]["null_count"] += 1
             else:
                 value_type = type(value).__name__
                 custom_field_analysis[key]["types"][value_type] += 1
-                
                 # Guardar muestras
                 if len(custom_field_analysis[key]["samples"]) < 5:
                     if isinstance(value, dict):
@@ -66,18 +56,14 @@ for ticket in tickets[:2000]:
                         custom_field_analysis[key]["samples"].append(value[:100])
                     else:
                         custom_field_analysis[key]["samples"].append(str(value)[:100])
-
 # Mapeo inferido de custom fields a nombres descriptivos
 def infer_field_name(field_id, analysis):
     """Infiere el nombre del custom field basado en su contenido"""
-    
     # Análisis de samples
     samples = analysis["samples"]
     if not samples:
         return "Unknown (always null)"
-    
     sample_str = str(samples[0]).lower() if samples else ""
-    
     # Patrones comunes
     if "sprint" in sample_str or "iteration" in sample_str:
         return "Sprint"
@@ -127,7 +113,6 @@ def infer_field_name(field_id, analysis):
             return "Custom Object"
     elif "array" in str(samples[0]).lower():
         return "Multi-Select Field"
-    
     # Por tipo de dato
     types = analysis["types"].most_common(1)
     if types:
@@ -142,22 +127,17 @@ def infer_field_name(field_id, analysis):
             return "Numeric Field"
         elif main_type == "bool":
             return "Checkbox"
-    
     return "Unknown Field"
-
 # Generar mapeo
 print("="*70)
 print("📋 CUSTOM FIELDS IDENTIFICADOS")
 print("="*70 + "\n")
-
 field_mapping = {}
 usage_stats = []
-
 for field_id, analysis in sorted(custom_field_analysis.items()):
     if analysis["count"] > 0:
         inferred_name = infer_field_name(field_id, analysis)
         usage_pct = ((analysis["count"] - analysis["null_count"]) / analysis["count"]) * 100
-        
         field_mapping[field_id] = inferred_name
         usage_stats.append({
             "field_id": field_id,
@@ -168,20 +148,15 @@ for field_id, analysis in sorted(custom_field_analysis.items()):
             "types": dict(analysis["types"]),
             "sample": analysis["samples"][0] if analysis["samples"] else None
         })
-
 # Ordenar por uso
 usage_stats.sort(key=lambda x: x["usage"], reverse=True)
-
 print(f"Total custom fields encontrados: {len(field_mapping)}\n")
-
 print("Top 30 Custom Fields por uso:\n")
 print(f"{'ID':20} {'Nombre Inferido':30} {'Uso':8} {'Sample'}")
 print("-" * 100)
-
 for stat in usage_stats[:30]:
     sample = str(stat["sample"])[:40] if stat["sample"] else "N/A"
     print(f"{stat['field_id']:20} {stat['name']:30} {stat['usage']:6.1f}%  {sample}")
-
 # Guardar mapeo
 output_file = cache_dir / "custom_fields_mapping.json"
 mapping_data = {
@@ -190,17 +165,13 @@ mapping_data = {
     "mapping": field_mapping,
     "usage_stats": usage_stats
 }
-
 with open(output_file, "w", encoding="utf-8") as f:
     json.dump(mapping_data, f, indent=2, ensure_ascii=False)
-
 print(f"\n💾 Mapeo guardado en: {output_file.name}")
-
 # Categorizar por tipo de funcionalidad
 print("\n" + "="*70)
 print("📊 CATEGORIZACIÓN POR FUNCIONALIDAD")
 print("="*70 + "\n")
-
 categories = {
     "Agile/Scrum": ["Sprint", "Story Points", "Epic Link", "Rank/Order"],
     "Service Desk": ["Request Type", "Organizations", "SLA Tracking", "Customer Info", "Satisfaction Rating"],
@@ -209,7 +180,6 @@ categories = {
     "Metadata": ["Category", "Flagged/Impediment", "Development Info"],
     "Generic": ["Short Text Field", "Long Text Field", "Numeric Field", "Checkbox", "Select List (Single)", "Multi-Select Field"]
 }
-
 categorized = defaultdict(list)
 for stat in usage_stats:
     name = stat["name"]
@@ -221,7 +191,6 @@ for stat in usage_stats:
             break
     if not categorized_flag:
         categorized["Other"].append(stat)
-
 for category, fields in sorted(categorized.items()):
     if fields:
         print(f"📁 {category} ({len(fields)} fields):")
@@ -230,7 +199,6 @@ for category, fields in sorted(categorized.items()):
         if len(fields) > 5:
             print(f"   ... y {len(fields) - 5} más")
         print()
-
 print("="*70)
 print("✅ Análisis completo")
 print("="*70)

@@ -3,21 +3,18 @@
  * Application layout, grid systems, flexbox utilities
  * SpeedyFlow Application
  */
-
 /* ==================== RESET ==================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
 html {
   width: 100%;
   height: auto;
   max-width: 100vw;
   overflow: auto;
 }
-
 /* ==================== BASE ==================== */
 body {
   font-family: var(--font-family);
@@ -37,7 +34,6 @@ body {
   /* Background removed to allow AI background container to show through */
   background: transparent;
 }
-
 /* ==================== APP LAYOUT ==================== */
 .app,
 .app-container {
@@ -50,20 +46,17 @@ body {
   box-sizing: border-box;
   background: transparent; /* Allow AI backgrounds to show through */
 }
-
 @media (max-width: 768px) {
   .app,
   .app-container {
     flex-direction: column;
   }
 }
-
 /* ==================== SIDEBAR (COMPONENTS) ==================== */
 /* Sidebar styles moved to glassmorphism.css:
  * - .sidebar-header-component
  * - .sidebar-content-component
  */
-
 @media (max-width: 768px) {
   .sidebar-header-component,
   .sidebar-content-component {
@@ -79,7 +72,6 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
 }
-
 @keyframes sidebarFadeIn {
   from {
     opacity: 0;
@@ -88,7 +80,6 @@ body {
     opacity: 1;
   }
 }
-
 .sidebar h1 {
   font-size: var(--font-size-xl);
   margin-bottom: var(--spacing-lg);
@@ -97,17 +88,14 @@ body {
   padding-bottom: 0;
   /* Colors moved to theme-specific files */
 }
-
 /* Sidebar inner content padding */
 .sidebar > div:not(.sidebar-toggle) {
   padding-left: var(--spacing-lg);
   padding-right: var(--spacing-lg);
 }
-
 .sidebar > div:first-of-type {
   padding-top: var(--spacing-lg);
 }
-
 /* Fade in animations for sidebar elements */
 @keyframes fadeInDown {
   from {
@@ -117,10 +105,8 @@ body {
     opacity: 1;
   }
 }
-
 /* Sidebar form groups - animation removed to prevent layout shift */
 /* No animation delays needed */
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -129,9 +115,7 @@ body {
     opacity: 1;
   }
 }
-
 /* Form styles moved to theme-specific files to avoid conflicts */
-
 .sidebar-header {
   padding: var(--spacing-md);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -139,16 +123,13 @@ body {
   justify-content: space-between;
   align-items: center;
 }
-
 .sidebar-header h2 {
   font-size: var(--font-size-lg);
   margin: 0;
   /* Color moved to theme files */
 }
-
 /* Sidebar primary button styles moved to sidebar-components.css */
 /* This prevents theme conflicts and improves maintainability */
-
 /* Other sidebar buttons inherit standard styling */
 .sidebar .btn {
   padding: 8px 12px;
@@ -157,7 +138,6 @@ body {
   cursor: pointer;
   transition: all var(--transition-base);
 }
-
 .sidebar-toggle {
   display: none;
   background: none;
@@ -166,9 +146,7 @@ body {
   cursor: pointer;
   padding: var(--spacing-sm);
 }
-
 /* .sidebar-content moved to glassmorphism.css to avoid conflicts */
-
 /* ==================== MAIN CONTENT ==================== */
 .main-content,
 .main-wrapper {
@@ -190,14 +168,12 @@ body {
   /* Inmune a efectos de glasmorfismo */
   opacity: 1 !important;
 }
-
 @media (max-width: 1024px) {
   .main-content,
   .main-wrapper {
     padding: 0 12px 12px 12px !important;
   }
 }
-
 @media (max-width: 768px) {
   .main-content,
   .main-wrapper {
@@ -207,19 +183,16 @@ body {
     width: 100% !important;
   }
 }
-
 @media (max-width: 480px) {
   .main-content,
   .main-wrapper {
     padding: 0 6px 6px 6px !important;
   }
 }
-
 /* When sidebar is collapsed, reduce margin */
 .sidebar-content-component.collapsed ~ .main-wrapper {
   margin-left: var(--sidebar-collapsed-width) !important;
 }
-
 /* ==================== HEADER/NAVBAR ==================== */
 .header,
 .navbar {
@@ -236,14 +209,12 @@ body {
   box-sizing: border-box;
   width: 100%;
 }
-
 .header-left {
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
   flex: 0 0 auto;
 }
-
 .header-center {
   display: flex;
   align-items: center;
@@ -251,19 +222,16 @@ body {
   flex: 1;
   gap: var(--spacing-md);
 }
-
 .header h2 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
 }
-
 .header-right {
   display: flex;
   gap: var(--spacing-md);
   align-items: center;
   flex: 0 0 auto;
 }
-
 .navbar-content {
   flex: 1;
   display: flex;
@@ -272,14 +240,12 @@ body {
   gap: var(--spacing-lg);
   min-width: 0;
 }
-
 .navbar-actions {
   display: flex;
   gap: var(--spacing-md);
   align-items: center;
   flex: 1;
 }
-
 /* ==================== FILTERS BAR ==================== */
 /* Filters bar - contains tabs and search - transparent parent, children style themselves */
 .filters-bar {
@@ -295,7 +261,6 @@ body {
   overflow-x: auto;
   border-bottom: 1px solid rgba(59, 130, 246, 0.1);
 }
-
 /* Tabs container (header & filters bar) */
 .tabs-container {
   display: flex;
@@ -310,7 +275,6 @@ body {
   flex-shrink: 0;
   white-space: nowrap;
 }
-
 /* Tab buttons in filters bar */
 .tabs-container .tab-btn {
   padding: 4px 10px;
@@ -322,15 +286,12 @@ body {
   margin: 0;
   /* Theme-specific colors, backgrounds, borders moved to theme files */
 }
-
 .tabs-container .tab-btn:hover {
   /* Theme-specific hover styles moved to theme files */
 }
-
 .tabs-container .tab-btn.active {
   /* Theme-specific active styles moved to theme files */
 }
-
 .filter-item {
   display: flex;
   flex: 1;
@@ -339,7 +300,6 @@ body {
   box-sizing: border-box;
   scrollbar-gutter: stable;
 }
-
 .filter-input,
 .filter-select {
   width: 100%;
@@ -354,7 +314,6 @@ body {
   border: 1px solid rgba(59, 130, 246, 0.15);
   color: var(--color-text);
 }
-
 .filter-input:focus,
 .filter-select:focus {
   outline: none;
@@ -362,9 +321,7 @@ body {
   border-color: rgba(59, 130, 246, 0.3);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
-
 /* Placeholder styles moved to theme files */
-
 /* View Toggle Buttons - Styling */
 .view-btn {
   padding: 8px 14px;
@@ -380,21 +337,18 @@ body {
   transition: all var(--transition-base);
   white-space: nowrap;
 }
-
 .view-btn:hover {
   background: rgba(255, 255, 255, 1);
   border-color: var(--primary);
   color: var(--primary);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
 }
-
 .view-btn.active {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
   border-color: var(--primary);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
-
 /* ==================== VIEW TOGGLE BAR - CENTERED ==================== */
 .view-toggle-bar {
   display: flex;
@@ -406,13 +360,11 @@ body {
   box-sizing: border-box;
   gap: 8px;
 }
-
 .view-toggle-container {
   display: flex;
   gap: 6px;
   align-items: center;
 }
-
 /* ==================== CONTENT AREA ==================== -->
 .content-area,
 .content-container {
@@ -428,29 +380,24 @@ body {
   max-width: 100%;
   box-sizing: border-box;
 }
-
 @media (min-width: 769px) {
   .content-area,
   .content-container {
     overflow: visible;
   }
 }
-
 @media (max-width: 768px) {
   .content-area,
   .content-container {
     padding: var(--spacing-md);
   }
 }
-
 .tab-content {
   display: none;
 }
-
 .tab-content.active {
   display: block;
 }
-
 /* ==================== GRID SYSTEM ==================== */
 .container {
   width: 100%;
@@ -458,18 +405,15 @@ body {
   margin: 0;
   padding: 0;
 }
-
 .row {
   display: flex;
   flex-wrap: wrap;
   margin: 0 calc(var(--spacing-md) * -1);
 }
-
 .col {
   flex: 1;
   padding: 0 var(--spacing-md);
 }
-
 /* Column Widths */
 .col-1 { flex: 0 0 8.333%; max-width: 8.333%; }
 .col-2 { flex: 0 0 16.666%; max-width: 16.666%; }
@@ -479,16 +423,13 @@ body {
 .col-8 { flex: 0 0 66.666%; max-width: 66.666%; }
 .col-9 { flex: 0 0 75%; max-width: 75%; }
 .col-12 { flex: 0 0 100%; max-width: 100%; }
-
 /* ==================== UTILITY CLASSES ==================== */
-
 /* Display */
 .d-none { display: none !important; }
 .d-block { display: block !important; }
 .d-flex { display: flex !important; }
 .d-inline { display: inline !important; }
 .d-inline-block { display: inline-block !important; }
-
 /* Flexbox */
 .flex-row { flex-direction: row !important; }
 .flex-column { flex-direction: column !important; }
@@ -504,7 +445,6 @@ body {
 .gap-sm { gap: var(--spacing-sm) !important; }
 .gap-md { gap: var(--spacing-md) !important; }
 .gap-lg { gap: var(--spacing-lg) !important; }
-
 /* Spacing */
 .m-0 { margin: 0 !important; }
 .mt-sm { margin-top: var(--spacing-sm) !important; }
@@ -517,67 +457,54 @@ body {
 .p-sm { padding: var(--spacing-sm) !important; }
 .p-md { padding: var(--spacing-md) !important; }
 .p-lg { padding: var(--spacing-lg) !important; }
-
 /* Text Alignment */
 .text-left { text-align: left !important; }
 .text-center { text-align: center !important; }
 .text-right { text-align: right !important; }
-
 /* Font Weight */
 .font-normal { font-weight: var(--font-weight-normal) !important; }
 .font-medium { font-weight: var(--font-weight-medium) !important; }
 .font-semibold { font-weight: var(--font-weight-semibold) !important; }
 .font-bold { font-weight: var(--font-weight-bold) !important; }
-
 /* Overflow */
 .overflow-auto { overflow: auto !important; }
 .overflow-hidden { overflow: hidden !important; }
 .overflow-y-auto { overflow-y: auto !important; }
-
 /* Position */
 .position-relative { position: relative !important; }
 .position-absolute { position: absolute !important; }
 .position-fixed { position: fixed !important; }
-
 /* Width & Height */
 .w-100 { width: 100% !important; }
 .h-100 { height: 100% !important; }
-
 /* ==================== RESPONSIVE ==================== */
-
 /* Tablet (max-width: 1024px) */
 @media (max-width: 1024px) {
   .sidebar {
     width: 240px;
   }
-  
   .sidebar.collapsed {
     width: 60px;
   }
-  
   .main-content {
     flex: 1;
   }
-  
   .content-area,
   .content-container {
     padding: var(--spacing-md);
   }
 }
-
 /* Mobile (max-width: 768px) */
 @media (max-width: 768px) {
   body {
     overflow-y: auto;
   }
-  
   .app {
     flex-direction: column;
     height: auto;
     min-height: 100vh;
     overflow: visible;
   }
-  
   .sidebar {
     width: 100%;
     position: static;
@@ -586,29 +513,23 @@ body {
     flex-direction: row;
     flex-wrap: wrap;
   }
-  
   .sidebar.open {
     transform: none;
   }
-  
   .sidebar.collapsed {
     transform: none;
   }
-  
   .sidebar-toggle {
     display: none;
   }
-  
   .main-content {
     height: auto;
     overflow: visible;
   }
-  
   .header,
   .navbar {
     padding: var(--spacing-sm) var(--spacing-md);
   }
-  
   .content-area,
   .content-container {
     padding: var(--spacing-md);
@@ -616,7 +537,6 @@ body {
     overflow-x: hidden;
     flex: 1;
   }
-  
   /* Responsive filters bar - keep everything in one line */
   .filters-bar {
     padding: var(--spacing-sm) var(--spacing-md);
@@ -624,7 +544,6 @@ body {
     gap: var(--spacing-sm);
     overflow-x: auto;
   }
-  
   .tabs-container {
     padding-right: var(--spacing-sm);
     border-right: 1px solid rgba(59, 130, 246, 0.15);
@@ -637,7 +556,6 @@ body {
     box-sizing: border-box;
     white-space: nowrap;
   }
-  
   .filter-item {
     flex: 0 0 auto;
     min-width: auto;
@@ -645,18 +563,15 @@ body {
     box-sizing: border-box;
     white-space: nowrap;
   }
-
   /* View toggle bar - always centered */
   .view-toggle-bar {
     padding: var(--spacing-sm) var(--spacing-md);
     justify-content: center;
   }
-
   .view-toggle-container {
     display: flex;
     gap: 6px;
   }
-  
   /* Stack columns on mobile */
   .col-1, .col-2, .col-3, .col-4, 
   .col-6, .col-8, .col-9, .col-12 {
@@ -664,65 +579,53 @@ body {
     max-width: 100%;
   }
 }
-
 /* Tablets and Mobile (max-width: 768px) */
 @media (max-width: 768px) {
   :root {
     --sidebar-width: 100%;
   }
-  
   .sidebar {
     width: 100%;
   }
-  
   .header,
   .navbar {
     flex-direction: column;
     align-items: stretch;
   }
-  
   .content-area,
   .content-container {
     padding: var(--spacing-sm);
   }
 }
-
 /* ==================== RIGHT SIDEBAR LAYOUT ==================== */
 /* Right sidebar styles moved to components/right-sidebar.css for better organization */
-
 /* Right sidebar responsive */
 @media (max-width: 1400px) {
   .right-sidebar {
     width: 500px;
   }
 }
-
 @media (max-width: 1200px) {
   .sidebar-two-columns {
     flex-direction: column;
     overflow-y: auto;
   }
-  
   .sidebar-column {
     flex: 0 0 auto;
   }
 }
-
 @media (max-width: 768px) {
   .right-sidebar {
     width: 100vw;
   }
-  
   .sidebar-two-columns {
     padding: 12px;
     gap: 12px;
   }
 }
-
 /* ==================== THEME OVERRIDES MOVED TO THEME FILES ==================== */
 /* All theme-specific styles have been moved to:
  * - theme-dark.css
  * - theme-light.css
  * This prevents conflicts and improves maintainability
  */
-

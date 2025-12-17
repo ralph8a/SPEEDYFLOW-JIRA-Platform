@@ -1,4 +1,3 @@
-
 // Auto-generated severity configuration
 function applyAutoDetectedSeverities() {
     if (typeof state !== 'undefined') {
@@ -29,11 +28,9 @@ function applyAutoDetectedSeverities() {
     "emoji": "\ud83d\udfe2"
   }
 };
-        
         console.log('✅ Applied auto-detected severity mapping with 5 values');
     }
 }
-
 // Auto-apply on load
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', applyAutoDetectedSeverities);

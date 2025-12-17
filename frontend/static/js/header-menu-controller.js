@@ -4,7 +4,6 @@
  * 
  * IMPORTANT: Uses ThemeManager (centralized theme control) to avoid conflicts
  */
-
 // ===== INITIALIZE FLOATING CONTROLS =====
 function initHeaderMenus() {
   setupThemeToggleButton();
@@ -13,17 +12,14 @@ function initHeaderMenus() {
   closeDropDownMenusOnClickOutside();
   console.log('✓ Floating controls initialized');
 }
-
 // ===== THEME TOGGLE BUTTON =====
 function setupThemeToggleButton() {
   const themeBtn = document.getElementById('themeToggleBtn');
-  
   if (themeBtn) {
     // Direct theme toggle on button click
     themeBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
       // Get current theme from ThemeManager or body class
       let currentTheme = 'light';
       if (window.ThemeManager && window.ThemeManager.currentTheme) {
@@ -31,9 +27,7 @@ function setupThemeToggleButton() {
       } else if (document.body.classList.contains('theme-dark')) {
         currentTheme = 'dark';
       }
-      
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      
       // Use ThemeManager if available (recommended)
       if (window.ThemeManager) {
         window.ThemeManager.setTheme(newTheme);
@@ -44,40 +38,32 @@ function setupThemeToggleButton() {
         document.documentElement.classList.add(`theme-${newTheme}`);
         document.body.classList.add(`theme-${newTheme}`);
         document.documentElement.setAttribute('data-theme', newTheme);
-        
         // Save to localStorage
         localStorage.setItem('theme', newTheme);
         localStorage.setItem('currentTheme', newTheme);
-        
         // Trigger theme change event
         window.dispatchEvent(new CustomEvent('themeChange', { detail: { theme: newTheme } }));
       }
-      
       // Update transparency manager if available
       if (window.transparencyManager) {
         window.transparencyManager.currentTheme = newTheme;
         window.transparencyManager.applyTransparency();
       }
-      
       // Update background manager if available
       if (window.backgroundManager) {
         window.backgroundManager.onThemeChange(newTheme);
       }
-      
       console.log(`🎨 Theme switched to: ${newTheme}`);
     });
-    
     console.log('✓ Theme toggle button enabled');
   }
 }
-
 // ===== USER MENU =====
 function setupUserMenu() {
   // Setup header account buttons
   const headerUserMenuBtn = document.getElementById('headerUserMenuBtn');
   const headerSettingsBtn = document.getElementById('headerSettingsBtn');
   const headerHelpBtn = document.getElementById('headerHelpBtn');
-  
   if (headerUserMenuBtn) {
     headerUserMenuBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -86,7 +72,6 @@ function setupUserMenu() {
     });
     console.log('✓ Header profile button enabled');
   }
-
   if (headerSettingsBtn) {
     headerSettingsBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -95,7 +80,6 @@ function setupUserMenu() {
     });
     console.log('✓ Header settings button enabled');
   }
-
   if (headerHelpBtn) {
     headerHelpBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -104,26 +88,20 @@ function setupUserMenu() {
     });
     console.log('✓ Header help button enabled');
   }
-  
   // Update user info for display only
   updateUserInfo();
 }
-
 function showSettingsModal() {
   let panel = document.getElementById('settingsPanel');
-  
   if (!panel) {
     panel = createSettingsPanel();
     document.body.appendChild(panel);
   }
-  
   panel.style.display = 'flex';
   setTimeout(() => panel.classList.add('active'), 10);
-  
   // Load current settings
   loadSettings();
 }
-
 function createSettingsPanel() {
   const panel = document.createElement('div');
   panel.id = 'settingsPanel';
@@ -141,7 +119,6 @@ function createSettingsPanel() {
           <button class="settings-tab" data-tab="notifications">Notifications</button>
           <button class="settings-tab" data-tab="advanced">Advanced</button>
         </div>
-        
         <div class="settings-content">
           <!-- General Settings -->
           <div class="settings-panel active" data-panel="general">
@@ -162,7 +139,6 @@ function createSettingsPanel() {
               </select>
             </div>
           </div>
-          
           <!-- Appearance Settings -->
           <div class="settings-panel" data-panel="appearance">
             <h3>Appearance</h3>
@@ -174,14 +150,12 @@ function createSettingsPanel() {
                 <option value="auto">Auto (System)</option>
               </select>
             </div>
-            
             <!-- Font Family Customization -->
             <div class="font-customization-section" style="margin-top: 24px;">
               <h4>Font Family</h4>
               <p class="section-description" style="font-size: 13px; opacity: 0.7; margin-bottom: 12px;">Choose a font combination that matches your workflow and aesthetic preferences.</p>
               <div id="fontPresetSelector"></div>
             </div>
-            
             <div class="setting-item" style="margin-top: 20px;">
               <label for="compactMode">Compact mode</label>
               <input type="checkbox" id="compactMode">
@@ -199,7 +173,6 @@ function createSettingsPanel() {
               </select>
             </div>
           </div>
-          
           <!-- Notifications Settings -->
           <div class="settings-panel" data-panel="notifications">
             <h3>Notification Preferences</h3>
@@ -224,7 +197,6 @@ function createSettingsPanel() {
               <input type="checkbox" id="notifyMentions" checked>
             </div>
           </div>
-          
           <!-- Advanced Settings -->
           <div class="settings-panel" data-panel="advanced">
             <h3>Advanced Settings</h3>
@@ -249,28 +221,22 @@ function createSettingsPanel() {
       </div>
     </div>
   `;
-  
   // Tab switching
   panel.querySelectorAll('.settings-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const tabName = tab.dataset.tab;
-      
       // Update tabs
       panel.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      
       // Update panels
       panel.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
       panel.querySelector(`[data-panel="${tabName}"]`).classList.add('active');
     });
   });
-  
   return panel;
 }
-
 function loadSettings() {
   const settings = JSON.parse(localStorage.getItem('userSettings') || '{}');
-  
   // General
   if (settings.autoRefresh !== undefined) {
     const el = document.getElementById('autoRefresh');
@@ -284,7 +250,6 @@ function loadSettings() {
     const el = document.getElementById('defaultView');
     if (el) el.value = settings.defaultView;
   }
-  
   // Appearance
   if (settings.theme) {
     const el = document.getElementById('themeSelect');
@@ -302,7 +267,6 @@ function loadSettings() {
     const el = document.getElementById('animationSpeed');
     if (el) el.value = settings.animationSpeed;
   }
-  
   // Notifications
   if (settings.enableNotifications !== undefined) {
     const el = document.getElementById('enableNotifications');
@@ -324,7 +288,6 @@ function loadSettings() {
     const el = document.getElementById('notifyMentions');
     if (el) el.checked = settings.notifyMentions;
   }
-  
   // Advanced
   if (settings.cacheEnabled !== undefined) {
     const el = document.getElementById('cacheEnabled');
@@ -334,33 +297,25 @@ function loadSettings() {
     const el = document.getElementById('debugMode');
     if (el) el.checked = settings.debugMode;
   }
-  
   // Initialize Font Selector
   initializeFontSelector();
-  
   // Apply saved font preset
   const savedPreset = localStorage.getItem('fontPreset') || 'business';
   applyFontPreset(savedPreset);
 }
-
 // ===== FONT FAMILY SYSTEM =====
-
 function initializeFontSelector() {
   const container = document.getElementById('fontPresetSelector');
   if (!container) {
     console.warn('⚠️ Font preset selector container not found');
     return;
   }
-
   // Generate font preset selector HTML
   container.innerHTML = generateFontPresetHTML();
-  
   // Setup event handlers
   setupFontPresetHandlers();
-  
   console.log('✅ Font selector initialized');
 }
-
 function generateFontPresetHTML() {
   return `
     <div class="font-preset-selector">
@@ -374,7 +329,6 @@ function generateFontPresetHTML() {
         </div>
         <p class="preset-description">Familiar and professional - Perfect for corporate environments</p>
       </div>
-      
       <div class="font-preset-option" data-preset="modern">
         <div class="preset-header">
           <h4>Modern Professional</h4>
@@ -385,7 +339,6 @@ function generateFontPresetHTML() {
         </div>
         <p class="preset-description">Clean and technological - Optimized for digital interfaces</p>
       </div>
-      
       <div class="font-preset-option" data-preset="corporate">
         <div class="preset-header">
           <h4>Corporate Executive</h4>
@@ -396,7 +349,6 @@ function generateFontPresetHTML() {
         </div>
         <p class="preset-description">Elegant and executive - Sophisticated corporate design</p>
       </div>
-      
       <div class="font-preset-option" data-preset="creative">
         <div class="preset-header">
           <h4>Creative Studio</h4>
@@ -410,21 +362,17 @@ function generateFontPresetHTML() {
     </div>
   `;
 }
-
 function setupFontPresetHandlers() {
   const options = document.querySelectorAll('.font-preset-option');
-  
   options.forEach(option => {
     option.addEventListener('click', (e) => {
       const presetId = option.getAttribute('data-preset');
       applyFontPreset(presetId);
-      
       // Update active state
       options.forEach(opt => opt.classList.remove('active'));
       option.classList.add('active');
     });
   });
-  
   // Load current preset
   const currentPreset = localStorage.getItem('fontPreset') || 'business';
   const currentOption = document.querySelector(`[data-preset="${currentPreset}"]`);
@@ -432,7 +380,6 @@ function setupFontPresetHandlers() {
     currentOption.classList.add('active');
   }
 }
-
 function applyFontPreset(presetId) {
   // Remove existing preset classes
   const presets = ['business', 'modern', 'corporate', 'creative'];
@@ -440,20 +387,15 @@ function applyFontPreset(presetId) {
     document.body.classList.remove(`font-preset-${preset}`);
     document.documentElement.classList.remove(`font-preset-${preset}`);
   });
-  
   // Apply new preset
   document.body.classList.add(`font-preset-${presetId}`);
   document.documentElement.classList.add(`font-preset-${presetId}`);
-  
   // Save to localStorage
   localStorage.setItem('fontPreset', presetId);
-  
   // Log adaptation details
   logFontAdaptation(presetId);
-  
   console.log(`✅ Font preset applied: ${presetId}`);
 }
-
 function logFontAdaptation(presetId) {
   const adaptations = {
     'business': 'Segoe UI + Georgia → Aptos + Century (0.95x line-height, +0.005em spacing)',
@@ -461,10 +403,8 @@ function logFontAdaptation(presetId) {
     'corporate': 'IBM Plex + Playfair → Aptos + Century (1.05x line-height, +0.008em spacing)',
     'creative': 'Poppins + Crimson Text → Aptos + Century (1.08x line-height, +0.003em spacing)'
   };
-
   console.log(`🎨 Font Adaptation: ${adaptations[presetId]}`);
 }
-
 function saveSettingsFromModal() {
   const settings = {
     autoRefresh: document.getElementById('autoRefresh')?.checked,
@@ -482,36 +422,28 @@ function saveSettingsFromModal() {
     cacheEnabled: document.getElementById('cacheEnabled')?.checked,
     debugMode: document.getElementById('debugMode')?.checked
   };
-  
   localStorage.setItem('userSettings', JSON.stringify(settings));
-  
   // Close modal
   const panel = document.getElementById('settingsPanel');
   if (panel) {
     panel.classList.remove('active');
     setTimeout(() => panel.style.display = 'none', 300);
   }
-  
   // Apply theme if changed
   if (settings.theme) {
     document.body.className = settings.theme === 'dark' ? 'theme-dark' : '';
   }
-  
   console.log('Settings saved:', settings);
 }
-
 function showHelpModal() {
   let modal = document.getElementById('helpModal');
-  
   if (!modal) {
     modal = createHelpModal();
     document.body.appendChild(modal);
   }
-  
   modal.style.display = 'flex';
   setTimeout(() => modal.classList.add('active'), 10);
 }
-
 function createHelpModal() {
   const modal = document.createElement('div');
   modal.id = 'helpModal';
@@ -532,7 +464,6 @@ function createHelpModal() {
             <li>Click on any ticket to view details and add comments</li>
           </ul>
         </div>
-        
         <div class="help-section">
           <h3>⌨️ Keyboard Shortcuts</h3>
           <ul>
@@ -542,7 +473,6 @@ function createHelpModal() {
             <li><kbd>N</kbd> - New ticket</li>
           </ul>
         </div>
-        
         <div class="help-section">
           <h3>🎨 Features</h3>
           <ul>
@@ -552,7 +482,6 @@ function createHelpModal() {
             <li><strong>Real-time Updates:</strong> Auto-refresh to stay synced with JIRA</li>
           </ul>
         </div>
-        
         <div class="help-section">
           <h3>📚 Resources</h3>
           <ul>
@@ -567,39 +496,31 @@ function createHelpModal() {
       </div>
     </div>
   `;
-  
   return modal;
 }
-
 function updateUserInfo() {
   const userName = localStorage.getItem('currentUser') || 'User';
   const userEmail = localStorage.getItem('userEmail') || 'user@example.com';
   const fullName = localStorage.getItem('userFullName') || 'John Doe';
-
   const userNameEl = document.getElementById('userName');
   const userEmailEl = document.getElementById('userEmail');
   const userFullNameEl = document.getElementById('userFullName');
-
   if (userNameEl) userNameEl.textContent = userName;
   if (userEmailEl) userEmailEl.textContent = userEmail;
   if (userFullNameEl) userFullNameEl.textContent = fullName;
-
   // Update avatar initials
   const initials = fullName.split(' ')
     .map(n => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
-  
   const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
   avatars.forEach(avatar => {
     if (initials) avatar.textContent = initials;
   });
 }
-
 function handleUserMenuAction(action) {
   const actionLower = action.toLowerCase();
-  
   if (actionLower.includes('settings')) {
     console.log('Opening settings...');
     showSettingsModal();
@@ -617,7 +538,6 @@ function handleUserMenuAction(action) {
     window.open('/docs', '_blank');
   }
 }
-
 function showProfileModal() {
   // Get user data from state or API
   const userData = window.state?.user || {
@@ -627,7 +547,6 @@ function showProfileModal() {
     department: 'Support',
     joined: new Date().toISOString()
   };
-
   // Calculate user stats
   const issues = window.state?.issues || [];
   const userIssues = issues.filter(i => 
@@ -637,14 +556,12 @@ function showProfileModal() {
     const status = (i.status || i.estado || '').toLowerCase();
     return status.includes('done') || status.includes('closed') || status.includes('resolved');
   });
-
   const initials = userData.name.split(' ').map(n => n[0]).join('').toUpperCase();
   const joinDate = new Date(userData.joined).toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
-
   let modal = document.getElementById('profileModal');
   if (!modal) {
     modal = document.createElement('div');
@@ -665,22 +582,18 @@ function showProfileModal() {
                 <div class="profile-email">${userData.email}</div>
               </div>
             </div>
-            
             <div class="profile-field">
               <label>Role</label>
               <div class="profile-field-value">${userData.role}</div>
             </div>
-            
             <div class="profile-field">
               <label>Department</label>
               <div class="profile-field-value">${userData.department}</div>
             </div>
-            
             <div class="profile-field">
               <label>Member Since</label>
               <div class="profile-field-value">${joinDate}</div>
             </div>
-            
             <div class="profile-stats">
               <div class="profile-stat">
                 <div class="profile-stat-value">${userIssues.length}</div>
@@ -716,22 +629,18 @@ function showProfileModal() {
     modal.querySelectorAll('.profile-stat-value')[1].textContent = completedIssues.length;
     modal.querySelectorAll('.profile-stat-value')[2].textContent = userIssues.length - completedIssues.length;
   }
-
   modal.style.display = 'flex';
   setTimeout(() => modal.classList.add('active'), 10);
 }
-
 function showPasswordChangeModal() {
   alert('Password change - Coming soon 🔑');
 }
-
 function logout() {
   if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
     localStorage.clear();
     window.location.href = '/logout';
   }
 }
-
 // ===== NOTIFICATIONS =====
 function setupNotifications() {
   // Notifications disabled - visual only mode
@@ -739,7 +648,6 @@ function setupNotifications() {
   // Just show badge count for display
   updateNotificationBadge(3);
 }
-
 function updateNotificationBadge(count) {
   const badge = document.querySelector('.notification-badge');
   if (badge) {
@@ -747,34 +655,28 @@ function updateNotificationBadge(count) {
     badge.style.display = count > 0 ? 'flex' : 'none';
   }
 }
-
 function showNotificationsPanel() {
   console.log('Notifications panel - Coming soon');
   alert('Notifications panel - Coming soon 🔔');
 }
-
 // ===== SEARCH (DISABLED - Not used in current version) =====
 /*
 function setupSearch() {
   const searchInput = document.getElementById('searchInput');
   const searchBtn = document.querySelector('.btn-search');
-  
   if (!searchInput) return;
-
   // Search on enter
   searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       performSearch(searchInput.value);
     }
   });
-
   // Search on button click
   if (searchBtn) {
     searchBtn.addEventListener('click', () => {
       performSearch(searchInput.value);
     });
   }
-
   // Real-time filtering (opcional)
   searchInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
@@ -786,27 +688,22 @@ function setupSearch() {
     }
   });
 }
-
 function performSearch(query) {
   console.log('Searching for:', query);
   if (query.length === 0) {
     renderView();
     return;
   }
-
   // Filter issues based on search query
   filterIssuesRealtime(query);
 }
-
 function filterIssuesRealtime(query) {
   const filtered = state.issues.filter(issue => {
     const key = issue.key?.toLowerCase() || '';
     const summary = (issue.summary || issue.fields?.summary || '').toLowerCase();
     const assignee = (issue.assignee || issue.fields?.assignee?.displayName || '').toLowerCase();
-    
     return key.includes(query) || summary.includes(query) || assignee.includes(query);
   });
-
   // Temporarily replace state.issues for rendering
   const backup = state.issues;
   state.issues = filtered;
@@ -814,23 +711,19 @@ function filterIssuesRealtime(query) {
   state.issues = backup;
 }
 */
-
 // ===== CLOSE DROPDOWNS ON CLICK OUTSIDE =====
 function closeDropDownMenusOnClickOutside() {
   document.addEventListener('click', (e) => {
     // Reserved for future dropdown menus if needed
   });
 }
-
 // ===== BREADCRUMB UPDATE =====
 function updateBreadcrumb(deskName, queueName) {
   const deskBreadcrumb = document.querySelector('.breadcrumb-item:first-of-type');
   const queueBreadcrumb = document.getElementById('queueBreadcrumb');
-  
   if (deskBreadcrumb) deskBreadcrumb.textContent = deskName || 'Desk';
   if (queueBreadcrumb) queueBreadcrumb.textContent = queueName || 'Queue';
 }
-
 // ===== QUEUE BREADCRUMB SYNC =====
 function syncQueueBreadcrumb() {
   const queueSelect = document.getElementById('queueSelect');
@@ -844,7 +737,6 @@ function syncQueueBreadcrumb() {
     }
   }
 }
-
 // ===== EXPORT FOR USE =====
 window.headerMenus = {
   init: initHeaderMenus,
@@ -853,7 +745,6 @@ window.headerMenus = {
   updateBreadcrumb,
   syncQueueBreadcrumb
 };
-
 // Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {

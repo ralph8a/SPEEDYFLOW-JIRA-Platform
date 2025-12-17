@@ -3,65 +3,52 @@
  * Controls glassmorphism opacity and blur effects
  * Coordinated with transparency-manager.js
  */
-
 /* ==================== GLASSMORPHIC VARIABLES ==================== */
 /* All glassmorphic variables are now centralized in core/variables.css */
 /* This file only contains component styling using those variables */
-
 /* ==================== GLASSMORPHISM EFFECTS ==================== */
-
 /* Primary glassmorphic layer - High blur */
 .glasmorphic-primary {
   background: rgba(255, 255, 255, var(--glasmorphic-primary-opacity));
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.15);
 }
-
 body.theme-dark .glassmorphic-primary {
   background: rgba(26, 26, 26, var(--glasmorphic-primary-opacity));
   box-shadow: 0 8px 32px 0 rgba(100, 181, 246, 0.2);
 }
-
 /* Secondary glassmorphic layer - Medium blur */
 .glasmorphic-secondary {
   background: rgba(255, 255, 255, var(--glasmorphic-secondary-opacity));
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 16px 0 rgba(99, 102, 241, 0.12);
 }
-
 body.theme-dark .glasmorphic-secondary {
   background: rgba(37, 37, 37, var(--glasmorphic-secondary-opacity));
   box-shadow: 0 4px 16px 0 rgba(100, 181, 246, 0.15);
 }
-
 /* Tertiary glassmorphic layer - Light blur */
 .glasmorphic-tertiary {
   background: rgba(255, 255, 255, var(--glasmorphic-tertiary-opacity));
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 2px 8px 0 rgba(99, 102, 241, 0.08);
 }
-
 body.theme-dark .glasmorphic-tertiary {
   background: rgba(42, 42, 42, var(--glasmorphic-tertiary-opacity));
   box-shadow: 0 2px 8px 0 rgba(100, 181, 246, 0.1);
 }
-
 /* Overlay layer - Very subtle */
 .glassmorphic-overlay {
   background: rgba(255, 255, 255, var(--glasmorphic-overlay-opacity));
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
-
 body.theme-dark .glasmorphic-overlay {
   background: rgba(26, 26, 26, var(--glasmorphic-overlay-opacity));
 }
-
 /* ==================== CONTAINER STYLING ==================== */
-
 /* ==================== PRIMARY COMPONENTS - UNIFIED BACKGROUND ==================== */
 /* MAXIMUM SPECIFICITY: These styles OVERRIDE ALL other definitions */
 /* Header, Sidebar, Right Sidebar, Filter Bar - Unified glasmorphic appearance */
-
 /* Header and Sidebars - Unified glasmorphic appearance */
 html body .header,
 html body .header-enhanced,
@@ -83,7 +70,6 @@ html body.theme-light .right-sidebar {
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1), 0 2px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
-
 html body.theme-dark .header,
 html body.theme-dark .header-enhanced,
 html body.theme-dark .header-bar-enhanced,
@@ -97,30 +83,23 @@ html body.theme-dark .right-sidebar {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
-
 /* Board Wrapper - TRANSPARENT (no background interference with AI backgrounds) */
 .board-wrapper {
   background: transparent !important;
   padding-bottom: 0 !important;
 }
-
 body.theme-dark .board-wrapper {
   background: transparent !important;
 }
-
 /* Header - Secondary layer */
 .main-header-pro {
   background: transparent !important;
 }
-
 body.theme-dark .main-header-pro {
   background: transparent !important;
 }
-
 /* Filter Bar configuration moved to unified primary components section above */
-
 /* ==================== TRANSPARENCY CONTROLS UI ==================== */
-
 .transparency-controls-section {
   background: rgba(59, 130, 246, 0.08) !important;
   border: 1px solid rgba(59, 130, 246, 0.2) !important;
@@ -130,12 +109,10 @@ body.theme-dark .main-header-pro {
   gap: 0 !important;
   flex-direction: column !important;
 }
-
 body.theme-dark .transparency-controls-section {
   background: rgba(100, 181, 246, 0.08) !important;
   border: 1px solid rgba(100, 181, 246, 0.2) !important;
 }
-
 .transparency-controls-header {
   display: flex;
   justify-content: space-between;
@@ -149,22 +126,18 @@ body.theme-dark .transparency-controls-section {
   font-weight: 600;
   color: rgba(59, 130, 246, 1);
 }
-
 body.theme-dark .transparency-controls-header {
   background: linear-gradient(135deg, rgba(100, 181, 246, 0.2), rgba(100, 181, 246, 0.1));
   color: rgba(100, 181, 246, 1);
 }
-
 .transparency-controls-header:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
-
 .controls-toggle-icon {
   display: inline-block;
   transition: transform 0.3s ease;
   font-size: 12px;
 }
-
 .transparency-controls-panel {
   padding: 12px 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -172,14 +145,12 @@ body.theme-dark .transparency-controls-header {
   max-height: 400px;
   overflow-y: auto;
 }
-
 .control-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 12px;
 }
-
 .control-label {
   display: flex;
   justify-content: space-between;
@@ -188,17 +159,14 @@ body.theme-dark .transparency-controls-header {
   font-weight: 500;
   opacity: 0.9;
 }
-
 .control-value {
   font-weight: 600;
   color: #3b82f6;
   font-variant-numeric: tabular-nums;
 }
-
 body.theme-dark .control-value {
   color: #64b5f6;
 }
-
 .transparency-slider {
   width: 100%;
   height: 6px;
@@ -208,11 +176,9 @@ body.theme-dark .control-value {
   -webkit-appearance: none;
   appearance: none;
 }
-
 body.theme-dark .transparency-slider {
   background: linear-gradient(90deg, rgba(100, 181, 246, 0.2), rgba(100, 181, 246, 0.4));
 }
-
 .transparency-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -224,11 +190,9 @@ body.theme-dark .transparency-slider {
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
   transition: box-shadow 0.2s ease;
 }
-
 .transparency-slider::-webkit-slider-thumb:hover {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
 }
-
 .transparency-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
@@ -239,11 +203,9 @@ body.theme-dark .transparency-slider {
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
   transition: box-shadow 0.2s ease;
 }
-
 .transparency-slider::-moz-range-thumb:hover {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
 }
-
 .btn-reset-effects {
   width: 100%;
   padding: 8px 12px;
@@ -257,27 +219,22 @@ body.theme-dark .transparency-slider {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .btn-reset-effects:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(99, 102, 241, 0.4));
   color: #1d4ed8;
 }
-
 body.theme-dark .btn-reset-effects {
   background: linear-gradient(135deg, rgba(100, 181, 246, 0.3), rgba(100, 181, 246, 0.2));
   color: #64b5f6;
 }
-
 body.theme-dark .btn-reset-effects:hover {
   background: linear-gradient(135deg, rgba(100, 181, 246, 0.5), rgba(100, 181, 246, 0.4));
   color: #93c5fd;
 }
-
 /* ============================================================
    FILTER BAR - FORCE SAME BACKGROUND AS HEADER/SIDEBAR
    MAXIMUM SPECIFICITY - Must override all other styles
    ============================================================ */
-
 /* Light Theme */
 html body:not(.theme-dark):not([data-theme="dark"]) .filter-bar-enhanced,
 html body.theme-light .filter-bar-enhanced,
@@ -289,7 +246,6 @@ body:not(.theme-dark):not([data-theme="dark"]) .filter-bar-enhanced {
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1), 0 2px 16px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
-
 /* Dark Theme */
 html body.theme-dark .filter-bar-enhanced,
 html body[data-theme="dark"] .filter-bar-enhanced,
@@ -302,5 +258,3 @@ body[data-theme="dark"] .filter-bar-enhanced,
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
-
-

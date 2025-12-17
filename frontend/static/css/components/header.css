@@ -2,7 +2,6 @@
  * SPEEDYFLOW - Enhanced Header Components
  * Header mejorado con búsqueda, menús desplegables y theme bubble
  */
-
 /* ==================== ENFORCE SOLID TEXT IN HEADER ==================== */
 /* ALL header text must be fully opaque */
 .main-header-pro p,
@@ -17,7 +16,6 @@
   color: var(--text-primary);
   opacity: 1;
 }
-
 /* ===== HEADER LAYOUT ===== */
 /* Header background and layout managed by transparency-manager.css */
 .header {
@@ -32,9 +30,7 @@
   gap: var(--spacing-lg);
   min-height: 44px;
 }
-
 /* (half-moon notch removed) */
-
 .brand-text {
   font-size: 20px;
   font-weight: 700;
@@ -43,32 +39,27 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
 .header-divider-vertical {
   width: 1px;
   height: 32px;
   background: rgba(0, 0, 0, 0.1);
   margin: 0 8px;
 }
-
 .header-page-title {
   margin: 0;
   padding: 0;
 }
-
 .page-title-text {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
-
 .header-title {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
 }
-
 .header-breadcrumb {
   display: flex;
   align-items: center;
@@ -78,7 +69,6 @@
   overflow: hidden;
   margin-left: auto;
 }
-
 .breadcrumb-item {
   white-space: nowrap;
   max-width: 80px;
@@ -86,11 +76,8 @@
   text-overflow: ellipsis;
   font-size: 11px;
 }
-
 /* breadcrumb separator handled by templates using .breadcrumb-separator */
-
 /* header-center (templates use header-center-section) — removed from this stylesheet */
-
 /* ===== HEADER RIGHT SECTION ===== */
 .header-right {
   display: flex;
@@ -98,10 +85,8 @@
   gap: 4px;
   margin-left: auto;
 }
-
 /* `.view-toggle`/`.btn-toggle` removed — not used in current templates */
 /* header-divider removed; variants defined in other files */
-
 /* ===== ICON BUTTONS ===== */
 .btn-icon {
   background: var(--card-bg);
@@ -121,20 +106,16 @@
   color: var(--text-primary);
   position: relative;
 }
-
 .btn-icon:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.15);
 }
-
 .btn-icon:active {
   transform: scale(0.95);
 }
-
 .btn-notifications {
   position: relative;
 }
-
 .notification-badge {
   position: absolute;
   top: -5px;
@@ -151,100 +132,77 @@
   justify-content: center;
   border: 2px solid rgba(26, 26, 26, 0.95);
 }
-
 /* Theme bubble / options removed — templates use minimal theme icons instead */
-
 /* User menu styles removed — header uses `header-icon-btn` / `header-account-actions` now */
-
 /* ===== ANIMATIONS ===== */
 @keyframes slideDownFade {
   from {
     opacity: 0;
     transform: translateY(-8px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 /* ===== LIGHT THEME ===== */
 /* Header background and borders managed by transparency-manager.css */
 /* `.search-bar` not present in templates; removed to keep CSS focused on actual elements */
-
 body:not(.theme-dark) .btn-icon {
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.1);
   color: #1f2937;
 }
-
 body:not(.theme-dark) .btn-icon:hover {
   background: rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 0, 0, 0.15);
 }
-
 /* Light-theme variants for removed theme/user-menu elements cleared */
-
 body:not(.theme-dark) .breadcrumb-item {
   color: #6b7280;
 }
-
 body:not(.theme-dark) .header-breadcrumb {
   color: #9ca3af;
 }
-
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .header-left {
     min-width: auto;
   }
-
   .header-breadcrumb {
     display: none;
   }
-
   .header-center {
     max-width: 300px;
   }
-
   .user-name {
     display: none;
   }
 }
-
 @media (max-width: 768px) {
   .header-center {
     display: none;
   }
-
   .header-brand {
     display: none;
   }
-
   .header-title {
     font-size: 12px;
   }
-
   .btn-icon {
     width: 28px;
     height: 28px;
     font-size: 12px;
   }
-
   /* .view-toggle handled in other component CSS; removed from header.css */
-
   .header-divider {
     display: none;
   }
-
   /* user-dropdown / btn-user-menu removed from this stylesheet */
-
   .notification-badge {
     width: 14px;
     height: 14px;
     font-size: 8px;
   }
-
   /* mobile adjustments: none for notch */
 }

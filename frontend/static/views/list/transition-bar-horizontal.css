@@ -3,11 +3,9 @@
  * Barra horizontal que aparece debajo de cada ticket en la vista de lista
  * mostrando todas las transiciones disponibles en máximo dos líneas
  */
-
 /* ============================================
    TRANSITION BAR - Container Horizontal
    ============================================ */
-
 .transition-bar-horizontal {
   /* Layout */
   display: none; /* Hidden by default, shown when clicking transitions button */
@@ -15,35 +13,29 @@
   margin: 4px 0;
   padding: 10px 12px;
   box-sizing: border-box;
-  
   /* Glassmorphism Effect */
   background: rgba(248, 250, 252, 0.98);
   backdrop-filter: blur(20px) saturate(180%);
-  
   /* Borders & Shadows */
   border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  
   /* Animation */
   animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: top;
 }
-
 /* Dark theme */
 body.theme-dark .transition-bar-horizontal {
   background: rgba(20, 20, 30, 0.95);
   border-color: rgba(99, 102, 241, 0.4);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
-
 /* Show state */
 .transition-bar-horizontal.show {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -54,11 +46,9 @@ body.theme-dark .transition-bar-horizontal {
     transform: translateY(0) scaleY(1);
   }
 }
-
 /* ============================================
    HEADER - Título compacto
    ============================================ */
-
 .transition-bar-horizontal-header {
   display: flex;
   align-items: center;
@@ -67,7 +57,6 @@ body.theme-dark .transition-bar-horizontal {
   border-bottom: 1px solid rgba(99, 102, 241, 0.15);
   margin-bottom: 6px;
 }
-
 .transition-bar-horizontal-title {
   font-size: 11px;
   font-weight: 600;
@@ -76,11 +65,9 @@ body.theme-dark .transition-bar-horizontal {
   align-items: center;
   gap: 4px;
 }
-
 body.theme-dark .transition-bar-horizontal-title {
   color: #8b9cff;
 }
-
 .transition-bar-horizontal-ticket {
   font-size: 9px;
   font-weight: 500;
@@ -89,12 +76,10 @@ body.theme-dark .transition-bar-horizontal-title {
   padding: 2px 6px;
   border-radius: 3px;
 }
-
 body.theme-dark .transition-bar-horizontal-ticket {
   color: #94a3b8;
   background: rgba(99, 102, 241, 0.2);
 }
-
 .transition-bar-horizontal-close {
   background: rgba(239, 68, 68, 0.1);
   border: none;
@@ -110,29 +95,23 @@ body.theme-dark .transition-bar-horizontal-ticket {
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
-
 .transition-bar-horizontal-close:hover {
   background: rgba(239, 68, 68, 0.2);
   transform: scale(1.1);
 }
-
 .transition-bar-horizontal-close:active {
   transform: scale(0.95);
 }
-
 body.theme-dark .transition-bar-horizontal-close {
   background: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
 }
-
 body.theme-dark .transition-bar-horizontal-close:hover {
   background: rgba(239, 68, 68, 0.25);
 }
-
 /* ============================================
    TRANSITIONS GRID - Máximo 2 líneas
    ============================================ */
-
 .transition-bar-horizontal-content {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -140,30 +119,24 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   width: 100%;
   padding: 1px;
 }
-
 /* Custom scrollbar for overflow */
 .transition-bar-horizontal-content::-webkit-scrollbar {
   height: 4px;
 }
-
 .transition-bar-horizontal-content::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
   border-radius: 2px;
 }
-
 .transition-bar-horizontal-content::-webkit-scrollbar-thumb {
   background: rgba(99, 102, 241, 0.3);
   border-radius: 2px;
 }
-
 .transition-bar-horizontal-content::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.5);
 }
-
 /* ============================================
    TRANSITION BUTTON - Compacto horizontal
    ============================================ */
-
 .transition-btn-horizontal {
   /* Layout */
   padding: 8px 12px;
@@ -173,7 +146,6 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  
   /* Typography */
   font-size: 11px;
   font-weight: 600;
@@ -181,7 +153,6 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
   /* Appearance */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -190,17 +161,14 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  
   /* Effects */
   box-shadow: 
     0 1px 6px rgba(102, 126, 234, 0.25);
   transition: all 0.3s ease;
-  
   /* Prevent selection */
   user-select: none;
   -webkit-user-select: none;
 }
-
 /* Water ripple effect - First wave */
 .transition-btn-horizontal::before {
   content: '';
@@ -220,7 +188,6 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   pointer-events: none;
   z-index: 0;
 }
-
 /* Second wave */
 .transition-btn-horizontal::after {
   content: '';
@@ -240,26 +207,21 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   pointer-events: none;
   z-index: 0;
 }
-
 .transition-btn-horizontal:hover::before {
   animation: waterRipple 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-
 .transition-btn-horizontal:hover::after {
   animation: waterRipple 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s;
 }
-
 .transition-btn-horizontal:hover {
   box-shadow: 
     0 4px 16px rgba(102, 126, 234, 0.4);
 }
-
 .transition-btn-horizontal:active {
   transform: scale(0.98);
   box-shadow: 
     0 2px 8px rgba(102, 126, 234, 0.3);
 }
-
 /* Button content wrapper */
 .transition-btn-horizontal-content {
   position: relative;
@@ -268,14 +230,12 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   align-items: center;
   gap: 6px;
 }
-
 /* Loading state */
 .transition-btn-horizontal.loading {
   background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
   cursor: wait;
   pointer-events: none;
 }
-
 /* Disable ripple on loading/success/error states */
 .transition-btn-horizontal.loading::before,
 .transition-btn-horizontal.loading::after,
@@ -285,13 +245,11 @@ body.theme-dark .transition-bar-horizontal-close:hover {
 .transition-btn-horizontal.error::after {
   display: none;
 }
-
 .transition-btn-horizontal.loading .transition-btn-horizontal-content {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-
 .transition-btn-horizontal.loading .transition-btn-horizontal-content::after {
   content: '';
   width: 12px;
@@ -301,45 +259,37 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
 /* Success state */
 .transition-btn-horizontal.success {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   pointer-events: none;
 }
-
 .transition-btn-horizontal.success::before {
   content: '✓';
   margin-right: 4px;
 }
-
 /* Error state */
 .transition-btn-horizontal.error {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
-
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
   75% { transform: translateX(4px); }
 }
-
 /* ============================================
    LOADING STATE - Skeleton
    ============================================ */
-
 .transition-bar-horizontal-loading {
   display: flex;
   gap: 8px;
   padding: 4px;
   animation: pulse 1.5s ease-in-out infinite;
 }
-
 .transition-skeleton {
   height: 36px;
   background: linear-gradient(
@@ -354,21 +304,17 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   flex: 1;
   min-width: 100px;
 }
-
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
-
 /* ============================================
    EMPTY STATE - No transitions available
    ============================================ */
-
 .transition-bar-horizontal-empty {
   text-align: center;
   padding: 16px;
@@ -376,64 +322,52 @@ body.theme-dark .transition-bar-horizontal-close:hover {
   font-size: 13px;
   font-style: italic;
 }
-
 body.theme-dark .transition-bar-horizontal-empty {
   color: #94a3b8;
 }
-
 /* ============================================
    RESPONSIVE - Mobile optimizations
    ============================================ */
-
 @media (max-width: 768px) {
   .transition-bar-horizontal {
     padding: 10px 12px;
     border-radius: 10px;
   }
-  
   .transition-bar-horizontal-content {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 6px;
   }
-  
   .transition-btn-horizontal {
     padding: 6px 10px;
     height: 32px;
     font-size: 11px;
     gap: 4px;
   }
-  
   .transition-bar-horizontal-header {
     padding-bottom: 6px;
   }
-  
   .transition-bar-horizontal-title {
     font-size: 12px;
   }
-  
   .transition-bar-horizontal-ticket {
     font-size: 10px;
     padding: 2px 6px;
   }
 }
-
 @media (max-width: 480px) {
   .transition-bar-horizontal-content {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     max-height: calc(2 * 32px + 6px);
   }
-  
   .transition-btn-horizontal {
     padding: 6px 8px;
     height: 32px;
     font-size: 10px;
   }
 }
-
 /* ============================================
    WATER RIPPLE ANIMATION
    ============================================ */
-
 @keyframes waterRipple {
   0% {
     width: 10px;

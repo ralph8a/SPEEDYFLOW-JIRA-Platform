@@ -1,9 +1,8 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 ML Anomaly Detection Engine
 Detects operational anomalies in ticket patterns, assignment distribution, and timing.
 """
-
 import os
 import json
 import gzip
@@ -12,11 +11,8 @@ from typing import List, Dict, Tuple, Optional
 from collections import defaultdict, Counter
 from datetime import datetime, timedelta
 from pathlib import Path
-
 import numpy as np
 from sklearn.ensemble import IsolationForest
-
 logger = logging.getLogger(__name__)
-
 # Default cache path - absolute path from project root
 DEFAULT_CACHE_PATH = Path(__file__).parent.parent / "data" / "cache" / "msm_issues.json.gz"

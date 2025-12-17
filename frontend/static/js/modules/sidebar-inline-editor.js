@@ -2,7 +2,6 @@
  * SIDEBAR INLINE EDITOR WITH AI SUGGESTIONS
  * Integra el AI analyzer con edición inline de campos en el sidebar
  */
-
 class SidebarInlineEditor {
   constructor() {
     this.currentIssue = null;
@@ -11,7 +10,6 @@ class SidebarInlineEditor {
     this.isEditMode = false;
     this.pendingChanges = {};
   }
-
   /**
    * Inicializa el editor inline para un issue
    * @param {string} issueKey - Key del issue
@@ -20,25 +18,20 @@ class SidebarInlineEditor {
     console.log(`📝 Initializing inline editor for ${issueKey}`);
     this.currentIssue = issueKey;
     this.pendingChanges = {};
-    
     // Agregar botón de AI suggestions en el sidebar
     this.addAISuggestionsButton();
   }
-
   /**
    * Agrega botón de AI suggestions al sidebar
    */
   addAISuggestionsButton() {
     const sidebar = document.getElementById('rightSidebar');
     if (!sidebar) return;
-
     // Buscar el header del sidebar
     const header = sidebar.querySelector('.sidebar-header');
     if (!header) return;
-
     // Verificar si ya existe
     if (document.getElementById('aiSuggestionsBtn')) return;
-
     // Crear botón
     const btn = document.createElement('button');
     btn.id = 'aiSuggestionsBtn';
@@ -46,7 +39,6 @@ class SidebarInlineEditor {
     btn.innerHTML = '🤖 AI Analyze';
     btn.title = 'Get AI suggestions for missing fields';
     btn.onclick = () => this.loadAISuggestions();
-
     // Insertar antes del botón de cerrar
     const closeBtn = header.querySelector('#closeSidebarBtn');
     if (closeBtn) {
@@ -55,19 +47,16 @@ class SidebarInlineEditor {
       header.appendChild(btn);
     }
   }
-
   /**
    * Carga y muestra sugerencias de AI
    */
   async loadAISuggestions() {
     console.log(`🤖 Loading AI suggestions for ${this.currentIssue}`);
-    
     const btn = document.getElementById('aiSuggestionsBtn');
     if (btn) {
       btn.innerHTML = '⏳ Analyzing...';
       btn.disabled = true;
     }
-
     try {
       const response = await fetch('/api/ai/suggest-updates', {
         method: 'POST',
@@ -85,23 +74,18 @@ class SidebarInlineEditor {
           ]
         })
       });
-
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-
       const data = await response.json();
       this.aiSuggestions = data.suggestions || [];
-      
       console.log(`✅ Received ${this.aiSuggestions.length} AI suggestions`);
-
       if (this.aiSuggestions.length === 0) {
         this.showNoSuggestionsMessage();
       } else {
         this.enableEditMode();
         this.renderInlineSuggestions();
       }
-
     } catch (error) {
       console.error('❌ Error loading AI suggestions:', error);
       alert('Failed to load AI suggestions. Please try again.');
@@ -112,14 +96,12 @@ class SidebarInlineEditor {
       }
     }
   }
-
   /**
    * Muestra mensaje cuando no hay sugerencias
    */
   showNoSuggestionsMessage() {
     const sidebar = document.getElementById('detailsPanel');
     if (!sidebar) return;
-
     // Crear banner temporal
     const banner = document.createElement('div');
     banner.className = 'ai-suggestions-banner success';
@@ -132,35 +114,28 @@ class SidebarInlineEditor {
         </div>
       </div>
     `;
-
     sidebar.insertBefore(banner, sidebar.firstChild);
-
     // Remover después de 5 segundos
     setTimeout(() => banner.remove(), 5000);
   }
-
   /**
    * Habilita modo de edición
    */
   enableEditMode() {
     this.isEditMode = true;
     console.log('📝 Edit mode enabled');
-
     // Agregar banner de sugerencias
     this.addSuggestionsBanner();
   }
-
   /**
    * Agrega banner con contador de sugerencias
    */
   addSuggestionsBanner() {
     const sidebar = document.getElementById('detailsPanel');
     if (!sidebar) return;
-
     // Remover banner existente
     const existingBanner = sidebar.querySelector('.ai-suggestions-banner');
     if (existingBanner) existingBanner.remove();
-
     const banner = document.createElement('div');
     banner.className = 'ai-suggestions-banner';
     banner.innerHTML = `
@@ -177,31 +152,25 @@ class SidebarInlineEditor {
         </button>
       </div>
     `;
-
     sidebar.insertBefore(banner, sidebar.firstChild);
   }
-
   /**
    * Renderiza sugerencias inline en los campos
    */
   renderInlineSuggestions() {
     console.log(`🎨 Rendering ${this.aiSuggestions.length} inline suggestions`);
-
     this.aiSuggestions.forEach(suggestion => {
       this.renderFieldSuggestion(suggestion);
     });
   }
-
   /**
    * Renderiza sugerencia para un campo específico
    */
   renderFieldSuggestion(suggestion) {
     const { field, field_label, current_value, suggested_value, confidence, reason } = suggestion;
-
     // Buscar el campo en el sidebar
     const fieldElements = document.querySelectorAll('.field-item, .detail-section');
     let fieldContainer = null;
-
     for (const el of fieldElements) {
       const label = el.querySelector('.field-label, .detail-label');
       if (label && label.textContent.includes(field_label)) {
@@ -209,15 +178,12 @@ class SidebarInlineEditor {
         break;
       }
     }
-
     if (!fieldContainer) {
       console.warn(`Field container not found for: ${field_label}`);
       return;
     }
-
     // Agregar clase para highlighting
     fieldContainer.classList.add('has-ai-suggestion');
-
     // Crear sugerencia inline
     const suggestionEl = document.createElement('div');
     suggestionEl.className = 'inline-ai-suggestion';
@@ -242,7 +208,6 @@ class SidebarInlineEditor {
         </button>
       </div>
     `;
-
     // Insertar después del valor actual
     const valueEl = fieldContainer.querySelector('.field-value, .detail-value');
     if (valueEl) {
@@ -251,17 +216,14 @@ class SidebarInlineEditor {
       fieldContainer.appendChild(suggestionEl);
     }
   }
-
   /**
    * Aplica una sugerencia individual
    */
   async applySuggestion(field, suggestedValue) {
     console.log(`✓ Applying suggestion for ${field}:`, suggestedValue);
-
     try {
       // Preparar el valor según el tipo de campo
       const fieldUpdate = this.prepareFieldUpdate(field, suggestedValue);
-
       // Llamar al API para actualizar
       const response = await fetch(`/api/issues/${this.currentIssue}`, {
         method: 'PUT',
@@ -269,46 +231,35 @@ class SidebarInlineEditor {
         credentials: 'include',
         body: JSON.stringify({ fields: fieldUpdate })
       });
-
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-
       console.log(`✅ Field ${field} updated successfully`);
-
       // Remover la sugerencia de la UI
       this.removeSuggestionUI(field);
-
       // Actualizar el valor en la UI
       this.updateFieldValue(field, suggestedValue);
-
       // Mostrar notificación de éxito
       this.showSuccessNotification(field);
-
       // Actualizar el modal de ML si está abierto
       this.refreshMLAnalysisModal();
-
     } catch (error) {
       console.error(`❌ Error applying suggestion for ${field}:`, error);
       alert(`Failed to update ${field}. Please try again.`);
     }
   }
-
   /**
    * Aplica todas las sugerencias de una vez
    */
   async applyAllSuggestions() {
     console.log(`🚀 Applying all ${this.aiSuggestions.length} suggestions`);
-
     const btn = document.querySelector('.ai-suggestions-banner button');
     if (btn) {
       btn.innerHTML = '⏳ Applying...';
       btn.disabled = true;
     }
-
     let successCount = 0;
     let failCount = 0;
-
     for (const suggestion of this.aiSuggestions) {
       try {
         await this.applySuggestion(suggestion.field, suggestion.suggested_value);
@@ -318,48 +269,38 @@ class SidebarInlineEditor {
         failCount++;
       }
     }
-
     console.log(`✅ Applied ${successCount}/${this.aiSuggestions.length} suggestions`);
-
     // Remover el banner
     const banner = document.querySelector('.ai-suggestions-banner');
     if (banner) banner.remove();
-
     // Mostrar resultado
     alert(`Successfully applied ${successCount} of ${this.aiSuggestions.length} suggestions!`);
-
     // Recargar el sidebar
     if (window.openIssueDetails) {
       window.openIssueDetails(this.currentIssue);
     }
-
     // Actualizar el modal de ML si está abierto
     this.refreshMLAnalysisModal();
   }
-
   /**
    * Descarta una sugerencia
    */
   dismissSuggestion(field) {
     console.log(`✕ Dismissing suggestion for ${field}`);
     this.removeSuggestionUI(field);
-
     // Remover de la lista
     this.aiSuggestions = this.aiSuggestions.filter(s => s.field !== field);
-
     // Si no quedan sugerencias, remover el banner
     if (this.aiSuggestions.length === 0) {
       const banner = document.querySelector('.ai-suggestions-banner');
       if (banner) banner.remove();
     }
   }
-
   /**
    * Prepara el valor del campo para la actualización
    */
   prepareFieldUpdate(field, value) {
     const update = {};
-
     // Manejar diferentes tipos de campos
     if (field.startsWith('customfield_')) {
       // Custom fields como criticidad
@@ -379,10 +320,8 @@ class SidebarInlineEditor {
     } else {
       update[field] = value;
     }
-
     return update;
   }
-
   /**
    * Formatea el valor sugerido para mostrar
    */
@@ -395,7 +334,6 @@ class SidebarInlineEditor {
     }
     return String(value);
   }
-
   /**
    * Obtiene color según la confianza
    */
@@ -404,13 +342,11 @@ class SidebarInlineEditor {
     if (confidence >= 0.7) return 'rgba(59,130,246,0.2)';
     return 'rgba(245,158,11,0.2)';
   }
-
   /**
    * Remueve la UI de sugerencia de un campo
    */
   removeSuggestionUI(field) {
     const fieldElements = document.querySelectorAll('.field-item, .detail-section');
-    
     for (const el of fieldElements) {
       const suggestion = el.querySelector('.inline-ai-suggestion');
       if (suggestion) {
@@ -423,13 +359,11 @@ class SidebarInlineEditor {
       }
     }
   }
-
   /**
    * Actualiza el valor del campo en la UI
    */
   updateFieldValue(field, newValue) {
     const fieldElements = document.querySelectorAll('.field-item, .detail-section');
-    
     for (const el of fieldElements) {
       const label = el.querySelector('.field-label, .detail-label');
       if (label && label.textContent.includes(field)) {
@@ -437,7 +371,6 @@ class SidebarInlineEditor {
         if (valueEl) {
           valueEl.textContent = this.formatSuggestionValue(newValue);
           valueEl.classList.add('field-updated');
-          
           // Remover highlight después de 3 segundos
           setTimeout(() => valueEl.classList.remove('field-updated'), 3000);
         }
@@ -445,7 +378,6 @@ class SidebarInlineEditor {
       }
     }
   }
-
   /**
    * Muestra notificación de éxito
    */
@@ -455,17 +387,14 @@ class SidebarInlineEditor {
       window.showNotification(`✅ ${field} updated successfully`, 'success');
     }
   }
-
   /**
    * Actualiza el modal de ML analysis después de aplicar cambios
    */
   refreshMLAnalysisModal() {
     console.log('🔄 Refreshing ML analysis modal...');
-    
     // Si el modal de Smart Functions está abierto, recalcular
     if (window.smartFunctionsModal && window.smartFunctionsModal.isOpen) {
       console.log('📊 Recalculating ML analysis stats');
-      
       // Disparar evento personalizado para actualizar
       const event = new CustomEvent('mlAnalysisUpdate', {
         detail: { issueKey: this.currentIssue }
@@ -474,7 +403,6 @@ class SidebarInlineEditor {
     }
   }
 }
-
 // Inicializar globalmente
 if (typeof window !== 'undefined') {
   window.sidebarEditor = new SidebarInlineEditor();

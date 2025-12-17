@@ -2,7 +2,6 @@
  * SIDEBAR INLINE EDITOR STYLES
  * Estilos para el sistema de edición inline con AI suggestions
  */
-
 /* AI Suggestions Button */
 .sidebar-ai-btn {
   display: flex;
@@ -18,28 +17,23 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .sidebar-ai-btn:hover {
   background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(139,92,246,0.25));
   border-color: rgba(168,85,247,0.5);
   transform: translateY(-1px);
 }
-
 .sidebar-ai-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
-
 /* AI Suggestions Banner */
 .ai-suggestions-banner {
   animation: slideDown 0.3s ease;
 }
-
 .ai-suggestions-banner.success {
   animation: slideDown 0.3s ease, fadeOut 0.5s ease 4.5s forwards;
 }
-
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -50,14 +44,12 @@
     transform: translateY(0);
   }
 }
-
 @keyframes fadeOut {
   to {
     opacity: 0;
     transform: translateY(-10px);
   }
 }
-
 .btn-primary-sm {
   padding: 6px 12px;
   background: linear-gradient(135deg, #a855f7, #9333ea);
@@ -69,13 +61,11 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .btn-primary-sm:hover {
   background: linear-gradient(135deg, #9333ea, #7e22ce);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(168,85,247,0.3);
 }
-
 /* Field with AI Suggestion */
 .has-ai-suggestion {
   position: relative;
@@ -85,7 +75,6 @@
   padding: 12px !important;
   margin-bottom: 16px !important;
 }
-
 .has-ai-suggestion::before {
   content: '✨';
   position: absolute;
@@ -96,7 +85,6 @@
   border-radius: 4px;
   font-size: 12px;
 }
-
 /* Inline AI Suggestion */
 .inline-ai-suggestion {
   margin-top: 12px;
@@ -106,7 +94,6 @@
   border-radius: 8px;
   animation: slideIn 0.3s ease;
 }
-
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -117,24 +104,20 @@
     transform: translateX(0);
   }
 }
-
 .suggestion-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
-
 .suggestion-icon {
   font-size: 16px;
 }
-
 .suggestion-label {
   font-size: 12px;
   font-weight: 600;
   color: #cbd5e1;
 }
-
 .confidence-badge {
   margin-left: auto;
   padding: 2px 8px;
@@ -143,18 +126,15 @@
   font-weight: 600;
   color: #fff;
 }
-
 .suggestion-value {
   font-size: 13px;
   color: #94a3b8;
   margin-bottom: 6px;
 }
-
 .suggestion-value strong {
   color: #cbd5e1;
   font-weight: 600;
 }
-
 .suggestion-reason {
   font-size: 12px;
   color: #64748b;
@@ -163,12 +143,10 @@
   padding-left: 8px;
   border-left: 2px solid rgba(168,85,247,0.3);
 }
-
 .suggestion-actions {
   display: flex;
   gap: 8px;
 }
-
 .btn-suggestion-apply,
 .btn-suggestion-dismiss {
   flex: 1;
@@ -180,34 +158,28 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .btn-suggestion-apply {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
 }
-
 .btn-suggestion-apply:hover {
   background: linear-gradient(135deg, #059669, #047857);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16,185,129,0.3);
 }
-
 .btn-suggestion-dismiss {
   background: rgba(239,68,68,0.1);
   border: 1px solid rgba(239,68,68,0.3);
   color: #f87171;
 }
-
 .btn-suggestion-dismiss:hover {
   background: rgba(239,68,68,0.2);
   border-color: rgba(239,68,68,0.5);
 }
-
 /* Field Updated Animation */
 .field-updated {
   animation: highlight 3s ease;
 }
-
 @keyframes highlight {
   0%, 100% {
     background: transparent;
@@ -219,61 +191,49 @@
     background: rgba(16,185,129,0.2);
   }
 }
-
 /* Dark Theme Adjustments */
 body.theme-dark .sidebar-ai-btn {
   background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(139,92,246,0.2));
   border-color: rgba(168,85,247,0.4);
   color: #e9d5ff;
 }
-
 body.theme-dark .sidebar-ai-btn:hover {
   background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(139,92,246,0.3));
   border-color: rgba(168,85,247,0.6);
 }
-
 body.theme-dark .has-ai-suggestion {
   border-color: rgba(168,85,247,0.4) !important;
   background: linear-gradient(135deg, rgba(168,85,247,0.08), transparent);
 }
-
 body.theme-dark .inline-ai-suggestion {
   background: rgba(168,85,247,0.15);
   border-left-color: #c084fc;
 }
-
 body.theme-dark .suggestion-label {
   color: #e9d5ff;
 }
-
 body.theme-dark .suggestion-value {
   color: #cbd5e1;
 }
-
 body.theme-dark .suggestion-value strong {
   color: #f3e8ff;
 }
-
 body.theme-dark .suggestion-reason {
   color: #94a3b8;
   border-left-color: rgba(168,85,247,0.4);
 }
-
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar-ai-btn {
     font-size: 12px;
     padding: 6px 12px;
   }
-
   .inline-ai-suggestion {
     padding: 10px;
   }
-
   .suggestion-actions {
     flex-direction: column;
   }
-
   .btn-suggestion-apply,
   .btn-suggestion-dismiss {
     width: 100%;

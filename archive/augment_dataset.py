@@ -1,16 +1,13 @@
 """Augment the labeled comments dataset using ingested docs.
-
 Heuristic labeling rules are applied to sentences/paragraphs found in /docs/*.txt
 and appended to existing `data/comments_dataset.csv` to produce `data/comments_dataset_augmented.csv`.
 """
 from pathlib import Path
 import re
 import pandas as pd
-
 docs_dir = Path(__file__).resolve().parent / 'docs'
 data_path = Path(__file__).resolve().parent.parent / 'data' / 'comments_dataset.csv'
 out_path = Path(__file__).resolve().parent.parent / 'data' / 'comments_dataset_augmented.csv'
-
 label_rules = [
     (re.compile(r'\b504\b|timeout|time out|timed out', re.I), 'timeout'),
     (re.compile(r'\b500\b|\b502\b|server error|nullpointer|exception', re.I), 'server-error'),
@@ -21,8 +18,6 @@ label_rules = [
     (re.compile(r'gateway|502|bad gateway', re.I), 'gateway-error'),
     (re.compile(r'fixed|resolved|closing|closed', re.I), 'fixed'),
 ]
-
-
 def extract_texts():
     texts = []
     if not docs_dir.exists():
@@ -36,16 +31,12 @@ def extract_texts():
         except Exception:
             continue
     return texts
-
-
 def label_text(t: str):
     labels = set()
     for regex, lab in label_rules:
         if regex.search(t):
             labels.add(lab)
     return list(labels)
-
-
 def main():
     base = pd.read_csv(data_path)
     texts = extract_texts()
@@ -66,14 +57,12 @@ def main():
             'weak_labels': ','.join(labs),
             'source': 'doc'
         })
-
     if not rows:
         print('No heuristic-labeled texts found in docs')
         # still write a copy of base
         base.to_csv(out_path, index=False)
         print('Wrote', out_path)
         return
-
     # Keep original labels intact; append docs-derived examples with empty `labels` and
     # `weak_labels` column so they are clearly identified as weak supervision.
     aug_df = pd.DataFrame(rows)
@@ -86,7 +75,5 @@ def main():
     combined = combined[cols]
     combined.to_csv(out_path, index=False)
     print(f'Augmented dataset created: {out_path} ({len(rows)} new rows)')
-
-
 if __name__ == '__main__':
     main()

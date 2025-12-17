@@ -25,13 +25,11 @@
     '🔧': 'settings',
     '🔔': 'bell'
   };
-
   function shouldSkip(node) {
     if (!node.parentElement) return true;
     const tag = node.parentElement.tagName;
     return ['SCRIPT','STYLE','NOSCRIPT','CODE','PRE','TEXTAREA'].includes(tag);
   }
-
   function replaceInElement(el) {
     // Only process elements with text nodes
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
@@ -63,7 +61,6 @@
       }
     });
   }
-
   function runReplacer() {
     try {
       // Target many common UI containers to limit scope
@@ -81,7 +78,6 @@
       console.warn('Emoji replacer failed:', e);
     }
   }
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', runReplacer);
   } else {

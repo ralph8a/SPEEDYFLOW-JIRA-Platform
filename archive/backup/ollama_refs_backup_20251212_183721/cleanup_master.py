@@ -6,9 +6,7 @@ Ejecuta todos los scripts de limpieza en orden
 import subprocess
 import sys
 from pathlib import Path
-
 BASE_DIR = Path(__file__).parent
-
 print("=" * 80)
 print("🚀 SPEEDYFLOW MASTER CLEANUP")
 print("=" * 80)
@@ -36,18 +34,15 @@ print("   - Se crearán backups automáticos de todos los archivos")
 print("   - Los cambios son reversibles desde la carpeta cleanup_backup/")
 print("   - Se recomienda hacer commit antes de ejecutar")
 print()
-
 # Pedir confirmación
 response = input("¿Deseas continuar? (si/no): ").lower().strip()
 if response not in ['si', 's', 'yes', 'y']:
     print("\n❌ Operación cancelada por el usuario")
     sys.exit(0)
-
 print("\n" + "=" * 80)
 print("🔥 INICIANDO LIMPIEZA COMPLETA")
 print("=" * 80)
 print()
-
 # ============================================================================
 # PASO 1: Cleanup Project
 # ============================================================================
@@ -63,11 +58,9 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"\n❌ Error en Paso 1: {e}")
     sys.exit(1)
-
 print("\n" + "=" * 80)
 input("Presiona ENTER para continuar al Paso 2...")
 print()
-
 # ============================================================================
 # PASO 2: Consolidate Docs
 # ============================================================================
@@ -83,11 +76,9 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"\n❌ Error en Paso 2: {e}")
     sys.exit(1)
-
 print("\n" + "=" * 80)
 input("Presiona ENTER para continuar al Paso 3...")
 print()
-
 # ============================================================================
 # PASO 3: Remove Ollama
 # ============================================================================
@@ -103,7 +94,6 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"\n❌ Error en Paso 3: {e}")
     sys.exit(1)
-
 # ============================================================================
 # RESUMEN FINAL
 # ============================================================================

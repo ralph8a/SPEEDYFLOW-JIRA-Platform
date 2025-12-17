@@ -2,7 +2,6 @@
  * Mentions Autocomplete Module
  * Handles @mention autocomplete functionality in textareas
  */
-
 const createMentionsAutocomplete = (() => {
   let activeTextarea = null;
   let autocompleteDropdown = null;
@@ -10,7 +9,6 @@ const createMentionsAutocomplete = (() => {
   let currentIssueKey = '';
   let currentQuery = '';
   let selectedIndex = 0;
-
   /**
    * Initialize mentions system
    */
@@ -19,13 +17,11 @@ const createMentionsAutocomplete = (() => {
     createDropdown();
     window.logger?.debug('✅ Mentions autocomplete initialized');
   }
-
   /**
    * Create autocomplete dropdown element
    */
   function createDropdown() {
     if (autocompleteDropdown) return;
-
     autocompleteDropdown = document.createElement('div');
     autocompleteDropdown.className = 'mentions-autocomplete-dropdown';
     // Base inline styles to ensure visibility across contexts (high z-index, white bg)
@@ -45,7 +41,6 @@ const createMentionsAutocomplete = (() => {
     autocompleteDropdown.innerHTML = '<div class="mentions-loading" style="padding:10px; color:#6b7280; font-size:12px;">Loading...</div>';
     document.body.appendChild(autocompleteDropdown);
   }
-
   /**
    * Attach mention autocomplete to a textarea
    */
@@ -54,29 +49,23 @@ const createMentionsAutocomplete = (() => {
       console.warn('⚠️ Cannot attach mentions: textarea not found');
       return;
     }
-
     console.log(`🔧 Attaching mentions to textarea for ${issueKey}`, {
       textareaId: textarea.id,
       textareaValue: textarea.value.substring(0, 50),
       hasDropdown: !!autocompleteDropdown
     });
-
     currentIssueKey = issueKey;
     activeTextarea = textarea;
-
     // Remove old listeners to avoid duplicates
     textarea.removeEventListener('input', handleInput);
     textarea.removeEventListener('keydown', handleKeydown);
     textarea.removeEventListener('blur', handleBlur);
-
     // Add event listeners
     textarea.addEventListener('input', handleInput);
     textarea.addEventListener('keydown', handleKeydown);
     textarea.addEventListener('blur', handleBlur);
-
     console.log(`✅ Mentions attached to textarea for ${issueKey}`);
   }
-
   /**
    * Handle textarea input
    */
@@ -84,10 +73,8 @@ const createMentionsAutocomplete = (() => {
     const textarea = event.target;
     const cursorPos = textarea.selectionStart;
     const textBeforeCursor = textarea.value.substring(0, cursorPos);
-
     // Check if we're typing a mention
     const mentionMatch = textBeforeCursor.match(/@([a-zA-Z0-9._-]*)$/);
-
     if (mentionMatch) {
       const query = mentionMatch[1];
       currentQuery = query;
@@ -97,7 +84,6 @@ const createMentionsAutocomplete = (() => {
       hideAutocomplete();
     }
   }
-
   /**
    * Handle keyboard navigation
    */
@@ -105,22 +91,18 @@ const createMentionsAutocomplete = (() => {
     if (!autocompleteDropdown || autocompleteDropdown.style.display === 'none') {
       return;
     }
-
     const items = autocompleteDropdown.querySelectorAll('.mention-item');
-
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
         selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
         updateSelection(items);
         break;
-
       case 'ArrowUp':
         event.preventDefault();
         selectedIndex = Math.max(selectedIndex - 1, 0);
         updateSelection(items);
         break;
-
       case 'Enter':
       case 'Tab':
         if (items.length > 0 && selectedIndex >= 0) {
@@ -128,14 +110,12 @@ const createMentionsAutocomplete = (() => {
           selectUser(items[selectedIndex]);
         }
         break;
-
       case 'Escape':
         event.preventDefault();
         hideAutocomplete();
         break;
     }
   }
-
   /**
    * Handle textarea blur (with delay for click events)
    */
@@ -144,7 +124,6 @@ const createMentionsAutocomplete = (() => {
       hideAutocomplete();
     }, 200);
   }
-
   /**
    * Fetch mentionable users from API
    */
@@ -152,7 +131,6 @@ const createMentionsAutocomplete = (() => {
     try {
       const url = `/api/v2/issues/${issueKey}/mentions/users?query=${encodeURIComponent(query)}`;
       console.log(`📡 Fetching mentionable users: ${url}`);
-      
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -160,16 +138,12 @@ const createMentionsAutocomplete = (() => {
         },
         credentials: 'same-origin'
       });
-
       console.log(`📡 Mentions API response status: ${response.status}`);
-
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-
       const data = await response.json();
       console.log(`📥 Mentions API data:`, data);
-
       if (data.success || data.data?.success) {
         // Handle wrapped response from json_response decorator
         const users = data.users || data.data?.users || [];
@@ -177,7 +151,6 @@ const createMentionsAutocomplete = (() => {
         console.log(`✅ Fetched ${mentionableUsers.length} mentionable users`);
         return mentionableUsers;
       }
-
       console.warn('⚠️ API response missing success flag:', data);
       return [];
     } catch (error) {
@@ -185,7 +158,6 @@ const createMentionsAutocomplete = (() => {
       return [];
     }
   }
-
   /**
    * Show autocomplete dropdown
    */
@@ -194,21 +166,16 @@ const createMentionsAutocomplete = (() => {
       window.logger?.warn('⚠️ No issue key set for mentions');
       return;
     }
-
     // Fetch users
     const users = await fetchMentionableUsers(currentIssueKey, query);
-
     if (users.length === 0) {
       hideAutocomplete();
       return;
     }
-
     // Render dropdown
     renderDropdown(users, query);
-
     // Position dropdown
     positionDropdown(textarea);
-
     // Show dropdown
     autocompleteDropdown.style.display = 'block';
     autocompleteDropdown.style.visibility = 'visible';
@@ -216,7 +183,6 @@ const createMentionsAutocomplete = (() => {
     selectedIndex = 0;
     updateSelection(autocompleteDropdown.querySelectorAll('.mention-item'));
   }
-
   /**
    * Render autocomplete dropdown
    */
@@ -230,12 +196,10 @@ const createMentionsAutocomplete = (() => {
              username.includes(queryLower) ||
              email.includes(queryLower);
     });
-
     if (filteredUsers.length === 0) {
       autocompleteDropdown.innerHTML = '<div class="mentions-empty">No users found</div>';
       return;
     }
-
     let html = '<div class="mentions-list">';
     filteredUsers.slice(0, 10).forEach((user, index) => {
       const initial = (user.displayName || '?')[0].toUpperCase();
@@ -252,9 +216,7 @@ const createMentionsAutocomplete = (() => {
       `;
     });
     html += '</div>';
-
     autocompleteDropdown.innerHTML = html;
-
     // Attach pointer listeners. Use mousedown/touchstart to avoid textarea blur
     const items = autocompleteDropdown.querySelectorAll('.mention-item');
     items.forEach(item => {
@@ -276,24 +238,20 @@ const createMentionsAutocomplete = (() => {
       });
     });
   }
-
   /**
    * Position dropdown above textarea (not below)
    */
   function positionDropdown(textarea) {
     const rect = textarea.getBoundingClientRect();
     const dropdownHeight = autocompleteDropdown.offsetHeight || 200;
-    
     // Position above textarea with small gap
     const top = rect.top - dropdownHeight - 8;
     const left = rect.left;
-    
     autocompleteDropdown.style.position = 'fixed';
     autocompleteDropdown.style.left = `${left}px`;
     autocompleteDropdown.style.top = `${Math.max(10, top)}px`;
     autocompleteDropdown.style.width = `${Math.min(280, rect.width)}px`;
   }
-
   /**
    * Update visual selection in dropdown
    */
@@ -307,19 +265,16 @@ const createMentionsAutocomplete = (() => {
       }
     });
   }
-
   /**
    * Select a user from autocomplete
    */
   function selectUser(item) {
     if (!activeTextarea) return;
-
     const username = item.dataset.username;
     const textarea = activeTextarea;
     const cursorPos = textarea.selectionStart;
     const textBeforeCursor = textarea.value.substring(0, cursorPos);
     const textAfterCursor = textarea.value.substring(cursorPos);
-
     // Replace @query with @username
     const mentionMatch = textBeforeCursor.match(/@([a-zA-Z0-9._-]*)$/);
     if (mentionMatch) {
@@ -328,20 +283,15 @@ const createMentionsAutocomplete = (() => {
                       `@${username} ` +
                       textAfterCursor;
       textarea.value = newText;
-
       // Move cursor after the mention
       const newCursorPos = mentionStart + username.length + 2;
       textarea.setSelectionRange(newCursorPos, newCursorPos);
-
       // Trigger input event for other listeners
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
-
       window.logger?.info(`✅ Mentioned user: @${username}`);
     }
-
     hideAutocomplete();
   }
-
   /**
    * Hide autocomplete dropdown
    */
@@ -351,7 +301,6 @@ const createMentionsAutocomplete = (() => {
     }
     selectedIndex = 0;
   }
-
   // Public API
   return {
     init,
@@ -360,11 +309,9 @@ const createMentionsAutocomplete = (() => {
     fetchMentionableUsers
   };
 })();
-
 // Export to window and initialize immediately
 if (typeof window !== 'undefined') {
   window.mentionsAutocomplete = createMentionsAutocomplete;
-  
   // Auto-initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

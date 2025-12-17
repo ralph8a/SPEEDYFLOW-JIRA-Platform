@@ -1,10 +1,8 @@
 """Webhooks blueprint: in-memory webhook registration (stub).
-
 Endpoints:
   GET  /api/webhooks              -> List registered webhooks
   POST /api/webhooks              -> Register a webhook (json: {url: str, event: str})
   DELETE /api/webhooks/<hook_id>  -> Remove a webhook
-
 Security: POST/DELETE require credentials. GET is public for transparency.
 Persistence: In-memory only (process lifetime). Future phase: durable storage.
 """
@@ -13,15 +11,11 @@ import logging
 import uuid
 from datetime import datetime, UTC
 from utils.decorators import handle_api_error, json_response, log_request as log_decorator, require_credentials
-
 logger = logging.getLogger(__name__)
 webhooks_bp = Blueprint('webhooks', __name__)
-
 # Simple in-memory store: {id: {id, url, event, created_at}}
 _WEBHOOKS: dict[str, dict] = {}
-
 _ALLOWED_EVENTS = {"issue.created", "issue.updated", "comment.created", "sla.breached"}
-
 @webhooks_bp.route('/api/webhooks', methods=['GET'])
 @handle_api_error
 @json_response
@@ -32,7 +26,6 @@ def list_webhooks():
         'count': len(_WEBHOOKS),
         'allowed_events': sorted(_ALLOWED_EVENTS)
     }
-
 @webhooks_bp.route('/api/webhooks', methods=['POST'])
 @handle_api_error
 @json_response
@@ -56,7 +49,6 @@ def create_webhook():
     _WEBHOOKS[hook_id] = record
     logger.info(f"[WEBHOOKS] Registered {hook_id} -> {event} @ {url}")
     return {'created': True, 'webhook': record}
-
 @webhooks_bp.route('/api/webhooks/<hook_id>', methods=['DELETE'])
 @handle_api_error
 @json_response

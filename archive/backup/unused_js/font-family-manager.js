@@ -3,7 +3,6 @@
  * Gestiona la personalización de familias de fuentes
  * Integrado con el sistema de configuración
  */
-
 class FontFamilyManager {
   constructor() {
     this.currentPreset = 'business'; // Default
@@ -50,10 +49,8 @@ class FontFamilyManager {
         mono: 'Fira Code, Consolas, monospace'
       }
     };
-    
     this.init();
   }
-
   init() {
     console.log('🎨 Initializing Font Family Manager...');
     this.loadSavedPreset();
@@ -61,7 +58,6 @@ class FontFamilyManager {
     this.bindEvents();
     console.log(`✅ Font Manager initialized with preset: ${this.currentPreset}`);
   }
-
   /**
    * Load saved font preset from localStorage
    */
@@ -78,7 +74,6 @@ class FontFamilyManager {
       console.warn('⚠️ Error loading font preset:', error);
     }
   }
-
   /**
    * Save current font preset to localStorage
    */
@@ -90,7 +85,6 @@ class FontFamilyManager {
       console.warn('⚠️ Error saving font preset:', error);
     }
   }
-
   /**
    * Apply font preset to the document
    * @param {string} presetName - Name of the preset to apply
@@ -100,62 +94,47 @@ class FontFamilyManager {
       console.warn(`⚠️ Unknown font preset: ${presetName}`);
       return false;
     }
-
     const oldPreset = this.currentPreset;
     this.currentPreset = presetName;
-    
     // Remove old preset class and adaptation class
     document.body.classList.remove(`font-preset-${oldPreset}`);
     document.body.classList.remove(`font-adaptation-${oldPreset}`);
-    
     // Apply new preset class and adaptation class
     document.body.classList.add(`font-preset-${presetName}`);
     document.body.classList.add(`font-adaptation-${presetName}`);
-    
     // Apply CSS variables directly for immediate effect
     this.applyCurrentPreset();
-    
     // Log Aptos/Century adaptation details
     this.logGlyphAdaptations(presetName);
-    
     // Save to localStorage
     this.savePreset();
-    
     // Dispatch custom event
     this.dispatchPresetChange(oldPreset, presetName);
-    
     console.log(`🎨 Font preset changed: ${oldPreset} → ${presetName}`);
     return true;
   }
-
   /**
    * Apply current preset CSS variables
    */
   applyCurrentPreset() {
     const preset = this.presets[this.currentPreset];
     if (!preset) return;
-
     const root = document.documentElement;
-    
     // Apply font family variables
     root.style.setProperty('--font-ui', preset.ui);
     root.style.setProperty('--font-content', preset.content);  
     root.style.setProperty('--font-display', preset.display);
     root.style.setProperty('--font-mono', preset.mono);
-    
     // Apply compatibility variables
     root.style.setProperty('--font-interface', preset.ui);
     root.style.setProperty('--font-heading', preset.display);
     root.style.setProperty('--font-body', preset.content);
     root.style.setProperty('--font-code', preset.mono);
-
     // Apply preset class to body
     document.body.classList.remove('font-preset-business', 'font-preset-modern', 'font-preset-corporate', 'font-preset-creative');
     document.body.classList.add(`font-preset-${this.currentPreset}`);
-
     console.log(`✅ Applied font preset: ${preset.name}`);
   }
-
   /**
    * Log Aptos/Century glyph adaptations for debugging
    * @param {string} presetName - Name of applied preset
@@ -191,7 +170,6 @@ class FontFamilyManager {
         notes: 'Google Fonts, creative and approachable'
       }
     };
-
     const info = adaptationInfo[presetName];
     if (info) {
       console.log(`🎨 Glyph Adaptations Applied for "${presetName}":`, {
@@ -203,7 +181,6 @@ class FontFamilyManager {
       });
     }
   }
-
   /**
    * Get current font preset info
    * @returns {Object} Current preset information
@@ -214,7 +191,6 @@ class FontFamilyManager {
       ...this.presets[this.currentPreset]
     };
   }
-
   /**
    * Get all available presets
    * @returns {Object} All preset information
@@ -222,14 +198,12 @@ class FontFamilyManager {
   getAllPresets() {
     return this.presets;
   }
-
   /**
    * Generate HTML for font preset selector
    * @returns {string} HTML for preset selector
    */
   generatePresetSelector() {
     let html = '<div class="font-preset-selector">';
-    
     Object.entries(this.presets).forEach(([key, preset]) => {
       const isActive = key === this.currentPreset;
       html += `
@@ -248,11 +222,9 @@ class FontFamilyManager {
         </div>
       `;
     });
-    
     html += '</div>';
     return html;
   }
-
   /**
    * Bind event listeners
    */
@@ -266,28 +238,23 @@ class FontFamilyManager {
         this.updateSelectorUI();
       }
     });
-
     // Listen for theme changes to reapply fonts
     document.addEventListener('themeChange', () => {
       console.log('🌓 Theme changed, reapplying font preset...');
       this.applyCurrentPreset();
     });
   }
-
   /**
    * Update the selector UI to reflect current preset
    */
   updateSelectorUI() {
     const selector = document.querySelector('.font-preset-selector');
     if (!selector) return;
-
     // Update active states
     selector.querySelectorAll('.font-preset-option').forEach(option => {
       const presetName = option.dataset.preset;
       const isActive = presetName === this.currentPreset;
-      
       option.classList.toggle('active', isActive);
-      
       // Update active indicator
       const indicator = option.querySelector('.preset-active-indicator');
       if (isActive && !indicator) {
@@ -297,7 +264,6 @@ class FontFamilyManager {
       }
     });
   }
-
   /**
    * Dispatch custom event when preset changes
    */
@@ -311,17 +277,14 @@ class FontFamilyManager {
     });
     document.dispatchEvent(event);
   }
-
   /**
    * Preview a preset without saving (for hover effects)
    * @param {string} presetName - Preset to preview
    */
   previewPreset(presetName) {
     if (!this.presets[presetName]) return;
-    
     const preset = this.presets[presetName];
     const root = document.documentElement;
-    
     // Store current values
     this.previewBackup = {
       ui: root.style.getPropertyValue('--font-ui'),
@@ -329,32 +292,26 @@ class FontFamilyManager {
       display: root.style.getPropertyValue('--font-display'),
       mono: root.style.getPropertyValue('--font-mono')
     };
-    
     // Apply preview values
     root.style.setProperty('--font-ui', preset.ui);
     root.style.setProperty('--font-content', preset.content);
     root.style.setProperty('--font-display', preset.display);
     root.style.setProperty('--font-mono', preset.mono);
-    
     console.log(`👀 Previewing font preset: ${preset.name}`);
   }
-
   /**
    * Restore from preview without saving
    */
   stopPreview() {
     if (!this.previewBackup) return;
-    
     const root = document.documentElement;
     root.style.setProperty('--font-ui', this.previewBackup.ui);
     root.style.setProperty('--font-content', this.previewBackup.content);
     root.style.setProperty('--font-display', this.previewBackup.display);
     root.style.setProperty('--font-mono', this.previewBackup.mono);
-    
     this.previewBackup = null;
     console.log('👀 Stopped font preview');
   }
-
   /**
    * Get preset recommendations based on current theme/context
    * @returns {Array} Recommended preset names
@@ -363,7 +320,6 @@ class FontFamilyManager {
     const isDark = document.body.classList.contains('theme-dark');
     const currentHour = new Date().getHours();
     const isWorkHours = currentHour >= 9 && currentHour <= 17;
-    
     if (isDark) {
       return ['modern', 'corporate', 'creative']; // Better for dark themes
     } else if (isWorkHours) {
@@ -373,15 +329,12 @@ class FontFamilyManager {
     }
   }
 }
-
 // Initialize globally
 window.fontManager = new FontFamilyManager();
-
 // Export for ES modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = FontFamilyManager;
 }
-
 console.log('✅ Font Family Manager loaded');
 console.log('📊 Available methods: setPreset(), getCurrentPreset(), getAllPresets(), generatePresetSelector()');
 console.log('📊 Example: fontManager.setPreset("modern")');

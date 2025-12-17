@@ -1,37 +1,29 @@
 Source: Splunk documentation (summary)
-
 Overview
 --------
 Splunk is a platform for searching, monitoring, and analyzing machine-generated data (logs, metrics, events). Supports powerful search language (SPL), dashboards, alerts, and integrations.
-
 Key Concepts
 ------------
 - Indexes: store time-series event data.
 - SPL (Search Processing Language): query language for filtering, aggregations, and transformations.
 - Forwarders: ship logs to Splunk indexers.
 - Dashboards/Alerts: create visualizations and trigger alerts.
-
 Advanced SPL & operational patterns
 ---------------------------------
 - Efficient time-bounded searches:
   Use `earliest` and `latest` to constrain windows and speed up queries.
   Example: index=app_logs "500" earliest=-15m latest=now | stats count by uri
-
 - Use summary indexing / data models for repeated heavy queries to speed up dashboards and correlation work.
-
 - Correlating traces across systems:
   If logs contain trace_id, use `transaction` or `stats` to correlate:
   index=app_logs trace_id=abc123 | transaction trace_id maxspan=30s
-
 - Alerts & automated ticket creation:
   Create saved searches that trigger webhooks to your ticketing system. Use throttling to avoid ticket storms.
-
 - Example SPL patterns:
   - Top endpoints returning 5xx in last hour:
     index=app_logs status>=500 status<600 earliest=-1h | stats count by uri | sort -count
   - Error rate delta detection (baseline):
     index=app_logs level=ERROR earliest=-24h@h latest=now | timechart span=1h count as errors
-
 Splunk REST API snippets
 ------------------------
 - Create a search job (async):
@@ -39,14 +31,11 @@ Splunk REST API snippets
   with form data: search=search index=..., earliest_time=..., latest_time=...
 - Poll job status: GET /services/search/jobs/{sid}
 - Fetch results: GET /services/search/jobs/{sid}/results
-
 Best practices for integration with SPEEDYFLOW
 --------------------------------------------
 - When CommentSuggester flags an error, run a background Splunk search for that ticket's time window and attach a summarized result (top URIs, sample messages) to the ticket.
 - Use field extraction rules (props/transforms) to always extract trace_id, user_id, request_id — consistent fields make ML features more reliable.
 - For high-volume alerts, implement an aggregation layer (e.g., count per minute) and trigger tickets only when aggregated thresholds exceed baselines.
-
-
 Useful SPL Patterns
 -------------------
 - Search error rates in last 15 min:
@@ -55,12 +44,10 @@ Useful SPL Patterns
   index=app_logs "500" | stats count by uri | sort -count
 - Correlate logs by trace id:
   index=app_logs trace_id=abc123 | table _time service message
-
 Integration Patterns
 --------------------
 - When a ticket mentions an error code, run a Splunk search for that code within the incident window and attach results or link to the dashboard.
 - Use Splunk alerts to create JIRA tickets via webhook for critical incidents.
-
 References
 ----------
 - https://docs.splunk.com/

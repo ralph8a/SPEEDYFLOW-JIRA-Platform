@@ -1,6 +1,5 @@
 import requests
 from requests.auth import HTTPBasicAuth
-
 resp = requests.post(
     'http://127.0.0.1:5005/api/notifications/sync',
     auth=HTTPBasicAuth(
@@ -9,10 +8,8 @@ resp = requests.post(
     ),
     timeout=30
 )
-
 print(f'Status: {resp.status_code}')
 result = resp.json()
-
 if resp.status_code != 200:
     print(f'ERROR: {result}')
 else:
@@ -20,7 +17,6 @@ else:
     data = result.get("data", {})
     print(f'Synced: {data.get("synced")}')
     print(f'Created: {data.get("created")}')
-
     if data.get("notifications"):
         print(f'\nFirst notification:')
         print(data["notifications"][0])

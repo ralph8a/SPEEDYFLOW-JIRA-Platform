@@ -2,7 +2,6 @@
  * AUTO-SWITCH NOTIFICATION
  * Notification shown when view is automatically switched to list
  */
-
 .auto-switch-notification {
   position: fixed;
   top: 80px;
@@ -10,7 +9,6 @@
   z-index: 10002;
   animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -21,11 +19,9 @@
     transform: translateX(0);
   }
 }
-
 .auto-switch-notification.fade-out {
   animation: slideOutRight 0.3s ease-out forwards;
 }
-
 @keyframes slideOutRight {
   from {
     opacity: 1;
@@ -36,7 +32,6 @@
     transform: translateX(400px);
   }
 }
-
 .auto-switch-content {
   display: flex;
   align-items: flex-start;
@@ -52,22 +47,18 @@
   max-width: 450px;
   color: white;
 }
-
 .auto-switch-icon {
   font-size: 32px;
   flex-shrink: 0;
   animation: bounce 1s ease-in-out infinite;
 }
-
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
-
 .auto-switch-text {
   flex: 1;
 }
-
 .auto-switch-text strong {
   display: block;
   font-size: 16px;
@@ -75,7 +66,6 @@
   margin-bottom: 4px;
   color: white;
 }
-
 .auto-switch-text p {
   margin: 0;
   font-size: 13px;
@@ -83,7 +73,6 @@
   color: rgba(255, 255, 255, 0.95);
   font-weight: 500;
 }
-
 .auto-switch-close {
   background: rgba(255, 255, 255, 0.2);
   border: none;
@@ -99,16 +88,13 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
-
 .auto-switch-close:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
-
 .auto-switch-close:active {
   transform: scale(0.95);
 }
-
 /* Auto-switch badge on button */
 .auto-switch-badge {
   position: absolute;
@@ -126,7 +112,6 @@
   animation: pulse-badge 2s infinite;
   pointer-events: none;
 }
-
 @keyframes pulse-badge {
   0%, 100% {
     transform: scale(1);
@@ -137,12 +122,10 @@
     opacity: 0.9;
   }
 }
-
 /* Ensure button has relative position for badge */
 .view-toggle-enhanced .view-btn {
   position: relative;
 }
-
 /* Dark theme adjustments */
 body.theme-dark .auto-switch-content {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.98), rgba(168, 85, 247, 0.98));
@@ -150,7 +133,6 @@ body.theme-dark .auto-switch-content {
     0 20px 50px rgba(139, 92, 246, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.15) inset;
 }
-
 /* Mobile responsive */
 @media (max-width: 768px) {
   .auto-switch-notification {
@@ -158,21 +140,17 @@ body.theme-dark .auto-switch-content {
     right: 12px;
     left: 12px;
   }
-  
   .auto-switch-content {
     min-width: auto;
     max-width: none;
     padding: 16px;
   }
-  
   .auto-switch-icon {
     font-size: 24px;
   }
-  
   .auto-switch-text strong {
     font-size: 14px;
   }
-  
   .auto-switch-text p {
     font-size: 12px;
   }

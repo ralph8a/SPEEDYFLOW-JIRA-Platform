@@ -4,19 +4,14 @@
 Decorators - Common decorators for API handlers
 Centralizes error handling, parameter validation, and logging
 """
-
 import logging
 from functools import wraps
 from flask import request, jsonify
 from datetime import datetime
 import time
-
 # In-memory rate limit state: { (identifier, path): [count, window_start_ts] }
 _RATE_LIMIT_STATE: dict[tuple[str, str], list] = {}
-
 logger = logging.getLogger(__name__)
-
-
 def handle_api_error(f):
     """
     Decorator to handle API errors consistently
@@ -53,8 +48,6 @@ def handle_api_error(f):
                 'timestamp': datetime.now().isoformat()
             }), 500
     return decorated_function
-
-
 def require_params(*param_names):
     """
     Decorator to validate required query/form parameters
@@ -71,7 +64,6 @@ def require_params(*param_names):
             for param in param_names:
                 if not request.args.get(param):
                     missing.append(param)
-            
             if missing:
                 return jsonify({
                     'success': False,
@@ -80,12 +72,9 @@ def require_params(*param_names):
                     'required': missing,
                     'timestamp': datetime.now().isoformat()
                 }), 400
-            
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
-
 def log_request(level=logging.INFO):
     """
     Decorator to log API requests
@@ -103,8 +92,6 @@ def log_request(level=logging.INFO):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
-
 def json_response(f):
     """
     Decorator to ensure consistent JSON response format
@@ -113,15 +100,12 @@ def json_response(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         result = f(*args, **kwargs)
-        
         # If already a tuple (response, status_code), return as-is
         if isinstance(result, tuple):
             return result
-        
         # If already jsonified, return as-is
         if hasattr(result, '__class__') and 'Response' in str(result.__class__):
             return result
-        
         # Otherwise wrap in success response
         return jsonify({
             'success': True,
@@ -129,8 +113,6 @@ def json_response(f):
             'timestamp': datetime.now().isoformat()
         }), 200
     return decorated_function
-
-
 def require_credentials(f):
     """Decorator to ensure JIRA credentials are configured.
     - Validates presence of site, email, api_token loaded via utils.common._get_credentials
@@ -159,8 +141,6 @@ def require_credentials(f):
             kwargs.setdefault('api_token', api_token)
         return f(*args, **kwargs)
     return decorated_function
-
-
 def rate_limited(max_calls: int = 60, period: int = 60, identifier_header: str | None = None):
     """Fixed-window rate limiting decorator.
     Args:
@@ -206,7 +186,6 @@ def rate_limited(max_calls: int = 60, period: int = 60, identifier_header: str |
             return f(*args, **kwargs)
         return wrapped
     return decorator
-
 # Backwards compatibility wrapper: previous code used `rate_limit` with
 # parameter names (max_requests, window_seconds). Normalize to new names.
 def rate_limit(*args, **kwargs):  # noqa: D401 - simple adapter

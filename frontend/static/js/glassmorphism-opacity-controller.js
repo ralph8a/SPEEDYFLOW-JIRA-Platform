@@ -3,7 +3,6 @@
  * Controla la opacidad de elementos glassmorphic para light y dark themes
  * Integrado con glassmorphism.css
  */
-
 class TransparencyManager {
   constructor() {
     // Default opacity values - HIGHER for better visibility
@@ -31,34 +30,27 @@ class TransparencyManager {
         }
       }
     };
-
     this.storageKey = 'appTransparency';
     this.currentTheme = this.detectTheme();
     this.init();
   }
-
   /**
    * Initialize transparency system
    */
   init() {
     console.log('🎨 Initializing Transparency Manager...');
-    
     // Load saved transparency or use defaults
     this.loadTransparency();
-    
     // Validate loaded settings - reset if corrupted
     this.validateSettings();
-    
     // Apply current transparency
     this.applyTransparency();
-    
     // Listen for theme changes
     document.addEventListener('themeChange', (e) => {
       this.currentTheme = e.detail?.theme || this.detectTheme();
       console.log(`🌓 Theme changed to: ${this.currentTheme}, applying transparency...`);
       this.applyTransparency();
     });
-
     // Listen for body class changes (alternate theme detection)
     const observer = new MutationObserver(() => {
       const newTheme = this.detectTheme();
@@ -68,13 +60,10 @@ class TransparencyManager {
         this.applyTransparency();
       }
     });
-
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
     // Re-apply transparency when DOM elements are added
     const domObserver = new MutationObserver((mutations) => {
       let shouldReapply = false;
-      
       // Check if new background overlay was added
       const overlays = document.querySelectorAll('.ai-background-overlay');
       if (overlays.length > 0) {
@@ -83,7 +72,6 @@ class TransparencyManager {
           overlay.style.opacity = this.settings[this.currentTheme]?.overlay || this.defaults[this.currentTheme].overlay;
         });
       }
-      
       // Check if kanban columns were added
       for (const mutation of mutations) {
         if (mutation.type === 'childList') {
@@ -98,7 +86,6 @@ class TransparencyManager {
         }
         if (shouldReapply) break;
       }
-      
       // If kanban columns were added, reapply transparency
       if (shouldReapply) {
         console.log('🔄 Kanban columns detected in DOM, applying transparency...');
@@ -107,17 +94,14 @@ class TransparencyManager {
         });
       }
     });
-
     domObserver.observe(document.body, { 
       childList: true, 
       subtree: true,
       attributes: true,
       attributeFilter: ['class']
     });
-
     console.log('✅ Transparency Manager initialized');
   }
-
   /**
    * Detect current theme from body classes
    * @returns {string} 'light' or 'dark'
@@ -128,7 +112,6 @@ class TransparencyManager {
     }
     return 'light';
   }
-
   /**
    * Load transparency settings from localStorage
    */
@@ -139,7 +122,6 @@ class TransparencyManager {
         const parsed = JSON.parse(saved);
         console.log(`📦 Loaded transparency settings:`, parsed);
         this.settings = { ...this.defaults, ...parsed };
-        
         // PROTECTION: Ensure Kanban columns (secondary) never go below 0.75 opacity
         if (this.settings.light && this.settings.light.secondary < 0.75) {
           console.warn(`⚠️ Light secondary opacity too low (${this.settings.light.secondary}), resetting to 0.75`);
@@ -158,20 +140,17 @@ class TransparencyManager {
       this.settings = JSON.parse(JSON.stringify(this.defaults));
     }
   }
-
   /**
    * Validate settings - check for corrupted or invalid values
    */
   validateSettings() {
     let needsReset = false;
-    
     ['light', 'dark'].forEach(theme => {
       if (!this.settings[theme]) {
         console.warn(`⚠️ Missing ${theme} theme settings, resetting...`);
         needsReset = true;
         return;
       }
-      
       // Check if all opacity values are valid numbers between 0 and 1
       ['primary', 'secondary', 'tertiary', 'overlay'].forEach(layer => {
         const value = this.settings[theme][layer];
@@ -180,7 +159,6 @@ class TransparencyManager {
           needsReset = true;
         }
       });
-      
       // Check blur values
       if (this.settings[theme].blur) {
         ['primary', 'secondary', 'tertiary'].forEach(layer => {
@@ -192,14 +170,12 @@ class TransparencyManager {
         });
       }
     });
-    
     if (needsReset) {
       console.warn('🔄 Resetting transparency settings to defaults due to corruption');
       this.settings = JSON.parse(JSON.stringify(this.defaults));
       this.saveTransparency();
     }
   }
-
   /**
    * Save transparency settings to localStorage
    */
@@ -211,7 +187,6 @@ class TransparencyManager {
       console.warn('⚠️ Error saving transparency settings:', error);
     }
   }
-
   /**
    * Apply transparency to all glassmorphic elements
    */
@@ -221,9 +196,7 @@ class TransparencyManager {
       console.warn(`⚠️ No settings found for theme: ${this.currentTheme}`);
       return;
     }
-
     console.log(`🎨 Applying ${this.currentTheme} transparency & blur:`, themeSettings);
-
     // Apply to root CSS variables for glassmorphism layers
     document.documentElement.style.setProperty(
       '--glassmorphic-primary-opacity',
@@ -237,7 +210,6 @@ class TransparencyManager {
       '--glassmorphic-tertiary-opacity',
       themeSettings.tertiary
     );
-
     // Apply blur CSS variables
     if (themeSettings.blur) {
       document.documentElement.style.setProperty(
@@ -253,7 +225,6 @@ class TransparencyManager {
         `${themeSettings.blur.tertiary}px`
       );
     }
-
     // CRITICAL: Apply directly to real UI elements ONLY
     // MAIN CONTAINERS (should receive effects)
     const mainContainers = {
@@ -270,19 +241,15 @@ class TransparencyManager {
       '.footer-two-columns': 'tertiary',
       '.comments-ai-container': 'tertiary'
     };
-
     Object.entries(mainContainers).forEach(([selector, level]) => {
       const elements = document.querySelectorAll(selector);
       elements.forEach(element => {
         let opacity = themeSettings[level];
-        
         // PROTECTION: Kanban columns must have minimum 0.75 opacity to remain readable
         if (element.classList.contains('kanban-column')) {
           opacity = Math.max(0.75, opacity);
         }
-        
         const blur = themeSettings.blur?.[level] || 15;
-        
         // Set background color based on current theme and element type
         // Use theme-specific color values for consistency
         let bgColor;
@@ -303,9 +270,7 @@ class TransparencyManager {
             bgColor = `rgba(255, 255, 255, ${opacity})`;
           }
         }
-        
         element.style.setProperty('background-color', bgColor, 'important');
-        
         // Apply appropriate backdrop filter based on selector - All with 180% saturation
         if (selector === '.sidebar') {
           element.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
@@ -331,16 +296,13 @@ class TransparencyManager {
         }
       });
     });
-
     // Apply overlay opacity
     const overlays = document.querySelectorAll('.ai-background-overlay');
     overlays.forEach(overlay => {
       overlay.style.opacity = themeSettings.overlay;
     });
-
     console.log(`✅ Transparency & blur applied for ${this.currentTheme} theme`);
   }
-
   /**
    * Apply opacity and blur to elements with specific glassmorphic class
    * IMPORTANT: Only applies to general backgrounds (sidebar, modal, navbar) NOT to object interiors
@@ -351,7 +313,6 @@ class TransparencyManager {
   applyToElements(level, opacity, blurPx) {
     const className = `.glassmorphic-${level}`;
     const elements = document.querySelectorAll(className);
-    
     // Define main background containers that should get effects
     const backgroundSelectors = [
       '.sidebar',
@@ -367,21 +328,17 @@ class TransparencyManager {
       '.footer-two-columns',
       '.comments-ai-container'
     ];
-    
     elements.forEach(el => {
       // ONLY apply to main background containers
       const isMainContainer = backgroundSelectors.some(selector => 
         el.matches(selector)
       );
-
       if (!isMainContainer) {
         // Skip small nested elements
         return;
       }
-
       // Apply opacity to background color ONLY
       const currentBg = window.getComputedStyle(el).backgroundColor;
-      
       // Extract RGB values (if it's an rgba color)
       const rgbMatch = currentBg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
       if (rgbMatch) {
@@ -389,7 +346,6 @@ class TransparencyManager {
         // IMPORTANT: Apply to backgroundColor, NOT element opacity
         el.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
       }
-
       // Apply blur via backdrop-filter
       if (blurPx !== undefined && blurPx > 0) {
         let currentFilter = el.style.backdropFilter || '';
@@ -400,12 +356,10 @@ class TransparencyManager {
         el.style.backdropFilter = newFilter;
       }
     });
-
     console.log(
       `📐 Applied to ${className}: opacity=${opacity}, blur=${blurPx}px (${elements.length} background elements)`
     );
   }
-
   /**
    * Set transparency for a specific theme layer
    * @param {string} theme - 'light' or 'dark'
@@ -417,22 +371,17 @@ class TransparencyManager {
       console.warn(`⚠️ Opacity must be between 0 and 1, got: ${opacity}`);
       return;
     }
-
     if (!this.settings[theme]) {
       this.settings[theme] = { ...this.defaults[theme] };
     }
-
     this.settings[theme][layer] = opacity;
     console.log(`🎨 Set ${theme} ${layer} transparency to ${opacity}`);
-
     // If this is the current theme, apply immediately
     if (theme === this.currentTheme) {
       this.applyTransparency();
     }
-
     this.saveTransparency();
   }
-
   /**
    * Get transparency for a specific theme layer
    * @param {string} theme - 'light' or 'dark'
@@ -442,7 +391,6 @@ class TransparencyManager {
   getTransparency(theme, layer) {
     return this.settings[theme]?.[layer] ?? this.defaults[theme]?.[layer] ?? 0.5;
   }
-
   /**
    * Reset transparency to defaults
    * @param {string} [theme] - Optional theme to reset (resets all if not specified)
@@ -455,11 +403,9 @@ class TransparencyManager {
       this.settings = JSON.parse(JSON.stringify(this.defaults));
       console.log(`🔄 Reset all transparency to defaults`);
     }
-
     this.applyTransparency();
     this.saveTransparency();
   }
-
   /**
    * Force re-apply transparency (useful after DOM changes)
    */
@@ -467,7 +413,6 @@ class TransparencyManager {
     console.log('🔄 Force reapplying transparency...');
     this.applyTransparency();
   }
-
   /**
    * Apply transparency to newly created kanban columns
    * Call this after kanban board is rendered
@@ -475,12 +420,9 @@ class TransparencyManager {
   applyToKanbanColumns() {
     const columns = document.querySelectorAll('.kanban-column');
     const themeSettings = this.settings[this.currentTheme];
-    
     if (!themeSettings || columns.length === 0) return;
-
     const opacity = themeSettings.secondary;
     const blur = themeSettings.blur?.secondary || 15;
-
     columns.forEach(column => {
       let bgColor;
       if (this.currentTheme === 'dark') {
@@ -488,15 +430,12 @@ class TransparencyManager {
       } else {
         bgColor = `rgba(248, 250, 252, ${opacity})`;
       }
-      
       column.style.setProperty('background-color', bgColor, 'important');
       column.style.setProperty('backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
       column.style.setProperty('-webkit-backdrop-filter', `blur(${blur}px) saturate(180%)`, 'important');
     });
-
     console.log(`✅ Applied transparency to ${columns.length} kanban columns`);
   }
-
   /**
    * Get current theme transparency settings
    * @returns {object} Current theme transparency settings
@@ -504,7 +443,6 @@ class TransparencyManager {
   getCurrentSettings() {
     return this.settings[this.currentTheme];
   }
-
   /**
    * Increase opacity for current theme by step
    * @param {string} layer - 'primary', 'secondary', 'tertiary', or 'overlay'
@@ -515,7 +453,6 @@ class TransparencyManager {
     const newValue = Math.min(1, current + step);
     this.setTransparency(this.currentTheme, layer, newValue);
   }
-
   /**
    * Decrease opacity for current theme by step
    * @param {string} layer - 'primary', 'secondary', 'tertiary', or 'overlay'
@@ -526,7 +463,6 @@ class TransparencyManager {
     const newValue = Math.max(0, current - step);
     this.setTransparency(this.currentTheme, layer, newValue);
   }
-
   /**
    * Set blur for a specific theme layer
    * @param {string} theme - 'light' or 'dark'
@@ -538,26 +474,20 @@ class TransparencyManager {
       console.warn(`⚠️ Blur should be between 0 and 50px, got: ${blurPx}`);
       return;
     }
-
     if (!this.settings[theme]) {
       this.settings[theme] = { ...this.defaults[theme] };
     }
-
     if (!this.settings[theme].blur) {
       this.settings[theme].blur = { ...this.defaults[theme].blur };
     }
-
     this.settings[theme].blur[layer] = blurPx;
     console.log(`🎨 Set ${theme} ${layer} blur to ${blurPx}px`);
-
     // If this is the current theme, apply immediately
     if (theme === this.currentTheme) {
       this.applyTransparency();
     }
-
     this.saveTransparency();
   }
-
   /**
    * Get blur for a specific theme layer
    * @param {string} theme - 'light' or 'dark'
@@ -567,7 +497,6 @@ class TransparencyManager {
   getBlur(theme, layer) {
     return this.settings[theme]?.blur?.[layer] ?? this.defaults[theme]?.blur?.[layer] ?? 15;
   }
-
   /**
    * Increase blur for current theme by step
    * @param {string} layer - 'primary', 'secondary', or 'tertiary'
@@ -578,7 +507,6 @@ class TransparencyManager {
     const newValue = Math.min(50, current + step);
     this.setBlur(this.currentTheme, layer, newValue);
   }
-
   /**
    * Decrease blur for current theme by step
    * @param {string} layer - 'primary', 'secondary', or 'tertiary'
@@ -590,7 +518,6 @@ class TransparencyManager {
     this.setBlur(this.currentTheme, layer, newValue);
   }
 }
-
 // Initialize globally - IMMEDIATE execution
 try {
   window.transparencyManager = new TransparencyManager();
@@ -602,4 +529,3 @@ try {
 } catch (error) {
   console.error('❌ Failed to initialize Transparency Manager:', error);
 }
-

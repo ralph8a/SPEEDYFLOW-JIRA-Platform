@@ -1,8 +1,6 @@
 """AI Suggestions Blueprint: Analiza tickets y sugiere actualizaciones de campos.
-
 Endpoint:
   POST /api/ai/suggest-updates
-  
 Funcionalidad similar a Atlassian Intelligence:
 - Analiza el contenido del ticket (summary, description, comments)
 - Sugiere valores para campos vacíos o incorrectos
@@ -19,18 +17,14 @@ from utils.decorators import (
     require_credentials,
     rate_limited
 )
-
 try:
     from core.api import get_api_client
     from utils.common import _make_request
 except ImportError:
     def get_api_client(*_a, **_k):
         return None
-
 logger = logging.getLogger(__name__)
-
 ai_suggestions_bp = Blueprint('ai_suggestions', __name__)
-
 @ai_suggestions_bp.route('/api/ai/analyze-queue', methods=['POST'])
 @handle_api_error
 @json_response
@@ -40,18 +34,14 @@ ai_suggestions_bp = Blueprint('ai_suggestions', __name__)
 def api_analyze_queue():
     """
     Analiza tickets de la cola seleccionada usando patrones del caché global.
-    
     Usa el caché completo para aprender patrones, pero solo sugiere mejoras
     para los tickets de la cola actual.
-    
     🚀 CACHING: Results cached in DB with 1-3h TTL (adaptive based on queue size)
-    
     Request Body:
         {
             "desk_id": "1",  # Required
             "queue_id": "46"  # Required
         }
-    
     Response:
         {
             "analyzed_count": 33,
@@ -65,14 +55,11 @@ def api_analyze_queue():
     data = request.get_json() or {}
     desk_id = data.get('desk_id')
     queue_id = data.get('queue_id', 'all')
-    
     if not desk_id:
         return {'error': 'desk_id is required'}, 400
-    
     # 🔍 LEVEL 3: Check backend DB cache (before expensive ML analysis)
     from utils.db import get_db
     from datetime import datetime, timedelta
-    
     try:
         conn = get_db()
         cached = conn.execute("""
@@ -80,12 +67,10 @@ def api_analyze_queue():
             FROM ml_analysis_cache 
             WHERE service_desk_id = ? AND queue_id = ? AND expires_at > ?
         """, (desk_id, queue_id, datetime.now().isoformat())).fetchone()
-        
         if cached:
             cached_data = json.loads(cached[0])
             generated_at = cached[1]
             logger.info(f"✅ Using cached ML analysis from {generated_at} (desk={desk_id}, queue={queue_id})")
-            
             # Ensure all required fields exist in cached response
             response = {
                 'analyzed_count': cached_data.get('analyzed_count', 0),
@@ -100,10 +85,8 @@ def api_analyze_queue():
             return response
     except Exception as e:
         logger.warning(f"⚠️ Failed to check ML analysis cache: {e}")
-    
     # 💡 Cache miss - perform expensive ML analysis
     logger.info(f"🔬 Performing fresh ML analysis (desk={desk_id}, queue={queue_id})")
-    
     try:
         # PASO 1: Cargar caché global para patrones (contexto de aprendizaje)
         from utils.issue_cache import get_cache_manager
@@ -111,13 +94,10 @@ def api_analyze_queue():
         cache_data = cache._load_json(cache.issues_file, {})
         cached_issues = cache_data.get('issues', [])
         cache_size = len(cached_issues)
-        
         logger.info(f"Using global cache with {cache_size} tickets for pattern learning")
-        
         # PASO 2: Obtener issues de la COLA ACTUAL para analizar
         from core.api import load_queue_issues
         df, error = load_queue_issues(desk_id, queue_id)
-        
         if error or df is None or getattr(df, 'empty', True):
             return {
                 'analyzed_count': 0,
@@ -126,27 +106,22 @@ def api_analyze_queue():
                 'cache_size': cache_size,
                 'message': 'No issues found in current queue'
             }
-        
         queue_issues = df.to_dict('records')
         client = get_api_client()
         results = []
         analyzed_count = 0
-        
         # PASO 3: Analizar cada issue de la COLA ACTUAL
         # (pero las sugerencias usan patrones del caché global)
         # OPTIMIZACIÓN: Limitar a primeros 50 tickets para velocidad
         max_to_analyze = 50
         queue_issues = queue_issues[:max_to_analyze]
         logger.info(f"Starting analysis of {len(queue_issues)} queue issues (limit: {max_to_analyze})")
-        
         for issue_data in queue_issues:
             try:
                 issue_key = issue_data.get('key') or issue_data.get('issue_key')
                 if not issue_key:
                     continue
-                
                 analyzed_count += 1
-                
                 # OPTIMIZACIÓN: Obtener issue + comentarios en 1 request usando expand
                 issue_url = f"{client.site}/rest/api/2/issue/{issue_key}"
                 full_issue = _make_request(
@@ -158,12 +133,9 @@ def api_analyze_queue():
                         'fields': 'summary,description,status,priority,comment,customfield_10125,customfield_10156,customfield_10168,customfield_10169,customfield_10165'
                     }
                 )
-                
                 if not full_issue:
                     continue
-                
                 fields = full_issue.get('fields', {})
-                
                 # Extraer comentarios desde el response (ya incluidos con expand)
                 comments_text = ''
                 try:
@@ -177,7 +149,6 @@ def api_analyze_queue():
                         ])
                 except Exception:
                     comments_text = ''
-                
                 # Saltar tickets cerrados o cancelados
                 status = fields.get('status', {})
                 status_name = ''
@@ -185,12 +156,10 @@ def api_analyze_queue():
                     status_name = status.get('name', '').lower()
                 else:
                     status_name = str(status).lower()
-                
                 # Estados que no deben recibir sugerencias
                 closed_states = ['cerrado', 'closed', 'cancelado', 'cancelled', 'canceled', 'done', 'resuelto', 'resolved']
                 if any(state in status_name for state in closed_states):
                     continue
-                
                 # Analizar y obtener sugerencias de custom fields importantes
                 try:
                     suggestions = _analyze_and_suggest(
@@ -206,7 +175,6 @@ def api_analyze_queue():
                         ],
                         comments_text  # Pasar comentarios al análisis
                     )
-                    
                     if isinstance(suggestions, list) and suggestions:
                         logger.info(f"🎯 {issue_key}: Found {len(suggestions)} suggestions")
                         results.append({
@@ -218,12 +186,9 @@ def api_analyze_queue():
                         logger.debug(f"✓ {issue_key}: No changes needed (all fields correct)")
                 except Exception as e:
                     logger.warning(f"⚠️ {issue_key}: Analysis error - {e}")
-                    
             except Exception:
                 continue
-        
         logger.info(f"Analyzed {analyzed_count} issues, found {len(results)} with suggestions")
-        
         response_data = {
             'analyzed_count': analyzed_count,
             'issues_with_suggestions': len(results),
@@ -234,18 +199,15 @@ def api_analyze_queue():
             'cached': False,
             'generated_at': datetime.now().isoformat()
         }
-        
         # 💾 Save to backend DB cache with adaptive TTL
         try:
             from core.api import load_queue_issues
             # Get queue size to determine TTL
             df_size, _ = load_queue_issues(desk_id, queue_id)
             queue_size = len(df_size) if df_size is not None and not getattr(df_size, 'empty', True) else 0
-            
             # Adaptive TTL: 3h for large queues (≥50), 1h for small queues
             cache_hours = 3 if queue_size >= 50 else 1
             expires_at = datetime.now() + timedelta(hours=cache_hours)
-            
             conn = get_db()
             conn.execute("""
                 INSERT INTO ml_analysis_cache (service_desk_id, queue_id, data, generated_at, expires_at)
@@ -262,19 +224,14 @@ def api_analyze_queue():
                 expires_at.isoformat()
             ))
             conn.commit()
-            
             logger.info(f"💾 Cached ML analysis in DB (TTL: {cache_hours}h, queue_size: {queue_size}, expires: {expires_at.isoformat()})")
         except Exception as e:
             logger.warning(f"⚠️ Failed to cache ML analysis: {e}")
-        
         logger.info(f"Response structure: analyzed={analyzed_count}, suggestions_count={len(results)}, cache={cache_size}")
-        
         return response_data
-        
     except Exception as e:
         logger.error(f"Error analyzing queue: {e}")
         return {'error': str(e)}, 500
-
 @ai_suggestions_bp.route('/api/ai/suggest-updates', methods=['POST'])
 @handle_api_error
 @json_response
@@ -284,13 +241,11 @@ def api_analyze_queue():
 def api_suggest_field_updates():
     """
     Analiza un ticket y sugiere actualizaciones de campos.
-    
     Request Body:
         {
             "issue_key": "MSM-1234",
             "fields_to_analyze": ["severity", "priority", "assignee", "labels"]
         }
-    
     Response:
         {
             "issue_key": "MSM-1234",
@@ -312,38 +267,29 @@ def api_suggest_field_updates():
     fields_to_analyze = data.get('fields_to_analyze', [
         'severity', 'priority', 'assignee', 'labels', 'components'
     ])
-    
     if not issue_key:
         return {'error': 'issue_key is required'}, 400
-    
     try:
         client = get_api_client()
-        
         # Obtener datos completos del ticket
         issue_url = f"{client.site}/rest/api/2/issue/{issue_key}"
         issue_data = _make_request("GET", issue_url, client.headers, params={
             "expand": "names,changelog"
         })
-        
         if not issue_data:
             return {'error': 'Issue not found', 'issue_key': issue_key}, 404
-        
         fields = issue_data.get('fields', {})
-        
         # Analizar y generar sugerencias
         suggestions = _analyze_and_suggest(issue_key, fields, fields_to_analyze)
-        
         return {
             'issue_key': issue_key,
             'suggestions': suggestions,
             'total_suggestions': len(suggestions),
             'analyzed_fields': fields_to_analyze
         }
-        
     except Exception as e:
         logger.error(f"Error generating suggestions for {issue_key}: {e}")
         return {'error': str(e), 'issue_key': issue_key}, 500
-
 def _analyze_and_suggest(
     issue_key: str,
     fields: Dict[str, Any],
@@ -353,18 +299,15 @@ def _analyze_and_suggest(
     """
     Analiza los custom fields del ticket y genera sugerencias inteligentes.
     SOLO muestra sugerencias si hay algo que mejorar (no campos vacíos por defecto).
-    
     Args:
         issue_key: Clave del ticket
         fields: Campos del ticket desde JIRA API
         fields_to_analyze: Lista de field IDs a analizar (ej: ['customfield_10125', 'priority'])
         comments_text: Texto de comentarios (opcional, peso 0.3x)
-        
     Returns:
         Lista de sugerencias con valores propuestos (SOLO si hay mejoras reales)
     """
     suggestions = []
-    
     summary = fields.get('summary', '').lower()
     description = fields.get('description', '') or ''
     if isinstance(description, dict):
@@ -372,18 +315,14 @@ def _analyze_and_suggest(
     if isinstance(description, list):
         description = ' '.join(str(item) for item in description)
     description = str(description).lower()
-    
     priority = fields.get('priority', {})
     priority_value = priority.get('name') if isinstance(priority, dict) else priority
-    
     # CRITICIDAD (customfield_10125) - Solo sugerir si falta O si está claramente incorrecto
     if 'customfield_10125' in fields_to_analyze:
         current_severity = fields.get('customfield_10125')
         severity_value = None
-        
         if isinstance(current_severity, dict):
             severity_value = current_severity.get('value')
-        
         # Solo sugerir si:
         # 1. Falta el valor Y hay indicadores claros en el texto
         # 2. El valor actual parece incorrecto según el contenido
@@ -391,7 +330,6 @@ def _analyze_and_suggest(
             suggested_severity, confidence, reason = _suggest_severity(
                 summary, description, priority_value
             )
-            
             # FILTRO: Solo sugerir si confianza >= 0.8 (indicadores claros)
             if suggested_severity and confidence >= 0.8:
                 suggestions.append({
@@ -408,7 +346,6 @@ def _analyze_and_suggest(
             suggested_severity, confidence, reason = _suggest_severity(
                 summary, description, priority_value
             )
-            
             # Solo sugerir cambio si hay alta confianza y es diferente
             if (suggested_severity and 
                 confidence >= 0.85 and 
@@ -422,13 +359,11 @@ def _analyze_and_suggest(
                     'confidence': confidence,
                     'reason': f'{reason} (actual: {severity_value} parece incorrecto)'
                 })
-    
     # PRIORITY ANALYSIS - Solo si falta Y hay indicadores
     if 'priority' in fields_to_analyze and not priority_value:
         suggested_priority, confidence, reason = _suggest_priority(
             summary, description
         )
-        
         # FILTRO: Solo sugerir si confianza >= 0.8
         if suggested_priority and confidence >= 0.8:
             suggestions.append({
@@ -440,28 +375,23 @@ def _analyze_and_suggest(
                 'confidence': confidence,
                 'reason': reason
             })
-    
     # TIPO DE SOLICITUD (customfield_10156) - Usar ML para sugerir desde caché
     if 'customfield_10156' in fields_to_analyze:
         current_tipo = fields.get('customfield_10156')
         tipo_value = current_tipo.get('value') if isinstance(current_tipo, dict) else current_tipo
-        
         # Construir texto para análisis (incluye comentarios con menor peso)
         text = summary + ' ' + description
         if comments_text:
             # Comentarios tienen peso 0.5x para no dominar el análisis
             text = text + ' ' + comments_text.lower()[:500]
-        
         # Intentar obtener sugerencia desde ML/cache (aprende de tickets históricos)
         try:
             from utils.issue_cache import get_cache_manager
             cache = get_cache_manager()
-            
             # Buscar en patrones aprendidos del caché
             tipo_sugerido = None
             confidence = 0.0
             reason = ''
-            
             # Intentar ML primero (semantic similarity)
             ml_result = None
             try:
@@ -478,13 +408,11 @@ def _analyze_and_suggest(
                     }
             except Exception as e:
                 logger.warning(f"ML suggestion failed: {e}")
-            
             if ml_result:
                 tipo_sugerido = ml_result.get('value')
                 confidence = ml_result.get('confidence', 0.0)
                 reason = f'ML: {ml_result.get("similar_count", 0)} similares'
                 logger.info(f"📊 {issue_key}: ML suggested '{tipo_sugerido}' (conf={confidence:.2f})")
-            
             # Fallback: patrones de frecuencia del caché
             if not tipo_sugerido or confidence < 0.60:
                 try:
@@ -496,7 +424,6 @@ def _analyze_and_suggest(
                         logger.info(f"📚 {issue_key}: Pattern suggested '{tipo_sugerido}' (conf={confidence:.2f})")
                 except Exception as e:
                     logger.warning(f"⚠️ {issue_key}: Pattern suggestion failed - {e}")
-            
             # Fallback final: Keywords basados en contenido (BAJO umbral para no bloquear patrones)
             if not tipo_sugerido or confidence < 0.50:
                 # Detectar tipo basado en palabras clave comunes
@@ -516,10 +443,8 @@ def _analyze_and_suggest(
                     confidence = 0.50  # Reducido de 0.60
                     reason = 'Keyword: consulta'
                     keyword_detected = True
-                
                 if keyword_detected:
                     logger.debug(f"{issue_key}: Tipo detected via keywords ({tipo_sugerido}, conf={confidence})")
-            
             # CASO 1: Campo vacío - sugerir si hay confianza (umbral 0.50 para incluir keywords)
             if not tipo_value and tipo_sugerido and confidence >= 0.50:
                 logger.info(f"🎯 {issue_key}: Tipo sugerido '{tipo_sugerido}' (conf={confidence:.2f}, {reason})")
@@ -532,7 +457,6 @@ def _analyze_and_suggest(
                     'confidence': confidence,
                     'reason': reason
                 })
-            
             # CASO 2: Campo lleno pero parece incorrecto (umbral alto para evitar cambios incorrectos)
             elif tipo_value and tipo_sugerido and tipo_sugerido != tipo_value and confidence >= 0.75:
                 suggestions.append({
@@ -544,20 +468,16 @@ def _analyze_and_suggest(
                     'confidence': confidence,
                     'reason': f'{reason}. Actual "{tipo_value}" podría ser incorrecto'
                 })
-                
         except Exception as e:
             logger.warning(f"Error suggesting tipo_solicitud: {e}")
-    
     # ÁREA (customfield_10168) - Sugerir si falta O si parece incorrecto
     if 'customfield_10168' in fields_to_analyze:
         current_area = fields.get('customfield_10168')
         area_value = current_area.get('value') if isinstance(current_area, dict) else current_area
-        
         # Detectar área basada en palabras clave (mejorado con más patrones)
         area_sugerida = None
         confidence = 0.0
         text = summary + ' ' + description
-        
         if any(word in text for word in ['aplicacion', 'app', 'software', 'código', 'sistema', 'plataforma', 'web']):
             area_sugerida = 'Aplicaciones'
             confidence = 0.65
@@ -574,7 +494,6 @@ def _analyze_and_suggest(
             area_sugerida = 'Seguridad'
             confidence = 0.60
             reason = 'Detectado como problema de accesos/seguridad'
-        
         # CASO 1: Campo vacío (umbral 0.50 para keywords)
         if not area_value and area_sugerida and confidence >= 0.50:
             logger.info(f"🎯 {issue_key}: Área sugerida '{area_sugerida}' (conf={confidence:.2f})")
@@ -598,17 +517,14 @@ def _analyze_and_suggest(
                 'confidence': confidence,
                 'reason': f'{reason}. Actual "{area_value}" podría ser incorrecto'
             })
-    
     # PLATAFORMA (customfield_10169) - Sugerir si falta O si parece incorrecto
     if 'customfield_10169' in fields_to_analyze:
         current_plat = fields.get('customfield_10169')
         plat_value = current_plat.get('value') if isinstance(current_plat, dict) else current_plat
-        
         plat_sugerida = None
         confidence = 0.0
         reason = ''
         text = summary + ' ' + description
-        
         # Detectar menciones explícitas de plataforma (ampliado)
         if any(kw in text for kw in ['smt', 'streaming', 'stream']):
             plat_sugerida = 'SMT'
@@ -626,7 +542,6 @@ def _analyze_and_suggest(
             plat_sugerida = 'Web'
             confidence = 0.60
             reason = 'Detectado como problema de plataforma web'
-        
         # CASO 1: Campo vacío (umbral 0.50 para keywords)
         if not plat_value and plat_sugerida and confidence >= 0.50:
             logger.info(f"🎯 {issue_key}: Plataforma sugerida '{plat_sugerida}' (conf={confidence:.2f})")
@@ -650,18 +565,15 @@ def _analyze_and_suggest(
                 'confidence': confidence,
                 'reason': f'{reason}. Actual "{plat_value}" podría ser incorrecto'
             })
-    
     # PAÍS (customfield_10165) - Sugerir si falta y hay evidencia
     if 'customfield_10165' in fields_to_analyze:
         current_pais = fields.get('customfield_10165')
         pais_value = current_pais.get('value') if isinstance(current_pais, dict) else current_pais
-        
         if not pais_value:
             pais_sugerido = None
             confidence = 0.0
             reason = ''
             text = summary + ' ' + description
-            
             # Detectar menciones de países
             if any(kw in text for kw in ['ecuador', 'ec', 'quito', 'guayaquil']):
                 pais_sugerido = 'Ecuador'
@@ -683,7 +595,6 @@ def _analyze_and_suggest(
                 pais_sugerido = 'Chile'
                 confidence = 0.85
                 reason = 'El ticket menciona Chile'
-            
             # Sugerir con alta confianza para país (0.75 para menciones explícitas)
             if pais_sugerido and confidence >= 0.75:
                 suggestions.append({
@@ -695,9 +606,7 @@ def _analyze_and_suggest(
                     'confidence': confidence,
                     'reason': reason
                 })
-    
     return suggestions
-
 def _suggest_severity(
     summary: str,
     description: str,
@@ -708,66 +617,54 @@ def _suggest_severity(
     PRIORIDAD 1: ML (semantic similarity con embeddings)
     PRIORIDAD 2: Patrones aprendidos del historial
     PRIORIDAD 3: Keywords estáticos
-    
     Returns:
         (suggested_value, confidence, reason)
     """
     text = f"{summary} {description}"
-    
     # PRIORIDAD 1: ML semantic similarity (con timeout para velocidad)
     try:
         from utils.ml_suggester import get_ml_suggester
         ml_suggester = get_ml_suggester()
-        
         if ml_suggester.is_ready():
             ml_result = ml_suggester.suggest_severity(text, top_k=5)
-            
             if ml_result:
                 value, confidence, reason, similar_tickets = ml_result
                 return value, confidence, f"ML: {reason}"
     except (ImportError, Exception):
         pass
-    
     # PRIORIDAD 2: Intentar usar patrones aprendidos del historial
     try:
         from utils.issue_cache import get_cache_manager
         cache = get_cache_manager()
         pattern_suggestion = cache.get_suggestion_from_patterns(text, 'severity')
-        
         if pattern_suggestion:
             value, confidence, reason = pattern_suggestion
             return value, confidence, f"Pattern: {reason}"
     except Exception:
         pass
-    
     # FALLBACK: Keywords estáticos (si no hay patrones)
     text_lower = text.lower()
-    
     # CRITICAL indicators
     critical_keywords = [
         'caído', 'down', 'outage', 'producción', 'production',
         'crítico', 'critical', 'urgente', 'urgent', 'bloqueante',
         'no funciona', 'not working', 'offline', 'error grave'
     ]
-    
     # HIGH indicators  
     high_keywords = [
         'falla', 'error', 'problema grave', 'afecta', 'affects',
         'importante', 'high', 'alto', 'degradado', 'degraded'
     ]
-    
     # MEDIUM indicators
     medium_keywords = [
         'lento', 'slow', 'mejora', 'improvement', 'optimización',
         'medium', 'medio', 'normal'
     ]
-    
     # LOW indicators
     low_keywords = [
         'pregunta', 'question', 'duda', 'consulta', 'información',
         'low', 'bajo', 'menor', 'cosmético', 'cosmetic'
     ]
-    
     # Check keywords
     if any(kw in text_lower for kw in critical_keywords):
         return 'Crítico', 0.9, 'Contiene indicadores de severidad crítica'
@@ -777,7 +674,6 @@ def _suggest_severity(
         return 'Normal', 0.7, 'Parece un problema de severidad media'
     elif any(kw in text_lower for kw in low_keywords):
         return 'Menor', 0.75, 'Parece una consulta o problema menor'
-    
     # Fallback to priority
     if priority:
         priority_lower = str(priority).lower()
@@ -789,13 +685,10 @@ def _suggest_severity(
             return 'Normal', 0.65, f'Basado en prioridad: {priority}'
         elif 'low' in priority_lower:
             return 'Menor', 0.65, f'Basado en prioridad: {priority}'
-    
     return 'Normal', 0.5, 'Valor por defecto (sin indicadores claros)'
-
 def _suggest_priority(summary: str, description: str) -> tuple[str, float, str]:
     """Sugiere prioridad basada en el contenido."""
     text = f"{summary} {description}".lower()
-    
     if any(kw in text for kw in ['crítico', 'urgente', 'caído', 'production']):
         return 'Highest', 0.9, 'Indica urgencia crítica'
     elif any(kw in text for kw in ['importante', 'grave', 'bloqueante']):
@@ -804,9 +697,7 @@ def _suggest_priority(summary: str, description: str) -> tuple[str, float, str]:
         return 'Medium', 0.7, 'Prioridad estándar'
     elif any(kw in text for kw in ['menor', 'pregunta', 'consulta']):
         return 'Low', 0.75, 'Prioridad baja'
-    
     return 'Medium', 0.5, 'Prioridad por defecto'
-
 def _suggest_labels(
     summary: str,
     description: str,
@@ -815,7 +706,6 @@ def _suggest_labels(
     """Sugiere labels basado en el contenido."""
     text = f"{summary} {description}".lower()
     suggested = []
-    
     # Detect technology/platform
     tech_map = {
         'smt': ['smt', 'speedy mobile'],
@@ -826,16 +716,12 @@ def _suggest_labels(
         'backend': ['backend', 'server', 'service'],
         'mobile': ['mobile', 'app', 'android', 'ios'],
     }
-    
     for label, keywords in tech_map.items():
         if any(kw in text for kw in keywords) and label not in current_labels:
             suggested.append(label)
-    
     # Detect issue type
     if any(kw in text for kw in ['error', 'bug', 'falla']) and 'bug' not in current_labels:
         suggested.append('bug')
-    
     if any(kw in text for kw in ['mejora', 'improvement', 'feature']) and 'enhancement' not in current_labels:
         suggested.append('enhancement')
-    
     return suggested[:3]  # Limit to 3 suggestions

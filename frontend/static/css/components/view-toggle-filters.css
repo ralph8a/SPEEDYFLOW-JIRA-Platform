@@ -2,7 +2,6 @@
  * SPEEDYFLOW - View Toggle Filters CSS
  * Styling for the view-mode filter interface
  */
-
 /* Filter Dropdown Styles */
 .filter-dropdown {
   position: absolute;
@@ -21,13 +20,11 @@
   margin-top: 4px;
   animation: dropdown-fade-in 0.2s ease-out;
 }
-
 /* Dark theme support */
 [data-theme="dark"] .filter-dropdown {
   background: rgba(30, 30, 30, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 /* Dropdown Animation */
 @keyframes dropdown-fade-in {
   from {
@@ -39,7 +36,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
 /* Dropdown Items */
 .dropdown-item {
   display: flex;
@@ -52,36 +48,29 @@
   font-size: 14px;
   font-weight: 500;
 }
-
 .dropdown-item:hover {
   background: rgba(59, 130, 246, 0.1);
   transform: translateX(2px);
 }
-
 .dropdown-item:active {
   transform: scale(0.98);
 }
-
 .dropdown-item.disabled {
   opacity: 0.5;
   cursor: not-allowed;
   color: #64748b;
 }
-
 .dropdown-item.disabled:hover {
   background: transparent;
   transform: none;
 }
-
 /* Dark theme dropdown items */
 [data-theme="dark"] .dropdown-item:hover {
   background: rgba(59, 130, 246, 0.2);
 }
-
 [data-theme="dark"] .dropdown-item.disabled {
   color: #94a3b8;
 }
-
 /* Item Icons and Text */
 .item-icon {
   margin-right: 8px;
@@ -89,57 +78,47 @@
   opacity: 0.7;
   transition: opacity 0.15s ease;
 }
-
 .item-text {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .dropdown-item:hover .item-icon {
   opacity: 1;
 }
-
 /* View Toggle Enhancements */
 .view-toggle-enhanced {
   position: relative;
 }
-
 .view-btn.active {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
-
 .view-btn.active:hover {
   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
-
 /* Filter Status Indicators */
 .status-text.success {
   color: #10b981;
   font-weight: 600;
 }
-
 .status-text.warning {
   color: #f59e0b;
   font-weight: 600;
 }
-
 .status-text.error {
   color: #ef4444;
   font-weight: 600;
 }
-
 /* Enhanced View Button States */
 .view-btn {
   position: relative;
   overflow: hidden;
 }
-
 .view-btn::before {
   content: '';
   position: absolute;
@@ -150,15 +129,12 @@
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.5s ease;
 }
-
 .view-btn:hover::before {
   left: 100%;
 }
-
 .view-btn.active::before {
   display: none;
 }
-
 /* Responsive Design with Wrap Support */
 @media (min-width: 1201px) {
   /* Desktop: Try to keep in single row */
@@ -168,7 +144,6 @@
     align-items: center !important;
   }
 }
-
 @media (max-width: 1200px) {
   /* Tablet: Allow wrapping, smaller gaps */
   .filter-bar-enhanced {
@@ -176,21 +151,17 @@
     padding: 10px 16px !important;
     align-items: flex-start !important;
   }
-  
   .filter-bar-enhanced .filter-label {
     font-size: 12px !important;
   }
-  
   .filter-bar-enhanced .view-btn {
     padding: 5px 10px !important;
     font-size: 12px !important;
   }
-  
   .filter-bar-enhanced .view-btn .view-text {
     font-size: 11px !important;
   }
 }
-
 @media (max-width: 900px) {
   /* Small tablet: Definitely allow wrapping */
   .filter-bar-enhanced {
@@ -198,12 +169,10 @@
     padding: 8px 12px !important;
     justify-content: center !important;
   }
-  
   .filter-bar-enhanced .filter-divider {
     display: none !important; /* Hide dividers when wrapping */
   }
 }
-
 @media (max-width: 768px) {
   /* Mobile: Compact with wrap */
   .filter-bar-enhanced {
@@ -211,26 +180,21 @@
     padding: 8px 12px !important;
     justify-content: flex-start !important;
   }
-  
   .filter-dropdown {
     min-width: 180px !important;
     max-width: 250px !important;
     font-size: 13px !important;
   }
-  
   .dropdown-item {
     padding: 10px 12px !important;
   }
-  
   .filter-bar-enhanced .view-btn {
     padding: 4px 8px !important;
   }
-  
   .filter-bar-enhanced .filter-label .filter-text {
     display: none !important; /* Hide text, keep only icons */
   }
 }
-
 @media (max-width: 480px) {
   /* Very small mobile: Ultra compact */
   .filter-bar-enhanced {
@@ -238,17 +202,14 @@
     padding: 6px 8px !important;
     margin: 8px !important;
   }
-  
   .filter-bar-enhanced .view-btn {
     padding: 3px 6px !important;
     font-size: 11px !important;
   }
-  
   .filter-bar-enhanced .view-btn .view-text {
     font-size: 10px !important;
   }
 }
-
 /* Filter Dividers - Force vertical in horizontal layout */
 .filter-bar-enhanced .filter-divider {
   width: 1px !important;
@@ -258,38 +219,30 @@
   flex-shrink: 0 !important;
   display: inline-block !important;
 }
-
 [data-theme="dark"] .filter-bar-enhanced .filter-divider {
   background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
 }
-
 /* Custom Scrollbar for Dropdown */
 .filter-dropdown::-webkit-scrollbar {
   width: 6px;
 }
-
 .filter-dropdown::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
   border-radius: 3px;
 }
-
 .filter-dropdown::-webkit-scrollbar-thumb {
   background: rgba(59, 130, 246, 0.3);
   border-radius: 3px;
 }
-
 .filter-dropdown::-webkit-scrollbar-thumb:hover {
   background: rgba(59, 130, 246, 0.5);
 }
-
 /* Filter Bar Layout - Only responsive adjustments, main styles in filter-bar-enhanced.css */
-
 /* Reset any grid styles that might interfere */
 .filter-bar-enhanced > * {
   grid-column: unset !important;
   grid-row: unset !important;
 }
-
 /* Enhanced Filter Labels - Force horizontal */
 .filter-bar-enhanced .filter-label {
   display: inline-flex !important;
@@ -302,11 +255,9 @@
   min-width: max-content !important;
   flex-shrink: 0 !important;
 }
-
 [data-theme="dark"] .filter-bar-enhanced .filter-label {
   color: #d1d5db !important;
 }
-
 /* Force horizontal toggle layout */
 .filter-bar-enhanced .view-toggle-enhanced {
   display: inline-flex !important;
@@ -315,7 +266,6 @@
   flex-shrink: 0 !important;
   align-items: center !important;
 }
-
 .filter-bar-enhanced .view-btn {
   padding: 6px 12px !important;
   min-width: auto !important;
@@ -324,39 +274,31 @@
   display: inline-flex !important;
   align-items: center !important;
 }
-
 .filter-bar-enhanced .view-btn .view-icon {
   font-size: 14px !important;
 }
-
 .filter-bar-enhanced .view-btn .view-text {
   font-size: 12px !important;
 }
-
 /* Force hidden selects to stay hidden */
 .filter-bar-enhanced select {
   display: none !important;
 }
-
 /* Wrap-friendly spacing */
 .filter-bar-enhanced > * {
   margin-bottom: 4px !important;
 }
-
 /* Group related items visually when wrapped */
 .filter-bar-enhanced .filter-label + .view-toggle-enhanced {
   margin-left: 0 !important;
 }
-
 .filter-bar-enhanced .filter-label + .view-btn {
   margin-left: 0 !important;
 }
-
 /* Ensure proper line height for wrapped content */
 .filter-bar-enhanced {
   line-height: 1.2 !important;
 }
-
 /* Save Diskette Button - Simplified */
 .save-btn-diskette {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -375,17 +317,14 @@
   position: relative;
   overflow: hidden;
 }
-
 .save-btn-diskette:hover {
   transform: translateY(-2px) rotate(5deg);
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
 }
-
 .save-btn-diskette:active {
   transform: translateY(0) rotate(0deg) scale(0.95);
 }
-
 .save-btn-diskette::before {
   content: '';
   position: absolute;
@@ -396,23 +335,19 @@
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   transition: left 0.6s ease;
 }
-
 .save-btn-diskette:hover::before {
   left: 100%;
 }
-
 /* Animation when saving */
 .save-btn-diskette.saving {
   animation: diskette-spin 0.8s ease-in-out;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 }
-
 @keyframes diskette-spin {
   0% { transform: rotate(0deg) scale(1); }
   50% { transform: rotate(180deg) scale(1.1); }
   100% { transform: rotate(360deg) scale(1); }
 }
-
 /* Header Toggle Buttons */
 .header-controls {
   display: flex;
@@ -420,7 +355,6 @@
   gap: 8px;
   margin-right: 16px;
 }
-
 .header-toggle-btn {
   display: flex;
   align-items: center;
@@ -438,59 +372,48 @@
   min-width: 70px;
   justify-content: center;
 }
-
 .header-toggle-btn:hover {
   background: rgba(59, 130, 246, 0.1);
   border-color: rgba(59, 130, 246, 0.3);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
-
 .header-toggle-btn.active {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
   border-color: #3b82f6;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
-
 .header-toggle-btn.active:hover {
   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
-
 .toggle-icon {
   font-size: 16px;
   opacity: 0.8;
   transition: opacity 0.2s ease;
 }
-
 .header-toggle-btn:hover .toggle-icon,
 .header-toggle-btn.active .toggle-icon {
   opacity: 1;
 }
-
 .toggle-text {
   font-weight: 600;
   white-space: nowrap;
 }
-
 /* Dark theme support */
 [data-theme="dark"] .header-toggle-btn {
   background: rgba(0, 0, 0, 0.2);
   color: #d1d5db;
   border-color: rgba(255, 255, 255, 0.1);
 }
-
 [data-theme="dark"] .header-toggle-btn:hover {
   background: rgba(59, 130, 246, 0.2);
   border-color: rgba(59, 130, 246, 0.4);
 }
-
 /* Header Bar - Defined in glassmorphism.css, only responsive adjustments here */
-
 /* Header Brand - Styles defined in header.css, inherited here */
-
 /* Header Title */
 .header-bar-enhanced .header-title {
   display: inline-flex !important;
@@ -498,23 +421,19 @@
   gap: 6px !important;
   flex-shrink: 0 !important;
 }
-
 .header-bar-enhanced .title-icon {
   font-size: 20px !important;
   opacity: 0.8 !important;
 }
-
 .header-bar-enhanced .title-text {
   font-size: 16px !important;
   font-weight: 600 !important;
   color: #374151 !important;
   white-space: nowrap !important;
 }
-
 [data-theme="dark"] .header-bar-enhanced .title-text {
   color: #d1d5db !important;
 }
-
 /* Header Dividers - Same as filter bar */
 .header-bar-enhanced .header-divider {
   width: 1px !important;
@@ -524,11 +443,9 @@
   flex-shrink: 0 !important;
   display: inline-block !important;
 }
-
 [data-theme="dark"] .header-bar-enhanced .header-divider {
   background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent) !important;
 }
-
 /* Breadcrumb in header */
 .header-bar-enhanced .breadcrumb-enhanced {
   display: inline-flex !important;
@@ -537,7 +454,6 @@
   flex-shrink: 1 !important;
   min-width: 0 !important;
 }
-
 .header-bar-enhanced .breadcrumb-item {
   font-size: 13px !important;
   color: #6b7280 !important;
@@ -545,16 +461,13 @@
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
-
 [data-theme="dark"] .header-bar-enhanced .breadcrumb-item {
   color: #9ca3af !important;
 }
-
 .header-bar-enhanced .breadcrumb-separator {
   color: #9ca3af !important;
   font-size: 12px !important;
 }
-
 /* Header Status Badge */
 .header-bar-enhanced .header-status-badge {
   display: inline-flex !important;
@@ -566,7 +479,6 @@
   border-radius: 20px !important;
   flex-shrink: 0 !important;
 }
-
 .header-bar-enhanced .status-indicator {
   width: 8px !important;
   height: 8px !important;
@@ -574,105 +486,87 @@
   background: #10b981 !important;
   animation: pulse 2s infinite !important;
 }
-
 .header-bar-enhanced .status-text {
   font-size: 12px !important;
   font-weight: 500 !important;
   color: #374151 !important;
   white-space: nowrap !important;
 }
-
 [data-theme="dark"] .header-bar-enhanced .status-text {
   color: #d1d5db !important;
 }
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
-
 /* Responsive header */
 @media (max-width: 1200px) {
   .header-bar-enhanced {
     gap: 12px !important;
     padding: 10px 16px !important;
   }
-  
   .header-bar-enhanced .brand-text,
   .header-bar-enhanced .title-text {
     font-size: 14px !important;
   }
 }
-
 @media (max-width: 900px) {
   .header-bar-enhanced {
     gap: 10px !important;
     justify-content: center !important;
   }
-  
   .header-bar-enhanced .header-divider {
     display: none !important;
   }
 }
-
 @media (max-width: 768px) {
   .header-bar-enhanced {
     gap: 8px !important;
     padding: 8px 12px !important;
   }
-  
   .header-bar-enhanced .brand-text,
   .header-bar-enhanced .title-text {
     display: none !important;
   }
-  
   .header-bar-enhanced .breadcrumb-enhanced {
     display: none !important;
   }
 }
-
 /* Loading State */
 .view-btn.loading {
   opacity: 0.7;
   pointer-events: none;
 }
-
 .view-btn.loading .view-text::after {
   content: '...';
   animation: dots 1.5s infinite;
 }
-
 @keyframes dots {
   0%, 20% { content: '...'; }
   40% { content: '..'; }
   60% { content: '.'; }
   80%, 100% { content: ''; }
 }
-
 /* Focus States for Accessibility */
 .view-btn:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
-
 .dropdown-item:focus {
   outline: 2px solid #3b82f6;
   outline-offset: -2px;
 }
-
 /* High Contrast Mode */
 @media (prefers-contrast: high) {
   .filter-dropdown {
     border: 2px solid #000;
     background: #fff;
   }
-  
   .dropdown-item:hover {
     background: #000;
     color: #fff;
   }
 }
-
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .dropdown-item,

@@ -1,28 +1,20 @@
 Comment patterns → extraction & recommended flows
 ===============================================
-
 Goal: detect common semantic intents in ticket comments and map them to workflow recommendations.
-
 Pattern categories
 ------------------
 - Reproducible steps / How-to: contains "steps to reproduce", "run", "curl", "payload", "example".
   - Action: Request structured reproduction block; add labels: `needs-repro`.
-
 - Blocker / Escalation: contains "blocker", "urgent", "stop", "production", "SLA", "breach".
   - Action: set priority=High, assign to on-call, notify Slack, set SLA remediation.
-
 - Root cause hypothesis: contains "because", "due to", "root cause", "happens when".
   - Action: add note with hypothesis, run confirmatory checks (logs, traces), propose owner.
-
 - Acceptance / Fix confirmed: contains "fixed", "resolved", "closing", "verified by".
   - Action: move to resolved state, request QA verification, add resolution comment.
-
 - Request for info: contains "cannot reproduce", "need more info", "please provide".
   - Action: set status "Needs Info", ask structured questions using template.
-
 - Actionable TODOs: contains verbs + assignee: "@john please deploy", "assign to".
   - Action: create subtask, add checklist, set owner.
-
 Fields to extract from comments
 -------------------------------
 - Timestamps and author (for timeline)
@@ -30,19 +22,16 @@ Fields to extract from comments
 - Action verbs (deploy, rollback, investigate, reproduce)
 - Error codes and stack traces
 - SLA mentions and deadlines
-
 Recommendation engine mapping (example)
 ---------------------------------------
 - If (SLA mention OR "breach") AND priority != High -> recommend priority upgrade + immediate notification.
 - If (error codes 500/502/504) AND repeated across comments -> recommend system outage workflow: notify ops and create incident.
 - If (user reports "can't reproduce") -> propose reproducible steps template and set status Needs Info.
-
 How to integrate with `UnifiedMLPredictor`
 ----------------------------------------
 1. Use `predict_all(summary, comment_text)` to obtain priority/assignee/labels/status suggestions.
 2. Combine model outputs with comment-extracted intents to compute a recommended workflow: e.g., assign + escalate + set SLA remediation.
 3. Store the suggested actions as a structured suggestion attached to the ticket (comment or custom field).
-
 Example suggestion payload
 --------------------------
 {

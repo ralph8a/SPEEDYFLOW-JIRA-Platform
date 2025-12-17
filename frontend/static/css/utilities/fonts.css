@@ -8,124 +8,98 @@
  * - Century: Contenido editorial, texto largo, profesionalismo (serif)
  * - Jerarquía clara y consistente
  */
-
 /* Font imports - system fonts primero para fallback */
 /* Aptos es una fuente del sistema de Microsoft (Windows 11+), no está en Google Fonts */
 /* Fallback a Segoe UI (Windows 7+) y system-ui para máxima compatibilidad */
-
 /* Century está disponible en Windows por defecto, fallback a Georgia/Times */
 /* No necesita @import, es una fuente del sistema */
-
 /* DEPRECATED - Legacy font stacks (mantenido por compatibilidad) */
 :root {
   --font-primary: 'Aptos', 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Aptos Display', 'Aptos', 'Segoe UI Semibold', sans-serif;
   --font-mono: 'Aptos Mono', 'Consolas', 'Courier New', monospace;
 }
-
 /* SISTEMA COHESIVO - Referencia a typography-system.css */
 /* El nuevo sistema está en core/typography-system.css */
-
 /* Global base - Aptos para UI por defecto */
 * {
   font-family: var(--font-ui, 'Aptos', 'Segoe UI', system-ui, sans-serif);
 }
-
 html, body {
   font-family: var(--font-interface, 'Aptos', 'Segoe UI', system-ui, sans-serif);
 }
-
 /* Headings - Aptos Display para jerarquía visual */
 h1, h2, h3, h4, h5, h6,
 .heading, .title {
   font-family: var(--font-heading, 'Aptos Display', 'Aptos', 'Segoe UI Semibold', sans-serif);
 }
-
 /* Contenido editorial - Century para legibilidad */
 p, .paragraph, .content, .description, .article {
   font-family: var(--font-body, 'Century', 'Century Gothic', 'Times New Roman', serif);
 }
-
 /* Form elements - Aptos para consistencia UI */
 input, textarea, select, button, .btn, .form-control, .input-group {
   font-family: var(--font-interface, 'Aptos', 'Segoe UI', system-ui, sans-serif);
 }
-
 /* Code elements - Aptos Mono */
 code, pre, .code, .monospace, .highlight {
   font-family: var(--font-code, 'Aptos Mono', 'Consolas', 'Courier New', monospace);
 }
-
 /* UI Components - Sistema cohesivo */
 .nav, .navbar, .sidebar, .card, .panel, .modal, .dropdown, .tooltip {
   font-family: var(--font-interface);
 }
-
 /* Labels y badges - Aptos para consistencia UI */
 label, .label, .text-muted, .text-secondary {
   font-family: var(--font-interface);
 }
-
 .badge, .tag, .chip, .label-inline {
   font-family: var(--font-interface);
 }
-
 /* Notificaciones y alertas - Aptos para claridad */
 .alert, .notification, .toast, .popover {
   font-family: var(--font-interface);
 }
-
 /* Tablas - Century para legibilidad de datos */
 table, .table, th, td {
   font-family: var(--font-body);
 }
-
 /* APLICACIONES ESPECÍFICAS */
-
 /* Issue cards - Sistema mixto optimizado */
 .issue-card .issue-title {
   font-family: var(--font-heading); /* Aptos Display */
 }
-
 .issue-card .issue-description {
   font-family: var(--font-body); /* Century */  
 }
-
 .issue-card .issue-meta {
   font-family: var(--font-interface); /* Aptos */
 }
-
 /* Kanban board */
 .kanban-column-title {
   font-family: var(--font-heading); /* Aptos Display */
 }
-
 /* Streamlit components - Aptos para consistencia */
 .stTextInput, .stNumberInput, .stSelectbox, .stMultiSelect, 
 .stButton, .stSlider, .stDateInput, .stTimeInput {
   font-family: var(--font-interface);
 }
-
 /* Mensajes y comentarios - Century para legibilidad */
 .message, .chat-bubble, .comment {
   font-family: var(--font-body);
 }
-
 /* Navegación - Aptos para UI */
 .menu-item, .dropdown-item, .nav-item {
   font-family: var(--font-interface);
 }
-
 /* Métricas - Aptos Display para impacto visual */
 .metric, .stat, .counter {
   font-family: var(--font-heading);
 }
-
 /* Footer - Century para legibilidad */
 footer, .footer {
   font-family: var(--font-body);
 }
-
 /* ==================== LEGACY COMPATIBILITY ==================== */
 /* Mantiene compatibilidad con clases existentes */
 .font-aptos { font-family: var(--font-interface); }

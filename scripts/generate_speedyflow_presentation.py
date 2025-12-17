@@ -1,14 +1,11 @@
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-
 prs = Presentation()
-
 PRIMARY = RGBColor(99, 102, 241)   # #6366f1
 ACCENT = RGBColor(6, 182, 212)     # #06b6d4
 TEXT_DARK = RGBColor(31, 41, 55)   # #1f2937
 MUTED = RGBColor(156, 163, 175)    # #9ca3af
-
 slides_content = [
     {
         'title': 'SpeedyFlow vs Jira Web',
@@ -76,15 +73,12 @@ slides_content = [
         'notes': 'Cerrar con CTA claro: agendar demo y plan de despliegue.'
     }
 ]
-
 def set_title_style(title_shape):
     tf = title_shape.text_frame
     p = tf.paragraphs[0]
     p.font.size = Pt(32)
     p.font.bold = True
     p.font.color.rgb = PRIMARY
-
-
 def add_icon_box(slide, left, top, emoji, bg_color):
     w = Inches(0.6)
     h = Inches(0.6)
@@ -100,18 +94,14 @@ def add_icon_box(slide, left, top, emoji, bg_color):
     p.font.size = Pt(18)
     p.font.bold = True
     p.font.color.rgb = RGBColor(255,255,255)
-
-
 for idx, s in enumerate(slides_content):
     slide_layout = prs.slide_layouts[1]  # title and content
     slide = prs.slides.add_slide(slide_layout)
-
     # Title and small icon accent
     title = slide.shapes.title
     title.text = s['title']
     set_title_style(title)
     add_icon_box(slide, Inches(0.3), Inches(0.4), '💡' if idx==0 else '⚡', PRIMARY)
-
     # content placeholder
     body = slide.shapes.placeholders[1]
     tf = body.text_frame
@@ -136,18 +126,15 @@ for idx, s in enumerate(slides_content):
         p.level = 0
         p.font.size = Pt(18)
         p.font.color.rgb = TEXT_DARK
-
     # speaker notes
     notes_slide = slide.notes_slide
     notes_text_frame = notes_slide.notes_text_frame
     notes_text_frame.text = s.get('notes', '')
-
 # Title slide (first) customization: make bigger hero
 if prs.slides:
     first = prs.slides[0]
     first.shapes.title.text = 'SpeedyFlow vs Jira Web'
     set_title_style(first.shapes.title)
-
 # Save output
 import os
 os.makedirs('output', exist_ok=True)

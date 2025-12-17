@@ -3,7 +3,6 @@
  * Badges, SLA indicators, alerts, loading, tooltips
  * Part of common.css split - <400 lines
  */
-
 /* ==================== ENFORCE SOLID TEXT IN BADGES ==================== */
 /* ALL badge and utility text must be fully opaque */
 .badge, .badge p, .badge span,
@@ -14,7 +13,6 @@
 .tooltip, .tooltip-text {
   opacity: 1 !important;
 }
-
 /* ==================== SLA STATUS DISPLAY ==================== */
 .issue-sla {
   display: flex;
@@ -25,7 +23,6 @@
   font-size: 11px;
   font-weight: 700;
 }
-
 .sla-badge {
   display: inline-flex;
   align-items: center;
@@ -36,79 +33,65 @@
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
-
 .sla-healthy {
   background: rgba(34, 197, 94, 0.12);
   color: #15803d;
   border: 1px solid rgba(34, 197, 94, 0.25);
 }
-
 .sla-on-track {
   background: rgba(234, 179, 8, 0.12);
   color: #b45309;
   border: 1px solid rgba(234, 179, 8, 0.25);
 }
-
 .sla-warning {
   background: rgba(249, 115, 22, 0.12);
   color: #c2410c;
   border: 1px solid rgba(249, 115, 22, 0.25);
 }
-
 .sla-critical {
   background: rgba(239, 68, 68, 0.12);
   color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
-
 .sla-breached {
   background: rgba(239, 68, 68, 0.15);
   color: #b91c1c;
   border: 1px solid rgba(239, 68, 68, 0.35);
   animation: none;
 }
-
 .sla-completed {
   background: rgba(34, 197, 94, 0.12);
   color: #15803d;
   border: 1px solid rgba(34, 197, 94, 0.25);
 }
-
 .sla-unknown {
   background: rgba(107, 114, 128, 0.1);
   color: #4b5563;
   border: 1px solid rgba(107, 114, 128, 0.2);
 }
-
 .sla-default {
   background: rgba(59, 130, 246, 0.12);
   color: #1e40af;
   border: 1px solid rgba(59, 130, 246, 0.25);
 }
-
 .sla-paused {
   background: rgba(168, 85, 247, 0.12);
   color: #6b21a8;
   border: 1px solid rgba(168, 85, 247, 0.25);
 }
-
 .sla-na {
   background: rgba(107, 114, 128, 0.1);
   color: #4b5563;
   border: 1px solid rgba(107, 114, 128, 0.2);
 }
-
 .sla-icon {
   font-size: 14px;
 }
-
 .sla-text {
   font-size: var(--font-size-xs);
 }
-
 /* ==================== BADGES ==================== */
 /* Badge base styles defined in common.css */
-
 .status-badge,
 .priority-badge {
   padding: 6px 12px;
@@ -125,7 +108,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
-
 /* Shine effect for badges */
 .priority-badge::before {
   content: '';
@@ -138,11 +120,9 @@
   transition: left 0.5s ease;
   pointer-events: none;
 }
-
 .priority-badge:hover::before {
   left: 100%;
 }
-
 /* Status Colors */
 .status-open {
   background: rgba(255, 255, 255, 0.65);
@@ -150,21 +130,18 @@
   border: 1px solid rgba(14, 165, 233, 0.3);
   font-weight: 700;
 }
-
 .status-progress {
   background: rgba(255, 255, 255, 0.65);
   color: #f59e0b;
   border: 1px solid rgba(245, 158, 11, 0.3);
   font-weight: 700;
 }
-
 .status-done {
   background: rgba(255, 255, 255, 0.65);
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.3);
   font-weight: 700;
 }
-
 /* Priority Colors - Premium Style with Fire Effect */
 .priority-highest,
 .priority-critico {
@@ -174,7 +151,6 @@
   animation: none;
   text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
 }
-
 .priority-highest:hover,
 .priority-critico:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.25) 100%);
@@ -182,58 +158,49 @@
   box-shadow: 0 12px 32px rgba(59, 130, 246, 0.7), 0 0 50px rgba(59, 130, 246, 0.5), inset 0 0 20px rgba(100, 150, 255, 0.3);
   filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.9)) drop-shadow(0 0 16px rgba(100, 150, 255, 0.7));
 }
-
 .priority-high {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.15) 100%);
   color: #b45309;
   border: 2px solid rgba(245, 158, 11, 0.4);
   animation: none;
 }
-
 .priority-high:hover {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0.25) 100%);
   transform: scale(1.12) translateY(-3px);
   box-shadow: 0 10px 28px rgba(245, 158, 11, 0.6), 0 0 40px rgba(245, 158, 11, 0.4);
   filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));
 }
-
 .priority-medium {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
   color: #1e40af;
   border: 2px solid rgba(59, 130, 246, 0.3);
   animation: none;
 }
-
 .priority-medium:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 100%);
   transform: scale(1.08) translateY(-3px);
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.3);
 }
-
 .priority-low {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
   color: #15803d;
   border: 2px solid rgba(34, 197, 94, 0.3);
 }
-
 .priority-low:hover {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.15) 100%);
   transform: scale(1.06) translateY(-2px);
   box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4), 0 0 20px rgba(34, 197, 94, 0.2);
 }
-
 .priority-lowest {
   background: linear-gradient(135deg, rgba(107, 114, 128, 0.15) 0%, rgba(107, 114, 128, 0.08) 100%);
   color: #4b5563;
   border: 2px solid rgba(107, 114, 128, 0.3);
 }
-
 .priority-lowest:hover {
   background: linear-gradient(135deg, rgba(107, 114, 128, 0.25) 0%, rgba(107, 114, 128, 0.15) 100%);
   transform: scale(1.05) translateY(-2px);
   box-shadow: 0 6px 16px rgba(107, 114, 128, 0.3);
 }
-
 /* ==================== ANIMATIONS ==================== */
 @keyframes pulse-breach {
   0%, 100% {
@@ -243,7 +210,6 @@
     opacity: 0.6;
   }
 }
-
 @keyframes fire-pulse {
   0%, 100% {
     opacity: 1;
@@ -274,7 +240,6 @@
     text-shadow: 0 0 14px rgba(255, 100, 0, 0.9);
   }
 }
-
 @keyframes warm-pulse {
   0%, 100% {
     opacity: 1;
@@ -287,7 +252,6 @@
     filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.9));
   }
 }
-
 @keyframes cool-pulse {
   0%, 100% {
     opacity: 1;
@@ -300,13 +264,10 @@
     filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8));
   }
 }
-
 /* ==================== ALERTS/MESSAGES ==================== */
 /* Alert styles defined in common.css */
-
 /* ==================== TOOLTIPS ==================== */
 /* Tooltip styles defined in common.css */
-
 /* ==================== EMPTY STATE ==================== */
 .empty-state {
   text-align: center;
@@ -314,18 +275,14 @@
   color: var(--text-muted);
   font-size: var(--font-size-base);
 }
-
 .empty-state-icon {
   font-size: 48px;
   margin-bottom: var(--spacing-md);
   opacity: 0.7;
 }
-
 /* ==================== LOADING ==================== */
 /* Loading styles defined in common.css */
-
 /* ==================== SLA INDICATOR CARD (FROM _legacy_sla-card-indicator.css) ==================== */
-
 /* SLA Indicator Container - Card version */
 .issue-sla-indicator {
   display: flex;
@@ -336,7 +293,6 @@
   border-top: 1px solid rgba(59, 130, 246, 0.08);
   font-size: 10px;
 }
-
 /* SLA Header - Shows status and time remaining */
 .sla-indicator-header {
   display: flex;
@@ -344,7 +300,6 @@
   align-items: center;
   gap: 4px;
 }
-
 .sla-indicator-label {
   font-weight: 600;
   color: #0891b2;
@@ -352,12 +307,10 @@
   align-items: center;
   gap: 4px;
 }
-
 .sla-indicator-label::before {
   content: '⏱️';
   font-size: 10px;
 }
-
 .sla-time-remaining {
   font-weight: 600;
   font-size: 9px;
@@ -365,39 +318,33 @@
   border-radius: 3px;
   white-space: nowrap;
 }
-
 /* Time remaining - Status colors */
 .sla-time-remaining.healthy,
 .sla-time-remaining.sla-healthy {
   background: rgba(34, 197, 94, 0.2);
   color: #16a34a;
 }
-
 .sla-time-remaining.caution,
 .sla-time-remaining.sla-caution {
   background: rgba(251, 191, 36, 0.2);
   color: #d97706;
 }
-
 .sla-time-remaining.warning,
 .sla-time-remaining.sla-warning {
   background: rgba(249, 115, 22, 0.2);
   color: #ea580c;
 }
-
 .sla-time-remaining.critical,
 .sla-time-remaining.sla-critical {
   background: rgba(239, 68, 68, 0.2);
   color: #dc2626;
 }
-
 .sla-time-remaining.breached,
 .sla-time-remaining.sla-breached {
   background: rgba(239, 68, 68, 0.3);
   color: #991b1b;
   font-weight: 700;
 }
-
 /* SLA Progress Bar */
 .sla-progress-bar {
   width: 100%;
@@ -407,7 +354,6 @@
   overflow: hidden;
   border: 0.5px solid rgba(59, 130, 246, 0.1);
 }
-
 .sla-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #3b82f6 0%, #0891b2 100%);
@@ -415,28 +361,23 @@
   border-radius: 3px;
   position: relative;
 }
-
 /* Progress bar colors based on percentage */
 .sla-progress-fill.healthy,
 .sla-progress-fill.sla-healthy {
   background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
 }
-
 .sla-progress-fill.caution,
 .sla-progress-fill.sla-caution {
   background: linear-gradient(90deg, #d97706 0%, #fbbf24 100%);
 }
-
 .sla-progress-fill.warning,
 .sla-progress-fill.sla-warning {
   background: linear-gradient(90deg, #ea580c 0%, #fb923c 100%);
 }
-
 .sla-progress-fill.critical,
 .sla-progress-fill.sla-critical {
   background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
 }
-
 .sla-progress-fill.breached,
 .sla-progress-fill.sla-breached {
   background: repeating-linear-gradient(
@@ -447,7 +388,6 @@
     #7f1d1d 4px
   );
 }
-
 /* SLA Info Row */
 .sla-info-row {
   display: flex;
@@ -456,16 +396,13 @@
   font-size: 9px;
   color: #6b7280;
 }
-
 .sla-elapsed {
   flex: 1;
 }
-
 .sla-goal {
   flex: 1;
   text-align: right;
 }
-
 /* SLA Status Dot */
 .sla-status-dot {
   display: inline-block;
@@ -475,34 +412,28 @@
   margin-right: 2px;
   flex: 0 0 auto;
 }
-
 .sla-status-dot.healthy,
 .sla-status-dot.sla-healthy {
   background: #22c55e;
   box-shadow: 0 0 4px rgba(34, 197, 94, 0.6);
 }
-
 .sla-status-dot.caution,
 .sla-status-dot.sla-caution {
   background: #fbbf24;
   box-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
 }
-
 .sla-status-dot.warning,
 .sla-status-dot.sla-warning {
   background: #fb923c;
   box-shadow: 0 0 4px rgba(249, 115, 22, 0.6);
 }
-
 .sla-status-dot.critical,
 .sla-status-dot.sla-critical {
   background: #ef4444;
   box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
 }
-
 .sla-status-dot.breached,
 .sla-status-dot.sla-breached {
   background: #991b1b;
   box-shadow: 0 0 6px rgba(153, 27, 27, 0.8);
 }
-

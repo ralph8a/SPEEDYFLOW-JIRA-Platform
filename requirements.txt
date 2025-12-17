@@ -12,7 +12,6 @@ python-json-logger>=2.0.7
 scikit-learn>=1.5.2
 numpy>=1.24.0
 apscheduler>=3.10.4
-
 sentence-transformers>=5.1.0
 torch>=2.0.0
 transformers>=4.30.0
@@ -27,11 +26,9 @@ langdetect>=1.0.9
 # and may require specific Python versions or OS toolchains. Install these in a
 # dedicated environment or via Docker. See `/requirements.txt` for the
 # recommended ML dependencies used by the microservice.
-
 # If you need the full ML stack locally, install from the  folder:
 #   cd 
 #   .venv3.12\Scripts\activate  # or source .venv3.12/bin/activate on *nix
 #   python -m pip install -r requirements.txt
-
 # Optional desktop launcher dependency (only needed for app_window.py):
 pywebview>=3.8

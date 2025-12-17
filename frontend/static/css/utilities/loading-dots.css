@@ -2,7 +2,6 @@
  * LOADING DOTS - Simple pulsing animation
  * Replaces skeleton shimmer with elegant dots
  */
-
 /* ===== LOADING DOTS CONTAINER ===== */
 .loading-dots {
   display: flex;
@@ -13,7 +12,6 @@
   font-size: 24px;
   color: var(--color-primary, #6366f1);
 }
-
 .loading-dot {
   width: 12px;
   height: 12px;
@@ -22,21 +20,16 @@
   animation: dotPulse 1.4s infinite ease-in-out;
   opacity: 0.6;
 }
-
 .loading-dot:nth-child(1) {
   animation-delay: -0.32s;
 }
-
 .loading-dot:nth-child(2) {
   animation-delay: -0.16s;
 }
-
 .loading-dot:nth-child(3) {
   animation-delay: 0s;
 }
-
 /* Animation dotPulse is now imported from core/animations.css */
-
 /* ===== LOADING TEXT ===== */
 .loading-text {
   text-align: center;
@@ -45,7 +38,6 @@
   color: var(--text-secondary, #6b7280);
   letter-spacing: 0.5px;
 }
-
 /* ===== LOADING WRAPPER ===== */
 .loading-wrapper {
   display: flex;
@@ -57,7 +49,6 @@
   border-radius: 12px;
   /* Variables glasmorphic gestionadas centralmente por variables.css */
 }
-
 /* ===== LOADING STATE FOR CARDS ===== */
 .cards-loading {
   display: grid;
@@ -65,7 +56,6 @@
   gap: 16px;
   padding: 20px;
 }
-
 .card-placeholder {
   background: transparent !important;
   background-size: 200% 100%;
@@ -73,7 +63,6 @@
   border-radius: 12px;
   height: 240px;
 }
-
 @keyframes fadeInOut {
   0%, 100% {
     opacity: 0.4;
@@ -82,14 +71,12 @@
     opacity: 0.6;
   }
 }
-
 /* ===== MINI LOADING (for small sections) ===== */
 .loading-dots-mini {
   display: inline-flex;
   gap: 4px;
   align-items: center;
 }
-
 .loading-dots-mini .loading-dot {
   width: 8px;
   height: 8px;

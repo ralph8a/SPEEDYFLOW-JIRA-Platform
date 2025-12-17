@@ -2,7 +2,6 @@
  * SPEEDYFLOW - HTTP Utilities for JavaScript
  * Centralized API request handling with error management
  */
-
 /**
  * Base API configuration
  */
@@ -12,7 +11,6 @@ const API_CONFIG = {
   retries: 3,
   retryDelay: 1000 // 1 second
 };
-
 /**
  * Make an HTTP request with error handling and retry logic
  * @param {string} method - HTTP method (GET, POST, PUT, DELETE)
@@ -31,9 +29,7 @@ export async function apiRequest(method, endpoint, options = {}) {
     timeout = API_CONFIG.timeout,
     retries = API_CONFIG.retries
   } = options;
-
   const url = endpoint.startsWith('http') ? endpoint : `${API_CONFIG.baseURL}${endpoint}`;
-  
   const fetchOptions = {
     method,
     headers: {
@@ -41,25 +37,19 @@ export async function apiRequest(method, endpoint, options = {}) {
       ...headers
     }
   };
-
   if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
     fetchOptions.body = JSON.stringify(body);
   }
-
   let lastError;
-  
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
-      
       const response = await fetch(url, {
         ...fetchOptions,
         signal: controller.signal
       });
-      
       clearTimeout(timeoutId);
-      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new APIError(
@@ -68,22 +58,17 @@ export async function apiRequest(method, endpoint, options = {}) {
           errorData
         );
       }
-      
       // Handle empty responses (204 No Content)
       if (response.status === 204) {
         return null;
       }
-      
       return await response.json();
-      
     } catch (error) {
       lastError = error;
-      
       // Don't retry on client errors (4xx) except 429 (rate limit)
       if (error instanceof APIError && error.status >= 400 && error.status < 500 && error.status !== 429) {
         throw error;
       }
-      
       // Retry on network errors or 5xx errors
       if (attempt < retries - 1) {
         const delay = API_CONFIG.retryDelay * Math.pow(2, attempt); // Exponential backoff
@@ -92,10 +77,8 @@ export async function apiRequest(method, endpoint, options = {}) {
       }
     }
   }
-  
   throw lastError;
 }
-
 /**
  * Custom API Error class
  */
@@ -107,7 +90,6 @@ export class APIError extends Error {
     this.data = data;
   }
 }
-
 /**
  * Convenience methods for common HTTP verbs
  */
@@ -118,7 +100,6 @@ export const api = {
   patch: (endpoint, body, options) => apiRequest('PATCH', endpoint, { ...options, body }),
   delete: (endpoint, options) => apiRequest('DELETE', endpoint, options)
 };
-
 /**
  * Sleep utility for delays
  * @param {number} ms - Milliseconds to sleep
@@ -127,7 +108,6 @@ export const api = {
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 /**
  * Show error notification to user
  * @param {string|Error} error - Error message or Error object
@@ -135,7 +115,6 @@ function sleep(ms) {
  */
 export function showError(error, title = 'Error') {
   const message = error instanceof Error ? error.message : error;
-  
   // Try to use existing notification system
   if (window.showNotification) {
     window.showNotification(message, 'error');
@@ -147,7 +126,6 @@ export function showError(error, title = 'Error') {
     alert(`${title}: ${message}`);
   }
 }
-
 /**
  * Show success notification to user
  * @param {string} message - Success message
@@ -162,7 +140,6 @@ export function showSuccess(message, title = 'Success') {
     console.log(`${title}:`, message);
   }
 }
-
 /**
  * Debounce function for search inputs
  * @param {Function} func - Function to debounce
@@ -180,7 +157,6 @@ export function debounce(func, wait = 300) {
     timeout = setTimeout(later, wait);
   };
 }
-
 /**
  * Throttle function for event handlers
  * @param {Function} func - Function to throttle
@@ -197,7 +173,6 @@ export function throttle(func, limit = 300) {
     }
   };
 }
-
 /**
  * NOTE: Date formatting, JSON parsing, and other utility functions
  * are now available in utils/helpers.js to avoid duplication.

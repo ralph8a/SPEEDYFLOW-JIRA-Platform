@@ -7,7 +7,6 @@
  * - Century como referencia para contenido (legibilidad, espaciado)
  * - Ajustes calculados basados en características de glyph específicas
  */
-
 /* ==================== GLYPH CHARACTERISTICS REFERENCE ==================== */
 /*
 APTOS CHARACTERISTICS:
@@ -16,7 +15,6 @@ APTOS CHARACTERISTICS:
 - Visual weight: Medium (400-500 range feels natural)
 - Optimal line-height: 1.4-1.5
 - Natural letter-spacing: 0em to 0.01em
-
 CENTURY GOTHIC CHARACTERISTICS:
 - X-height: High (0.58 ratio)
 - Letter width: Slightly condensed
@@ -24,9 +22,7 @@ CENTURY GOTHIC CHARACTERISTICS:
 - Optimal line-height: 1.5-1.6
 - Natural letter-spacing: 0.01em to 0.02em
 */
-
 /* ==================== FAMILY-SPECIFIC ADAPTATIONS ==================== */
-
 /* SEGOE UI (Business Classic) */
 /* 
 Características vs Aptos:
@@ -40,7 +36,6 @@ Características vs Aptos:
   --letter-spacing-factor: 0.005em; /* Añadir respiro */
   --weight-factor: -15; /* Reducir peso visual */
 }
-
 /* INTER (Modern Professional) */
 /*
 Características vs Aptos:
@@ -54,7 +49,6 @@ Características vs Aptos:
   --letter-spacing-factor: -0.002em; /* Reducir por mayor amplitud */
   --weight-factor: 10; /* Aumentar peso visual ligeramente */
 }
-
 /* IBM PLEX SANS (Corporate Executive) */
 /*
 Características vs Aptos:
@@ -68,7 +62,6 @@ Características vs Aptos:
   --letter-spacing-factor: 0.008em; /* Mantener apertura característica */
   --weight-factor: 25; /* Compensar ligereza visual */
 }
-
 /* POPPINS (Creative Studio) */
 /*
 Características vs Aptos:
@@ -82,9 +75,7 @@ Características vs Aptos:
   --letter-spacing-factor: 0.003em; /* Sutil respiro adicional */
   --weight-factor: 35; /* Compensar ligereza considerable */
 }
-
 /* ==================== SERIF ADAPTATIONS (vs Century Gothic) ==================== */
-
 /* GEORGIA (Business Classic) */
 /*
 Características vs Century Gothic:
@@ -96,7 +87,6 @@ Características vs Century Gothic:
   --serif-line-height-factor: 1.0; /* Georgia ya es óptima */
   --serif-letter-spacing-factor: 0.005em; /* Respiro adicional sutil */
 }
-
 /* SOURCE SERIF PRO (Modern Professional) */
 /*
 Características vs Century Gothic:
@@ -108,7 +98,6 @@ Características vs Century Gothic:
   --serif-line-height-factor: 0.98; /* Ligeramente más compacta */
   --serif-letter-spacing-factor: 0.002em; /* Espaciado mínimo */
 }
-
 /* PLAYFAIR DISPLAY (Corporate Executive) */
 /*
 Características vs Century Gothic:
@@ -120,7 +109,6 @@ Características vs Century Gothic:
   --serif-line-height-factor: 1.1; /* Necesita más espacio vertical */
   --serif-letter-spacing-factor: 0.008em; /* Respiro generoso */
 }
-
 /* CRIMSON TEXT (Creative Studio) */
 /*
 Características vs Century Gothic:
@@ -132,10 +120,8 @@ Características vs Century Gothic:
   --serif-line-height-factor: 1.03; /* Ligeramente más espaciosa */
   --serif-letter-spacing-factor: 0.003em; /* Espaciado sutil */
 }
-
 /* ==================== AUTOMATIC APPLICATION CLASSES ==================== */
 /* Estas clases se aplican automáticamente via JavaScript */
-
 /* Cuando se usa Business Classic */
 .font-preset-business h1,
 .font-preset-business h2,
@@ -147,7 +133,6 @@ Características vs Century Gothic:
   letter-spacing: calc(var(--combo-letter-spacing) + 0.005em);
   font-weight: calc(var(--combo-font-weight) - 15);
 }
-
 /* Cuando se usa Modern Professional */
 .font-preset-modern h1,
 .font-preset-modern h2,
@@ -159,7 +144,6 @@ Características vs Century Gothic:
   letter-spacing: calc(var(--combo-letter-spacing) - 0.002em);
   font-weight: calc(var(--combo-font-weight) + 10);
 }
-
 /* Cuando se usa Corporate Executive */
 .font-preset-corporate h1,
 .font-preset-corporate h2,
@@ -171,7 +155,6 @@ Características vs Century Gothic:
   letter-spacing: calc(var(--combo-letter-spacing) + 0.008em);
   font-weight: calc(var(--combo-font-weight) + 25);
 }
-
 /* Cuando se usa Creative Studio */
 .font-preset-creative h1,
 .font-preset-creative h2,
@@ -183,10 +166,8 @@ Características vs Century Gothic:
   letter-spacing: calc(var(--combo-letter-spacing) + 0.003em);
   font-weight: calc(var(--combo-font-weight) + 35);
 }
-
 /* ==================== RESPONSIVE GLYPH ADJUSTMENTS ==================== */
 /* Ajustes adicionales para diferentes tamaños de pantalla */
-
 @media (max-width: 768px) {
   /* En móviles, reducir compensaciones para mejor legibilidad */
   .font-preset-business { --line-height-compensation: 0.97; }
@@ -194,7 +175,6 @@ Características vs Century Gothic:
   .font-preset-corporate { --line-height-compensation: 1.03; }
   .font-preset-creative { --line-height-compensation: 1.05; }
 }
-
 @media (min-width: 1200px) {
   /* En pantallas grandes, aprovechar mejor las características */
   .font-preset-business { --letter-spacing-compensation: 0.008em; }
@@ -202,10 +182,8 @@ Características vs Century Gothic:
   .font-preset-corporate { --letter-spacing-compensation: 0.012em; }
   .font-preset-creative { --letter-spacing-compensation: 0.006em; }
 }
-
 /* ==================== DEBUG HELPERS ==================== */
 /* Clases para visualizar diferencias durante desarrollo */
-
 .debug-font-metrics::before {
   content: 
     "Family: " attr(data-font-family) 

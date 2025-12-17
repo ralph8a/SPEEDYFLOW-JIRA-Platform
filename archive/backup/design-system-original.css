@@ -17,35 +17,29 @@
   --color-warning: #f59e0b;
   --color-success: #16a34a;
   --color-info: #0ea5e9;
-  
   /* Spacing Scale */
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
-  
   /* Border Radius */
   --radius-md: 8px;
   --radius-lg: 14px;
   --radius-pill: 999px;
-  
   /* Font & Transitions */
   --font-stack: 'Inter', 'Aptos', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
   --focus-ring: 0 0 0 3px rgba(37,99,235,0.35);
   --transition: 140ms cubic-bezier(.4,.2,.2,1);
-  
   /* Elevations */
   --elevation-sm: 0 1px 2px var(--color-shadow);
   --elevation-md: 0 2px 6px var(--color-shadow);
 }
-
 body.theme-light, body.theme-dark {
   font-family: var(--font-stack);
   background: var(--color-bg-page);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
 }
-
 /* Dark theme token overrides */
 body.theme-dark {
   --color-bg-page: linear-gradient(135deg,#12141a 0%, #1e2127 100%);
@@ -67,7 +61,6 @@ body.theme-dark {
   --color-info: #0ea5e9;
   --focus-ring: 0 0 0 3px rgba(59,130,246,0.5);
 }
-
 /* Card / surface - base styles for all card-like elements */
 .ds-surface,
 .main-header-pro {
@@ -76,8 +69,6 @@ body.theme-dark {
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-sm);
 }
-
-
 /* Unified header */
 .main-header-pro {
   display: flex;
@@ -90,21 +81,18 @@ body.theme-dark {
   box-sizing: border-box;
   gap: var(--space-4);
 }
-
 .main-header-pro h1 {
   font-size: 18px;
   font-weight: 600;
   margin: 0;
   flex: 0 0 auto;
 }
-
 .header-status {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
 .header-status .status-text {
   padding: var(--space-2) var(--space-3);
   font-size: 12px;
@@ -112,9 +100,7 @@ body.theme-dark {
   text-transform: uppercase;
   font-weight: 600;
 }
-
 /* OLD FILTER BAR STYLES - DEPRECATED - Now using filter-bar-enhanced.css
-
 .filter-bar-pro {
   display: flex;
   align-items: flex-end;
@@ -135,34 +121,28 @@ body.theme-dark {
   flex: 0 0 auto;
   flex-basis: auto;
 }
-
 .filter-bar-pro .group:has(.view-toggle-pro) {
   min-width: 100px;
 }
-
 .filter-bar-pro .group-ux-effects {
   min-width: 120px;
   position: relative;
 }
-
 .queue-controls {
   display: flex;
   flex-direction: row;
   gap: var(--space-2);
   align-items: center;
 }
-
 .queue-controls select {
   flex: 1;
 }
-
 .ux-controls {
   display: flex;
   flex-direction: row;
   gap: var(--space-2);
   align-items: center;
 }
-
 .btn-ux-effect {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%);
   border: 1px solid rgba(59, 130, 246, 0.25);
@@ -178,16 +158,13 @@ body.theme-dark {
   align-items: center;
   gap: var(--space-1);
 }
-
 .btn-unified:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%);
   border-color: rgba(59, 130, 246, 0.4);
   color: var(--color-text);
   transform: translateY(-1px);
 }
-
 */ /* END DEPRECATED FILTER BAR STYLES */
-
 /* Enhanced save icon button */
 .btn-emoji-icon {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.08) 100%);
@@ -206,7 +183,6 @@ body.theme-dark {
   min-height: 36px;
   color: rgba(34, 197, 94, 0.8);
 }
-
 .btn-emoji-icon:hover {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.15) 100%);
   border-color: rgba(34, 197, 94, 0.4);
@@ -216,21 +192,17 @@ body.theme-dark {
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
   color: rgba(34, 197, 94, 1);
 }
-
 .btn-emoji-icon svg {
   width: 16px;
   height: 16px;
   transition: all 0.2s ease;
 }
-
 .btn-emoji-icon:hover svg {
   transform: scale(1.1);
 }
-
 /* ===========================================
    UNIFIED BUTTON SYSTEM - All buttons and menus follow this standard
    =========================================== */
-
 /* Base button class - can be applied to any button element */
 .btn-unified {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%);
@@ -248,32 +220,27 @@ body.theme-dark {
   gap: var(--space-1);
   white-space: nowrap;
 }
-
 .btn-unified:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%);
   border-color: rgba(59, 130, 246, 0.4);
   transform: translateY(-1px);
   /* backdrop-filter: blur(15px); */
 }
-
 .btn-unified:active {
   transform: translateY(0);
 }
-
 /* Success variant for save buttons */
 .btn-unified.btn-success {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(22, 163, 74, 0.08) 100%);
   border: 1px solid rgba(34, 197, 94, 0.25);
   color: rgba(34, 197, 94, 0.8);
 }
-
 .btn-unified.btn-success:hover {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.15) 100%);
   border-color: rgba(34, 197, 94, 0.4);
   color: rgba(34, 197, 94, 1);
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
 }
-
 /* Theme dropdown menu */
 .theme-dropdown {
   display: none;
@@ -286,12 +253,10 @@ body.theme-dark {
   min-width: 140px;
   margin-top: var(--space-2);
 }
-
 .theme-dropdown.visible {
   display: flex;
   flex-direction: column;
 }
-
 .theme-dropdown .theme-option {
   background: transparent;
   border: none;
@@ -302,14 +267,11 @@ body.theme-dark {
   font-size: 12px;
   transition: var(--transition);
 }
-
 .theme-dropdown .theme-option:hover {
   background: var(--color-accent);
   color: #fff;
 }
-
 /* OLD FILTER BAR STYLES - DEPRECATED - Now using filter-bar-enhanced.css
-
 .filter-bar-pro label {
   font-size: 11px;
   font-weight: 600;
@@ -317,7 +279,6 @@ body.theme-dark {
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
-
 .filter-bar-pro select,
 .filter-bar-pro input {
   width: 100%;
@@ -328,23 +289,19 @@ body.theme-dark {
   background: var(--color-surface-alt);
   transition: var(--transition);
 }
-
 .filter-bar-pro select:focus {
   outline: none;
   box-shadow: var(--focus-ring);
   border-color: var(--color-accent);
 }
-
 .filter-bar-pro select:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-soft);
 }
-
 .view-toggle-pro {
   display: flex;
   gap: var(--space-2);
 }
-
 .view-toggle-pro button {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%);
   border: 1px solid rgba(59, 130, 246, 0.25);
@@ -358,7 +315,6 @@ body.theme-dark {
   display: inline-flex;
   align-items: center;
 }
-
 .view-toggle-pro button.active,
 .view-toggle-pro button:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%);
@@ -366,9 +322,7 @@ body.theme-dark {
   color: var(--color-text);
   transform: translateY(-1px);
 }
-
 */ /* END DEPRECATED FILTER BAR STYLES */
-
 /* Board wrapper */
 .board-wrapper {
   display: flex;
@@ -384,7 +338,6 @@ body.theme-dark {
   box-sizing: border-box;
   height: 100%;
 }
-
 /* Placeholder for empty states */
 .placeholder-pro {
   background: transparent !important;
@@ -398,7 +351,6 @@ body.theme-dark {
   z-index: 10;
   position: relative;
 }
-
 /* Skeleton loader animation */
 .skeleton-line {
   height: 12px;
@@ -406,12 +358,10 @@ body.theme-dark {
   border-radius: var(--radius-pill);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
-
 /* Utility classes */
 .mt-2 { margin-top: var(--space-2); }
 .mt-4 { margin-top: var(--space-4); }
@@ -419,7 +369,6 @@ body.theme-dark {
 .flex { display: flex; }
 .space-between { justify-content: space-between; }
 .center { justify-content: center; align-items: center; }
-
 /* Responsive adjustments */
 /* Tablet and below (max-width: 768px) */
 @media (max-width: 768px) {
@@ -429,40 +378,32 @@ body.theme-dark {
     padding: var(--space-2) var(--space-3) var(--space-3);
     overflow-x: auto;
   }
-
   .filter-bar-pro .group {
     min-width: 70px;
     flex: 0 0 auto;
   }
-
   .filter-bar-pro .group:has(.view-toggle-pro) {
     min-width: 85px;
   }
-
   .filter-bar-pro .group-ux-effects {
     min-width: 110px;
   }
-
   .filter-bar-pro select,
   .filter-bar-pro button {
     font-size: 12px;
     padding: var(--space-2) var(--space-3);
   }
   */
-
   .board-wrapper {
     padding: var(--space-3) var(--space-3);
   }
-
   .main-header-pro {
     padding: var(--space-3) var(--space-3);
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-2);
   }
-
   .main-header-pro h1 {
     font-size: 16px;
   }
 }
-

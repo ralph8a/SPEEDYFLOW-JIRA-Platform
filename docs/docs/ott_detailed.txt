@@ -1,9 +1,7 @@
 Source: Wikipedia OTT page and industry notes
-
 What is OTT?
 ------------
 Over-the-top (OTT) services deliver audio/video content over the public Internet without using managed pay-TV or cable distribution. OTT models include streaming platforms (SVOD), free-ad-supported (FAST), and live skinny bundles.
-
 Technical building blocks
 ------------------------
 - CDN: Content Delivery Networks for edge caching and low latency delivery.
@@ -11,17 +9,14 @@ Technical building blocks
 - DRM: Widevine/PlayReady/FairPlay for content protection.
 - Analytics: real-time telemetry to detect buffering, bitrate switches, concurrent viewers.
 - Personalization: recommendation engines, A/B experimentation, user profiles.
-
 Operational patterns
 --------------------
 - Scale for peaks (sporting events): autoscaling, multi-CDN strategies, pre-warming caches.
 - Monitor rebuffering ratio and startup time; set SLOs and alert thresholds.
 - Use adaptive bitrate with device/network-aware profiles for best QoE.
-
 Relevance to SPEEDYFLOW
 -----------------------
 - If integrating OTT notifications or ticketing for streaming incidents, capture telemetry (region, CDN, error codes) in tickets; use ML models to map errors → likely root causes (CDN/Origin/Encoding).
-
 References
 ----------
 - https://en.wikipedia.org/wiki/Over-the-top_media_service

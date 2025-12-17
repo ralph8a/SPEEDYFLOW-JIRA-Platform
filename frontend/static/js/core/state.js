@@ -3,9 +3,7 @@
  * Centralized application state with reactive updates
  * SPEEDYFLOW JIRA Platform
  */
-
 import { logger } from '../utils/helpers.js';
-
 /**
  * Application State Store
  */
@@ -16,17 +14,14 @@ class StateStore {
       desksWithQueues: {},
       selectedDesk: null,
       selectedQueue: null,
-      
       // Issue Data
       allIssues: [],
       filteredIssues: [],
       selectedIssue: null,
-      
       // UI State
       currentView: 'kanban', // 'kanban' or 'list'
       currentTab: 'board', // 'board', 'dashboard', 'analytics'
       sidebarOpen: false,
-      
       // Filters
       filters: {
         search: '',
@@ -35,11 +30,9 @@ class StateStore {
         status: '',
         sortBy: 'created-desc',
       },
-      
       // User Data
       currentUser: null,
       teamMembers: [],
-      
       // Loading States
       loading: {
         desks: false,
@@ -47,7 +40,6 @@ class StateStore {
         issue: false,
         comments: false,
       },
-      
       // Error States
       errors: {
         desks: null,
@@ -55,12 +47,10 @@ class StateStore {
         issue: null,
       },
     };
-    
     // Subscribers for reactive updates
     this.subscribers = new Map();
     this.nextSubscriberId = 0;
   }
-
   /**
    * Get current state
    * @returns {Object} Current state
@@ -68,7 +58,6 @@ class StateStore {
   getState() {
     return this.state;
   }
-
   /**
    * Get a specific state value by path
    * @param {string} path - Dot-notation path (e.g., 'filters.search')
@@ -77,7 +66,6 @@ class StateStore {
   get(path) {
     return path.split('.').reduce((obj, key) => obj?.[key], this.state);
   }
-
   /**
    * Set state value(s) and notify subscribers
    * @param {Object|string} updates - Object with updates or path string
@@ -93,7 +81,6 @@ class StateStore {
       this.notify(updates, value);
       return;
     }
-
     // Handle object updates
     Object.keys(updates).forEach(key => {
       if (key.includes('.')) {
@@ -107,10 +94,8 @@ class StateStore {
       }
       this.notify(key, updates[key]);
     });
-
     logger.debug('State updated', updates);
   }
-
   /**
    * Subscribe to state changes
    * @param {string|Function} pathOrCallback - State path or callback
@@ -119,7 +104,6 @@ class StateStore {
    */
   subscribe(pathOrCallback, callback) {
     const id = this.nextSubscriberId++;
-    
     if (typeof pathOrCallback === 'function') {
       // Subscribe to all changes
       this.subscribers.set(id, { path: '*', callback: pathOrCallback });
@@ -127,11 +111,9 @@ class StateStore {
       // Subscribe to specific path
       this.subscribers.set(id, { path: pathOrCallback, callback });
     }
-
     // Return unsubscribe function
     return () => this.subscribers.delete(id);
   }
-
   /**
    * Notify subscribers of state changes
    * @param {string} path - Changed state path
@@ -144,7 +126,6 @@ class StateStore {
       }
     });
   }
-
   /**
    * Reset state to initial values
    */
@@ -164,14 +145,11 @@ class StateStore {
     logger.info('State reset');
   }
 }
-
 // Create singleton instance
 const store = new StateStore();
-
 // ============================================================
 // CONVENIENCE FUNCTIONS
 // ============================================================
-
 /**
  * Get all issues from state
  * @returns {Array} All issues
@@ -179,7 +157,6 @@ const store = new StateStore();
 export function getAllIssues() {
   return store.get('allIssues');
 }
-
 /**
  * Get filtered issues from state
  * @returns {Array} Filtered issues
@@ -187,7 +164,6 @@ export function getAllIssues() {
 export function getFilteredIssues() {
   return store.get('filteredIssues');
 }
-
 /**
  * Set all issues in state
  * @param {Array} issues - Issues array
@@ -195,7 +171,6 @@ export function getFilteredIssues() {
 export function setAllIssues(issues) {
   store.setState({ allIssues: issues, filteredIssues: issues });
 }
-
 /**
  * Set filtered issues in state
  * @param {Array} issues - Filtered issues array
@@ -203,7 +178,6 @@ export function setAllIssues(issues) {
 export function setFilteredIssues(issues) {
   store.setState({ filteredIssues: issues });
 }
-
 /**
  * Get selected issue
  * @returns {Object|null} Selected issue
@@ -211,7 +185,6 @@ export function setFilteredIssues(issues) {
 export function getSelectedIssue() {
   return store.get('selectedIssue');
 }
-
 /**
  * Set selected issue
  * @param {Object|null} issue - Issue object
@@ -219,7 +192,6 @@ export function getSelectedIssue() {
 export function setSelectedIssue(issue) {
   store.setState({ selectedIssue: issue });
 }
-
 /**
  * Get current view
  * @returns {string} Current view ('kanban' or 'list')
@@ -227,7 +199,6 @@ export function setSelectedIssue(issue) {
 export function getCurrentView() {
   return store.get('currentView');
 }
-
 /**
  * Set current view
  * @param {string} view - View name
@@ -235,7 +206,6 @@ export function getCurrentView() {
 export function setCurrentView(view) {
   store.setState({ currentView: view });
 }
-
 /**
  * Get current tab
  * @returns {string} Current tab
@@ -243,7 +213,6 @@ export function setCurrentView(view) {
 export function getCurrentTab() {
   return store.get('currentTab');
 }
-
 /**
  * Set current tab
  * @param {string} tab - Tab name
@@ -251,7 +220,6 @@ export function getCurrentTab() {
 export function setCurrentTab(tab) {
   store.setState({ currentTab: tab });
 }
-
 /**
  * Get filters
  * @returns {Object} Current filters
@@ -259,7 +227,6 @@ export function setCurrentTab(tab) {
 export function getFilters() {
   return store.get('filters');
 }
-
 /**
  * Set filter value
  * @param {string} key - Filter key
@@ -268,7 +235,6 @@ export function getFilters() {
 export function setFilter(key, value) {
   store.setState(`filters.${key}`, value);
 }
-
 /**
  * Reset all filters
  */
@@ -283,7 +249,6 @@ export function resetFilters() {
     },
   });
 }
-
 /**
  * Get service desks with queues
  * @returns {Object} Desks with queues
@@ -291,7 +256,6 @@ export function resetFilters() {
 export function getDesksWithQueues() {
   return store.get('desksWithQueues');
 }
-
 /**
  * Set service desks with queues
  * @param {Object} desks - Desks object
@@ -299,7 +263,6 @@ export function getDesksWithQueues() {
 export function setDesksWithQueues(desks) {
   store.setState({ desksWithQueues: desks });
 }
-
 /**
  * Get selected desk
  * @returns {string|null} Selected desk name
@@ -307,7 +270,6 @@ export function setDesksWithQueues(desks) {
 export function getSelectedDesk() {
   return store.get('selectedDesk');
 }
-
 /**
  * Set selected desk
  * @param {string} desk - Desk name
@@ -315,7 +277,6 @@ export function getSelectedDesk() {
 export function setSelectedDesk(desk) {
   store.setState({ selectedDesk: desk });
 }
-
 /**
  * Get selected queue
  * @returns {string|null} Selected queue ID
@@ -323,7 +284,6 @@ export function setSelectedDesk(desk) {
 export function getSelectedQueue() {
   return store.get('selectedQueue');
 }
-
 /**
  * Set selected queue
  * @param {string} queue - Queue ID
@@ -331,7 +291,6 @@ export function getSelectedQueue() {
 export function setSelectedQueue(queue) {
   store.setState({ selectedQueue: queue });
 }
-
 /**
  * Get loading state
  * @param {string} key - Loading key
@@ -340,7 +299,6 @@ export function setSelectedQueue(queue) {
 export function getLoading(key) {
   return store.get(`loading.${key}`);
 }
-
 /**
  * Set loading state
  * @param {string} key - Loading key
@@ -349,7 +307,6 @@ export function getLoading(key) {
 export function setLoading(key, value) {
   store.setState(`loading.${key}`, value);
 }
-
 /**
  * Get error state
  * @param {string} key - Error key
@@ -358,7 +315,6 @@ export function setLoading(key, value) {
 export function getError(key) {
   return store.get(`errors.${key}`);
 }
-
 /**
  * Set error state
  * @param {string} key - Error key
@@ -367,7 +323,6 @@ export function getError(key) {
 export function setError(key, error) {
   store.setState(`errors.${key}`, error);
 }
-
 /**
  * Clear all errors
  */
@@ -380,7 +335,6 @@ export function clearErrors() {
     },
   });
 }
-
 /**
  * Get current user
  * @returns {Object|null} Current user
@@ -388,7 +342,6 @@ export function clearErrors() {
 export function getCurrentUser() {
   return store.get('currentUser');
 }
-
 /**
  * Set current user
  * @param {Object} user - User object
@@ -396,7 +349,6 @@ export function getCurrentUser() {
 export function setCurrentUser(user) {
   store.setState({ currentUser: user });
 }
-
 /**
  * Toggle sidebar
  */
@@ -404,6 +356,5 @@ export function toggleSidebar() {
   const current = store.get('sidebarOpen');
   store.setState({ sidebarOpen: !current });
 }
-
 // Export the store instance for direct access
 export { store };

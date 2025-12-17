@@ -1,19 +1,15 @@
 """
 Minimal AI background generator — Ollama primary, 3 solid/gradient fallbacks.
-
 This file provides a compact, well-scoped implementation:
 - `generate_variants(theme, count)` tries Ollama per-variant and falls back
   to small solid SVGs when Ollama is unavailable or returns invalid output.
 - `generate_solid_variants(theme, count=3)` returns lightweight gradient SVGs.
 """
-
 from datetime import datetime
 from typing import List, Dict
 import logging
 import base64
-
 logger = logging.getLogger(__name__)
-
 def generate_solid_variants(theme: str = "dark", count: int = 3) -> List[Dict]:
     variants: List[Dict] = []
     if theme == "light":
@@ -44,10 +40,8 @@ def generate_solid_variants(theme: str = "dark", count: int = 3) -> List[Dict]:
             "timestamp": datetime.now().isoformat(),
         })
     return variants
-
 def generate_variants(theme: str = "dark", count: int = 7) -> List[Dict]:
     """Generate lightweight SVG background variants using built-in fallbacks.
-
     This implementation intentionally avoids any external LLM dependency and
     returns deterministic solid/gradient SVGs.
     """
@@ -66,7 +60,6 @@ def generate_variants(theme: str = "dark", count: int = 7) -> List[Dict]:
             "timestamp": datetime.now().isoformat(),
         })
     return variants
-
 def get_ai_backgrounds(theme: str = "dark") -> Dict:
     try:
         import time

@@ -2,7 +2,6 @@
  * SPEEDYFLOW - SVG Icons Styles
  * Global styles for SVG icons across the application
  */
-
 /* Base SVG Icon Styles */
 .svg-icon {
     display: inline-block;
@@ -12,7 +11,6 @@
     pointer-events: none; /* Prevent SVG from interfering with button clicks */
     flex-shrink: 0; /* Prevent icon from shrinking in flex containers */
 }
-
 /* Icon Sizes */
 .svg-icon-xs { width: 12px; height: 12px; }
 .svg-icon-sm { width: 14px; height: 14px; }
@@ -20,7 +18,6 @@
 .svg-icon-lg { width: 20px; height: 20px; }
 .svg-icon-xl { width: 24px; height: 24px; }
 .svg-icon-2xl { width: 32px; height: 32px; }
-
 /* Button Icon Styles */
 button .svg-icon,
 .btn .svg-icon,
@@ -28,24 +25,20 @@ a .svg-icon {
     display: block;
     margin: auto;
 }
-
 button:hover .svg-icon,
 .btn:hover .svg-icon,
 a:hover .svg-icon {
     stroke: currentColor; /* Inherit hover color from parent */
 }
-
 /* Icon with text (inline with label) */
 .icon-with-text {
     display: inline-flex;
     align-items: center;
     gap: 6px;
 }
-
 .icon-with-text .svg-icon {
     margin-right: 6px;
 }
-
 /* Inline icons (for dynamic content like error messages) */
 .inline-icon,
 .inline-icon svg {
@@ -53,12 +46,10 @@ a:hover .svg-icon {
     vertical-align: middle;
     margin-right: 4px;
 }
-
 .inline-icon svg {
     width: 1em;
     height: 1em;
 }
-
 /* Icon only buttons */
 .icon-btn {
     display: inline-flex;
@@ -71,15 +62,12 @@ a:hover .svg-icon {
     border-radius: 6px;
     transition: all 0.2s ease;
 }
-
 .icon-btn:hover {
     background: rgba(99, 102, 241, 0.1);
 }
-
 .icon-btn:active {
     transform: scale(0.95);
 }
-
 /* Icon Colors */
 .svg-icon-primary { stroke: var(--ff-accent); }
 .svg-icon-secondary { stroke: var(--ff-text-muted); }
@@ -88,7 +76,6 @@ a:hover .svg-icon {
 .svg-icon-warning { stroke: var(--ff-warning); }
 .svg-icon-info { stroke: var(--ff-accent); }
 .svg-icon-muted { stroke: var(--ff-text-muted); }
-
 /* Spinning animation (for refresh icons) */
 @keyframes svg-spin {
     from {
@@ -98,12 +85,10 @@ a:hover .svg-icon {
         transform: rotate(360deg);
     }
 }
-
 .svg-icon-spin {
     animation: svg-spin 1s linear infinite;
     transform-origin: center;
 }
-
 /* Pulse animation (for notifications) */
 @keyframes svg-pulse {
     0%, 100% {
@@ -113,11 +98,9 @@ a:hover .svg-icon {
         opacity: 0.5;
     }
 }
-
 .svg-icon-pulse {
     animation: svg-pulse 2s ease-in-out infinite;
 }
-
 /* Bounce animation */
 @keyframes svg-bounce {
     0%, 100% {
@@ -127,11 +110,9 @@ a:hover .svg-icon {
         transform: translateY(-10px);
     }
 }
-
 .svg-icon-bounce {
     animation: svg-bounce 1s ease-in-out infinite;
 }
-
 /* Shake animation (for alerts) */
 @keyframes svg-shake {
     0%, 100% {
@@ -144,11 +125,9 @@ a:hover .svg-icon {
         transform: translateX(5px);
     }
 }
-
 .svg-icon-shake {
     animation: svg-shake 0.5s ease-in-out;
 }
-
 /* Swing animation */
 @keyframes svg-swing {
     20% {
@@ -167,12 +146,10 @@ a:hover .svg-icon {
         transform: rotate(0deg);
     }
 }
-
 .svg-icon-swing {
     animation: svg-swing 1s ease-in-out;
     transform-origin: top center;
 }
-
 /* Tada animation (attention grabber) */
 @keyframes svg-tada {
     0% {
@@ -191,11 +168,9 @@ a:hover .svg-icon {
         transform: scale(1) rotate(0deg);
     }
 }
-
 .svg-icon-tada {
     animation: svg-tada 1s ease-in-out;
 }
-
 /* Heartbeat animation */
 @keyframes svg-heartbeat {
     0%, 100% {
@@ -208,11 +183,9 @@ a:hover .svg-icon {
         transform: scale(0.9);
     }
 }
-
 .svg-icon-heartbeat {
     animation: svg-heartbeat 1.3s ease-in-out infinite;
 }
-
 /* Fade in animation */
 @keyframes svg-fade-in {
     from {
@@ -222,11 +195,9 @@ a:hover .svg-icon {
         opacity: 1;
     }
 }
-
 .svg-icon-fade-in {
     animation: svg-fade-in 0.5s ease-in;
 }
-
 /* Scale in animation */
 @keyframes svg-scale-in {
     from {
@@ -238,11 +209,9 @@ a:hover .svg-icon {
         opacity: 1;
     }
 }
-
 .svg-icon-scale-in {
     animation: svg-scale-in 0.3s ease-out;
 }
-
 /* Rotate in animation */
 @keyframes svg-rotate-in {
     from {
@@ -254,11 +223,9 @@ a:hover .svg-icon {
         opacity: 1;
     }
 }
-
 .svg-icon-rotate-in {
     animation: svg-rotate-in 0.5s ease-out;
 }
-
 /* Float animation */
 @keyframes svg-float {
     0%, 100% {
@@ -268,11 +235,9 @@ a:hover .svg-icon {
         transform: translateY(-8px);
     }
 }
-
 .svg-icon-float {
     animation: svg-float 2s ease-in-out infinite;
 }
-
 /* Glow animation */
 @keyframes svg-glow {
     0%, 100% {
@@ -282,11 +247,9 @@ a:hover .svg-icon {
         filter: drop-shadow(0 0 8px currentColor);
     }
 }
-
 .svg-icon-glow {
     animation: svg-glow 2s ease-in-out infinite;
 }
-
 /* Flip animation */
 @keyframes svg-flip {
     0% {
@@ -296,11 +259,9 @@ a:hover .svg-icon {
         transform: perspective(400px) rotateY(360deg);
     }
 }
-
 .svg-icon-flip {
     animation: svg-flip 1s ease-in-out;
 }
-
 /* Wiggle animation */
 @keyframes svg-wiggle {
     0%, 100% {
@@ -313,11 +274,9 @@ a:hover .svg-icon {
         transform: rotate(5deg);
     }
 }
-
 .svg-icon-wiggle {
     animation: svg-wiggle 0.5s ease-in-out infinite;
 }
-
 /* Jello animation */
 @keyframes svg-jello {
     0%, 11.1%, 100% {
@@ -345,23 +304,19 @@ a:hover .svg-icon {
         transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
     }
 }
-
 .svg-icon-jello {
     animation: svg-jello 1s ease-in-out;
     transform-origin: center;
 }
-
 /* Theme-specific styles */
 .theme-dark .svg-icon {
     stroke: currentColor;
     opacity: 0.9;
 }
-
 .theme-light .svg-icon {
     stroke: currentColor;
     opacity: 1;
 }
-
 /* Icon in disabled state */
 button:disabled .svg-icon,
 .btn:disabled .svg-icon,
@@ -369,13 +324,11 @@ button:disabled .svg-icon,
     opacity: 0.4;
     cursor: not-allowed;
 }
-
 /* Icon badge (for notifications count) */
 .icon-badge {
     position: relative;
     display: inline-block;
 }
-
 .icon-badge::after {
     content: attr(data-badge);
     position: absolute;
@@ -390,41 +343,34 @@ button:disabled .svg-icon,
     min-width: 16px;
     text-align: center;
 }
-
 /* Loading state */
 .icon-loading {
     opacity: 0.6;
 }
-
 .icon-loading .svg-icon {
     animation: svg-spin 1s linear infinite;
 }
-
 /* Icon group (multiple icons together) */
 .icon-group {
     display: inline-flex;
     align-items: center;
     gap: 4px;
 }
-
 /* Responsive icons (hide on mobile) */
 @media (max-width: 640px) {
     .icon-hide-mobile {
         display: none;
     }
-    
     .icon-with-text .svg-icon {
         margin-right: 4px;
     }
 }
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
     .svg-icon {
         stroke-width: 2.5;
     }
 }
-
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     .svg-icon-spin,
@@ -433,32 +379,26 @@ button:disabled .svg-icon,
         animation: none;
     }
 }
-
 /* ============================================
    ASSEMBLE ANIMATION (Parts come together)
    ============================================ */
-
 /* Assemble animation - parts slide in from different directions */
 @keyframes svg-assemble-from-top {
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes svg-assemble-from-bottom {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes svg-assemble-from-left {
     from { opacity: 0; transform: translateX(-20px); }
     to { opacity: 1; transform: translateX(0); }
 }
-
 @keyframes svg-assemble-from-right {
     from { opacity: 0; transform: translateX(20px); }
     to { opacity: 1; transform: translateX(0); }
 }
-
 /* Apply assemble animation - parts come from different directions */
 /* Use nth-of-type to target specific element types (line, path, etc) */
 .svg-icon-draw svg > *:nth-child(1) {
@@ -466,80 +406,66 @@ button:disabled .svg-icon,
     animation: svg-assemble-from-top 0.6s ease-out forwards;
     animation-delay: 0s;
 }
-
 .svg-icon-draw svg > *:nth-child(2) {
     opacity: 0;
     animation: svg-assemble-from-right 0.6s ease-out forwards;
     animation-delay: 0.2s;
 }
-
 .svg-icon-draw svg > *:nth-child(3) {
     opacity: 0;
     animation: svg-assemble-from-bottom 0.6s ease-out forwards;
     animation-delay: 0.4s;
 }
-
 .svg-icon-draw svg > *:nth-child(4) {
     opacity: 0;
     animation: svg-assemble-from-left 0.6s ease-out forwards;
     animation-delay: 0.6s;
 }
-
 .svg-icon-draw svg > circle {
     opacity: 0;
     animation: svg-assemble-from-top 0.8s ease-out forwards;
 }
-
 /* Faster assemble animation */
 .svg-icon-draw-fast svg > *:nth-child(1) {
     opacity: 0;
     animation: svg-assemble-from-top 0.3s ease-out forwards;
     animation-delay: 0s;
 }
-
 .svg-icon-draw-fast svg > *:nth-child(2) {
     opacity: 0;
     animation: svg-assemble-from-right 0.3s ease-out forwards;
     animation-delay: 0.1s;
 }
-
 .svg-icon-draw-fast svg > *:nth-child(3) {
     opacity: 0;
     animation: svg-assemble-from-bottom 0.3s ease-out forwards;
     animation-delay: 0.2s;
 }
-
 .svg-icon-draw-fast svg > circle {
     opacity: 0;
     animation: svg-assemble-from-top 0.4s ease-out forwards;
 }
-
 /* Assemble on hover - icon visible, re-assembles on hover */
 @keyframes svg-assemble-hover-shake {
     0%, 100% { transform: translate(0, 0); }
     25% { transform: translate(-2px, 2px); }
     75% { transform: translate(2px, -2px); }
 }
-
 .svg-icon-draw-hover svg > * {
     opacity: 1;
 }
-
 .svg-icon-draw-hover:hover svg > *:nth-child(1) {
     animation: svg-assemble-hover-shake 0.5s ease-in-out;
     animation-delay: 0s;
 }
-
 .svg-icon-draw-hover:hover svg > *:nth-child(2) {
     animation: svg-assemble-hover-shake 0.5s ease-in-out;
     animation-delay: 0.1s;
 }
-
 .svg-icon-draw-hover:hover svg > *:nth-child(3) {
     animation: svg-assemble-hover-shake 0.5s ease-in-out;
     animation-delay: 0.2s;
 }
-
 /* Assemble loop - start assembled, disassemble, reassemble, pause 1s */
 @keyframes svg-assemble-loop-top {
     0% { opacity: 1; transform: translateY(0); }
@@ -547,36 +473,30 @@ button:disabled .svg-icon,
     60%, 80% { opacity: 1; transform: translateY(0); }
     100% { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes svg-assemble-loop-right {
     0% { opacity: 1; transform: translateX(0); }
     20% { opacity: 0; transform: translateX(20px); }
     60%, 80% { opacity: 1; transform: translateX(0); }
     100% { opacity: 1; transform: translateX(0); }
 }
-
 @keyframes svg-assemble-loop-bottom {
     0% { opacity: 1; transform: translateY(0); }
     20% { opacity: 0; transform: translateY(20px); }
     60%, 80% { opacity: 1; transform: translateY(0); }
     100% { opacity: 1; transform: translateY(0); }
 }
-
 .svg-icon-draw-loop svg > *:nth-child(1) {
     animation: svg-assemble-loop-top 3.5s ease-in-out infinite;
     animation-delay: 0s;
 }
-
 .svg-icon-draw-loop svg > *:nth-child(2) {
     animation: svg-assemble-loop-right 3.5s ease-in-out infinite;
     animation-delay: 0.3s;
 }
-
 .svg-icon-draw-loop svg > *:nth-child(3) {
     animation: svg-assemble-loop-bottom 3.5s ease-in-out infinite;
     animation-delay: 0.6s;
 }
-
 .svg-icon-draw-loop svg > circle {
     animation: svg-assemble-loop-top 4s ease-in-out infinite;
 }

@@ -3,7 +3,6 @@
  * Sistema de personalización de familias de fuentes
  * 3 opciones profesionales para diferentes contextos
  */
-
 /* ==================== FONT FAMILY PRESETS ==================== */
 :root {
   /* PRESET 1: Business Classic - Familiar y profesional */
@@ -11,32 +10,27 @@
   --preset-business-content: 'Georgia', 'Times New Roman', serif;
   --preset-business-display: 'Segoe UI Semibold', 'Segoe UI', system-ui, sans-serif;
   --preset-business-mono: 'Consolas', 'Courier New', monospace;
-
   /* PRESET 2: Modern Professional - Tecnológico y limpio */
   --preset-modern-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
   --preset-modern-content: 'Source Serif Pro', 'Georgia', serif;
   --preset-modern-display: 'Inter Display', 'Inter', 'Segoe UI', sans-serif;
   --preset-modern-mono: 'JetBrains Mono', 'Consolas', monospace;
-
   /* PRESET 3: Corporate Executive - Elegante y corporativo */
   --preset-corporate-ui: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
   --preset-corporate-content: 'Playfair Display', 'Georgia', serif;
   --preset-corporate-display: 'IBM Plex Sans Medium', 'IBM Plex Sans', system-ui, sans-serif;
   --preset-corporate-mono: 'IBM Plex Mono', 'Consolas', monospace;
-
   /* PRESET 4: Creative Studio (Bonus) */
   --preset-creative-ui: 'Poppins', 'Segoe UI', system-ui, sans-serif;
   --preset-creative-content: 'Crimson Text', 'Georgia', serif;
   --preset-creative-display: 'Poppins SemiBold', 'Poppins', sans-serif;
   --preset-creative-mono: 'Fira Code', 'Consolas', monospace;
-
   /* DEFAULT PRESET - Business Classic por defecto */
   --font-ui: var(--preset-business-ui);
   --font-content: var(--preset-business-content);
   --font-display: var(--preset-business-display);
   --font-mono: var(--preset-business-mono);
 }
-
 /* ==================== GOOGLE FONTS IMPORTS ==================== */
 /* Importamos solo las fuentes que no son del sistema */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Inter+Display:wght@400;500;600;700;800&display=swap');
@@ -48,62 +42,52 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
-
 /* ==================== PRESET CLASSES ==================== */
 /* Aplicación automática de presets via JavaScript */
-
 /* Business Classic */
 .font-preset-business {
   --font-ui: var(--preset-business-ui);
   --font-content: var(--preset-business-content);
   --font-display: var(--preset-business-display);
   --font-mono: var(--preset-business-mono);
-  
   /* Adaptación Aptos/Century: Segoe UI + Georgia */
   --line-height-compensation: 0.95; /* Segoe UI más compacta que Aptos */
   --letter-spacing-compensation: 0.005em; /* Georgia necesita más espacio que Century */
   --weight-compensation: -15; /* Segoe UI visualmente más pesada que Aptos */
 }
-
 /* Modern Professional */
 .font-preset-modern {
   --font-ui: var(--preset-modern-ui);
   --font-content: var(--preset-modern-content);
   --font-display: var(--preset-modern-display);
   --font-mono: var(--preset-modern-mono);
-  
   /* Adaptación Aptos/Century: Inter + Source Serif Pro */
   --line-height-compensation: 1.02; /* Inter ligeramente más alta que Aptos */
   --letter-spacing-compensation: -0.002em; /* Inter más ancha que Aptos */
   --weight-compensation: 10; /* Inter más ligera visualmente */
 }
-
 /* Corporate Executive */
 .font-preset-corporate {
   --font-ui: var(--preset-corporate-ui);
   --font-content: var(--preset-corporate-content);
   --font-display: var(--preset-corporate-display);
   --font-mono: var(--preset-corporate-mono);
-  
   /* Adaptación Aptos/Century: IBM Plex + Playfair Display */
   --line-height-compensation: 1.05; /* IBM Plex más espaciosa que Aptos */
   --letter-spacing-compensation: 0.008em; /* Playfair necesita más respiro */
   --weight-compensation: 25; /* IBM Plex más ligera que Aptos */
 }
-
 /* Creative Studio */
 .font-preset-creative {
   --font-ui: var(--preset-creative-ui);
   --font-content: var(--preset-creative-content);
   --font-display: var(--preset-creative-display);
   --font-mono: var(--preset-creative-mono);
-  
   /* Adaptación Aptos/Century: Poppins + Crimson Text */
   --line-height-compensation: 1.08; /* Poppins más alta que Aptos */
   --letter-spacing-compensation: 0.003em; /* Crimson Text más estrecha */
   --weight-compensation: 35; /* Poppins más ligera que Aptos */
 }
-
 /* ==================== COMPATIBILITY LAYER ==================== */
 /* Mantiene compatibilidad con el sistema existente */
 :root {
@@ -112,22 +96,18 @@
   --font-body: var(--font-content);
   --font-code: var(--font-mono);
 }
-
 /* ==================== PRESET METADATA ==================== */
 /* Información para el selector de fuentes en settings */
 :root {
   --preset-business-name: "Business Classic";
   --preset-business-description: "Familiar y profesional - Segoe UI + Georgia";
   --preset-business-category: "professional";
-
   --preset-modern-name: "Modern Professional";
   --preset-modern-description: "Tecnológico y limpio - Inter + Source Serif Pro";
   --preset-modern-category: "modern";
-
   --preset-corporate-name: "Corporate Executive";
   --preset-corporate-description: "Elegante y corporativo - IBM Plex + Playfair";
   --preset-corporate-category: "executive";
-
   --preset-creative-name: "Creative Studio";
   --preset-creative-description: "Creativo y dinámico - Poppins + Crimson Text";
   --preset-creative-category: "creative";

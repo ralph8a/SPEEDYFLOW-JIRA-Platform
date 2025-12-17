@@ -7,9 +7,7 @@ import functools
 import time
 from typing import Callable, Any, Optional
 import logging
-
 logger = logging.getLogger(__name__)
-
 def with_retry(
     max_retries: int = 3,
     delay: float = 1.0,
@@ -22,7 +20,6 @@ def with_retry(
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             retries = 0
             current_delay = delay
-            
             while retries < max_retries:
                 try:
                     return func(*args, **kwargs)
@@ -30,15 +27,12 @@ def with_retry(
                     retries += 1
                     if retries == max_retries:
                         raise e
-                    
                     logger.warning(
                         f"Attempt {retries}/{max_retries} failed: {str(e)}. "
                         f"Retrying in {current_delay} seconds..."
                     )
-                    
                     time.sleep(current_delay)
                     current_delay *= backoff
-            
             return None
         return wrapper
     return decorator

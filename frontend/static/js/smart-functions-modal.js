@@ -2,57 +2,44 @@
  * Quick Action Button Controller  
  * Manages the quick action modal with tabs for Smart Functions
  */
-
 (function() {
   'use strict';
-
   let menuOpen = false;
   let currentEmojiIndex = 0;
   const emojis = ['⚡', '🎯', '🤖'];
-
   function initQuickActionButton() {
     const btn = document.getElementById('quickActionBtn');
     if (!btn) {
       console.error('Quick action button not found');
       return;
     }
-
     console.log('✅ Quick action button found, initializing...');
-
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
       toggleQuickActionMenu();
     });
-
     document.addEventListener('metricsUpdated', function() {
       updateButtonBadge();
     });
-
     // Initial update
     setTimeout(updateButtonBadge, 3000);
-    
     // Rotate emoji every 5 minutes
     setInterval(rotateEmoji, 5 * 60 * 1000);
-    
     console.log('✅ Quick action button initialized');
   }
-
   function rotateEmoji() {
     currentEmojiIndex = (currentEmojiIndex + 1) % emojis.length;
     updateButtonIcon();
     console.log(`🔄 Emoji rotated to: ${emojis[currentEmojiIndex]}`);
   }
-
   function updateButtonIcon() {
     const btn = document.getElementById('quickActionBtn');
     if (!btn) return;
-
     const icon = btn.querySelector('.toggle-icon');
     if (icon) {
       icon.textContent = emojis[currentEmojiIndex];
     }
   }
-
   function toggleQuickActionMenu() {
     if (menuOpen) {
       closeQuickActionMenu();
@@ -60,21 +47,16 @@
       openQuickActionMenu();
     }
   }
-
   function updateButtonBadge() {
     const metrics = window.smartMetrics || { triageCount: 0, needsResponseCount: 0, mlSuggestionsCount: 0 };
     const totalCount = metrics.triageCount + metrics.needsResponseCount + metrics.mlSuggestionsCount;
-    
     const btn = document.getElementById('quickActionBtn');
     if (!btn) return;
-
     // Update icon
     updateButtonIcon();
-
     // Update badge
     const existingBadge = btn.querySelector('.quick-action-btn-badge');
     if (existingBadge) existingBadge.remove();
-
     if (totalCount > 0) {
       const badge = document.createElement('span');
       badge.className = 'quick-action-btn-badge';
@@ -82,25 +64,20 @@
       btn.appendChild(badge);
     }
   }
-
   // Helper function to get modal element
   function getSmartModal() {
     return document.getElementById('smartFunctionsModal');
   }
-
   function openQuickActionMenu() {
     console.log('🎯 Opening Quick Actions modal...');
-    
     if (getSmartModal()) {
       console.log('⚠️ Modal already exists, skipping');
       return;
     }
-
     const modal = document.createElement('div');
     modal.id = 'smartFunctionsModal';
     modal.className = 'bg-selector-modal bg-modal-open';
     modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);';
-    
     modal.innerHTML = `
       <div class="bg-modal-overlay"></div>
       <div class="bg-modal-content">
@@ -108,65 +85,50 @@
           <h2 class="bg-modal-title">🧠 Smart Functions</h2>
           <button class="bg-modal-close" onclick="(() => { const modal = document.getElementById('smartFunctionsModal'); if(modal) modal.remove(); console.log('✕ Modal closed'); })();">✕</button>
         </div>
-        
         <div class="bg-modal-tabs">
           <button class="bg-modal-tab active" data-tab="triage">⚡ Quick Triage</button>
           <button class="bg-modal-tab" data-tab="filters">🎯 Smart Filters</button>
           <button class="bg-modal-tab" data-tab="ml">🤖 ML Analysis</button>
         </div>
-        
         <div class="bg-modal-body">
           <div class="bg-modal-tab-content active" data-tab-content="triage">
             <div id="triageTabContent"></div>
           </div>
-          
           <div class="bg-modal-tab-content" data-tab-content="filters">
             <div id="filtersTabContent"></div>
           </div>
-          
           <div class="bg-modal-tab-content" data-tab-content="ml">
             <div id="mlTabContent"></div>
           </div>
         </div>
       </div>
     `;
-
     document.body.appendChild(modal);
-    
     const tabs = modal.querySelectorAll('.bg-modal-tab');
     const tabContents = modal.querySelectorAll('.bg-modal-tab-content');
-    
     tabs.forEach(tab => {
       tab.addEventListener('click', function() {
         const tabName = this.getAttribute('data-tab');
-        
         tabs.forEach(t => t.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
-        
         this.classList.add('active');
         modal.querySelector(`[data-tab-content="${tabName}"]`).classList.add('active');
-        
         loadTabContent(tabName);
       });
     });
-    
     modal.querySelector('.bg-modal-overlay').addEventListener('click', function() {
       console.log('📍 Overlay clicked, closing modal');
       modal.remove();
       menuOpen = false;
     });
-    
     console.log('📊 Loading triage content...');
     loadTabContent('triage');
-    
     menuOpen = true;
     console.log('✅ Smart Functions modal opened successfully');
   }
-  
   function loadTabContent(tabName) {
     const modal = getSmartModal();
     if (!modal) return;
-    
     switch(tabName) {
       case 'triage':
         loadTriageContent();
@@ -179,14 +141,11 @@
         break;
     }
   }
-  
   function loadTriageContent() {
     const container = document.getElementById('triageTabContent');
     if (!container) return;
-    
     const allIssues = Array.from(window.app.issuesCache.values());
     const triageIssues = window.quickTriage ? window.quickTriage.filterTriageIssues(allIssues) : [];
-    
     if (triageIssues.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
@@ -197,7 +156,6 @@
       `;
       return;
     }
-    
     container.innerHTML = `
       <div style="margin-bottom: 16px; padding: 12px; background: rgba(59,130,246,0.1); border-radius: 8px; border-left: 3px solid #3b82f6;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
@@ -208,7 +166,6 @@
           Found ${triageIssues.length} ticket${triageIssues.length !== 1 ? 's' : ''} requiring immediate attention
         </div>
       </div>
-      
       <div class="triage-tickets-list">
         ${triageIssues.map(issue => {
           const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned';
@@ -216,7 +173,6 @@
           const severityClass = severity.toLowerCase().replace(/\s+/g, '-');
           const isHighPriority = severity === 'Critico' || severity === 'Alto' || severity === 'Mayor';
           const updatedDays = Math.floor((new Date() - new Date(issue.updated || issue.created)) / (1000 * 60 * 60 * 24));
-          
           return `
             <div class="triage-ticket-card" data-key="${issue.key}" style="cursor: pointer; border-left: 3px solid ${isHighPriority ? '#ef4444' : isUnassigned ? '#f59e0b' : '#6b7280'};">
               <div class="triage-ticket-header">
@@ -238,7 +194,6 @@
           `;
         }).join('')}
       </div>
-      
       ${triageIssues.length > 0 ? `
         <div style="margin-top: 16px; padding: 12px; background: rgba(34,197,94,0.1); border-radius: 8px; text-align: center;">
           <button class="bg-modal-primary-btn" onclick="window.quickTriage?.open(); document.getElementById('smartFunctionsModal')?.remove();" style="width: 100%;">
@@ -247,26 +202,21 @@
         </div>
       ` : ''}
     `;
-    
     // Add click handlers after rendering
     const ticketCards = container.querySelectorAll('.triage-ticket-card');
     ticketCards.forEach(card => {
       const issueKey = card.getAttribute('data-key');
-      
       card.addEventListener('click', function(e) {
         // Don't open if clicking on action button
         if (e.target.classList.contains('triage-action-btn')) {
           return;
         }
-        
         console.log('🎯 Opening ticket:', issueKey);
-        
         // Close the modal
         const modal = getSmartModal();
         if (modal) {
           modal.remove();
         }
-        
         // Open the right sidebar with ticket details
         if (window.app && window.app.loadIssueDetails) {
           window.app.loadIssueDetails(issueKey);
@@ -274,7 +224,6 @@
           console.error('❌ app.loadIssueDetails not available');
         }
       });
-      
       // Handle action buttons (assign and snooze)
       const actionBtns = card.querySelectorAll('.triage-action-btn');
       actionBtns.forEach(btn => {
@@ -283,16 +232,12 @@
           const action = this.getAttribute('data-action');
           const originalText = this.innerHTML;
           const originalBg = this.style.background;
-          
           if (action === 'assign') {
             console.log('👤 Assigning ticket to me:', issueKey);
-            
             if (window.quickTriage && window.quickTriage.assignToMe) {
               this.innerHTML = '⏳ Assigning...';
               this.style.background = '#6b7280';
-              
               window.quickTriage.assignToMe(issueKey);
-              
               // Show success feedback
               setTimeout(() => {
                 const successIcon = typeof SVGIcons !== 'undefined' 
@@ -300,7 +245,6 @@
                   : '✅';
                 this.innerHTML = `${successIcon} Assigned`;
                 this.style.background = '#059669';
-                
                 // Reload content after short delay
                 setTimeout(() => {
                   loadTriageContent();
@@ -320,18 +264,14 @@
             }
           } else if (action === 'snooze') {
             console.log('💤 Snoozing ticket 1 hour:', issueKey);
-            
             if (window.quickTriage && window.quickTriage.snoozeTicket) {
               this.innerHTML = '⏳ Snoozing...';
               this.style.background = '#6b7280';
-              
               window.quickTriage.snoozeTicket(issueKey, 60); // 1 hour
-              
               // Show success feedback
               setTimeout(() => {
                 this.innerHTML = '💤 Snoozed';
                 this.style.background = '#059669';
-                
                 // Reload content after short delay
                 setTimeout(() => {
                   loadTriageContent();
@@ -354,19 +294,15 @@
       });
     });
   }
-  
   function loadFiltersContent() {
     const container = document.getElementById('filtersTabContent');
     if (!container) return;
-    
     const allIssues = Array.from(window.app?.issuesCache?.values() || []);
-    
     // Calculate counts for each filter
     const calculateFilterCounts = () => {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const currentUser = window.state?.currentUser || '';
-      
       return {
         'updated-today': allIssues.filter(issue => {
           const updated = new Date(issue.last_real_change || issue.updated || issue.created);
@@ -398,9 +334,7 @@
         }).length
       };
     };
-    
     const counts = calculateFilterCounts();
-    
     const filters = [
       { id: 'updated-today', icon: '📅', name: 'Updated Today', description: 'Modified in last 24 hours', count: counts['updated-today'] },
       { id: 'high-priority-unassigned', icon: '🔴', name: 'High Priority Unassigned', description: 'Critical & high without assignee', count: counts['high-priority-unassigned'] },
@@ -409,7 +343,6 @@
       { id: 'all-critical', icon: '🚨', name: 'All Critical', description: 'All critical severity tickets', count: counts['all-critical'] },
       { id: 'created-today', icon: '🆕', name: 'Created Today', description: 'New from last 24 hours', count: counts['created-today'] }
     ];
-    
     container.innerHTML = `
       <div style="margin-bottom: 16px; padding: 12px; background: rgba(34,197,94,0.1); border-radius: 8px; border-left: 3px solid #22c55e;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
@@ -420,7 +353,6 @@
           Quick access to common filter presets with live counts
         </div>
       </div>
-      
       <div class="filters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
         ${filters.map(filter => {
           const hasResults = filter.count > 0;
@@ -447,7 +379,6 @@
           `;
         }).join('')}
       </div>
-      
       ${window.smartFilters?.activeFilter ? `
         <div style="margin-top: 16px; padding: 12px; background: rgba(99,102,241,0.1); border-radius: 8px; border-left: 3px solid #6366f1;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -457,56 +388,44 @@
         </div>
       ` : ''}
     `;
-    
     // Add the functions needed for the onclick handlers
     window.applySmartFilter = function(filterId) {
       console.log('🎯 Applying smart filter:', filterId);
-      
       if (window.smartFilters && window.smartFilters.applyFilter) {
         window.smartFilters.applyFilter(filterId);
-        
         // Close modal
         const modal = document.getElementById('smartFunctionsModal');
         if (modal) {
           modal.remove();
         }
-        
         console.log('✅ Smart filter applied:', filterId);
       } else {
         console.error('❌ smartFilters not available');
         alert('Smart Filters not available');
       }
     };
-    
     window.clearSmartFilter = function() {
       console.log('🎯 Clearing smart filter');
-      
       if (window.smartFilters && window.smartFilters.clearFilter) {
         window.smartFilters.clearFilter();
-        
         // Close modal
         const modal = document.getElementById('smartFunctionsModal');
         if (modal) {
           modal.remove();
         }
-        
         console.log('✅ Filter cleared');
       } else {
         console.error('❌ smartFilters not available');
       }
     };
   }
-  
   function loadMLContent() {
     const container = document.getElementById('mlTabContent');
     if (!container) return;
-    
     // Automatically run ML analysis when tab opens
     runMLAnalysis(container);
-    
     allIssues.forEach(issue => {
       const missing = [];
-      
       // 🔴 Critical Fields
       if (!issue.customfield_10125 && !issue.severity) {
         missing.push('🔴 Severity');
@@ -520,7 +439,6 @@
         missing.push('🔴 Description');
         fieldStats['Description'] = (fieldStats['Description'] || 0) + 1;
       }
-      
       // 👤 Assignment Fields
       if (!issue.assignee || !issue.assignee.displayName) {
         missing.push('👤 Assignee');
@@ -530,7 +448,6 @@
         missing.push('👤 Reporter');
         fieldStats['Reporter'] = (fieldStats['Reporter'] || 0) + 1;
       }
-      
       // 🏷️ Classification
       if (!issue.labels || issue.labels.length === 0) {
         missing.push('🏷️ Labels');
@@ -540,7 +457,6 @@
         missing.push('🏷️ Components');
         fieldStats['Components'] = (fieldStats['Components'] || 0) + 1;
       }
-      
       // ⏱️ Time Tracking
       if (!issue.duedate) {
         missing.push('⏱️ Due Date');
@@ -550,7 +466,6 @@
         missing.push('⏱️ Estimate');
         fieldStats['Estimate'] = (fieldStats['Estimate'] || 0) + 1;
       }
-      
       // 📦 Versions
       if (!issue.fixVersions || issue.fixVersions.length === 0) {
         missing.push('📦 Fix Version');
@@ -560,25 +475,20 @@
         missing.push('📦 Affected Ver.');
         fieldStats['Affected Version'] = (fieldStats['Affected Version'] || 0) + 1;
       }
-      
       // 🌍 Context
       if (!issue.environment || issue.environment.trim().length < 5) {
         missing.push('🌍 Environment');
         fieldStats['Environment'] = (fieldStats['Environment'] || 0) + 1;
       }
-      
       if (missing.length > 0) {
         missingFields.push({ issue, missing });
       }
     });
-    
     // Calculate top missing fields
     const topMissingFields = Object.entries(fieldStats)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
-    
     const completionRate = ((allIssues.length - missingFields.length) / allIssues.length * 100).toFixed(1);
-    
     container.innerHTML = `
       <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(139,92,246,0.1)); border-radius: 12px; border-left: 4px solid #a855f7;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
@@ -590,11 +500,9 @@
             ${completionRate}% Complete
           </div>
         </div>
-        
         <div style="color: #94a3b8; font-size: 13px; margin-bottom: 12px;">
           Found ${missingFields.length} ticket${missingFields.length !== 1 ? 's' : ''} with incomplete fields for AI enhancement
         </div>
-        
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
           <div style="background: rgba(16,185,129,0.1); padding: 8px; border-radius: 8px; text-align: center;">
             <div style="font-size: 18px; font-weight: 700; color: #10b981;">${allIssues.length}</div>
@@ -609,7 +517,6 @@
             <div style="font-size: 11px; color: #64748b;">Complete</div>
           </div>
         </div>
-        
         ${topMissingFields.length > 0 ? `
           <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px;">
             <div style="font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">🎯 Top Missing Fields:</div>
@@ -623,16 +530,13 @@
           </div>
         ` : ''}
       </div>
-      
     `;
   }
-  
   /**
    * Run ML analysis automatically
    */
   async function runMLAnalysis(container) {
     console.log('🤖 Running ML field suggestions analysis...');
-    
     // Validate state
     if (!window.state || !window.state.currentDesk || !window.state.currentQueue) {
       container.innerHTML = `
@@ -648,7 +552,6 @@
       `;
       return;
     }
-    
     if (!window.state.issues || window.state.issues.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
@@ -663,7 +566,6 @@
       `;
       return;
     }
-    
     // Show loading
     container.innerHTML = `
       <div class="loading-state" style="text-align: center; padding: 60px 20px;">
@@ -676,7 +578,6 @@
         </div>
       </div>
     `;
-    
     try {
       // Call ML analysis API
       const response = await fetch('/api/ai/analyze-queue', {
@@ -687,17 +588,13 @@
           queue_id: window.state.currentQueue
         })
       });
-      
       if (!response.ok) {
         throw new Error(`API returned ${response.status}`);
       }
-      
       const data = await response.json();
       console.log('✅ ML analysis complete:', data);
-      
       // Render results directly in the tab
       renderMLSuggestionsResults(container, data);
-      
     } catch (error) {
       console.error('❌ Error running ML analysis:', error);
       container.innerHTML = `
@@ -716,13 +613,11 @@
       `;
     }
   }
-
   /**
    * Render ML suggestions results with checkboxes for bulk updates
    */
   function renderMLSuggestionsResults(container, data) {
     const { analyzed_count, issues_with_suggestions, suggestions, cache_size } = data;
-    
     if (!suggestions || suggestions.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
@@ -754,7 +649,6 @@
       `;
       return;
     }
-    
     // Group suggestions by field type for stats
     const fieldCounts = {};
     suggestions.forEach(issue => {
@@ -763,11 +657,9 @@
         fieldCounts[label] = (fieldCounts[label] || 0) + 1;
       });
     });
-    
     const topFields = Object.entries(fieldCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
-    
     container.innerHTML = `
       <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1)); border-radius: 12px; border-left: 4px solid #10b981;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -778,11 +670,9 @@
             ${issues_with_suggestions} tickets
           </div>
         </div>
-        
         <div style="color: #94a3b8; font-size: 13px; margin-bottom: 12px;">
           ${issues_with_suggestions} of ${analyzed_count} tickets have suggested improvements
         </div>
-        
         ${topFields.length > 0 ? `
           <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px;">
             <div style="font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">
@@ -798,7 +688,6 @@
           </div>
         ` : ''}
       </div>
-      
       <div class="ml-suggestions-scrollable" style="max-height: 450px; overflow-y: auto; padding-right: 8px;">
         ${suggestions.map(issue => `
           <div class="ml-issue-suggestion-card" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(71,85,105,0.5); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
@@ -812,12 +701,10 @@
                 </div>
               </div>
             </div>
-            
             <div class="suggestions-list">
               ${issue.suggestions.map((sug, idx) => {
                 const confidenceColor = sug.confidence >= 0.8 ? '#10b981' : sug.confidence >= 0.6 ? '#f59e0b' : '#ef4444';
                 const confidenceText = (sug.confidence * 100).toFixed(0) + '%';
-                
                 return `
                   <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 8px;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
@@ -859,7 +746,6 @@
           </div>
         `).join('')}
       </div>
-      
       <div style="margin-top: 16px; display: flex; gap: 8px;">
         <button class="bg-modal-secondary-btn" onclick="document.querySelectorAll('.ml-issue-suggestion-card input[type=checkbox]').forEach(cb => cb.checked = true)">
           ✅ Select All
@@ -872,44 +758,35 @@
         </button>
       </div>
     `;
-    
     // Handle apply button
     const applyBtn = container.querySelector('#applyMLSuggestionsBtn');
     if (applyBtn) {
       applyBtn.addEventListener('click', async function() {
         const selectedSuggestions = [];
         const checkboxes = container.querySelectorAll('input[type=checkbox]:checked');
-        
         checkboxes.forEach(cb => {
           const issueKey = cb.dataset.issueKey;
           const field = cb.dataset.field;
           const value = JSON.parse(cb.dataset.value);
-          
           // Group by issue
           let issueGroup = selectedSuggestions.find(s => s.issue_key === issueKey);
           if (!issueGroup) {
             issueGroup = { issue_key: issueKey, updates: {} };
             selectedSuggestions.push(issueGroup);
           }
-          
           issueGroup.updates[field] = value;
         });
-        
         if (selectedSuggestions.length === 0) {
           alert('Please select at least one suggestion to apply');
           return;
         }
-        
         console.log('🚀 Applying ML suggestions:', selectedSuggestions);
-        
         // Show progress
         applyBtn.disabled = true;
         applyBtn.textContent = '⏳ Applying changes...';
-        
         try {
           let successCount = 0;
           let errorCount = 0;
-          
           for (const suggestion of selectedSuggestions) {
             try {
               const response = await fetch(`/api/issues/${suggestion.issue_key}`, {
@@ -917,7 +794,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fields: suggestion.updates })
               });
-              
               if (response.ok) {
                 successCount++;
                 console.log(`✅ Updated ${suggestion.issue_key}`);
@@ -930,23 +806,19 @@
               console.error(`❌ Error updating ${suggestion.issue_key}:`, error);
             }
           }
-          
           // Show result
           const resultMsg = `✅ Successfully updated ${successCount} ticket${successCount !== 1 ? 's' : ''}` +
                            (errorCount > 0 ? `\n⚠️ ${errorCount} failed` : '');
           alert(resultMsg);
-          
           // Reload issues
           if (window.app && window.app.loadCurrentQueue) {
             await window.app.loadCurrentQueue();
           }
-          
           // Close modal
           const modal = getSmartModal();
           if (modal) {
             modal.remove();
           }
-          
         } catch (error) {
           console.error('❌ Error applying suggestions:', error);
           alert('Error applying changes. Please try again.');
@@ -956,7 +828,6 @@
       });
     }
   }
-
   function closeQuickActionMenu() {
     const modal = getSmartModal();
     if (modal) {
@@ -965,39 +836,31 @@
     menuOpen = false;
     updateButtonBadge();
   }
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initQuickActionButton);
   } else {
     initQuickActionButton();
   }
-
   // Listen for ML analysis updates (when fields are modified)
   document.addEventListener('mlAnalysisUpdate', async function(e) {
     console.log('🔄 ML analysis update triggered:', e.detail);
-    
     // Si el modal está abierto en la pestaña ML, recalcular
     const modal = getSmartModal();
     if (modal && menuOpen) {
       const container = modal.querySelector('#modalContent');
       const activeTab = modal.querySelector('.bg-modal-tab.active');
-      
       if (activeTab && activeTab.dataset.tab === 'ml') {
         console.log('📊 Recalculating ML analysis tab...');
-        
         // Mostrar loading
         container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Updating analysis...</p></div>';
-        
         // Forzar recarga de issues desde el API
         try {
           if (window.state && window.state.currentDesk && window.state.currentQueue) {
             console.log('🔄 Reloading issues from API...');
-            
             const response = await fetch(`/api/servicedesk/${window.state.currentDesk}/queue/${window.state.currentQueue}/issues`);
             if (response.ok) {
               const data = await response.json();
               const issues = data.data || data.issues || data;
-              
               // Actualizar window.state.issues
               if (window.state) {
                 window.state.issues = issues;
@@ -1008,7 +871,6 @@
         } catch (error) {
           console.error('❌ Error reloading issues:', error);
         }
-        
         // Recalcular después de recargar
         setTimeout(() => {
           renderMLAnalysisTab(container);
@@ -1016,7 +878,6 @@
       }
     }
   });
-
   // Exponer objeto global para verificar estado
   window.smartFunctionsModal = {
     get isOpen() { return menuOpen; },
@@ -1033,6 +894,5 @@
       }
     }
   };
-
   console.log('✅ Quick action button controller loaded');
 })();

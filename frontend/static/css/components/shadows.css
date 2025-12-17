@@ -2,7 +2,6 @@
    Uses design tokens in :root (variables.css). This file provides stronger
    shadows and dark-mode overrides to improve legibility in dark themes.
 */
-
 :root {
   /* Softer, lower-elevation shadows by default */
   --shadow: 0 8px 24px rgba(2, 6, 23, 0.10);
@@ -29,56 +28,47 @@
   --ff-danger: #ef4444;
   --ff-warning: #f59e0b;
 }
-
 /* Apply shadows only to essential, small-to-medium elements */
 :where(.issue-card, .card, .flowing-footer, .mentions-autocomplete-dropdown, .comment) {
   box-shadow: var(--shadow) !important;
   transition: box-shadow var(--transition-base) ease, transform var(--transition-fast) ease;
 }
-
 /* Keep other large panels flat by default */
 :where(.panel, .panel-card, .sla-monitor-container, .ticket-description-section, .left-column, .right-column, .comments-section) {
   box-shadow: none !important;
 }
-
 /* Smaller elements (buttons, small cards, mention items) */
 :where(button, .btn, .btn-add-comment, .btn-add-comment-footer, .comment-action-btn, .comment-toolbar-btn, .mention-item, .mention-option) {
   box-shadow: var(--shadow-sm) !important;
   transition: box-shadow var(--transition-fast) ease, transform var(--transition-fast) ease;
 }
-
 /* Hover/active states for emphasis */
 :where(.card:hover, [class*="card"]:hover, .panel:hover, .issue-card:hover, .flowing-footer:hover, .mentions-autocomplete-dropdown .mention-item:hover, button:hover, .btn:hover, .comment:hover) {
   box-shadow: var(--shadow-md) !important;
   transform: translateY(-2px);
 }
-
 /* Focus states should also show slight elevation */
 :where(button:focus, .btn:focus, .mention-item:focus, .field-input:focus, textarea:focus, input:focus) {
   outline: none !important;
   box-shadow: var(--shadow-md) !important;
 }
-
 /* Make the mentions dropdown items clearly separated */
 .mentions-autocomplete-dropdown .mention-item {
   border-radius: 6px;
   margin: 6px;
   padding: 6px 8px;
 }
-
 /* Subtle inner shadows for cards that contain images */
 .issue-card .card-image,
 .comment .comment-avatar {
   box-shadow: var(--shadow-sm) inset !important;
 }
-
 /* Dark mode overrides: force readable backgrounds and contrast */
 body[data-theme="dark"] :where(.ticket-description-section, .field-input, .comments-section, .suggestion-item, .flowing-footer, .left-column, .right-column, .panel, .panel-card, .issue-card) {
   background: linear-gradient(180deg, rgba(10, 12, 18, 0.6), rgba(8, 10, 14, 0.6)) !important;
   color: #e6eef8 !important;
   border-color: rgba(255, 255, 255, 0.04) !important;
 }
-
 /* Global typography color normalization
    Reduce the number of distinct font colors by mapping common UI text
    to a small, pleasant palette. Use !important sparingly to override
@@ -87,7 +77,6 @@ body[data-theme="dark"] :where(.ticket-description-section, .field-input, .comme
 body {
   color: var(--ff-text-primary);
 }
-
 /* Muted / secondary text */
 .ff-text-muted,
 .ticket-meta,
@@ -100,7 +89,6 @@ body {
 .small-muted {
   color: var(--ff-text-muted) !important;
 }
-
 /* Accent / links / titles */
 a,
 .flowing-title-text h3,
@@ -109,7 +97,6 @@ a,
 .ticket-summary-header {
   color: var(--ff-accent) !important;
 }
-
 /* Strong headings */
 h1,
 h2,
@@ -121,20 +108,16 @@ h6,
 .footer-title {
   color: var(--ff-accent-strong) !important;
 }
-
 /* Status colors mapped to tokens */
 .status-success {
   color: var(--ff-success) !important;
 }
-
 .status-danger {
   color: var(--ff-danger) !important;
 }
-
 .status-warning {
   color: var(--ff-warning) !important;
 }
-
 /* Dark theme: pick lighter palette for text while preserving tokens */
 body[data-theme="dark"] {
   --ff-text-primary: #e6eef8;
@@ -142,7 +125,6 @@ body[data-theme="dark"] {
   --ff-accent: #8b5cf6;
   --ff-accent-strong: #f8fafc;
 }
-
 /* Ensure Flowing MVP / ML footer and balanced view honor the typography tokens
    and adapt automatically to dark mode via the variables above. This avoids
    hard-coded colors in legacy CSS causing poor contrast in dark theme.
@@ -153,7 +135,6 @@ body[data-theme="dark"] {
   color: var(--ff-text-primary) !important;
   background-color: transparent !important;
 }
-
 .flowing-footer .ticket-description-content,
 .flowing-footer .ticket-meta,
 .flowing-footer .flowing-subtitle,
@@ -164,28 +145,24 @@ body[data-theme="dark"] {
 .right-column {
   color: var(--ff-text-muted) !important;
 }
-
 /* Links and strong titles inside footer */
 .flowing-footer a,
 .flowing-footer .footer-title,
 .flowing-footer .flowing-title-text h3 {
   color: var(--ff-accent) !important;
 }
-
 /* Dark-mode specific tweaks for footer backgrounds to preserve glassmorphism */
 body[data-theme="dark"] .flowing-footer,
 body.theme-dark .flowing-footer {
   background: linear-gradient(180deg, rgba(17, 24, 39, 0.76), rgba(12, 14, 18, 0.72)) !important;
   border-top-color: rgba(255, 255, 255, 0.04) !important;
 }
-
 /* Ensure white text for small labels in dark mode */
 body[data-theme="dark"] .field-label,
 body[data-theme="dark"] .comment-author,
 body[data-theme="dark"] .comment-time {
   color: #cbd5e1 !important;
 }
-
 /* Mentions dropdown in dark mode */
 body[data-theme="dark"] .mentions-autocomplete-dropdown {
   background: #071022 !important;
@@ -193,13 +170,11 @@ body[data-theme="dark"] .mentions-autocomplete-dropdown {
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
 }
-
 /* Attachments preview in dark mode */
 body[data-theme="dark"] .attachments-preview,
 body[data-theme="dark"] .attachments-preview-footer {
   background: transparent !important;
 }
-
 /* Remove shadows for large layout panels to keep UI light and avoid heavy elevation */
 :where(.panel, .panel-card, .sla-monitor-container, .ticket-description-section, .left-column, .right-column) {
   box-shadow: none !important;

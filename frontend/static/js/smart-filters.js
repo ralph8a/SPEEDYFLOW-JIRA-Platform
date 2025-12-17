@@ -2,17 +2,14 @@
  * Smart Filters Module
  * Provides quick access to common filter presets
  */
-
 class SmartFilters {
   constructor() {
     this.filters = this.defineFilters();
     this.init();
   }
-
   init() {
     console.log('🎯 Smart Filters module initialized');
   }
-
   /**
    * Define available smart filters
    */
@@ -96,14 +93,12 @@ class SmartFilters {
       }
     ];
   }
-
   /**
    * Get all available filters
    */
   getFilters() {
     return this.filters.filter(f => !f.disabled);
   }
-
   /**
    * Apply a smart filter
    */
@@ -113,42 +108,32 @@ class SmartFilters {
       console.error(`Filter ${filterId} not found`);
       return;
     }
-
     console.log(`🎯 Applying smart filter: ${filter.name}`);
-
     // Get all issues from cache
     const allIssues = window.app?.issuesCache 
       ? Array.from(window.app.issuesCache.values()) 
       : [];
-
     if (allIssues.length === 0) {
       alert('No issues loaded. Please select a queue first.');
       return;
     }
-
     // Apply filter
     const filteredIssues = allIssues.filter(filter.filter);
-
     console.log(`✓ Filter result: ${filteredIssues.length} / ${allIssues.length} tickets`);
-
     // Trigger re-render with filtered issues
     if (typeof renderKanban === 'function') {
       // Store original issues for restoration
       if (!window.app.originalIssues) {
         window.app.originalIssues = allIssues;
       }
-      
       // Store filtered issues temporarily
       window.app.filteredIssues = filteredIssues;
-      
       // Render filtered view
       renderKanban();
-      
       // Show filter badge
       this.showActiveFilterBadge(filter, filteredIssues.length, allIssues.length);
     }
   }
-
   /**
    * Clear active filter and restore original view
    */
@@ -163,14 +148,12 @@ class SmartFilters {
       this.hideActiveFilterBadge();
     }
   }
-
   /**
    * Show active filter badge in header
    */
   showActiveFilterBadge(filter, matchCount, totalCount) {
     // Remove existing badge
     this.hideActiveFilterBadge();
-
     const badge = document.createElement('div');
     badge.id = 'smartFilterBadge';
     badge.className = 'smart-filter-badge';
@@ -179,14 +162,12 @@ class SmartFilters {
       <span class="badge-text">${filter.name}: ${matchCount}/${totalCount}</span>
       <button class="badge-clear" onclick="window.smartFilters.clearFilter()">✕</button>
     `;
-
     // Insert after header actions or in header
     const header = document.querySelector('.kanban-header') || document.querySelector('header');
     if (header) {
       header.appendChild(badge);
     }
   }
-
   /**
    * Hide active filter badge
    */
@@ -194,7 +175,6 @@ class SmartFilters {
     const badge = document.getElementById('smartFilterBadge');
     if (badge) badge.remove();
   }
-
   /**
    * Open smart filters menu
    */
@@ -203,9 +183,7 @@ class SmartFilters {
     if (document.getElementById('smartFiltersModal')) {
       return;
     }
-
     const filters = this.getFilters();
-    
     const modal = document.createElement('div');
     modal.id = 'smartFiltersModal';
     modal.className = 'smart-filters-modal';
@@ -238,11 +216,9 @@ class SmartFilters {
         ` : ''}
       </div>
     `;
-
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add('active'), 10);
   }
-
   /**
    * Close smart filters menu
    */
@@ -254,7 +230,6 @@ class SmartFilters {
     }
   }
 }
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   window.smartFilters = new SmartFilters();

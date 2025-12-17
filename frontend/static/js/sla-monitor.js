@@ -8,26 +8,20 @@ class SLAMonitor {
     this.currentIssue = null;
     this.refreshInterval = null;
   }
-
   /**
    * Initialize SLA Monitor for an issue
    */
   async init(issueKey) {
     if (!issueKey) return;
-    
     this.currentIssue = issueKey;
-    
     try {
       console.log(`🔄 Loading SLA data for ${issueKey}...`);
       const response = await fetch(`/api/issues/${issueKey}/sla`);
-      
       if (response.ok) {
         const apiResponse = await response.json();
         console.log(`📥 Raw SLA response for ${issueKey}:`, apiResponse);
-        
         // Extract data from wrapped response
         const slaData = apiResponse.success ? apiResponse.data : apiResponse;
-        
         if (slaData && !slaData.is_default) {
           this.slaData[issueKey] = slaData;
           console.log(`✅ Real SLA data stored for ${issueKey}:`, this.slaData[issueKey]);
@@ -46,17 +40,14 @@ class SLAMonitor {
       console.error(`❌ Error loading SLA for ${issueKey}:`, error);
       this.slaData[issueKey] = null;
     }
-    
     this.setupRefreshInterval();
     return this.slaData[issueKey];
   }
-
   /**
    * Render SLA display panel
    */
   renderSLAPanel(issueKey) {
     const slaData = this.slaData[issueKey];
-    
     // If no real SLA data, return a hidden empty container (no white box)
     if (!slaData) {
       console.log(`❌ No SLA data for ${issueKey}, not rendering panel`);
@@ -66,19 +57,15 @@ class SLAMonitor {
       container.style.display = 'none';
       return container;
     }
-    
     console.log(`🎨 Rendering SLA panel for ${issueKey}:`, slaData);
-    
     const container = document.createElement('div');
     // Remove the outer `.sla-panel` wrapper — render header, cycle and footer directly
     container.className = 'sla-monitor';
     container.id = `sla-monitor-${issueKey}`;
-
     const cycle = slaData.cycles?.[0] || slaData;
     // Pass is_secondary flag from parent data to cycle
     cycle.is_secondary = slaData.is_secondary || false;
     console.log(`🎯 Using cycle data:`, cycle);
-    
     container.innerHTML = `
       <div class="sla-header">
         <h3 class="sla-title">${SVGIcons.chart({size:18,className:'inline-icon'})} SLA Monitor</h3>
@@ -86,16 +73,13 @@ class SLAMonitor {
           ${SVGIcons.sync({size:16,className:'sla-refresh-svg'})}
         </button>
       </div>
-
       <div class="sla-content">
         ${this.renderSLACycle(cycle)}
       </div>
-
       <div class="sla-footer">
         <span class="sla-last-updated">Updated: ${new Date().toLocaleTimeString()}</span>
       </div>
     `;
-
     // If the .sla-content contains no meaningful elements (only dividers), remove it to avoid extra empty container
     const contentElCheck = container.querySelector('.sla-content');
     if (contentElCheck) {
@@ -104,7 +88,6 @@ class SLAMonitor {
         contentElCheck.remove();
       }
     }
-
     // Attach refresh handler to trigger live refresh with animated SVG
     setTimeout(() => {
       const btn = container.querySelector('.sla-refresh-btn');
@@ -124,10 +107,8 @@ class SLAMonitor {
         });
       }
     }, 0);
-
     return container;
   }
-
   /**
    * Render SLA cycle
    */
@@ -136,10 +117,8 @@ class SLAMonitor {
     console.log(`🔍 Goal duration: ${cycle.goal_duration}`);
     console.log(`🔍 Elapsed time: ${cycle.elapsed_time}`);
     console.log(`🔍 Remaining time: ${cycle.remaining_time}`);
-    
     // Determine status - check paused first, then breached
     let statusIcon, statusClass, statusLabel;
-    
     if (cycle.paused) {
       statusIcon = SVGIcons.pause({size:12,className:'inline-icon'});
       statusClass = 'paused';
@@ -153,10 +132,8 @@ class SLAMonitor {
       statusClass = 'healthy';
       statusLabel = 'On Track';
     }
-    
     // Check if this is a secondary SLA (Cierre Ticket)
     const isSecondary = cycle.is_secondary || false;
-    
     return `
       <div class="sla-cycle sla-cycle-${statusClass}">
         <div class="cycle-header">
@@ -165,7 +142,6 @@ class SLAMonitor {
             ${statusIcon} ${statusLabel}
           </span>
         </div>
-
         <div class="cycle-details">
           <div class="detail-row">
             <span class="detail-label">Goal:</span>
@@ -182,13 +158,11 @@ class SLAMonitor {
             </span>
           </div>
         </div>
-
         ${isSecondary ? `
           <div class="secondary-sla-warning">
             ⚠️ Using "Cierre Ticket" SLA (No primary SLA available)
           </div>
         ` : ''}
-        
         ${cycle.paused ? `
           <div class="pause-notice">
             ⏸️ SLA is currently paused
@@ -201,7 +175,6 @@ class SLAMonitor {
       </div>
     `;
   }
-
   /**
    * Setup auto-refresh interval
    */
@@ -209,7 +182,6 @@ class SLAMonitor {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
-    
     // Refresh every 10 minutes
     this.refreshInterval = setInterval(() => {
       if (this.currentIssue) {
@@ -217,21 +189,17 @@ class SLAMonitor {
       }
     }, 600000); // 10 minutes = 600,000 ms
   }
-
   /**
    * Refresh SLA data from API
    */
   async refreshSLAData(issueKey) {
     try {
       const response = await fetch(`/api/issues/${issueKey}/sla`);
-      
       if (response.ok) {
         const apiResponse = await response.json();
         const slaData = apiResponse.success ? apiResponse.data : apiResponse;
-        
         if (slaData) {
           this.slaData[issueKey] = slaData;
-          
           // Update UI if panel exists
           const panel = document.querySelector(`#sla-panel-${issueKey}`);
           if (panel) {
@@ -244,7 +212,6 @@ class SLAMonitor {
       console.error(`Failed to refresh SLA for ${issueKey}:`, error);
     }
   }
-
   /**
    * Cleanup and stop monitoring
    */
@@ -257,6 +224,5 @@ class SLAMonitor {
     this.currentIssue = null;
   }
 }
-
 // Global instance
 window.slaMonitor = new SLAMonitor();

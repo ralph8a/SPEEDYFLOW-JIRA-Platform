@@ -1,8 +1,6 @@
 """AI blueprint: provides stub AI suggestions endpoint.
-
 Endpoint:
   GET /api/ai/suggestions?text=...&limit=5
-
 Returns deterministic placeholder suggestions until real model integration
 is restored. Designed to be fast and safe.
 """
@@ -10,11 +8,8 @@ from flask import Blueprint, request
 import logging
 from datetime import datetime, UTC
 from utils.decorators import handle_api_error, json_response, log_request as log_decorator, require_credentials, rate_limited
-
 logger = logging.getLogger(__name__)
-
 ai_bp = Blueprint('ai', __name__)
-
 _BASE_SUGGESTIONS = [
     "Clarify customer impact in description.",
     "Add reproduction steps for faster triage.",
@@ -23,7 +18,6 @@ _BASE_SUGGESTIONS = [
     "Specify environment (prod/staging/local).",
     "Add acceptance criteria for completion.",
 ]
-
 @ai_bp.route('/api/ai/suggestions', methods=['GET'])
 @handle_api_error
 @json_response

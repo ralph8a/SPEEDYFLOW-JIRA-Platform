@@ -7,17 +7,14 @@ import sys
 import os
 import logging
 import warnings
-
 # Suppress Streamlit warnings before any imports
 warnings.filterwarnings('ignore', message='.*ScriptRunContext.*')
 warnings.filterwarnings('ignore', category=UserWarning, module='streamlit.*')
-
 # Configure logging early to filter Streamlit warnings
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
-
 class StreamlitWarningFilter(logging.Filter):
     """Filter to suppress Streamlit ScriptRunContext warnings (safe in bare mode)"""
     def filter(self, record):
@@ -26,20 +23,16 @@ class StreamlitWarningFilter(logging.Filter):
         if 'No runtime found' in record.getMessage():
             return False
         return True
-
 # Apply filter to Streamlit loggers before importing
 for logger_name in ['streamlit', 'streamlit.runtime', 'streamlit.runtime.scriptrunner_utils', 
                      'streamlit.runtime.caching', 'streamlit.runtime.caching.cache_data_api']:
     streamlit_logger = logging.getLogger(logger_name)
     streamlit_logger.addFilter(StreamlitWarningFilter())
     streamlit_logger.setLevel(logging.ERROR)
-
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request, send_from_directory, render_template
 from flask_cors import CORS
-
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from utils.config import config  # noqa: E402
 from utils.decorators import (  # noqa: E402
     handle_api_error,
@@ -53,7 +46,6 @@ from utils.api_migration import (  # noqa: E402
     get_current_user
 )
 from utils.db import init_db  # noqa: E402
-
 # Blueprint imports
 from api.blueprints.issues import issues_bp  # noqa: E402
 from api.blueprints.comments_v2 import comments_v2_bp  # noqa: E402
@@ -75,7 +67,6 @@ from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: 
 from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
 from api.blueprints.comment_suggestions import comment_suggestions_bp  # noqa: E402
 from api.blueprints.anomaly_detection import anomaly_detection_bp  # noqa: E402
-
 try:  # pragma: no cover
     from core.api import (  # type: ignore
         get_dashboard_summary,
@@ -94,16 +85,13 @@ except ImportError:  # pragma: no cover
             'by_assignee': {},
             'by_desk': {},
         }
-
     get_dashboard_summary = _stub('get_dashboard_summary')
     list_available_queues = _stub('list_available_queues')
     list_available_projects = _stub('list_available_projects')
-
 logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_FOLDER = os.path.join(BASE_DIR, 'frontend', 'static')
 TEMPLATE_FOLDER = os.path.join(BASE_DIR, 'frontend', 'templates')
-
 app = Flask(
     __name__,
     static_folder=STATIC_FOLDER,
@@ -112,7 +100,6 @@ app = Flask(
 )
 init_db()
 CORS(app)
-
 # Enable gzip compression for all responses (reduces payload by 70-90%)
 app.config['COMPRESS_MIMETYPES'] = [
     'text/html', 'text/css', 'text/xml', 'text/plain',
@@ -120,7 +107,6 @@ app.config['COMPRESS_MIMETYPES'] = [
 ]
 app.config['COMPRESS_LEVEL'] = 6  # Compression level 1-9 (6 is good balance)
 app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
-
 try:
     from flask_compress import Compress
     Compress(app)
@@ -128,7 +114,6 @@ try:
 except ImportError:
     logger.warning('⚠️ flask-compress not installed, compression disabled. Install: pip install flask-compress')
     pass
-
 # Register active blueprints
 app.register_blueprint(issues_bp)
 app.register_blueprint(comments_v2_bp)
@@ -150,22 +135,18 @@ app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & du
 app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
 app.register_blueprint(comment_suggestions_bp)  # ML: Smart comment suggestions
 app.register_blueprint(anomaly_detection_bp)  # ML: Anomaly detection dashboard
-
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
     'data': None,
     'expires': datetime.utcnow(),
     'updated': None,
 }
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(STATIC_FOLDER, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
 # Primary UI: Flask template (Streamlit UI deprecated)
 def _render_index():
     """Internal helper to render the main UI template with graceful fallback.
-
     Centralizes logic used by both '/' and '/app' routes to avoid duplication.
     """
     import time
@@ -175,25 +156,20 @@ def _render_index():
         return render_template('index.html', timestamp=timestamp)
     except Exception:  # pragma: no cover - extremely unlikely missing template
         return send_from_directory(TEMPLATE_FOLDER, 'index.html')
-
 @app.route('/')
 def root_index():
     return _render_index()
-
 @app.route('/app')
 def app_alias():
     return _render_index()
-
 @app.route('/icons')
 def icon_gallery():
     """SVG Icons Gallery - Visual reference for all available icons"""
     return send_from_directory(STATIC_FOLDER, 'icon-gallery.html')
-
 @app.before_request
 def _log_req():
     if not request.path.startswith('/static'):
         logger.debug(f"📨 {request.method} {request.path}")
-
 @app.after_request
 def add_cache_headers(response):
     """Add cache-busting headers to prevent JavaScript/CSS/HTML caching issues"""
@@ -202,7 +178,6 @@ def add_cache_headers(response):
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
     return response
-
 # Dashboard -----------------------------------------------------------
 @app.route('/api/dashboard/summary', methods=['GET'])
 @handle_api_error
@@ -221,7 +196,6 @@ def api_dashboard_summary():
         'by_assignee': data.get('by_assignee', {}),
         'by_desk': desk_data,
     }
-
 # Queues / Desks ------------------------------------------------------
 @app.route('/api/user/login-status', methods=['GET'])
 @handle_api_error
@@ -238,7 +212,6 @@ def api_check_login_status():
         'desk_id': config.user.desk_id,
         'queue_id': config.user.queue_id
     }
-
 @app.route('/api/user/login', methods=['POST'])
 @handle_api_error
 @json_response
@@ -246,14 +219,12 @@ def api_check_login_status():
 def api_save_user_login():
     """Save user credentials and configuration"""
     from utils.config import save_user_credentials
-    
     data = request.get_json() or {}
     jira_site = data.get('jira_site', '').strip().rstrip('/')
     jira_email = data.get('jira_email', '').strip()
     jira_token = data.get('jira_token', '').strip()
     project_key = data.get('project_key', '').strip().upper() if data.get('project_key') else None
     desk_id = data.get('desk_id', '').strip() if data.get('desk_id') else None
-    
     # Validate required fields
     if not jira_site:
         return {'success': False, 'error': 'JIRA site URL is required'}, 400
@@ -261,23 +232,18 @@ def api_save_user_login():
         return {'success': False, 'error': 'Email is required'}, 400
     if not jira_token:
         return {'success': False, 'error': 'API token is required'}, 400
-    
     # Validate URL format
     if not jira_site.startswith('https://'):
         return {'success': False, 'error': 'JIRA site must start with https://'}, 400
-    
     # Validate email format
     if '@' not in jira_email:
         return {'success': False, 'error': 'Invalid email format'}, 400
-    
     # Save to .env and Documents
     success = save_user_credentials(jira_site, jira_email, jira_token, project_key, desk_id)
-    
     if success:
         # Reload config
         from utils import config as config_module
         config_module.config = config_module.AppConfig.from_env()
-        
         return {
             'success': True,
             'message': 'Credentials saved successfully',
@@ -286,7 +252,6 @@ def api_save_user_login():
         }
     else:
         return {'success': False, 'error': 'Failed to save credentials'}, 500
-
 @app.route('/api/user/setup', methods=['GET'])
 @handle_api_error
 @json_response
@@ -298,7 +263,6 @@ def api_check_user_setup():
         'project_key': config.user.project_key,
         'desk_id': config.user.desk_id
     }
-
 @app.route('/api/user/setup', methods=['POST'])
 @handle_api_error
 @json_response
@@ -307,23 +271,18 @@ def api_check_user_setup():
 def api_save_user_setup():
     """Save user configuration"""
     from utils.config import save_user_config
-    
     data = request.get_json() or {}
     project_key = data.get('project_key', '').strip().upper()
     desk_id = data.get('desk_id', '').strip()
     queue_id = data.get('queue_id', '').strip()
-    
     if not project_key:
         return {'success': False, 'error': 'project_key is required'}, 400
-    
     # Save to .env
     success = save_user_config(project_key, desk_id, queue_id)
-    
     if success:
         # Reload config
         from utils import config as config_module
         config_module.config = config_module.AppConfig.from_env()
-        
         return {
             'success': True,
             'message': 'Configuration saved successfully',
@@ -334,7 +293,6 @@ def api_save_user_setup():
         }
     else:
         return {'success': False, 'error': 'Failed to save configuration'}, 500
-
 @app.route('/api/user/desk-context', methods=['GET'])
 @handle_api_error
 @json_response
@@ -342,7 +300,6 @@ def api_save_user_setup():
 @require_credentials
 def api_get_user_desk_context():
     """Get user's desk context from configuration or detect automatically.
-    
     Priority:
     1. USER_PROJECT_KEY from .env (configured by user)
     2. Auto-detection from user's tickets
@@ -352,11 +309,9 @@ def api_get_user_desk_context():
         # Priority 1: Use configured project key
         if config.user.project_key:
             logging.info(f"✅ Using configured project key: {config.user.project_key}")
-            
             # Find desk by project key
             desks_response = get_service_desks()
             desks = desks_response.get('values', []) if isinstance(desks_response, dict) else []
-            
             for desk in desks:
                 if desk.get('projectKey') == config.user.project_key:
                     logging.info(f"✅ Found configured desk: {desk.get('id')} - {desk.get('projectName')}")
@@ -367,13 +322,10 @@ def api_get_user_desk_context():
                         'ticket_count': 0,
                         'source': 'user_config'
                     }
-            
             logging.warning(f"⚠️ Configured project {config.user.project_key} not found in desks")
-        
         # Fallback: Use first available desk
         desks_response = get_service_desks()
         desks = desks_response.get('values', []) if isinstance(desks_response, dict) else []
-        
         if not desks:
             logging.warning("No service desks found")
             return {
@@ -384,10 +336,8 @@ def api_get_user_desk_context():
                 'source': 'none',
                 'needs_setup': True
             }
-        
         first_desk = desks[0]
         logging.info(f"⚠️ Using fallback desk: {first_desk.get('id')} - {first_desk.get('projectName')} ({first_desk.get('projectKey')})")
-        
         return {
             'desk_id': first_desk.get('id'),
             'desk_name': first_desk.get('projectName'),
@@ -397,7 +347,6 @@ def api_get_user_desk_context():
             'all_desks_count': len(desks),
             'needs_setup': not config.user.project_key
         }
-        
     except Exception as e:
         logging.error(f"Error getting user desk context: {e}", exc_info=True)
         return {
@@ -408,7 +357,6 @@ def api_get_user_desk_context():
             'source': 'error',
             'error': str(e)
         }
-
 @app.route('/api/queues', methods=['GET'])
 @handle_api_error
 @json_response
@@ -417,7 +365,6 @@ def api_get_user_desk_context():
 def api_get_queues():
     queues = list_available_queues() or []
     return {'queues': queues, 'count': len(queues)}
-
 @app.route('/api/desks', methods=['GET'])
 @handle_api_error
 @json_response
@@ -425,14 +372,11 @@ def api_get_queues():
 @require_credentials
 def api_get_desks_with_queues():
     """Fetch JIRA Service Desks with their queues (aggregated) and cache in memory.
-
     Response (wrapped by json_response): a LIST of desk objects:
       [{ id: <str>, name: <str>, queues: [{ id: <str>, name: <str> }, ...] }, ...]
-
     Caching:
       In-memory TTL (config.cache.default_ttl, max bounded by config.cache.max_ttl).
       Query param refresh=1 forces cache bypass & rebuild.
-
     Implementation details:
       - Uses compatibility layer functions get_service_desks() / get_queues() from utils.api_migration
       - Each queue object simplified to id + name
@@ -443,10 +387,8 @@ def api_get_desks_with_queues():
     now = datetime.utcnow()
     ttl_seconds = min(getattr(config.cache, 'default_ttl', 300), getattr(config.cache, 'max_ttl', 3600))
     force_refresh = request.args.get('refresh') == '1'
-
     if not force_refresh and DESKS_CACHE.get('data') and DESKS_CACHE.get('expires') > now:
         return DESKS_CACHE['data']
-
     svc_resp = get_service_desks()
     raw_desks = svc_resp.get('values', []) or []
     aggregated = []
@@ -478,25 +420,19 @@ def api_get_desks_with_queues():
             q_name = next((qn for qn in q_name_candidates if isinstance(qn, str) and qn.strip()), None) or f"Queue {q_id}"
             q_jql = q.get('jql', '')
             queues.append({'id': str(q_id), 'name': q_name, 'jql': q_jql})
-        
         # Skip desks with no accessible queues (permission issues)
         if not queues:
             logger.info(f"⚠️ Skipping desk '{display_name}' (ID: {desk_id}) - No accessible queues (likely permission restriction)")
             continue
-        
         # Provide both name and displayName and flag if placeholder
         aggregated.append({'id': str(desk_id), 'name': display_name, 'displayName': display_name, 'placeholder': placeholder_used, 'queues': queues})
         if placeholder_used:
             logger.warning(f"Desk {desk_id} missing expected name fields; using placeholder. Raw keys: {list(d.keys())}")
-
     # No fallback injection: if Jira returns zero desks, UI will reflect empty state.
-
     DESKS_CACHE['data'] = aggregated
     DESKS_CACHE['expires'] = now + timedelta(seconds=ttl_seconds)
     DESKS_CACHE['updated'] = now.isoformat()
-
     return aggregated
-
 @app.route('/api/desks/cache', methods=['GET'])
 @handle_api_error
 @json_response
@@ -518,11 +454,8 @@ def api_get_desks_cache_meta():
         'updated': DESKS_CACHE.get('updated'),
         'cached': bool(data) and remaining > 0,
     }
-
 # Issues / Comments / Attachments now provided by registered blueprints.
-
 # Transitions endpoint migrated to blueprint (transitions_bp)
-
 # User / Projects -----------------------------------------------------
 @app.route('/api/user', methods=['GET'])
 @handle_api_error
@@ -538,7 +471,6 @@ def api_get_user():
         'user': user,
         'timestamp': datetime.now().isoformat()
     }
-
 @app.route('/api/users', methods=['GET'])
 @handle_api_error
 @json_response
@@ -548,12 +480,10 @@ def api_get_users():
     """
     Get list of users for mentions system.
     Uses database cache (24h TTL) + fallback to JIRA APIs.
-    
     Query Parameters:
         - query: Optional search query to filter users
         - serviceDeskId: Optional Service Desk ID for participants
         - forceRefresh: Force refresh from JIRA APIs (default: false)
-    
     Returns:
         {
             "success": true,
@@ -564,11 +494,9 @@ def api_get_users():
     """
     from core.api import get_api_client
     from utils.db import get_users_from_db, upsert_users
-    
     query = request.args.get('query', '')
     service_desk_id = request.args.get('serviceDeskId', '')
     force_refresh = request.args.get('forceRefresh', 'false').lower() == 'true'
-    
     # Try to get from database cache first (unless force refresh)
     if not force_refresh:
         try:
@@ -587,16 +515,13 @@ def api_get_users():
             logger.warning(f"Database cache error: {e}, fetching from JIRA APIs...")
     else:
         logger.info("🔄 Force refresh requested, fetching from JIRA APIs...")
-    
     client = get_api_client()
     users_dict = {}  # Use dict to deduplicate by accountId
-    
     try:
         # Fetch from both APIs in parallel
         platform_users = []
         sd_users = []
         from core.api import _make_request
-        
         # Strategy 1: Platform API v3 user search
         try:
             url = f"{client.site}/rest/api/3/user/search"
@@ -604,27 +529,22 @@ def api_get_users():
                 'maxResults': 1000,  # Obtener todos los usuarios
                 'query': query if query else ''
             }
-            
             response = _make_request('GET', url, client.headers, params=params)
-            
             if response and isinstance(response, list):
                 platform_users = response
                 logger.info(f"📋 Platform API returned {len(platform_users)} users")
         except Exception as e:
             logger.warning(f"Platform API user search failed: {e}")
-        
         # Strategy 2: Service Desk participants
         if service_desk_id:
             try:
                 sd_url = f"{client.site}/rest/servicedeskapi/servicedesk/{service_desk_id}/participants"
                 sd_response = _make_request('GET', sd_url, client.headers, params={'start': 0, 'limit': 1000})
-                
                 if sd_response and 'values' in sd_response:
                     sd_users = sd_response.get('values', [])
                     logger.info(f"📋 Service Desk API returned {len(sd_users)} participants")
             except Exception as e:
                 logger.warning(f"Service Desk API failed: {e}")
-        
         # Combine both results
         for user in platform_users:
             account_id = user.get('accountId', '')
@@ -638,7 +558,6 @@ def api_get_users():
                     'username': user.get('name', '') or display_name.lower().replace(' ', '.'),
                     'source': 'platform'
                 }
-        
         for user in sd_users:
             account_id = user.get('accountId', '')
             if account_id:
@@ -654,10 +573,8 @@ def api_get_users():
                         'username': user.get('name', '') or display_name.lower().replace(' ', '.'),
                         'source': 'servicedesk'
                     }
-        
         logger.info(f"✅ Combined total: {len(users_dict)} unique users")
         users = list(users_dict.values())
-        
         # Save to database
         try:
             from utils.db import upsert_users
@@ -665,7 +582,6 @@ def api_get_users():
             logger.info(f"💾 Saved {saved_count} users to database")
         except Exception as e:
             logger.warning(f"Failed to save users to database: {e}")
-        
         # Apply query filter if provided
         if query:
             query_lower = query.lower()
@@ -675,12 +591,9 @@ def api_get_users():
                    query_lower in u.get('emailAddress', '').lower() or
                    query_lower in u.get('username', '').lower()
             ]
-        
         # Sort by displayName
         users.sort(key=lambda u: u['displayName'].lower())
-        
         logger.info(f"✅ Returning {len(users)} users for mentions")
-        
         return {
             'success': True,
             'users': users,
@@ -688,7 +601,6 @@ def api_get_users():
             'cached': False,
             'timestamp': datetime.now().isoformat()
         }
-        
     except Exception as e:
         logger.error(f"Error fetching users: {e}")
         return {
@@ -697,7 +609,6 @@ def api_get_users():
             'users': [],
             'count': 0
         }, 500
-
 @app.route('/api/users/refresh', methods=['POST'])
 @handle_api_error
 @json_response
@@ -706,21 +617,16 @@ def api_get_users():
 def api_refresh_users():
     """Force refresh users from JIRA APIs and update database."""
     service_desk_id = request.args.get('serviceDeskId', '')
-    
     # Force refresh by calling the main endpoint with forceRefresh
     from flask import make_response
     request.args = request.args.copy()
     request.args['forceRefresh'] = 'true'
-    
     result = api_get_users()
-    
     return {
         'success': True,
         'message': 'Users refreshed successfully',
         'result': result
     }
-
-
 @app.route('/api/users/cleanup', methods=['POST'])
 @handle_api_error
 @json_response
@@ -729,17 +635,13 @@ def api_refresh_users():
 def api_cleanup_users():
     """Clean up old users from database (older than 30 days)."""
     from utils.db import clear_old_users
-    
     days = int(request.args.get('days', 30))
     deleted_count = clear_old_users(days=days)
-    
     return {
         'success': True,
         'deleted': deleted_count,
         'message': f'Deleted {deleted_count} users older than {days} days'
     }
-
-
 @app.route('/api/projects', methods=['GET'])
 @handle_api_error
 @json_response
@@ -747,7 +649,6 @@ def api_cleanup_users():
 def api_get_projects():
     projects = list_available_projects() or []
     return {'projects': projects, 'count': len(projects)}
-
 @app.route('/api/severity/values', methods=['GET'])
 @handle_api_error
 @json_response
@@ -757,7 +658,6 @@ def api_get_severity_values():
     from core.api import get_severity_values
     severity_values = get_severity_values()
     return {'severity_values': severity_values, 'count': len(severity_values)}
-
 # Enrichment APIs using Service Desk API only -------------------------
 @app.route('/api/enrichment/issue/<issue_key>', methods=['GET'])
 @handle_api_error
@@ -767,32 +667,25 @@ def api_enrich_issue(issue_key):
     """Enrich issue data using Service Desk API and JIRA REST API (no hardcoded data)"""
     from core.api import get_api_client, _make_request
     import json
-    
     try:
         client = get_api_client()
-        
         # Get issue details from JIRA REST API
         issue_url = f"{client.site}/rest/api/2/issue/{issue_key}"
         issue_response = _make_request("GET", issue_url, client.headers, params={
             "expand": "names,schema,operations,editmeta,changelog,versionedRepresentations"
         })
-        
         if not issue_response:
             return {'error': 'Issue not found', 'issue_key': issue_key}, 404
-            
         # Extract only the fields we need from real API data
         fields = issue_response.get('fields', {})
         enriched_data = {}
-        
         # Get assignee from API (no fallbacks)
         if fields.get('assignee'):
             enriched_data['assignee'] = fields['assignee'].get('displayName')
-        
         # Get reporter from API (no fallbacks)  
         if fields.get('reporter'):
             enriched_data['reporter'] = fields['reporter'].get('displayName')
             enriched_data['reporterEmail'] = fields['reporter'].get('emailAddress')
-        
         # Get reporter contact info from custom fields
         if fields.get('customfield_10141'):  # Email
             enriched_data['reporterEmail'] = fields['customfield_10141']
@@ -800,34 +693,27 @@ def api_enrich_issue(issue_key):
             enriched_data['reporterPhone'] = fields['customfield_10142']
         if fields.get('customfield_10143'):  # Empresa (Company)
             enriched_data['reporterCompany'] = fields['customfield_10143']
-        
         # Get description from API (no fallbacks)
         if fields.get('description'):
             enriched_data['description'] = fields['description']
-        
         # Get summary from API (no fallbacks)
         if fields.get('summary'):
             enriched_data['summary'] = fields['summary']
-            
         # Get status from API (no fallbacks)
         if fields.get('status'):
             enriched_data['status'] = fields['status'].get('name')
-            
         # Get issue type from API (no fallbacks)
         if fields.get('issuetype'):
             enriched_data['type'] = fields['issuetype'].get('name')
-            
         # Get dates from API (no fallbacks)
         if fields.get('created'):
             enriched_data['created'] = fields['created']
         if fields.get('updated'):
             enriched_data['updated'] = fields['updated']
-            
         # Extract severity from custom fields using dictionary
         severity = _extract_severity_from_fields(fields)
         if severity:
             enriched_data['severity'] = severity
-            
         return {
             'success': True,
             'issue_key': issue_key,
@@ -835,11 +721,9 @@ def api_enrich_issue(issue_key):
             'severity_detected': severity is not None,
             'source': 'jira_rest_api'
         }
-        
     except Exception as e:
         logger.error(f"Error enriching issue {issue_key}: {e}")
         return {'error': str(e), 'issue_key': issue_key}, 500
-
 def _extract_severity_from_fields(fields):
     """Extract severity from JIRA fields using known custom field IDs"""
     try:
@@ -851,7 +735,6 @@ def _extract_severity_from_fields(fields):
             'customfield_10129',  # Alternate severity
             'customfield_10048',  # Another common one
         ]
-        
         # Try each severity field ID
         for field_id in severity_field_ids:
             if field_id in fields and fields[field_id] is not None:
@@ -860,21 +743,17 @@ def _extract_severity_from_fields(fields):
                 if extracted:
                     logger.info(f"Severity found in {field_id}: {extracted}")
                     return str(extracted)
-        
         # Fallback: check standard severity field
         if 'severity' in fields and fields['severity']:
             return _extract_field_value(fields['severity'])
-            
         return None
     except Exception as e:
         logger.error(f"Error extracting severity: {e}")
         return None
-
 def _extract_field_value(value):
     """Extract meaningful value from JIRA field objects"""
     if not value:
         return None
-        
     if isinstance(value, str):
         return value
     elif isinstance(value, (int, float)):
@@ -891,7 +770,6 @@ def _extract_field_value(value):
         return _extract_field_value(first_item)
     else:
         return str(value)
-
 @app.route('/api/enrichment/custom-fields/<issue_key>', methods=['GET'])
 @handle_api_error
 @json_response
@@ -901,10 +779,8 @@ def api_get_custom_fields(issue_key):
     from core.api import get_api_client, _make_request
     import json
     import os
-    
     try:
         client = get_api_client()
-        
         # Load auto-generated custom fields dictionary if available
         custom_fields_dict = None
         dict_path = 'custom_fields_dictionary.json'
@@ -914,7 +790,6 @@ def api_get_custom_fields(issue_key):
                     custom_fields_dict = json.load(f)
             except Exception as e:
                 logger.warning(f"Could not load custom fields dictionary: {e}")
-        
         # Create field mapping (use dictionary if available, otherwise fetch from API)
         field_mapping = {}
         if custom_fields_dict and 'mappings' in custom_fields_dict:
@@ -924,41 +799,31 @@ def api_get_custom_fields(issue_key):
             # Fallback: get fields from API
             fields_url = f"{client.site}/rest/api/2/field"
             fields_response = _make_request("GET", fields_url, client.headers)
-            
             if not fields_response:
                 return {'error': 'Could not get field definitions'}, 500
-                
             for field in fields_response:
                 if field.get('custom') and field.get('name'):
                     field_mapping[field['id']] = field.get('name')
-        
         # Get issue to extract custom field values
         issue_url = f"{client.site}/rest/api/2/issue/{issue_key}"
         issue_response = _make_request("GET", issue_url, client.headers)
-        
         if not issue_response:
             return {'error': 'Issue not found'}, 404
-            
         fields = issue_response.get('fields', {})
         custom_fields = {}
-        
         # Extract custom fields dynamically using enhanced processing
         for field_id, value in fields.items():
             if field_id.startswith('customfield_') and value is not None:
                 # Get field name from mapping
                 field_name = field_mapping.get(field_id, field_id)
-                
                 # Process value to extract meaningful content
                 processed_value = _extract_field_value(value)
-                
                 if processed_value is not None:
                     # Store by ID always
                     custom_fields[field_id] = processed_value
-                    
                     # Also store by name if it's different from ID
                     if field_name != field_id:
                         custom_fields[field_name.lower()] = processed_value
-        
         # Add metadata about field processing
         response = {
             'success': True,
@@ -968,7 +833,6 @@ def api_get_custom_fields(issue_key):
             'source': 'enhanced_dictionary' if custom_fields_dict else 'jira_field_api',
             'dictionary_available': custom_fields_dict is not None
         }
-        
         # Add category hints if dictionary is available
         if custom_fields_dict and 'categories' in custom_fields_dict:
             response['field_categories'] = {
@@ -976,13 +840,10 @@ def api_get_custom_fields(issue_key):
                 'reporter_contact': [f['id'] for f in custom_fields_dict['categories'].get('reporter_contact', [])],
                 'technical_info': [f['id'] for f in custom_fields_dict['categories'].get('technical_info', [])]
             }
-        
         return response
-        
     except Exception as e:
         logger.error(f"Error getting custom fields for {issue_key}: {e}")
         return {'error': str(e)}, 500
-
 @app.route('/api/enrichment/field-definitions', methods=['GET'])
 @handle_api_error
 @json_response
@@ -990,21 +851,16 @@ def api_get_custom_fields(issue_key):
 def api_get_field_definitions():
     """Get all available field definitions from JIRA (for dynamic field mapping)"""
     from core.api import get_api_client, _make_request
-    
     try:
         client = get_api_client()
-        
         # Get field definitions
         fields_url = f"{client.site}/rest/api/2/field"
         fields_response = _make_request("GET", fields_url, client.headers)
-        
         if not fields_response:
             return {'error': 'Could not get field definitions'}, 500
-            
         # Filter and organize fields
         custom_fields = []
         system_fields = []
-        
         for field in fields_response:
             field_info = {
                 'id': field.get('id'),
@@ -1013,12 +869,10 @@ def api_get_field_definitions():
                 'searchable': field.get('searchable', False),
                 'navigable': field.get('navigable', False)
             }
-            
             if field.get('custom'):
                 custom_fields.append(field_info)
             else:
                 system_fields.append(field_info)
-        
         return {
             'success': True,
             'custom_fields': custom_fields,
@@ -1027,15 +881,12 @@ def api_get_field_definitions():
             'total_system': len(system_fields),
             'source': 'jira_field_api'
         }
-        
     except Exception as e:
         logger.error(f"Error getting field definitions: {e}")
         return {'error': str(e)}, 500
-
 # Health & Docs -------------------------------------------------------
 @app.route('/health', methods=['GET'])
 def health(): return jsonify({'status': 'ok', 'timestamp': datetime.now().isoformat()})
-
 @app.route('/api', methods=['GET'])
 def api_docs():
     return jsonify({
@@ -1064,7 +915,6 @@ def api_docs():
         },
     'pending_restoration': []
     })
-
 @app.route('/test-login', methods=['GET'])
 def test_login_flow():
     """Test endpoint to simulate login flow"""
@@ -1081,12 +931,10 @@ def test_login_flow():
             // Set login flags
             sessionStorage.setItem('speedyflow_just_logged_in', 'true');
             sessionStorage.setItem('speedyflow_initial_project', 'MSM');
-            
             console.log('✅ Login flags set:', {
                 just_logged_in: sessionStorage.getItem('speedyflow_just_logged_in'),
                 initial_project: sessionStorage.getItem('speedyflow_initial_project')
             });
-            
             // Redirect to main app
             setTimeout(() => {
                 window.location.href = '/';
@@ -1096,21 +944,17 @@ def test_login_flow():
     </html>
     '''
     return html
-
 @app.errorhandler(404)
 def not_found(error): return jsonify({'success': False, 'error': 'Endpoint not found', 'path': request.path}), 404
-
 @app.errorhandler(500)
 def internal_error(error):
     logger.error(f"Internal error: {error}")
     return jsonify({'success': False, 'error': 'Internal server error'}), 500
-
 def start_ollama_service():
     """Start Ollama service if not already running"""
     import subprocess
     import time
     import requests
-    
     # Check if Ollama is already running
     try:
         response = requests.get('http://localhost:11434/api/tags', timeout=2)
@@ -1119,7 +963,6 @@ def start_ollama_service():
             return True
     except:
         pass
-    
     # Try to start Ollama
     logger.info('🤖 Starting Ollama service...')
     try:
@@ -1136,7 +979,6 @@ def start_ollama_service():
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL,
                            start_new_session=True)
-        
         # Wait for Ollama to start (max 5 seconds)
         for i in range(10):
             time.sleep(0.5)
@@ -1147,10 +989,8 @@ def start_ollama_service():
                     return True
             except:
                 continue
-        
         logger.warning('⚠️ Ollama started but not responding yet (may need more time)')
         return False
-        
     except FileNotFoundError:
         logger.warning('⚠️ Ollama not installed. Install from: https://ollama.ai')
         logger.warning('   Comment Suggestions will show installation prompt')
@@ -1158,12 +998,9 @@ def start_ollama_service():
     except Exception as e:
         logger.error(f'❌ Error starting Ollama: {e}')
         return False
-
 if __name__ == '__main__':
     PORT = 5005
-    
     # Try to start Ollama service
     start_ollama_service()
-    
     logger.info(f"🚀 Starting Stable API Server on {PORT}")
     app.run(host='127.0.0.1', port=PORT, debug=False, threaded=True, use_reloader=False)

@@ -1,7 +1,5 @@
 # 📍 Comment Suggestions - Nueva Ubicación en UI
-
 ## Estructura Visual del Right Sidebar
-
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                         RIGHT SIDEBAR (Ticket Details)                    ║
@@ -58,13 +56,9 @@
 ║                                                                           ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
-
 ## 🎯 Punto de Inyección
-
 **ANTES**: Intentaba inyectarse en `#commentsPanel` (columna derecha)
-
 **AHORA**: Se inyecta después de `#attachmentsSection` (columna izquierda)
-
 ```javascript
 // Código de inyección
 const attachmentsSection = sidebar.querySelector('#attachmentsSection');
@@ -73,9 +67,7 @@ if (attachmentsSection) {
   attachmentsSection.parentNode.insertBefore(this.container, attachmentsSection.nextSibling);
 }
 ```
-
 ## 📱 Estados Visuales
-
 ### Estado 1: Esperando Ticket
 ```
 ┌─────────────────────┐
@@ -85,7 +77,6 @@ if (attachmentsSection) {
 │                     │
 └─────────────────────┘
 ```
-
 ### Estado 2: Analizando con IA
 ```
 ┌─────────────────────┐
@@ -102,7 +93,6 @@ if (attachmentsSection) {
 │ ▓▓▓▓░░░░░░░░░░░    │ ← Loader animado
 └─────────────────────┘
 ```
-
 ### Estado 3: Sugerencias Disponibles
 ```
 ┌─────────────────────┐
@@ -131,7 +121,6 @@ if (attachmentsSection) {
 │ └─────────────────┘ │
 └─────────────────────┘
 ```
-
 ### Estado 4: Sin Información
 ```
 ┌─────────────────────┐
@@ -147,9 +136,7 @@ if (attachmentsSection) {
 │ la información...   │
 └─────────────────────┘
 ```
-
 ## 🔄 Flujo Completo
-
 ```
 1. Usuario abre ticket
         ↓
@@ -193,33 +180,24 @@ if (attachmentsSection) {
         ↓
 11. onTicketLeave() persiste caché
 ```
-
 ## 🎨 Jerarquía Visual
-
 ```
 Columna Izquierda (Prioridad de arriba a abajo):
-
 1. ⏱️ SLA Monitor           ← Más importante (tiempo crítico)
 2. 📋 Ticket Information    ← Información esencial
 3. 📎 Attachments           ← Archivos adjuntos
 4. 🤖 Sugerencias IA        ← NUEVA SECCIÓN (contexto adicional)
-
 Columna Derecha:
-
 1. 💬 Comments              ← Historial de conversación
 2. ✍️ Comment Input         ← Área de escritura
 ```
-
 ## ✨ Ventajas de la Nueva Ubicación
-
 ✅ **Contexto visual**: Usuario ve detalles del ticket Y sugerencias juntos  
 ✅ **No interfiere**: No compite con el área de comentarios  
 ✅ **Flujo natural**: Abajo de información estática, antes de escribir  
 ✅ **Scroll intuitivo**: Se descubre al revisar detalles del ticket  
 ✅ **Consistencia**: Todas las secciones informativas en columna izquierda  
-
 ---
-
 **Ubicación Final**: Right Sidebar → Left Column → Después de Attachments  
 **Visible**: Al abrir cualquier ticket  
 **Comportamiento**: Análisis automático → Caché → Reutilización instantánea

@@ -1,9 +1,7 @@
 Source: Dynatrace documentation (summary)
-
 Overview
 --------
 Dynatrace is an APM and observability platform for monitoring applications, infrastructure, and user experience. Key features: full-stack monitoring, distributed traces, metrics, logs, synthetic monitoring, real-user monitoring (RUM), AI-driven root cause analysis (Davis).
-
 Key Concepts
 ------------
 - OneAgent: automatic instrumentation agent for hosts and containers.
@@ -11,7 +9,6 @@ Key Concepts
 - Dynatrace Metrics / Custom Metrics: ingest application and infrastructure metrics.
 - Traces: distributed tracing for request flows across services.
 - Log monitoring: ingest logs and connect to traces for context.
-
 Advanced topics & patterns
 -------------------------
 - Problem detection & Davis: Dynatrace groups related symptoms into Problems; use Problems API to fetch correlated services, root-cause entities, impacted hosts, and timestamps. Example pattern: when ML comment-suggester flags a "timeout spike", query Problems API for correlating CPU/latency anomalies in the incident window and attach top 3 problem IDs to the ticket.
@@ -20,23 +17,18 @@ Advanced topics & patterns
 - Synthetic monitoring: configure synthetic HTTP/browser monitors for critical flows (login, checkout, API health). When a synthetic monitor fails, automatically create a JIRA incident with synthetic test details and link to the run.
 - Log analytics: forward structured logs (JSON) and use auto-extracted attributes. Dynatrace can link logs to traces and problems via traceId and entity IDs; ensure your log format includes traceId and spanId.
 - Alerting & remediation runbooks: attach a short runbook link (from docs/playbooks) to problems and add automated remediation steps (e.g., scale-up, restart service) using webhooks or Automations API.
-
 APIs: practical examples
 ------------------------
 - Problems API (query problems):
 	GET /api/v2/problems?from=<epoch-ms>&to=<epoch-ms>&pageSize=50
 	Response includes problemId, title, impact, rootCauseEntityId, and related events.
-
 - Traces API (get a trace by ID):
 	GET /api/v2/traces/{traceId}
-
 - Metrics ingest (push custom metric v1):
 	POST /api/v2/metrics/ingest
 	Content-Type: text/plain; charset=utf-8
 	Body format example: custom.ticket.sla_breach,source=flowing value=1 timestamp
-
 - Authentication: use API tokens with appropriate scopes (API keys created via Dynatrace UI). Keep tokens out of docs (do not ingest credentials).
-
 Integration snippet (pseudo):
 ```py
 # find problems in window
@@ -44,25 +36,21 @@ probs = dynatrace.get_problems(from_ts, to_ts)
 for p in probs[:3]:
 		ticket.add_comment(f"Dynatrace problem: {p['title']} (id={p['problemId']})\n{p['impact']}")
 ```
-
 Performance & scale
 -------------------
 - Use batch queries when scanning ranges (Problems API supports pagination). Avoid per-ticket synchronous calls on high-volume flows; instead enqueue background enrichment jobs.
 - Pre-aggregate metrics (rollups) to reduce query cost for dashboards and ML models.
-
 APIs & Integrations
 -------------------
 - Metrics API: push metrics to Dynatrace.
 - Events API: send custom events/annotations.
 - Problems API: query detected problems.
 - Logs ingest API: ship logs via HTTP or collectors.
-
 Patterns for SPEEDYFLOW
 ----------------------
 - Use OneAgent in staging/prod to collect traces and map slow transactions to tickets.
 - When comment patterns indicate "timeout" or "500", query Dynatrace Problems and Traces for related timestamps and attach summaries to the ticket.
 - Enrich tickets with Dynatrace problem IDs and URLs for quick investigation.
-
 References
 ----------
 - https://www.dynatrace.com/support/help/

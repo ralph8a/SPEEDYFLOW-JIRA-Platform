@@ -1,60 +1,50 @@
 /* =====================================================
    ISSUE DETAILS BUTTON - Edge-style sidebar toggle
    ===================================================== */
-
 .issue-details-btn {
   /* Basic styling */
   width: 32px !important;
   height: 32px !important;
   padding: 4px !important;
   margin-left: auto !important;
-  
   /* Appearance */
   background: #3b82f6 !important;
   border: 2px solid #2563eb !important;
   border-radius: 8px !important;
   color: white !important;
   cursor: pointer !important;
-  
   /* Layout */
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  
   /* Ensure clickability */
   pointer-events: auto !important;
   z-index: 5 !important;
   position: relative !important;
-  
   /* Transition for smooth hide/show */
   transition: opacity 0.15s ease, transform 0.2s ease !important;
 }
-
 .issue-details-btn:hover {
   background: rgba(59, 130, 246, 0.2);
   border-color: rgba(59, 130, 246, 0.4);
   transform: scale(1.05);
   color: #2563eb;
 }
-
 .issue-details-btn:active {
   transform: scale(0.95);
   background: rgba(59, 130, 246, 0.3);
 }
-
 /* Dark theme support */
 body.theme-dark .issue-details-btn {
   background: rgba(99, 102, 241, 0.1);
   border-color: rgba(99, 102, 241, 0.2);
   color: #a5b4fc;
 }
-
 body.theme-dark .issue-details-btn:hover {
   background: rgba(99, 102, 241, 0.2);
   border-color: rgba(99, 102, 241, 0.4);
   color: #c7d2fe;
 }
-
 /* Integration with issue-card-header */
 .issue-card-header {
   display: flex;
@@ -62,28 +52,23 @@ body.theme-dark .issue-details-btn:hover {
   gap: 8px;
   justify-content: space-between;
 }
-
 /* SVG icon styling */
 .issue-details-btn svg {
   pointer-events: none;
   transition: transform 0.2s ease;
 }
-
 .issue-details-btn:hover svg {
   transform: translateX(1px);
 }
-
 /* Prevent button from being draggable */
 .issue-details-btn {
   -webkit-user-drag: none;
 }
-
 /* Show on hover */
 .issue-card:hover .issue-details-btn {
   background: rgba(59, 130, 246, 0.7) !important;
   border-color: rgba(59, 130, 246, 0.9) !important;
 }
-
 /* Hide during drag */
 .issue-card.dragging .issue-details-btn {
   display: none !important;

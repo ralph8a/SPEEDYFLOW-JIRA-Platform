@@ -2,10 +2,8 @@
 from flask import Blueprint, request
 import logging
 from utils.decorators import handle_api_error, json_response, log_request as log_decorator, require_credentials, rate_limited
-
 logger = logging.getLogger(__name__)
 exports_bp = Blueprint('exports', __name__)
-
 @exports_bp.route('/api/exports/issues', methods=['GET'])
 @handle_api_error
 @json_response

@@ -2,13 +2,11 @@
  * SpeedyFlow Login Modal
  * First-time login and configuration screen
  */
-
 class UserSetupModal {
     constructor() {
         this.modal = null;
         this.initialized = false;
     }
-
     /**
      * Check if login is needed and show modal
      */
@@ -16,7 +14,6 @@ class UserSetupModal {
         try {
             const response = await fetch('/api/user/login-status');
             const data = await response.json();
-            
             if (data.data && data.data.needs_login) {
                 console.log('🔐 Login required');
                 await this.show();
@@ -29,7 +26,6 @@ class UserSetupModal {
             await this.show();
         }
     }
-
     /**
      * Show login modal
      */
@@ -38,7 +34,6 @@ class UserSetupModal {
             this.modal.style.display = 'flex';
             return;
         }
-
         // Create modal HTML
         const modalHTML = `
             <div id="userSetupModal" class="setup-modal">
@@ -48,7 +43,6 @@ class UserSetupModal {
                         <h2>Bienvenido a SpeedyFlow</h2>
                         <p>Inicia sesión con tus credenciales de JIRA</p>
                     </div>
-                    
                     <div class="setup-modal-body">
                         <form id="loginForm">
                             <div class="setup-form-group">
@@ -67,7 +61,6 @@ class UserSetupModal {
                                     Ejemplo: <code>https://speedymovil.atlassian.net</code>
                                 </small>
                             </div>
-
                             <div class="setup-form-group">
                                 <label for="jiraEmail">
                                     <strong>Email</strong>
@@ -80,7 +73,6 @@ class UserSetupModal {
                                     required
                                 />
                             </div>
-
                             <div class="setup-form-group">
                                 <label for="jiraToken">
                                     <strong>API Token</strong>
@@ -92,7 +84,6 @@ class UserSetupModal {
                                     placeholder="••••••••••••••••"
                                     required
                                 />
-                                
                                 <!-- Expandable guide -->
                                 <details class="token-guide">
                                     <summary>¿No sabes cómo obtener tu token de JIRA? Click para ver la guía</summary>
@@ -112,7 +103,6 @@ class UserSetupModal {
                                     </div>
                                 </details>
                             </div>
-
                             <div class="setup-form-group">
                                 <label for="projectKey">
                                     <strong>Project Key</strong>
@@ -135,9 +125,7 @@ class UserSetupModal {
                                     Un nombre incorrecto puede generar inconsistencias en la detección de colas.
                                 </div>
                             </div>
-
                             <div id="setupError" class="setup-error" style="display: none;"></div>
-
                             <div class="setup-modal-footer">
                                 <button type="submit" id="setupSaveBtn" class="setup-btn-primary">
                                     🔐 Guardar mis Credenciales
@@ -148,38 +136,31 @@ class UserSetupModal {
                 </div>
             </div>
         `;
-
         // Add to DOM
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         this.modal = document.getElementById('userSetupModal');
-
         // Setup event listeners
         this.setupEventListeners();
-
         this.initialized = true;
     }
-
     /**
      * Setup event listeners
      */
     setupEventListeners() {
         const form = document.getElementById('loginForm');
         const projectKeyInput = document.getElementById('projectKey');
-
         // Convert project key to uppercase
         if (projectKeyInput) {
             projectKeyInput.addEventListener('input', (e) => {
                 e.target.value = e.target.value.toUpperCase();
             });
         }
-
         // Form submit
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveConfiguration();
         });
     }
-
     /**
      * Save credentials and configuration
      */
@@ -188,36 +169,29 @@ class UserSetupModal {
         const jiraEmail = document.getElementById('jiraEmail').value.trim();
         const jiraToken = document.getElementById('jiraToken').value.trim();
         const projectKey = document.getElementById('projectKey').value.trim();
-        
         const errorDiv = document.getElementById('setupError');
         const saveBtn = document.getElementById('setupSaveBtn');
-
         // Validate required fields
         if (!jiraSite) {
             this.showError('Por favor ingresa tu JIRA Site URL');
             return;
         }
-
         if (!jiraEmail) {
             this.showError('Por favor ingresa tu email');
             return;
         }
-
         if (!jiraToken) {
             this.showError('Por favor ingresa tu API Token');
             return;
         }
-
         if (!projectKey) {
             this.showError('Por favor ingresa tu Project Key (obligatorio)');
             return;
         }
-
         if (projectKey.length < 2) {
             this.showError('El Project Key debe tener al menos 2 caracteres');
             return;
         }
-
         // Validate URL format
         try {
             new URL(jiraSite);
@@ -225,18 +199,15 @@ class UserSetupModal {
             this.showError('URL inválida. Debe comenzar con https://');
             return;
         }
-
         // Validate email format
         if (!jiraEmail.includes('@')) {
             this.showError('Email inválido');
             return;
         }
-
         // Disable button
         saveBtn.disabled = true;
         saveBtn.innerHTML = '⏳ Guardando credenciales...';
         errorDiv.style.display = 'none';
-
         try {
             const response = await fetch('/api/user/login', {
                 method: 'POST',
@@ -250,9 +221,7 @@ class UserSetupModal {
                     project_key: projectKey || null
                 })
             });
-
             const result = await response.json();
-
             if (result.data && result.data.success) {
                 // Success!
                 const successIcon = typeof SVGIcons !== 'undefined' 
@@ -260,10 +229,8 @@ class UserSetupModal {
                   : '✅';
                 saveBtn.innerHTML = `${successIcon} Credenciales Guardadas`;
                 saveBtn.classList.add('success');
-                
                 // Show success message
                 this.showSuccess(`${successIcon} Configuración guardada. Inicializando SpeedyFlow...`);
-                
                 // Reload and trigger initial filters
                 setTimeout(() => {
                     // Store flag to trigger initial filters after reload
@@ -285,7 +252,6 @@ class UserSetupModal {
             saveBtn.innerHTML = '🔐 Guardar mis Credenciales';
         }
     }
-
     /**
      * Show error message
      */
@@ -294,7 +260,6 @@ class UserSetupModal {
         errorDiv.textContent = '❌ ' + message;
         errorDiv.style.display = 'block';
     }
-
     /**
      * Show success message
      */
@@ -304,7 +269,6 @@ class UserSetupModal {
         errorDiv.className = 'setup-success';
         errorDiv.style.display = 'block';
     }
-
     /**
      * Hide modal
      */
@@ -314,10 +278,8 @@ class UserSetupModal {
         }
     }
 }
-
 // Initialize on page load
 const userSetupModal = new UserSetupModal();
-
 // Check on DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -326,6 +288,5 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(() => userSetupModal.checkAndShow(), 500);
 }
-
 // Export for manual use
 window.userSetupModal = userSetupModal;

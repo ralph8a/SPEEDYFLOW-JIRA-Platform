@@ -2,7 +2,6 @@
  * SPEEDYFLOW - DOM Utilities
  * Centralized DOM manipulation and event handling utilities
  */
-
 /**
  * Safely query selector with error handling
  * @param {string} selector - CSS selector
@@ -17,7 +16,6 @@ export function $(selector, parent = document) {
     return null;
   }
 }
-
 /**
  * Query all elements matching selector
  * @param {string} selector - CSS selector
@@ -32,7 +30,6 @@ export function $$(selector, parent = document) {
     return [];
   }
 }
-
 /**
  * Create element with attributes and children
  * @param {string} tag - HTML tag name
@@ -42,7 +39,6 @@ export function $$(selector, parent = document) {
  */
 export function createElement(tag, attrs = {}, children = []) {
   const element = document.createElement(tag);
-  
   // Set attributes
   Object.entries(attrs).forEach(([key, value]) => {
     if (key === 'className') {
@@ -58,7 +54,6 @@ export function createElement(tag, attrs = {}, children = []) {
       element.setAttribute(key, value);
     }
   });
-  
   // Add children
   const childArray = Array.isArray(children) ? children : [children];
   childArray.forEach(child => {
@@ -68,10 +63,8 @@ export function createElement(tag, attrs = {}, children = []) {
       element.appendChild(document.createTextNode(String(child)));
     }
   });
-  
   return element;
 }
-
 /**
  * Remove all child nodes from element
  * @param {HTMLElement} element - Element to clear
@@ -82,7 +75,6 @@ export function clearElement(element) {
     element.removeChild(element.firstChild);
   }
 }
-
 /**
  * Toggle class on element
  * @param {HTMLElement} element - Target element
@@ -93,7 +85,6 @@ export function toggleClass(element, className, force = undefined) {
   if (!element) return;
   element.classList.toggle(className, force);
 }
-
 /**
  * Add event listener with automatic cleanup
  * @param {HTMLElement|Window|Document} element - Element to listen on
@@ -104,12 +95,9 @@ export function toggleClass(element, className, force = undefined) {
  */
 export function on(element, event, handler, options = {}) {
   if (!element) return () => {};
-  
   element.addEventListener(event, handler, options);
-  
   return () => element.removeEventListener(event, handler, options);
 }
-
 /**
  * Add event listener that fires once
  * @param {HTMLElement} element - Element to listen on
@@ -120,7 +108,6 @@ export function once(element, event, handler) {
   if (!element) return;
   element.addEventListener(event, handler, { once: true });
 }
-
 /**
  * Delegate event handling to parent
  * @param {HTMLElement} parent - Parent element
@@ -131,19 +118,15 @@ export function once(element, event, handler) {
  */
 export function delegate(parent, event, selector, handler) {
   if (!parent) return () => {};
-  
   const wrappedHandler = (e) => {
     const target = e.target.closest(selector);
     if (target && parent.contains(target)) {
       handler.call(target, e);
     }
   };
-  
   parent.addEventListener(event, wrappedHandler);
-  
   return () => parent.removeEventListener(event, wrappedHandler);
 }
-
 /**
  * Show element (remove hidden class or set display)
  * @param {HTMLElement} element - Element to show
@@ -156,7 +139,6 @@ export function show(element, display = 'block') {
     element.style.display = display;
   }
 }
-
 /**
  * Hide element (add hidden class and set display: none)
  * @param {HTMLElement} element - Element to hide
@@ -166,7 +148,6 @@ export function hide(element) {
   element.classList.add('hidden');
   element.style.display = 'none';
 }
-
 /**
  * Toggle element visibility
  * @param {HTMLElement} element - Element to toggle
@@ -174,7 +155,6 @@ export function hide(element) {
  */
 export function toggle(element, force = undefined) {
   if (!element) return;
-  
   if (force === true) {
     show(element);
   } else if (force === false) {
@@ -187,7 +167,6 @@ export function toggle(element, force = undefined) {
     }
   }
 }
-
 /**
  * Get/set element data attributes
  * @param {HTMLElement} element - Target element
@@ -197,14 +176,12 @@ export function toggle(element, force = undefined) {
  */
 export function data(element, key, value = undefined) {
   if (!element) return null;
-  
   if (value !== undefined) {
     element.dataset[key] = value;
   } else {
     return element.dataset[key];
   }
 }
-
 /**
  * Find closest parent matching selector
  * @param {HTMLElement} element - Starting element
@@ -215,7 +192,6 @@ export function closest(element, selector) {
   if (!element) return null;
   return element.closest(selector);
 }
-
 /**
  * Get element dimensions and position
  * @param {HTMLElement} element - Target element
@@ -235,7 +211,6 @@ export function getRect(element) {
     y: rect.y
   };
 }
-
 /**
  * Set multiple styles on element
  * @param {HTMLElement} element - Target element
@@ -247,7 +222,6 @@ export function setStyles(element, styles) {
     element.style[key] = value;
   });
 }
-
 /**
  * Animate element with CSS transitions
  * @param {HTMLElement} element - Target element
@@ -257,20 +231,17 @@ export function setStyles(element, styles) {
  */
 export function animate(element, styles, duration = 300) {
   if (!element) return Promise.resolve();
-  
   return new Promise(resolve => {
     setStyles(element, {
       transition: `all ${duration}ms ease`,
       ...styles
     });
-    
     setTimeout(() => {
       element.style.transition = '';
       resolve();
     }, duration);
   });
 }
-
 /**
  * Wait for DOM to be ready
  * @param {Function} callback - Callback function
@@ -282,7 +253,6 @@ export function ready(callback) {
     callback();
   }
 }
-
 /**
  * Insert HTML safely (prevents XSS)
  * @param {HTMLElement} element - Target element
@@ -291,11 +261,9 @@ export function ready(callback) {
  */
 export function insertHTML(element, html, position = 'beforeend') {
   if (!element) return;
-  
   // Create temporary container
   const temp = document.createElement('div');
   temp.innerHTML = html;
-  
   // Insert sanitized elements
   const nodes = Array.from(temp.childNodes);
   nodes.forEach(node => {
@@ -310,7 +278,6 @@ export function insertHTML(element, html, position = 'beforeend') {
     }
   });
 }
-
 /**
  * Check if element matches selector
  * @param {HTMLElement} element - Element to check
@@ -321,7 +288,6 @@ export function matches(element, selector) {
   if (!element) return false;
   return element.matches(selector);
 }
-
 /**
  * Get computed style property
  * @param {HTMLElement} element - Target element
@@ -332,7 +298,6 @@ export function getStyle(element, property) {
   if (!element) return '';
   return window.getComputedStyle(element).getPropertyValue(property);
 }
-
 /**
  * Focus element with optional scroll
  * @param {HTMLElement} element - Element to focus
@@ -342,7 +307,6 @@ export function focusElement(element, options = { preventScroll: false }) {
   if (!element) return;
   element.focus(options);
 }
-
 /**
  * Blur (unfocus) element
  * @param {HTMLElement} element - Element to blur

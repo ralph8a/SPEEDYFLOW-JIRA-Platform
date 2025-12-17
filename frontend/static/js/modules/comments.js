@@ -17,7 +17,6 @@
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
-
   function processCommentText(text) {
     if (!text) return '';
     const isHtml = text.includes('<') && (text.includes('</') || text.includes('/>'));
@@ -43,7 +42,6 @@
     text = text.replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, '');
     return text.trim();
   }
-
   async function loadIssueComments(issueKey, opts = {}) {
     // opts: {listSelector, countSelector}
     // support opts.order: 'asc' (oldest first) or 'desc' (newest first)
@@ -76,7 +74,6 @@
       // Optionally reverse order to show newest first
       const order = (opts.order || 'asc').toLowerCase();
       const iter = order === 'desc' ? comments.slice().reverse() : comments;
-
       iter.forEach((comment, index) => {
         const author = comment.author?.displayName || comment.author || 'Unknown';
         const time = formatCommentTime(comment.created || comment.timestamp);
@@ -114,7 +111,6 @@
       commentsList.innerHTML = '<p class="error">Failed to load comments</p>';
     }
   }
-
   function setupCommentEventListeners(issueKey, opts = {}) {
     const listSel = opts.listSelector || '#commentsList';
     const container = document.querySelector(listSel);
@@ -138,7 +134,6 @@
       });
     });
   }
-
   async function postComment(issueKey, opts = {}) {
     // opts: {textareaSelector, internalCheckboxSelector, listSelector, countSelector, format}
     const taSel = opts.textareaSelector || '#commentText';
@@ -180,7 +175,6 @@
       if (btn) { btn.disabled = false; btn.textContent = originalText || 'Add Comment'; }
     }
   }
-
   function setupCommentShortcuts() {
     const commentText = document.getElementById('commentText');
     if (!commentText) return;
@@ -191,7 +185,6 @@
       }
     });
   }
-
   // Expose
   window.commentsModule = {
     formatCommentTime,

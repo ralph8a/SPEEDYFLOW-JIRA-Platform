@@ -2,18 +2,15 @@
  * Quick Triage Module
  * Provides rapid access to urgent/unassigned tickets requiring immediate attention
  */
-
 class QuickTriage {
   constructor() {
     this.modalId = 'quickTriageModal';
     this.snoozedTickets = this.loadSnoozedTickets();
     this.init();
   }
-
   init() {
     console.log('⚡ Quick Triage module initialized');
   }
-
   /**
    * Load snoozed tickets from localStorage
    */
@@ -26,7 +23,6 @@ class QuickTriage {
       return {};
     }
   }
-
   /**
    * Save snoozed tickets to localStorage
    */
@@ -37,14 +33,12 @@ class QuickTriage {
       console.error('Error saving snoozed tickets:', e);
     }
   }
-
   /**
    * Check if a ticket is currently snoozed
    */
   isSnoozed(issueKey) {
     const snoozeData = this.snoozedTickets[issueKey];
     if (!snoozeData) return false;
-    
     const now = Date.now();
     if (now > snoozeData.until) {
       // Snooze expired, remove it
@@ -54,7 +48,6 @@ class QuickTriage {
     }
     return true;
   }
-
   /**
    * Snooze a ticket for specified duration (in minutes)
    */
@@ -64,29 +57,23 @@ class QuickTriage {
     this.saveSnoozedTickets();
     console.log(`💤 Ticket ${issueKey} snoozed for ${minutes} minutes`);
   }
-
   /**
    * Filter issues for triage (urgent/unassigned/needs attention)
    */
   filterTriageIssues(allIssues) {
     if (!allIssues || !Array.isArray(allIssues)) return [];
-
     return allIssues.filter(issue => {
       // Skip snoozed tickets
       if (this.isSnoozed(issue.key)) return false;
-
       // Filter criteria
       const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned' || issue.assignee === 'No assignee';
       const isHighPriority = issue.severity === 'Critico' || issue.severity === 'Alto' || issue.severity === 'Mayor';
-      
       // Use last_real_change like app.js cards, fallback to updated or created
       const lastChange = issue.last_real_change || issue.updated || issue.created;
       const isStale = this.isOlderThan(lastChange, 3); // 3+ days without changes
-      
       return isUnassigned || isHighPriority || isStale;
     });
   }
-
   /**
    * Check if date is older than specified days
    */
@@ -98,7 +85,6 @@ class QuickTriage {
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
     return diffDays > days;
   }
-
   /**
    * Open the Quick Triage modal
    */
@@ -107,29 +93,23 @@ class QuickTriage {
     const allIssues = window.app?.issuesCache 
       ? Array.from(window.app.issuesCache.values()) 
       : [];
-
     if (allIssues.length === 0) {
       this.showEmptyState();
       return;
     }
-
     const triageIssues = this.filterTriageIssues(allIssues);
-    
     if (triageIssues.length === 0) {
       this.showAllClearState();
       return;
     }
-
     this.showModal(triageIssues);
   }
-
   /**
    * Show modal with triage issues
    */
   showModal(issues) {
     // Remove existing modal if any
     this.closeModal();
-
     const modal = document.createElement('div');
     modal.id = this.modalId;
     modal.className = 'quick-triage-modal';
@@ -146,13 +126,10 @@ class QuickTriage {
         </div>
       </div>
     `;
-
     document.body.appendChild(modal);
-    
     // Animate in
     setTimeout(() => modal.classList.add('active'), 10);
   }
-
   /**
    * Render list of triage issues
    */
@@ -164,14 +141,12 @@ class QuickTriage {
       const bPriority = priorityOrder[b.severity] || 999;
       return aPriority - bPriority;
     });
-
     return sortedIssues.map(issue => {
       const severityClass = this.getSeverityClass(issue.severity);
       const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned' || issue.assignee === 'No assignee';
       // Use last_real_change like app.js cards
       const lastChange = issue.last_real_change || issue.updated || issue.created;
       const ageTag = this.getAgeTag(lastChange);
-
       return `
         <div class="triage-issue-card" data-issue-key="${issue.key}">
           <div class="triage-issue-header">
@@ -199,7 +174,6 @@ class QuickTriage {
       `;
     }).join('');
   }
-
   /**
    * Get severity CSS class
    */
@@ -213,25 +187,21 @@ class QuickTriage {
     };
     return severityMap[severity] || 'severity-normal';
   }
-
   /**
    * Get age tag for old tickets
    */
   getAgeTag(dateString) {
     if (!dateString) return null;
-    
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
     if (diffDays > 30) return '🔴 30+ days';
     if (diffDays > 14) return '🟠 14+ days';
     if (diffDays > 7) return '🟡 7+ days';
     if (diffDays >= 3) return '⚠️ 3+ days';
     return null;
   }
-
   /**
    * Assign ticket to current user
    */
@@ -239,13 +209,11 @@ class QuickTriage {
     try {
       const currentUser = window.state?.currentUser || 'You';
       console.log(`Assigning ${issueKey} to ${currentUser}...`);
-
       const response = await fetch(`/api/issues/${issueKey}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assignee: currentUser })
       });
-
       if (response.ok) {
         console.log(`✅ Assigned ${issueKey} to ${currentUser}`);
         // Refresh the modal
@@ -260,7 +228,6 @@ class QuickTriage {
       alert(`Failed to assign ticket: ${error.message}`);
     }
   }
-
   /**
    * Show empty state (no issues in cache)
    */
@@ -282,7 +249,6 @@ class QuickTriage {
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add('active'), 10);
   }
-
   /**
    * Show all clear state (no urgent issues)
    */
@@ -305,7 +271,6 @@ class QuickTriage {
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add('active'), 10);
   }
-
   /**
    * Close the modal
    */
@@ -317,7 +282,6 @@ class QuickTriage {
     }
   }
 }
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   window.quickTriage = new QuickTriage();

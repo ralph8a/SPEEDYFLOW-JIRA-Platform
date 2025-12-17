@@ -5,13 +5,10 @@ Verificar modelos ML existentes
 """
 from pathlib import Path
 import os
-
 models_dir = Path("C:/Users/rafae/SPEEDYFLOW-JIRA-Platform/models")
-
 print("="*70)
 print("📦 MODELOS ML - ESTADO ACTUAL")
 print("="*70 + "\n")
-
 # Modelos esperados
 expected_models = {
     "Core Models": [
@@ -31,10 +28,8 @@ expected_models = {
         "issuetype_encoder.pkl"
     ]
 }
-
 total_found = 0
 total_expected = sum(len(models) for models in expected_models.values())
-
 for category, models in expected_models.items():
     print(f"📁 {category}:")
     for model in models:
@@ -46,7 +41,6 @@ for category, models in expected_models.items():
         else:
             print(f"  ❌ {model:35} (No encontrado)")
     print()
-
 # Checkpoints
 checkpoint_dir = models_dir / "checkpoints"
 if checkpoint_dir.exists():
@@ -55,12 +49,10 @@ if checkpoint_dir.exists():
         size = file.stat().st_size / (1024 * 1024)
         print(f"  ✅ {file.name:35} ({size:.2f} MB)")
     print()
-
 # Resumen
 print("="*70)
 print(f"📊 RESUMEN: {total_found}/{total_expected} modelos encontrados ({total_found/total_expected*100:.1f}%)")
 print("="*70)
-
 if total_found == total_expected:
     print("\n✅ Todos los modelos están completos y listos para usar\n")
 elif total_found >= 3:
