@@ -2,6 +2,24 @@
 SPEEDYFLOW ML Service - Microservicio FastAPI simplificado
 """
 from fastapi import FastAPI, HTTPException
+from fastapi.encoders import jsonable_encoder
+import numpy as np
+
+
+def _to_native(obj):
+    """Recursively convert numpy types/arrays to native Python types for JSON serialization."""
+    if isinstance(obj, np.generic):
+        try:
+            return obj.item()
+        except Exception:
+            return obj.tolist() if hasattr(obj, 'tolist') else obj
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: _to_native(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_native(v) for v in obj]
+    return obj
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -139,7 +157,8 @@ async def predict_unified(ticket: FullTicket) -> Dict[str, Any]:
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
     result = predictor.predict_all(ticket.summary, ticket.description or "")
-    return result
+    # Ensure numpy types are converted to native Python types for JSON serialization
+    return jsonable_encoder(_to_native(result))
 
 
 @app.post('/predict/priority')
@@ -147,7 +166,7 @@ async def predict_priority(ticket: FullTicket):
     predictor = getattr(app.state, 'predictor', None)
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
-    return predictor.predict_priority(ticket.summary, ticket.description or "")
+    return jsonable_encoder(_to_native(predictor.predict_priority(ticket.summary, ticket.description or "")))
 
 
 @app.post('/predict/assignee')
@@ -155,7 +174,7 @@ async def predict_assignee(ticket: FullTicket):
     predictor = getattr(app.state, 'predictor', None)
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
-    return predictor.suggest_assignee(ticket.summary, ticket.description or "")
+    return jsonable_encoder(_to_native(predictor.suggest_assignee(ticket.summary, ticket.description or "")))
 
 
 @app.post('/predict/labels')
@@ -163,7 +182,7 @@ async def predict_labels(ticket: FullTicket):
     predictor = getattr(app.state, 'predictor', None)
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
-    return predictor.suggest_labels(ticket.summary, ticket.description or "")
+    return jsonable_encoder(_to_native(predictor.suggest_labels(ticket.summary, ticket.description or "")))
 
 
 @app.post('/predict/status')
@@ -171,7 +190,7 @@ async def predict_status(ticket: FullTicket):
     predictor = getattr(app.state, 'predictor', None)
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
-    return predictor.suggest_status(ticket.summary, ticket.description or "")
+    return jsonable_encoder(_to_native(predictor.suggest_status(ticket.summary, ticket.description or "")))
 
 
 @app.post('/predict/duplicates')
@@ -179,7 +198,7 @@ async def predict_duplicates(ticket: FullTicket):
     predictor = getattr(app.state, 'predictor', None)
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
-    return predictor.predict_duplicate(ticket.summary, ticket.description or "")
+    return jsonable_encoder(_to_native(predictor.predict_duplicate(ticket.summary, ticket.description or "")))
 
 
 @app.post('/predict/sla-breach')
@@ -187,7 +206,7 @@ async def predict_sla(ticket: FullTicket):
     predictor = getattr(app.state, 'predictor', None)
     if not predictor:
         raise HTTPException(status_code=503, detail='Predictor not available')
-    return predictor.predict_sla_breach(ticket.summary, ticket.description or "")
+    return jsonable_encoder(_to_native(predictor.predict_sla_breach(ticket.summary, ticket.description or "")))
 
 
 class ChatRequest(BaseModel):
@@ -214,7 +233,7 @@ async def predict_comment_suggest(req: CommentSuggestRequest):
     if not suggester:
         raise HTTPException(status_code=503, detail='Comment suggester not available')
     result = suggester.suggest_actions(req.summary, req.comments or '')
-    return result
+    return jsonable_encoder(_to_native(result))
 
 
 class CommentActionRequest(BaseModel):

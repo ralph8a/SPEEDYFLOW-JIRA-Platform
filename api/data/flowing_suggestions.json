@@ -1,0 +1,11 @@
+[
+  {
+    "id": "6c25d384-5414-4c89-900c-ce62966438b9",
+    "title": "Smoke Test",
+    "description": "created via smoke test",
+    "icon": "💡",
+    "action": "semantic_search",
+    "priority": 1,
+    "meta": {}
+  }
+]

@@ -59,22 +59,20 @@ from api.blueprints.issues import issues_bp  # noqa: E402
 from api.blueprints.comments_v2 import comments_v2_bp  # noqa: E402
 from api.blueprints.attachments import attachments_bp  # noqa: E402
 from api.blueprints.transitions import transitions_bp  # noqa: E402
-from api.blueprints.ai import ai_bp  # noqa: E402
 from api.blueprints.notifications import notifications_bp  # noqa: E402
 from api.blueprints.exports import exports_bp  # noqa: E402
 from api.blueprints.automations import automations_bp  # noqa: E402
 from api.blueprints.backgrounds import backgrounds_bp  # noqa: E402
 from api.blueprints.webhooks import webhooks_bp  # noqa: E402
 from api.blueprints.kanban import kanban_bp  # noqa: E402
-from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
+from api.blueprints.ml_deprecated import ml_deprecated_bp  # noqa: E402
 from api.blueprints.sync import sync_bp  # noqa: E402
 from api.blueprints.sla import sla_bp  # noqa: E402
-from api.blueprints.copilot import copilot_bp  # noqa: E402
 from api.blueprints.reports import reports_bp  # noqa: E402
-from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
-from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
-from api.blueprints.comment_suggestions import comment_suggestions_bp  # noqa: E402
-from api.blueprints.anomaly_detection import anomaly_detection_bp  # noqa: E402
+# ML endpoints deprecated and consolidated under ml_deprecated_bp
+# legacy ML blueprints (ai, copilot, flowing, comment_suggestions, anomaly_detection)
+# have been disabled and replaced by `ml_deprecated_bp` so models remain on disk
+# but APIs return a deprecation response.
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -134,7 +132,8 @@ app.register_blueprint(issues_bp)
 app.register_blueprint(comments_v2_bp)
 app.register_blueprint(attachments_bp)
 app.register_blueprint(transitions_bp)
-app.register_blueprint(ai_bp)
+# ML blueprints were removed; register deprecation shim instead
+app.register_blueprint(ml_deprecated_bp)
 app.register_blueprint(sync_bp)
 app.register_blueprint(notifications_bp)
 app.register_blueprint(exports_bp)
@@ -142,14 +141,8 @@ app.register_blueprint(automations_bp)
 app.register_blueprint(backgrounds_bp)
 app.register_blueprint(webhooks_bp)
 app.register_blueprint(kanban_bp)
-app.register_blueprint(ai_suggestions_bp)
 app.register_blueprint(sla_bp)
-app.register_blueprint(copilot_bp)
 app.register_blueprint(reports_bp)
-app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & duplicates
-app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
-app.register_blueprint(comment_suggestions_bp)  # ML: Smart comment suggestions
-app.register_blueprint(anomaly_detection_bp)  # ML: Anomaly detection dashboard
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
@@ -191,8 +184,21 @@ def icon_gallery():
 
 @app.before_request
 def _log_req():
-    if not request.path.startswith('/static'):
-        logger.debug(f"📨 {request.method} {request.path}")
+    # Avoid noisy logging for static assets and deprecated ML endpoints
+    path = request.path or ''
+    if path.startswith('/static'):
+        return
+
+    # Do not log ML-related API calls (they are deprecated/disabled or sensitive)
+    ml_prefixes = ('/api/ml', '/api/flowing', '/api/copilot', '/api/ai')
+    try:
+        if any(path.startswith(p) for p in ml_prefixes):
+            return
+    except Exception:
+        # Fallback to logging in unexpected cases
+        pass
+
+    logger.debug(f"📨 {request.method} {request.path}")
 
 @app.after_request
 def add_cache_headers(response):

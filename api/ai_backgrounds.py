@@ -3,8 +3,8 @@ DEPRECATED: moved to `api.ai_backgrounds_minimal`.
 
 This module previously contained many programmatic pattern generators.
 All legacy patterns were intentionally removed; use `api.ai_backgrounds_minimal`
-which provides an Ollama-based generator plus a small set of solid/gradient
-fallbacks. Keeping this shim for backward compatibility.
+which provides a minimal background generator and solid/gradient fallbacks.
+Keeping this shim for backward compatibility.
 """
 
 from api.ai_backgrounds_minimal import get_ai_backgrounds  # re-export

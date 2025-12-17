@@ -584,6 +584,26 @@
   <script src="/static/js/modules/ai-field-suggestions.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/ml-comment-suggestions.js?v={{ timestamp }}"></script>
+  <!-- ML CLIENT (frontend -> ML Service) -->
+  <script src="/static/js/ml-client.js?v={{ timestamp }}"></script>
+        <script>
+          // Auto-init ML UI helper when fields are present (tries common IDs)
+          document.addEventListener('DOMContentLoaded', function() {
+            try {
+              const tryIds = [ ['summary','description'], ['issueSummary','issueDescription'], ['summaryField','descriptionField'] ];
+              for (const ids of tryIds) {
+                const [sId,dId] = ids;
+                if (document.getElementById(sId)) {
+                  if (window.mlUIHelper && typeof window.mlUIHelper.initTicketForm === 'function') {
+                    window.mlUIHelper.initTicketForm(sId, dId);
+                    console.log('✅ [ML] mlUIHelper initialized with', sId, dId);
+                    break;
+                  }
+                }
+              }
+            } catch(e){ console.warn('⚠️ [ML] Auto-init failed', e); }
+          });
+        </script>
   <!-- DISABLED: ml-anomaly-dashboard.js (obsolete, auto-opens modal) -->
 
   <!-- ===== DRAG & DROP TRANSITIONS ===== -->
@@ -667,6 +687,113 @@
       };
       
       initFlowingIntegration();
+    });
+  </script>
+  <!-- Issue selection detector: dispatch ticketSelected when details buttons clicked or balanced view shown -->
+  <script>
+    (function(){
+      // Delegated click listener for issue details buttons
+      document.addEventListener('click', function(e){
+        try {
+          const btn = e.target.closest('.issue-details-btn, .btn-view-details');
+          if (!btn) return;
+          // attempt to find issueKey from dataset or ancestor attributes
+          const issueKey = btn.dataset.issueKey || btn.dataset.key || btn.closest('[data-issue-key]')?.dataset.issueKey || btn.closest('[data-key]')?.dataset.key;
+          if (!issueKey) return;
+
+          // Try to resolve full issue object from window.state or app caches
+          let ticket = null;
+          try { ticket = window.state?.issues?.find(i => i.key === issueKey) || window.app?.issuesCache?.get(issueKey) || null; } catch(_) { ticket = null; }
+          if (!ticket) ticket = { key: issueKey, fields: {} };
+
+          // If Flowing Footer supports balanced view, open it
+          if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+            try { window.flowingFooter.switchToBalancedView(issueKey); } catch(_) {}
+          }
+
+          // Dispatch ticketSelected for ML modules
+          document.dispatchEvent(new CustomEvent('ticketSelected', { detail: { ticket: ticket } }));
+
+          // Also directly invoke the comment suggestions UI if available (force analysis)
+          try {
+            const tryInvoke = () => {
+              if (window.commentSuggestionsUI && typeof window.commentSuggestionsUI.showSuggestionsForTicket === 'function') {
+                console.log('📣 Invoking commentSuggestionsUI.showSuggestionsForTicket for', issueKey);
+                try { window.commentSuggestionsUI.showSuggestionsForTicket(ticket); } catch (e) { console.warn('Error calling showSuggestionsForTicket:', e); }
+                return true;
+              }
+              return false;
+            };
+
+            if (!tryInvoke()) {
+              // Retry a few times in case ML module initializes slightly later
+              let attempts = 0;
+              const maxAttempts = 8;
+              const interval = setInterval(() => {
+                attempts += 1;
+                if (tryInvoke() || attempts >= maxAttempts) {
+                  clearInterval(interval);
+                }
+              }, 250);
+            }
+          } catch (e) { console.warn('Could not call commentSuggestionsUI directly:', e); }
+        } catch (err) { console.warn('issueSelectionDetector click handler error', err); }
+      }, true);
+
+      // Observe balanced view visibility and dispatch when shown
+      const balancedEl = document.getElementById('balancedView');
+      if (balancedEl) {
+        const obs = new MutationObserver((mutations) => {
+          mutations.forEach(m => {
+            try {
+              if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
+                const isVisible = window.getComputedStyle(balancedEl).display !== 'none';
+                if (isVisible) {
+                  // try to get issue key from FlowingFooter context or from DOM
+                  const issueKey = window.flowingFooter?.context?.selectedIssue || document.querySelector('#balancedContentContainer [data-issue-key]')?.dataset.issueKey || null;
+                  if (issueKey) {
+                    let ticket = null;
+                    try { ticket = window.state?.issues?.find(i => i.key === issueKey) || window.app?.issuesCache?.get(issueKey) || null; } catch(_) { ticket = null; }
+                    if (!ticket) ticket = { key: issueKey, fields: {} };
+                    document.dispatchEvent(new CustomEvent('ticketSelected', { detail: { ticket: ticket } }));
+                  }
+                }
+              }
+            } catch (e) { /* ignore */ }
+          });
+        });
+        obs.observe(balancedEl, { attributes: true, attributeFilter: ['style','class'] });
+      }
+    })();
+  </script>
+  <script>
+    // Ensure that external ticketSelected events (e.g. from scripts) trigger ML UI analysis
+    document.addEventListener('ticketSelected', (e) => {
+      try {
+        const ticket = e.detail?.ticket;
+        if (!ticket) return;
+
+        const issueKey = ticket.key || ticket.fields?.key || null;
+        if (!issueKey) return;
+
+        const tryInvoke = () => {
+          if (window.commentSuggestionsUI && typeof window.commentSuggestionsUI.showSuggestionsForTicket === 'function') {
+            console.log('📣 ticketSelected listener: invoking commentSuggestionsUI for', issueKey);
+            try { window.commentSuggestionsUI.showSuggestionsForTicket(ticket); } catch (err) { console.warn('Error invoking commentSuggestionsUI:', err); }
+            return true;
+          }
+          return false;
+        };
+
+        if (!tryInvoke()) {
+          let attempts = 0;
+          const maxAttempts = 12;
+          const interval = setInterval(() => {
+            attempts += 1;
+            if (tryInvoke() || attempts >= maxAttempts) clearInterval(interval);
+          }, 250);
+        }
+      } catch (err) { console.warn('ticketSelected handler error', err); }
     });
   </script>
 </body>

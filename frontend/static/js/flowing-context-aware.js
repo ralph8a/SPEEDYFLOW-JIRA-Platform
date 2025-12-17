@@ -26,6 +26,23 @@
             });
         }
 
+        // Local fallback suggestions (used when server contextual-suggestions fails)
+        this.LOCAL_SUGGESTIONS = {
+            'kanban_board': [
+                { id: 'similar_tickets_board', icon: '🔍', title: 'Buscar tickets similares', description: 'Buscar casos parecidos en esta columna', action: 'semantic_search', priority: 1 }
+            ],
+            'right_sidebar': [
+                { id: 'summarize_conversation', icon: '📝', title: 'Resumir conversación', description: 'Generar resumen de la conversación', action: 'summarize_conversation', priority: 1 },
+                { id: 'suggest_detailed_response', icon: '💬', title: 'Sugerir respuesta', description: 'Generar una respuesta basada en el contexto', action: 'suggest_response', priority: 2 }
+            ],
+            'kanban_card': [
+                { id: 'similar_tickets_card', icon: '🔍', title: 'Ver tickets similares', description: 'Buscar casos parecidos a este ticket', action: 'semantic_search', priority: 1 }
+            ],
+            'list_view': [
+                { id: 'bulk_similar_search', icon: '🔍', title: 'Búsqueda en lote', description: 'Buscar patrones en los tickets visibles', action: 'semantic_search', priority: 1 }
+            ]
+        };
+
         detectContext() {
             // Heuristics: prefer global app/state if available, fallback to DOM
             const state = window.state || {};
@@ -61,11 +78,26 @@
 
         async getSuggestions() {
             try {
+                // Build a minimal, serializable payload to avoid sending complex circular objects
+                const contextDataMinimal = {};
+                try {
+                    if (this.contextData && typeof this.contextData === 'object') {
+                        contextDataMinimal.comment_count = this.contextData.comment_count || this.contextData.commentCount || 0;
+                        contextDataMinimal.issue_count = this.contextData.issueCount || 0;
+                        // add other small scalar fields if available
+                        if (this.contextData.status) contextDataMinimal.status = this.contextData.status;
+                    }
+                } catch (e) {
+                    console.warn('FlowingContext: could not build minimal context_data', e);
+                }
+
                 const payload = {
                     context: this.currentContext,
                     issue_key: this.activeIssueKey,
-                    context_data: this.contextData
+                    context_data: contextDataMinimal
                 };
+
+                console.debug('FlowingContext.getSuggestions payload:', payload);
 
                 const resp = await fetch('/api/flowing/contextual-suggestions', {
                     method: 'POST',
@@ -75,7 +107,10 @@
 
                 if (!resp.ok) {
                     console.warn('FlowingContext.getSuggestions: HTTP', resp.status);
-                    this.suggestions = [];
+                    // Fallback to local suggestions mapping to keep UI functional
+                    const fall = this.LOCAL_SUGGESTIONS[this.currentContext] || [];
+                    this.suggestions = fall.map(s => Object.assign({}, s));
+                    this.suggestionsContext = this.currentContext;
                     return this.suggestions;
                 }
 
@@ -140,6 +175,7 @@
                         </div>
                         <div class="suggestion-card-desc">${s.description || ''}</div>
                         <div class="suggestion-card-footer">
+                            <button class="flowing-save-btn" data-action="${s.action || ''}" data-id="${s.id || ''}">Guardar</button>
                             <button class="flowing-exec-btn" data-action="${s.action || ''}" data-id="${s.id || ''}">Ejecutar</button>
                         </div>
                     `;
@@ -157,6 +193,7 @@
             sidebar.appendChild(results);
 
             // Wire execute buttons
+            // Wire execute and save buttons
             sidebar.querySelectorAll('.flowing-exec-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const action = btn.dataset.action;
@@ -164,6 +201,43 @@
                     this.executeSuggestion(action, id);
                 });
             });
+
+            sidebar.querySelectorAll('.flowing-save-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const card = btn.closest('.suggestion-card');
+                    const title = card.querySelector('.suggestion-card-title')?.textContent || '';
+                    const desc = card.querySelector('.suggestion-card-desc')?.textContent || '';
+                    const payload = {
+                        title: title.replace(/^\S+\s*/, ''), // naive strip icon
+                        description: desc,
+                        icon: (card.querySelector('.suggestion-card-title')?.textContent || '').trim().slice(0, 2),
+                        action: btn.dataset.action || '',
+                        priority: parseInt(card.querySelector('.suggestion-card-priority')?.textContent?.replace('#', '') || '0', 10)
+                    };
+                    this.saveSuggestion(payload).then(res => {
+                        if (res && res.success) {
+                            // refresh saved suggestions
+                            this.loadSavedSuggestions();
+                        }
+                    });
+                });
+            });
+
+            // Render saved suggestions area after suggestions bar
+            const savedHeader = document.createElement('div');
+            savedHeader.className = 'flowing-saved-header';
+            savedHeader.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><strong>Saved Suggestions</strong><button id="addSavedSuggestionBtn" class="btn-small">+ Add</button></div>`;
+            sidebar.appendChild(savedHeader);
+
+            const savedList = document.createElement('div');
+            savedList.id = 'flowingSavedList';
+            savedList.className = 'flowing-saved-list';
+            sidebar.appendChild(savedList);
+
+            document.getElementById('addSavedSuggestionBtn')?.addEventListener('click', () => this.showNewSavedForm());
+
+            // Load saved suggestions
+            this.loadSavedSuggestions();
         }
 
         // Create a small floating bulb button that toggles the FlowingContext sidebar
@@ -254,6 +328,113 @@
                 console.error('executeSuggestion error', e);
                 resultsEl.innerHTML = `<p class="flowing-error">Error ejecutando sugerencia</p>`;
             }
+        }
+
+        // Saved suggestions storage API
+        async loadSavedSuggestions() {
+            try {
+                const resp = await fetch('/api/flowing-storage/saved-suggestions', { method: 'GET' });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const list = data.items || [];
+                const container = document.getElementById('flowingSavedList');
+                if (!container) return;
+                container.innerHTML = '';
+                list.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'flowing-saved-item';
+                    el.dataset.id = item.id;
+                    el.innerHTML = `<div class="saved-item-main"><span class="saved-icon">${item.icon || '💡'}</span><strong class="saved-title">${item.title}</strong> <span class="saved-priority">#${item.priority || 0}</span></div>
+                        <div class="saved-desc">${item.description || ''}</div>
+                        <div class="saved-actions"><button class="saved-edit-btn">Edit</button><button class="saved-delete-btn">Delete</button></div>`;
+                    container.appendChild(el);
+                });
+
+                container.querySelectorAll('.saved-edit-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                    const id = e.target.closest('.flowing-saved-item').dataset.id;
+                    this.showEditSavedForm(id);
+                }));
+
+                container.querySelectorAll('.saved-delete-btn').forEach(btn => btn.addEventListener('click', async (e) => {
+                    const id = e.target.closest('.flowing-saved-item').dataset.id;
+                    await fetch(`/api/flowing-storage/saved-suggestions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                    this.loadSavedSuggestions();
+                }));
+            } catch (e) { console.warn('loadSavedSuggestions error', e); }
+        }
+
+        async saveSuggestion(payload) {
+            try {
+                const resp = await fetch('/api/flowing-storage/saved-suggestions', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                });
+                if (!resp.ok) return null;
+                return await resp.json();
+            } catch (e) { console.warn('saveSuggestion error', e); return null; }
+        }
+
+        showNewSavedForm() {
+            const sidebar = document.getElementById('rightSidebar');
+            if (!sidebar) return;
+            const form = document.createElement('div');
+            form.className = 'flowing-saved-form';
+            form.innerHTML = `
+                <label>Title: <input class="fs-title" /></label>
+                <label>Description: <textarea class="fs-desc"></textarea></label>
+                <label>Icon: <input class="fs-icon" value="💡" /></label>
+                <label>Action: <input class="fs-action" /></label>
+                <label>Priority: <input class="fs-priority" type="number" value="0" /></label>
+                <div style="display:flex;gap:8px;margin-top:8px"><button class="fs-save">Save</button><button class="fs-cancel">Cancel</button></div>
+            `;
+            sidebar.appendChild(form);
+            form.querySelector('.fs-cancel').addEventListener('click', () => form.remove());
+            form.querySelector('.fs-save').addEventListener('click', async () => {
+                const payload = {
+                    title: form.querySelector('.fs-title').value,
+                    description: form.querySelector('.fs-desc').value,
+                    icon: form.querySelector('.fs-icon').value,
+                    action: form.querySelector('.fs-action').value,
+                    priority: parseInt(form.querySelector('.fs-priority').value || '0', 10)
+                };
+                await this.saveSuggestion(payload);
+                form.remove();
+                this.loadSavedSuggestions();
+            });
+        }
+
+        showEditSavedForm(itemId) {
+            // load item
+            fetch('/api/flowing-storage/saved-suggestions').then(r => r.json()).then(data => {
+                const item = (data.items || []).find(i => i.id === itemId);
+                if (!item) return;
+                const sidebar = document.getElementById('rightSidebar');
+                const form = document.createElement('div');
+                form.className = 'flowing-saved-form';
+                form.innerHTML = `
+                    <label>Title: <input class="fs-title" value="${(item.title || '').replace(/"/g, '&quot;')}" /></label>
+                    <label>Description: <textarea class="fs-desc">${(item.description || '').replace(/</g, '&lt;')}</textarea></label>
+                    <label>Icon: <input class="fs-icon" value="${item.icon || '💡'}" /></label>
+                    <label>Action: <input class="fs-action" value="${item.action || ''}" /></label>
+                    <label>Priority: <input class="fs-priority" type="number" value="${item.priority || 0}" /></label>
+                    <div style="display:flex;gap:8px;margin-top:8px"><button class="fs-update">Update</button><button class="fs-cancel">Cancel</button></div>
+                `;
+                sidebar.appendChild(form);
+                form.querySelector('.fs-cancel').addEventListener('click', () => form.remove());
+                form.querySelector('.fs-update').addEventListener('click', async () => {
+                    const payload = {
+                        title: form.querySelector('.fs-title').value,
+                        description: form.querySelector('.fs-desc').value,
+                        icon: form.querySelector('.fs-icon').value,
+                        action: form.querySelector('.fs-action').value,
+                        priority: parseInt(form.querySelector('.fs-priority').value || '0', 10)
+                    };
+                    await fetch(`/api/flowing-storage/saved-suggestions/${encodeURIComponent(itemId)}`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                    });
+                    form.remove();
+                    this.loadSavedSuggestions();
+                });
+            }).catch(e => console.warn(e));
         }
     }
 

@@ -1,0 +1,263 @@
+{
+  "generated_at": "2025-12-16T00:00:00Z",
+  "summary": "Audit of ML components and proposed consolidated ML API surface for SpeedyFlow / Flowing MVP",
+  "audit_routes": [
+    {
+      "route": "/api/ai/suggestions",
+      "methods": ["GET"],
+      "file": "api/blueprints/ai.py",
+      "blueprint": "ai_bp",
+      "description": "Lightweight stub suggestions (rate-limited)."
+    },
+    {
+      "route": "/api/ai/analyze-queue",
+      "methods": ["POST"],
+      "file": "api/blueprints/ai_suggestions.py",
+      "blueprint": "ai_suggestions_bp",
+      "description": "Queue-level ML analysis; caches results in DB."
+    },
+    {
+      "route": "/api/ai/suggest-updates",
+      "methods": ["POST"],
+      "file": "api/blueprints/ai_suggestions.py",
+      "blueprint": "ai_suggestions_bp",
+      "description": "Analyze a ticket and suggest field updates."
+    },
+    {
+      "route": "/api/ai/analyze-ticket",
+      "methods": ["POST"],
+      "file": "api/ai_endpoints.py",
+      "blueprint": null,
+      "description": "Analyze single ticket (ai_engine_v2 wrapper)."
+    },
+    {
+      "route": "/api/ml/comments/suggestions",
+      "methods": ["POST"],
+      "file": "api/blueprints/comment_suggestions.py",
+      "blueprint": "comment_suggestions_bp",
+      "description": "Get ML-powered comment suggestions for a ticket."
+    },
+    {
+      "route": "/api/flowing/semantic-search",
+      "methods": ["POST"],
+      "file": "api/blueprints/flowing_semantic_search.py",
+      "blueprint": "flowing_semantic_bp",
+      "description": "Semantic search for similar issues (embeddings)."
+    },
+    {
+      "route": "/api/flowing/detect-duplicates",
+      "methods": ["POST"],
+      "file": "api/blueprints/flowing_semantic_search.py",
+      "blueprint": "flowing_semantic_bp",
+      "description": "Detect potential duplicate issues using embeddings."
+    },
+    {
+      "route": "/api/flowing/contextual-suggestions",
+      "methods": ["POST"],
+      "file": "api/blueprints/flowing_semantic_search.py",
+      "blueprint": "flowing_semantic_bp",
+      "description": "Contextual suggestions for a given issue (uses embeddings)."
+    },
+    {
+      "route": "/api/flowing/suggest-response",
+      "methods": ["POST"],
+      "file": "api/blueprints/flowing_comments_assistant.py",
+      "blueprint": "flowing_comments_bp",
+      "description": "Generate AI-suggested response based on conversation history (Ollama placeholder)."
+    },
+    {
+      "route": "/api/copilot/chat",
+      "methods": ["POST"],
+      "file": "api/blueprints/copilot.py",
+      "blueprint": "copilot_bp",
+      "description": "Flowing MVP chat endpoint used by frontend (Flowing MVP chat)."
+    }
+  ],
+
+  "components": [
+    {
+      "name": "ai_engine_v2",
+      "file": "api/ai_engine_v2.py",
+      "type": "in-process heuristic/text-analysis engine",
+      "model": "rule-based + lightweight heuristics",
+      "inputs": ["ticket summary", "ticket description"],
+      "outputs": ["summary", "keywords", "priority_analysis", "type_analysis"],
+      "stateful": true,
+      "state_details": "Caches analysis results in memory with TTL (cache dict)",
+      "config_keys": ["cache_ttl"],
+      "persistence": "in-memory cache only",
+      "expected_latency_ms": 50,
+      "dependencies": [],
+      "notes": "Good fallback when external LLMs are unavailable; deterministic." 
+    },
+    {
+      "name": "comment_suggestion_engine",
+      "file": "api/ml_comment_suggestions.py",
+      "type": "ML model / pattern engine (custom)",
+      "model": "custom trained models or heuristic predictor (UnifiedMLPredictor optional)",
+      "inputs": ["summary", "description", "recent_comments", "issue metadata"],
+      "outputs": ["suggested_comments"],
+      "stateful": true,
+      "state_details": "Has internal suggestion cache and trained patterns; training DB in api/ml_training_db.py",
+      "config_keys": ["MODEL_DIR", "SUGGESTION_CACHE_TTL"],
+      "persistence": "training DB + suggestions cache (on-disk/db)",
+      "expected_latency_ms": "200-800",
+      "dependencies": ["api/ml_training_db.py"],
+      "notes": "Provides /api/ml/comments/* endpoints and supports training/export/metrics."
+    },
+    {
+      "name": "flowing_semantic (embedding manager)",
+      "file": "utils/embedding_manager.py",
+      "type": "embedding index + vector search",
+      "model": "embeddings provider (Ollama/local or remote embedding service)",
+      "inputs": ["query text", "issue corpus"],
+      "outputs": ["similar issues list with similarity scores"],
+      "stateful": true,
+      "state_details": "Maintains index, optionally persists embeddings to disk/cache", 
+      "config_keys": ["EMBEDDING_PROVIDER", "EMBEDDING_INDEX_PATH"],
+      "persistence": "embedding index files / cache",
+      "expected_latency_ms": "50-500",
+      "dependencies": ["utils/ollama_client (optional)", "db/cache files"],
+      "notes": "Used by semantic-search, detect-duplicates, contextual-suggestions." 
+    },
+    {
+      "name": "flowing_comments_assistant (Ollama integration)",
+      "file": "api/blueprints/flowing_comments_assistant.py",
+      "type": "LLM text generation over conversation",
+      "model": "external LLM client (Ollama or other)",
+      "inputs": ["issueKey", "recent comments", "context"],
+      "outputs": ["suggested response text", "tone", "confidence"],
+      "stateful": false,
+      "state_details": "Stateless request-response; may cache recent prompts/results optionally",
+      "config_keys": ["OLLAMA_URL", "LLM_MODEL"],
+      "persistence": "none by default; can log usage",
+      "expected_latency_ms": "500-2000",
+      "dependencies": ["utils/ollama_client.py"],
+      "notes": "Placeholder endpoints; must guard for service unavailability and rate limits." 
+    },
+    {
+      "name": "ai_suggestions (queue analyzer)",
+      "file": "api/blueprints/ai_suggestions.py",
+      "type": "orchestration + ML analysis",
+      "model": "combines ai_engine_v2 heuristics + comment/embedding engines",
+      "inputs": ["desk_id", "queue_id"],
+      "outputs": ["analyzed_count", "issues_with_suggestions", "suggestions list"],
+      "stateful": false,
+      "state_details": "Uses DB cache (ml_analysis_cache) to persist computed results",
+      "config_keys": ["CACHE_TTL_ADAPTIVE"],
+      "persistence": "DB cache table ml_analysis_cache",
+      "expected_latency_ms": "500-5000",
+      "dependencies": ["utils.db", "core.api.get_api_client", "ai_engine_v2", "utils/embedding_manager"],
+      "notes": "Designed for batch analysis; important to throttle or async-queue long jobs." 
+    },
+    {
+      "name": "anomaly_detection",
+      "file": "api/ml_anomaly_detection.py",
+      "type": "time-series / anomaly detection engine",
+      "model": "statistical/ML anomaly detectors (custom)",
+      "inputs": ["ticket stream metrics", "historical stats"],
+      "outputs": ["anomalies list", "dashboard metrics"],
+      "stateful": true,
+      "state_details": "Maintains baseline_stats and anomalies list; retraining updates baseline",
+      "config_keys": ["ANOMALY_MODEL_DIR", "ANOMALY_WINDOW"],
+      "persistence": "trained baseline stats (on-disk/db)",
+      "expected_latency_ms": "100-1000",
+      "dependencies": ["api/ml_training_db.py"],
+      "notes": "Used by /api/ml/anomalies/* endpoints."
+    },
+    {
+      "name": "ml_training_db",
+      "file": "api/ml_training_db.py",
+      "type": "data persistence and export layer",
+      "purpose": "Store labeled samples, export training datasets, provide stats",
+      "inputs": ["annotated samples", "usage records"],
+      "outputs": ["exported dataset path", "stats"],
+      "stateful": true,
+      "persistence": "SQLite or similar DB under /data or api/db",
+      "dependencies": [],
+      "notes": "Central to training and audits."
+    }
+  ],
+
+  "expected_api_surface": {
+    "description": "Consolidated ML API surface (versioned) recommended for migration and rollout",
+    "base_prefix": "/api/ml/v1",
+    "endpoints": [
+      {
+        "path": "/chat",
+        "method": "POST",
+        "purpose": "Flowing-MVP assistant chat (replace /api/copilot/chat)",
+        "request": {"message": "string", "context": "object (optional)"},
+        "response": {"response": "string", "context": "object (optional)"},
+        "auth": "optional require_credentials or API key",
+        "notes": "Synchronous chat; backend may proxy to LLM adapter." 
+      },
+      {
+        "path": "/comments/suggest",
+        "method": "POST",
+        "purpose": "Get comment suggestions for a ticket",
+        "request": {"summary": "string", "description": "string", "recent_comments": ["string"], "max_suggestions": "int (optional)"},
+        "response": {"suggestions": [{"text": "string", "confidence": "float"}], "cached": "bool"},
+        "auth": "require_credentials"
+      },
+      {
+        "path": "/comments/train",
+        "method": "POST",
+        "purpose": "Trigger training/retraining of comment suggestion engine",
+        "request": {"force": "bool (optional)"},
+        "response": {"success": "bool", "stats": "object"},
+        "auth": "require_credentials (admin)",
+        "notes": "Should run async or queue long jobs; return job id." 
+      },
+      {
+        "path": "/semantic/search",
+        "method": "POST",
+        "purpose": "Semantic search for similar issues",
+        "request": {"query": "string", "top_k": "int (optional)", "min_similarity": "float (optional)"},
+        "response": {"results": [{"issue_key":"string","similarity":"float","text_preview":"string"}]},
+        "auth": "require_credentials"
+      },
+      {
+        "path": "/duplicates/detect",
+        "method": "POST",
+        "purpose": "Detect potential duplicates for an issue",
+        "request": {"issue_key":"string","summary":"string","description":"string","threshold":"float (optional)"},
+        "response": {"duplicates": ["objects"], "is_potential_duplicate": "bool", "confidence": "float"},
+        "auth": "require_credentials"
+      },
+      {
+        "path": "/tickets/analyze",
+        "method": "POST",
+        "purpose": "Analyze a ticket and suggest field updates (single ticket)",
+        "request": {"issue_key":"string","fields_to_analyze":"array of strings (optional)"},
+        "response": {"issue_key":"string","suggestions": ["objects"],"total_suggestions":"int"},
+        "auth": "require_credentials"
+      },
+      {
+        "path": "/admin/reload-models",
+        "method": "POST",
+        "purpose": "Admin endpoint to reload models/resources",
+        "request": {},
+        "response": {"status":"reloaded|error","details":"object"},
+        "auth": "require_credentials (admin only)"
+      },
+      {
+        "path": "/health",
+        "method": "GET",
+        "purpose": "ML service health and readiness",
+        "response": {"status":"ok|unavailable","components": {"comment_suggestions":"ok","embeddings":"ok","llm":"ok"}},
+        "auth": "optional"
+      }
+    ]
+  },
+
+  "migration_notes": {
+    "strategy": "Add a versioned compatibility shim (/api/ml/v1) that proxies existing endpoints. Gradually rewire front-end to call /api/ml/v1/* and implement adapters under the new blueprint that call legacy implementations until refactor complete.",
+    "priority_actions": [
+      "Centralize ML config in utils/config.py (MODEL_DIR, EMBEDDING_PROVIDER, OLLAMA_URL, ML_API_KEY)",
+      "Implement /api/ml/v1/chat and point flowing-mvp-footer.js to it (non-breaking concurrent support)",
+      "Add admin protected /admin/reload-models to safely refresh models",
+      "Introduce async job queue for long batch analyses (/tickets/analyze or analyze-queue)"
+    ]
+  }
+}

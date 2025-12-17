@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 SPEEDYFLOW Project Cleanup Script
-Consolida scripts, documentación y elimina archivos obsoletos/Ollama
+Consolida scripts, documentación y elimina archivos obsoletos
 """
 import os
 import shutil
@@ -42,16 +42,13 @@ print(f"📁 Backup folder: {BACKUP_DIR}")
 print()
 
 # ============================================================================
-# FASE 1: ELIMINAR ARCHIVOS RELACIONADOS CON OLLAMA
+# FASE 1: ELIMINAR ARCHIVOS RELACIONADOS (si existen)
 # ============================================================================
-print("🗑️  FASE 1: Eliminando archivos Ollama...")
+print("🗑️  FASE 1: Eliminando archivos obsoletos...")
 print("-" * 80)
 
-    "",
-    "",
-    "",
-    "",
-]
+# No-op list (previously contained Ollama-related files)
+ollama_files = []
 
 for file_rel in ollama_files:
     file_path = BASE_DIR / file_rel

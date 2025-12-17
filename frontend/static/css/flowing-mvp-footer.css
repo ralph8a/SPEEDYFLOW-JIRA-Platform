@@ -1,35 +1,32 @@
-/* Make the main content animate when footer expands so it is visibly pushed up */
-/* Use a body class toggled by JS to control expanded footer layout */
+/* Disable layout shift caused by footer: do not push or translate main content */
 html,
 body {
-  transition: padding-bottom 0.25s ease;
+  transition: none !important;
 }
 
-/* When Flowing footer is expanded, push main content up to leave room */
+/* Ensure footer overlays content instead of pushing it */
 body.flowing-footer-expanded #kanbanView,
 body.flowing-footer-expanded .board-wrapper,
 body.flowing-footer-expanded #listView,
 body.flowing-footer-expanded .list-wrapper,
 body.flowing-footer-expanded .header-enhanced,
 body.flowing-footer-expanded .filter-bar-enhanced {
-  /* translate the main content up by the footer added delta so it visually makes room (avoid adding scroll) */
-  transform: translateY(calc(-1 * var(--flowing-footer-translate, 0px))) !important;
-  transition: transform 0.28s ease;
+  transform: none !important;
+  transition: none !important;
 }
 
-/* Respect sidebar-collapsed state too */
 body.sidebar-collapsed.flowing-footer-expanded #kanbanView,
 body.sidebar-collapsed.flowing-footer-expanded .board-wrapper,
 body.sidebar-collapsed.flowing-footer-expanded .header-enhanced,
 body.sidebar-collapsed.flowing-footer-expanded .filter-bar-enhanced {
-  transform: translateY(calc(-1 * var(--flowing-footer-translate, 0px))) !important;
-  transition: transform 0.28s ease;
+  transform: none !important;
+  transition: none !important;
 }
 
-/* Expanded state visual: allow taller footer with smooth transition */
+/* Expanded state visual: footer may grow but should overlay content */
 .flowing-footer:not(.collapsed) {
   transition: max-height 0.28s ease, box-shadow 0.2s ease;
-  max-height: 640px;
+  max-height: 60vh;
 }
 
 
@@ -75,18 +72,16 @@ body.sidebar-collapsed.flowing-footer-expanded .filter-bar-enhanced {
 .board-wrapper,
 #kanbanView,
 #listView {
-  padding-bottom: 300px !important;
-  /* Space for expanded footer */
-  transition: padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Do not reserve extra space for the footer; footer will overlay content */
+  padding-bottom: 0 !important;
 }
 
-/* Adjust padding when footer is collapsed */
+/* When collapsed, keep default small safe spacing if desired (optional) */
 .flowing-footer.collapsed~.main-wrapper .board-wrapper,
 body:has(.flowing-footer.collapsed) .board-wrapper,
 body:has(.flowing-footer.collapsed) #kanbanView,
 body:has(.flowing-footer.collapsed) #listView {
-  padding-bottom: 80px !important;
-  /* Space for collapsed footer */
+  padding-bottom: 0 !important;
 }
 
 .ticket-key {
@@ -675,10 +670,6 @@ body.theme-dark .ml-suggestion-checkbox {
   display: none;
 }
 
-/* Hide ML actions in right column when in chat mode */
-.flowing-footer.chat-only .ml-actions-section {
-  display: none;
-}
 
 /* Hide mode tabs when in chat-only mode */
 .flowing-footer.chat-only .mode-tabs {
@@ -696,9 +687,7 @@ body.theme-dark .ml-suggestion-checkbox {
   display: block !important;
 }
 
-.ml-actions-section#mlActionsLeft {
-  display: none;
-}
+.\/* ML Actions deprecated - removed styles *\/
 
 /* SLA Section */
 .sla-section {
@@ -878,50 +867,8 @@ body.theme-dark .ml-suggestion-checkbox {
   box-shadow: var(--shadow-md, 0 8px 24px rgba(59, 130, 246, 0.25));
 }
 
-/* ML Actions Section */
-.ml-actions-section {
-  margin-top: 1rem;
-}
-
-.ml-actions-section h4 {
-  color: #2d3748;
-  font-size: 0.95rem;
-  margin-bottom: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.suggested-comments {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.suggestion-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.suggestion-item:hover {
-  border-color: #667eea;
-  background: #f7fafc;
-}
-
-.suggestion-text {
-  flex: 1;
-  color: #2d3748;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
+/* ML Actions deprecated - styles removed. If reintroducing ML Actions,
+   restore or rework styles here. */
 
 .btn-copy {
   background: transparent;
@@ -2437,7 +2384,6 @@ body.theme-dark .footer-two-columns .panel-card {
 
 .footer-two-columns .right-column .panel,
 .footer-two-columns .right-column .panel-card,
-.footer-two-columns .right-column .ml-actions-section,
 .footer-two-columns .right-column .sla-monitor-container {
   padding: 6px 6px;
   margin-bottom: 6px;

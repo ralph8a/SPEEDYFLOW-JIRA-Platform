@@ -6,7 +6,7 @@ Ejecuta todos los scripts de limpieza en orden
 import subprocess
 import sys
 from pathlib import Path
-
+print("      - Elimina archivos obsoletos (if any)")
 BASE_DIR = Path(__file__).parent
 
 print("=" * 80)
@@ -16,7 +16,7 @@ print()
 print("Este script ejecutará los siguientes pasos:")
 print()
 print("  1️⃣  cleanup_project.py")
-print("      - Elimina archivos obsoletos de Ollama")
+print("      - Elimina referencias a motores IA en código")
 print("      - Consolida scripts (44 → 23)")
 print("      - Limpia archivos de testing")
 print("      - Remueve archivos redundantes")
@@ -103,7 +103,7 @@ except subprocess.CalledProcessError as e:
     print(f"\n❌ Error en Paso 3: {e}")
     sys.exit(1)
 
-# ============================================================================
+print("  ✅ Referencias a motores IA opcionales eliminadas del código") 
 # RESUMEN FINAL
 # ============================================================================
 print("\n" + "=" * 80)

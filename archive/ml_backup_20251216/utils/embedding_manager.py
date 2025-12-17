@@ -7,6 +7,9 @@ import json
 import gzip
 import logging
 import os
+import re
+import math
+import hashlib
 from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 from datetime import datetime
@@ -21,7 +24,7 @@ class EmbeddingManager:
     """Gestor de embeddings con cache persistente"""
     
     def __init__(self):
-        self.        self.embeddings_cache: Dict[str, Dict] = {}
+        self.embeddings_cache: Dict[str, Dict] = {}
         self.load_cache()
     
     def load_cache(self):
@@ -117,12 +120,8 @@ class EmbeddingManager:
         if not text:
             logger.warning(f"No text extracted for {issue_key}")
             return None
-        
-        if not self.ollama.is_available():
-            logger.warning("Ollama not available, cannot generate embedding")
-            return None
-        
-        embedding = self.ollama.generate_embedding(text)
+        # Generate a lightweight deterministic embedding (no external services)
+        embedding = self._generate_embedding(text)
         
         if embedding:
             # Guardar en cache
@@ -194,12 +193,8 @@ class EmbeddingManager:
         Returns:
             Lista de issues similares con scores
         """
-        if not self.ollama.is_available():
-            logger.warning("Ollama not available, returning empty results")
-            return []
-        
-        # Generar embedding para query
-        query_embedding = self.ollama.generate_embedding(query_text)
+        # Generate embedding for query using local generator
+        query_embedding = self._generate_embedding(query_text)
         if not query_embedding:
             logger.error("Failed to generate query embedding")
             return []
@@ -215,7 +210,7 @@ class EmbeddingManager:
             if not embedding:
                 continue
             
-            similarity = self.ollama.cosine_similarity(query_embedding, embedding)
+            similarity = self._cosine_similarity(query_embedding, embedding)
             
             if similarity >= min_similarity:
                 results.append({
@@ -239,9 +234,7 @@ class EmbeddingManager:
             logger.error("Issues cache not found")
             return
         
-        if not self.ollama.is_available():
-            logger.error("Ollama not available")
-            return
+        # Use built-in embedding generator (no external engine required)
         
         try:
             with open(ISSUES_CACHE_PATH, 'r', encoding='utf-8') as f:
@@ -279,6 +272,31 @@ class EmbeddingManager:
             
         except Exception as e:
             logger.error(f"Error generating embeddings: {e}")
+
+    def _generate_embedding(self, text: str, dim: int = 128) -> List[float]:
+        """Deterministic, lightweight embedding using hashed token counts.
+
+        Not a replacement for semantic embeddings, but provides a stable
+        vector for similarity ranking without external dependencies.
+        """
+        vec = [0.0] * dim
+        if not text:
+            return vec
+        tokens = re.findall(r"\w+", text.lower())
+        for t in tokens:
+            h = int(hashlib.sha256(t.encode('utf-8')).hexdigest(), 16)
+            idx = h % dim
+            vec[idx] += 1.0
+        # L2 normalize
+        norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+        return [v / norm for v in vec]
+
+    def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
+        if not a or not b or len(a) != len(b):
+            return 0.0
+        dot = sum(x * y for x, y in zip(a, b))
+        # both vectors are expected normalized
+        return float(dot)
 
 # Singleton global
 _embedding_manager = None

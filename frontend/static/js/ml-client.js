@@ -7,7 +7,7 @@
  */
 
 class MLClient {
-    constructor(baseURL = 'http://localhost:5001') {
+    constructor(baseURL = 'http://localhost:5002') {
         this.baseURL = baseURL;
         this.cache = new Map();
         this.cacheTimeout = 5 * 60 * 1000; // 5 minutos
@@ -21,7 +21,7 @@ class MLClient {
      */
     async predictAll(summary, description = '') {
         const cacheKey = `${summary}|${description}`;
-        
+
         // Verificar caché local
         if (this.cache.has(cacheKey)) {
             const cached = this.cache.get(cacheKey);
@@ -35,12 +35,12 @@ class MLClient {
         const startTime = performance.now();
 
         try {
-            const response = await fetch(`${this.baseURL}/ml/predict/all`, {
+            const response = await fetch(`${this.baseURL}/predict/unified`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({summary, description})
+                body: JSON.stringify({ summary, description })
             });
 
             if (!response.ok) {
@@ -49,9 +49,9 @@ class MLClient {
 
             const data = await response.json();
             const latency = Math.round(performance.now() - startTime);
-            
+
             console.log(`✅ [ML] Predictions received in ${latency}ms`);
-            
+
             // Guardar en caché
             this.cache.set(cacheKey, {
                 data,
@@ -70,15 +70,15 @@ class MLClient {
      */
     async checkDuplicate(summary, description = '') {
         try {
-            const response = await fetch(`${this.baseURL}/ml/predict/duplicate`, {
+            const response = await fetch(`${this.baseURL}/predict/duplicates`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ summary, description })
             });
             return await response.json();
         } catch (error) {
             console.error('❌ [ML] Error checking duplicate:', error);
-            return {is_duplicate: false, confidence: 0, similar_tickets: []};
+            return { is_duplicate: false, confidence: 0, similar_tickets: [] };
         }
     }
 
@@ -87,15 +87,15 @@ class MLClient {
      */
     async suggestPriority(summary, description = '') {
         try {
-            const response = await fetch(`${this.baseURL}/ml/predict/priority`, {
+            const response = await fetch(`${this.baseURL}/predict/priority`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ summary, description })
             });
             return await response.json();
         } catch (error) {
             console.error('❌ [ML] Error suggesting priority:', error);
-            return {suggested_priority: 'Medium', confidence: 0};
+            return { suggested_priority: 'Medium', confidence: 0 };
         }
     }
 
@@ -104,15 +104,15 @@ class MLClient {
      */
     async predictSLABreach(summary, description = '') {
         try {
-            const response = await fetch(`${this.baseURL}/ml/predict/sla-breach`, {
+            const response = await fetch(`${this.baseURL}/predict/sla-breach`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ summary, description })
             });
             return await response.json();
         } catch (error) {
             console.error('❌ [ML] Error predicting SLA breach:', error);
-            return {will_breach: false, breach_probability: 0, risk_level: 'LOW'};
+            return { will_breach: false, breach_probability: 0, risk_level: 'LOW' };
         }
     }
 
@@ -121,15 +121,15 @@ class MLClient {
      */
     async suggestAssignee(summary, description = '', topK = 3) {
         try {
-            const response = await fetch(`${this.baseURL}/ml/suggest/assignee?top_k=${topK}`, {
+            const response = await fetch(`${this.baseURL}/predict/assignee`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ summary, description })
             });
             return await response.json();
         } catch (error) {
             console.error('❌ [ML] Error suggesting assignee:', error);
-            return {suggestions: [], top_choice: null};
+            return { suggestions: [], top_choice: null };
         }
     }
 
@@ -138,15 +138,15 @@ class MLClient {
      */
     async suggestLabels(summary, description = '', threshold = 0.3) {
         try {
-            const response = await fetch(`${this.baseURL}/ml/suggest/labels?threshold=${threshold}`, {
+            const response = await fetch(`${this.baseURL}/predict/labels`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ summary, description })
             });
             return await response.json();
         } catch (error) {
             console.error('❌ [ML] Error suggesting labels:', error);
-            return {suggested_labels: [], count: 0};
+            return { suggested_labels: [], count: 0 };
         }
     }
 
@@ -155,15 +155,15 @@ class MLClient {
      */
     async suggestStatus(summary, description = '') {
         try {
-            const response = await fetch(`${this.baseURL}/ml/suggest/status`, {
+            const response = await fetch(`${this.baseURL}/predict/status`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({summary, description})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ summary, description })
             });
             return await response.json();
         } catch (error) {
             console.error('❌ [ML] Error suggesting status:', error);
-            return {suggested_status: 'Unknown', confidence: 0};
+            return { suggested_status: 'Unknown', confidence: 0 };
         }
     }
 
@@ -176,7 +176,7 @@ class MLClient {
             return await response.json();
         } catch (error) {
             console.error('❌ [ML] Service unavailable:', error);
-            return {status: 'unavailable'};
+            return { status: 'unavailable' };
         }
     }
 
@@ -279,9 +279,9 @@ class MLUIHelper {
      * Auto-completar prioridad
      */
     autofillPriority(priorityData) {
-        const priorityField = document.getElementById('priority') || 
-                            document.querySelector('[name="priority"]');
-        
+        const priorityField = document.getElementById('priority') ||
+            document.querySelector('[name="priority"]');
+
         if (!priorityField) return;
 
         priorityField.value = priorityData.suggested_priority;
@@ -297,8 +297,8 @@ class MLUIHelper {
                 <i class="fas fa-exclamation-triangle"></i>
                 <strong>⚠️ Posible ticket duplicado</strong>
                 <p>Confianza: ${(duplicateData.confidence * 100).toFixed(0)}%</p>
-                ${duplicateData.similar_tickets.length > 0 ? 
-                    `<p>Similares: ${duplicateData.similar_tickets.join(', ')}</p>` : ''}
+                ${duplicateData.similar_tickets.length > 0 ?
+                `<p>Similares: ${duplicateData.similar_tickets.join(', ')}</p>` : ''}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
@@ -325,9 +325,9 @@ class MLUIHelper {
      * Sugerir asignados
      */
     suggestAssignees(assigneeData) {
-        const assigneeField = document.getElementById('assignee') || 
-                             document.querySelector('[name="assignee"]');
-        
+        const assigneeField = document.getElementById('assignee') ||
+            document.querySelector('[name="assignee"]');
+
         if (!assigneeField) return;
 
         // Si es un select, agregar opciones con badges de confianza
@@ -337,7 +337,7 @@ class MLUIHelper {
                 const option = document.createElement('option');
                 option.value = suggestion.assignee;
                 option.text = `${suggestion.assignee} (${confidence}% ML)`;
-                
+
                 if (index === 0) {
                     assigneeField.prepend(option);
                     option.selected = true;
@@ -354,7 +354,7 @@ class MLUIHelper {
         if (!labelsContainer) return;
 
         labelsContainer.innerHTML = '<strong>🏷️ Labels sugeridos:</strong><br>';
-        
+
         labelsData.suggested_labels.forEach(label => {
             const confidence = (label.confidence * 100).toFixed(0);
             const badge = document.createElement('span');
@@ -370,8 +370,8 @@ class MLUIHelper {
      * Agregar label al campo
      */
     addLabel(labelText) {
-        const labelsField = document.getElementById('labels') || 
-                           document.querySelector('[name="labels"]');
+        const labelsField = document.getElementById('labels') ||
+            document.querySelector('[name="labels"]');
         if (!labelsField) return;
 
         const currentLabels = labelsField.value.split(',').map(l => l.trim()).filter(Boolean);
@@ -388,10 +388,10 @@ class MLUIHelper {
         const badge = document.createElement('span');
         badge.className = 'badge bg-success ms-2';
         badge.innerHTML = `${text} (${(confidence * 100).toFixed(0)}%)`;
-        
+
         // Insertar después del campo
         field.parentNode.insertBefore(badge, field.nextSibling);
-        
+
         // Auto-remover después de 5 segundos
         setTimeout(() => badge.remove(), 5000);
     }
@@ -417,10 +417,10 @@ class MLUIHelper {
 if (typeof window !== 'undefined') {
     window.MLClient = MLClient;
     window.MLUIHelper = MLUIHelper;
-    
+
     // Instancia lista para usar
     window.mlClient = new MLClient();
     window.mlUIHelper = new MLUIHelper(window.mlClient);
-    
+
     console.log('✅ [ML] Client initialized');
 }

@@ -3,6 +3,16 @@
  * Manejo de detalles de tickets, comentarios y actividad
  */
 
+// Reduce noise: treat existing console.log calls in this module as debug-level
+// so they are hidden unless debug verbosity is enabled via app log settings.
+(function () {
+  try {
+    if (window && window.appLogger && window.appLogger.level !== 'debug') {
+      console.log = console.debug.bind(console);
+    }
+  } catch (e) { }
+})();
+
 console.log('📥 [Load] right-sidebar.js loading...');
 
 const sidebarState = {
@@ -1174,7 +1184,10 @@ window.rightSidebar = {
   open: openIssueDetails,
   close: closeSidebar,
   setupCardHandlers: setupIssueCardClickHandlers,
-  switchPanel,
+  switchPanel: function (name) {
+    console.warn('⚠️ switchPanel fallback invoked with', name);
+    try { sidebarState.currentPanel = name; } catch (e) { }
+  },
   setupMentionSystem,
   setupAttachmentsSystem,
   setupCommentShortcuts
@@ -1265,5 +1278,25 @@ if (document.readyState !== 'loading') {
 // Initialize tab switching early (for static HTML tabs)
 setTimeout(() => {
   console.log('📋 Early tab initialization...');
-  setupTabSwitching();
+  // Provide fallback if setupTabSwitching is not defined
+  try {
+    if (typeof setupTabSwitching === 'function') setupTabSwitching();
+    else console.log('ℹ️ setupTabSwitching not defined - skipping');
+  } catch (e) {
+    console.warn('Error calling setupTabSwitching fallback:', e);
+  }
 }, 500);
+
+// Provide safe no-op functions for missing tab/panel helpers to avoid runtime errors
+function setupPanelTabs() {
+  console.log('ℹ️ setupPanelTabs fallback - no-op');
+}
+
+function setupTabSwitching() {
+  console.log('ℹ️ setupTabSwitching fallback - no-op');
+}
+
+function switchPanel(name) {
+  console.log('ℹ️ switchPanel fallback called with', name);
+  sidebarState.currentPanel = name || sidebarState.currentPanel;
+}

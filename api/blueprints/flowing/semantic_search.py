@@ -44,7 +44,15 @@ def get_suggestions():
     }
     """
     try:
-        data = request.get_json() or {}
+        # Diagnostic: log raw body to help troubleshoot 400 from client
+        try:
+            raw = request.get_data(as_text=True)
+            logger.info('flowing_semantic.get_suggestions raw body: %s', raw)
+        except Exception:
+            logger.info('flowing_semantic.get_suggestions could not read raw body')
+
+        data = request.get_json(silent=True) or {}
+        logger.info('flowing_semantic.get_suggestions parsed json keys: %s', list(data.keys()) if isinstance(data, dict) else type(data))
         context = data.get('context', 'kanban_board')
         issue_key = data.get('issue_key')
         context_data = data.get('context_data', {})
