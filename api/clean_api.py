@@ -451,3 +451,75 @@ def get_attachment_content(issue_key, attachment_id):
     except Exception as e:
         logger.debug(f"attachments.content unavailable: {e}")
         return {'error': 'attachments content unavailable', 'issue_key': issue_key}, 501
+
+
+# Backwards-compatible routes (v2 / legacy paths)
+@clean_bp.route('/api/v2/issues/<issue_key>/comments', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def get_comments_v2_route(issue_key):
+    return get_comments(issue_key)
+
+
+@clean_bp.route('/api/v2/issues/<issue_key>/comments', methods=['POST'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def post_comment_v2_route(issue_key):
+    return post_comment(issue_key)
+
+
+@clean_bp.route('/api/v2/issues/<issue_key>/comments/<comment_id>', methods=['PUT'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def put_comment_v2_route(issue_key, comment_id):
+    return put_comment(issue_key, comment_id)
+
+
+@clean_bp.route('/api/v2/issues/<issue_key>/comments/<comment_id>', methods=['DELETE'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def delete_comment_v2_route(issue_key, comment_id):
+    return delete_comment(issue_key, comment_id)
+
+
+@clean_bp.route('/api/v2/issues/<issue_key>/comments/count', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def comments_count_v2_route(issue_key):
+    return comments_count(issue_key)
+
+
+@clean_bp.route('/api/v2/issues/<issue_key>/mentions/users', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def get_mentions_v2_route(issue_key):
+    return get_mentions(issue_key)
+
+
+@clean_bp.route('/api/issues/<issue_key>/attachments', methods=['GET'])
+@handle_api_error
+@json_response
+@log_decorator(logging.INFO)
+@require_credentials
+def list_attachments_legacy(issue_key):
+    return list_attachments(issue_key)
+
+
+@clean_bp.route('/api/issues/<issue_key>/attachments/<attachment_id>', methods=['GET'])
+@handle_api_error
+@log_decorator(logging.INFO)
+@require_credentials
+def get_attachment_content_legacy(issue_key, attachment_id):
+    return get_attachment_content(issue_key, attachment_id)
