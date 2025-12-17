@@ -298,17 +298,9 @@ class BackgroundSelectorUI {
       this.updateVariants();
     } else {
       backgroundManager.currentTheme = detectedTheme;
-      // Generate backgrounds - the event listener will update the modal when ready
-      backgroundManager.generateBackgrounds(detectedTheme)
-        .catch(err => {
-          console.error('❌ Background generation failed:', err);
-          if (this.isOpen && grid) {
-            const errorIcon = typeof SVGIcons !== 'undefined' 
-              ? SVGIcons.error({ size: 20, className: 'inline-icon' })
-              : '❌';
-            grid.innerHTML = `<div style="text-align: center; padding: 30px; color: #ef4444;">${errorIcon} Error generating backgrounds</div>`;
-          }
-        });
+      // AI-generated backgrounds disabled — apply placeholder variants and update UI
+      backgroundManager.applyPlaceholderVariants(detectedTheme);
+      this.updateVariants();
     }
     console.log('📂 Background selector opened');
   }
@@ -399,7 +391,7 @@ class BackgroundSelectorUI {
       } else {
         console.warn(`⚠️ No image for background ${idx}`, bg);
         item.style.background = 'linear-gradient(135deg, #1e293b, #0f172a)';
-        const placeholderIcon = typeof SVGIcons !== 'undefined' 
+        const placeholderIcon = typeof SVGIcons !== 'undefined'
           ? SVGIcons.image({ size: 32, className: 'placeholder-icon' })
           : '🖼️';
         item.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:24px;">${placeholderIcon}</div>`;

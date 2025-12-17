@@ -1,0 +1,79 @@
+2025-12-17 12:53:12,327 - INFO - Loaded environment from C:\Users\rafael.hernandez\Documents\SPEEDYFLOW-JIRA-Platform\.env
+2025-12-17 12:53:13,297 - INFO - \u2705 Reports & ML analysis database initialized
+2025-12-17 12:53:13,305 - INFO - \u2713 Gzip compression enabled (reduces payload by 70-90%)
+2025-12-17 12:53:26,820 - INFO - \U0001f4e8 GET /api/user/login-status
+2025-12-17 12:53:37,762 - INFO - \U0001f4e8 GET /api/user/login-status
+2025-12-17 12:59:29,820 - INFO - \U0001f4e8 GET /api/desks
+2025-12-17 12:59:32,149 - WARNING - Queues empty or malformed. URL=https://speedymovil.atlassian.net/rest/servicedeskapi/servicedesk/7/queue desk=7 start=0 limit=50 raw=None
+2025-12-17 12:59:32,150 - INFO - \u26a0\ufe0f Skipping desk 'Arquitectos' (ID: 7) - No accessible queues (likely permission restriction)
+2025-12-17 12:59:34,899 - INFO - \U0001f4e8 GET /api/queues
+2025-12-17 12:59:34.900 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'Thread-5 (process_request_thread)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:35.423 "client.disableSystemTheme" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-12-17 12:59:35.424 "server.watchFileSystemEvents" is not a valid config option. If you previously had this config option set, it may have been removed.
+2025-12-17 12:59:35.425 
+  [33m[1mWarning:[0m to view this Streamlit app on a browser, run it with the following
+  command:
+
+    streamlit run run_server.py [ARGUMENTS]
+2025-12-17 12:59:35.425 Thread 'Thread-5 (process_request_thread)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:35.425 Thread 'Thread-5 (process_request_thread)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:35.425 Thread 'Thread-5 (process_request_thread)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:35,452 - WARNING - Queues empty or malformed. URL=https://speedymovil.atlassian.net/rest/servicedeskapi/servicedesk/9/queue desk=9 start=0 limit=50 raw=None
+2025-12-17 12:59:35,453 - INFO - \u26a0\ufe0f Skipping desk 'Quality Assurance' (ID: 9) - No accessible queues (likely permission restriction)
+2025-12-17 12:59:35.929 Thread 'Thread-6': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:35.929 Thread 'Thread-6': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:35.929 Thread 'Thread-6': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:36,016 - INFO - Found 7 service desks
+2025-12-17 12:59:36,017 - INFO - Added queue: AP
+2025-12-17 12:59:36,017 - INFO - Added queue: AR
+2025-12-17 12:59:36,017 - INFO - Added queue: IN
+2025-12-17 12:59:36,018 - INFO - Added queue: OP
+2025-12-17 12:59:36,018 - INFO - Added queue: DES
+2025-12-17 12:59:36,018 - INFO - Added queue: QA
+2025-12-17 12:59:36,019 - INFO - Added queue: MSM
+2025-12-17 12:59:36,019 - INFO - Returning 7 queues total
+2025-12-17 12:59:36.020 Thread 'Thread-5 (process_request_thread)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:36.020 Thread 'Thread-5 (process_request_thread)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:36.020 Thread 'Thread-5 (process_request_thread)': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2025-12-17 12:59:36,090 - INFO - \U0001f4e8 GET /api/dashboard/summary
+2025-12-17 12:59:36,468 - INFO - \u2713 Current user: Rafael Hernández Ochoa (rafael.hernandez@speedymovil.com)
+2025-12-17 12:59:51,305 - INFO - Dashboard summary: 201 total issues, 6 unassigned
+2025-12-17 12:59:57,646 - INFO - \U0001f4e8 GET /api/desks
+2025-12-17 13:00:06,234 - INFO - \U0001f4e8 GET /api/queues
+2025-12-17 13:00:17,264 - INFO - \U0001f4e8 GET /api/dashboard/summary
+2025-12-17 13:18:08,963 - INFO - \U0001f4e8 GET /api/issues/MSM-1/sla
+2025-12-17 13:18:08,964 - INFO - No cached SLA for MSM-1, fetching from JIRA API
+2025-12-17 13:18:09,528 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/issue/MSM-1?expand=%2A
+2025-12-17 13:18:09,530 - WARNING - Could not fetch issue MSM-1 from JIRA
+2025-12-17 13:18:37,682 - INFO - \U0001f4e8 GET /api/issues/MSM-1/sla
+2025-12-17 13:18:37,683 - INFO - No cached SLA for MSM-1, fetching from JIRA API
+2025-12-17 13:18:38,219 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/issue/MSM-1?expand=%2A
+2025-12-17 13:18:38,221 - WARNING - Could not fetch issue MSM-1 from JIRA
+2025-12-17 13:21:20,734 - INFO - \U0001f4e8 GET /api/v2/issues/MSM-1/comments
+2025-12-17 13:21:20,735 - INFO - Fetching issue and attachments for MSM-1
+2025-12-17 13:21:21,171 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/issue/MSM-1?fields=attachment
+2025-12-17 13:21:21,172 - INFO - Fetching comments for MSM-1
+2025-12-17 13:21:21,576 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/issue/MSM-1/comment?orderBy=created
+2025-12-17 13:21:22,017 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/issue/MSM-1?fields=comment
+2025-12-17 13:21:22,042 - INFO - \U0001f4e8 GET /api/v2/issues/MSM-1/mentions/users
+2025-12-17 13:21:22,043 - INFO - \U0001f4e1 Fetching mentionable users for MSM-1 (query: '')
+2025-12-17 13:21:22,503 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/user/assignable/search?issueKey=MSM-1&maxResults=50
+2025-12-17 13:21:23,632 - INFO -   Found service desk customers
+2025-12-17 13:21:23,633 - INFO - \u2705 Returning 0 mentionable users for MSM-1
+2025-12-17 13:21:23,662 - INFO - \U0001f4e8 GET /api/issues/MSM-1/attachments
+2025-12-17 13:21:24,036 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/issue/MSM-1
+2025-12-17 13:21:24,037 - ERROR - Error in api_get_attachments: Issue not found
+Traceback (most recent call last):
+  File "C:\Users\rafael.hernandez\Documents\SPEEDYFLOW-JIRA-Platform\utils\decorators.py", line 25, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\rafael.hernandez\Documents\SPEEDYFLOW-JIRA-Platform\utils\decorators.py", line 102, in decorated_function
+    result = f(*args, **kwargs)
+  File "C:\Users\rafael.hernandez\Documents\SPEEDYFLOW-JIRA-Platform\utils\decorators.py", line 92, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\rafael.hernandez\Documents\SPEEDYFLOW-JIRA-Platform\utils\decorators.py", line 142, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\rafael.hernandez\Documents\SPEEDYFLOW-JIRA-Platform\api\blueprints\attachments.py", line 33, in api_get_attachments
+    raise RuntimeError('Issue not found')
+RuntimeError: Issue not found
+2025-12-17 13:21:24,041 - INFO - \U0001f4e8 GET /api/issues/MSM-1/attachments/100
+2025-12-17 13:21:24,442 - ERROR - Request failed: 404 Client Error: Not Found for url: https://speedymovil.atlassian.net/rest/api/2/attachment/100

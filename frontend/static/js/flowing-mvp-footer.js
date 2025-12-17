@@ -35,6 +35,17 @@ class FlowingFooter {
   }
   init() {
     console.log('🤖 Initializing Flowing MVP Footer...');
+    // Ensure component stylesheet is loaded
+    try {
+      const cssId = 'flowing-mvp-footer-styles'; // Ensure styles are loaded
+      if (!document.getElementById(cssId)) {
+        const l = document.createElement('link');
+        l.id = cssId;
+        l.rel = 'stylesheet';
+        l.href = '/static/css/flowing-mvp-footer.css?v=' + Date.now();
+        document.head.appendChild(l);
+      }
+    } catch (e) { console.warn('Could not load FlowingFooter stylesheet:', e); }
     // Get DOM elements
     this.footer = document.getElementById('flowingFooter');
     this.toggleBtn = document.getElementById('flowingToggleBtn');
@@ -408,10 +419,10 @@ class FlowingFooter {
     if (!issue) {
       console.error('❌ Issue not found:', issueKey);
       container.innerHTML = `
-        <div style="padding: 40px; text-align: center;">
-          <p style="color: #ef4444; margin-bottom: 16px;">❌ Issue not found in current queue</p>
-          <button onclick="window.flowingFooter.switchToChatView()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Chat
+        <div class="ff-container-centered">
+          <p class="ff-notfound-msg">❌ Issue not found in current queue</p>
+          <button onclick="window.flowingFooter.switchToChatView()" class="ff-btn-primary">
+            <i class="fas fa-arrow-left ff-icon-margin-right"></i> Back to Chat
           </button>
         </div>
       `;
@@ -425,11 +436,21 @@ class FlowingFooter {
     }
     // Show loading state
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center;">
-        <div class="loading-spinner" style="border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-        <p style="margin-top: 16px; color: #6b7280;">Loading complete ticket details...</p>
+      <div class="ff-container-centered">
+        <div class="ff-loading-spinner"></div>
+        <p class="ff-loading-text">Loading complete ticket details...</p>
       </div>
     `;
+    // Apply dynamic colors (avoid inline styles in template)
+    try {
+      const rpEl = riskContainer.querySelector('.risk-percent');
+      if (rpEl && rpEl.dataset && rpEl.dataset.riskColor) rpEl.style.color = rpEl.dataset.riskColor;
+      const badgeEl = riskContainer.querySelector('.risk-badge');
+      if (badgeEl) {
+        if (badgeEl.dataset.riskBg) badgeEl.style.background = badgeEl.dataset.riskBg;
+        if (badgeEl.dataset.riskColor) badgeEl.style.color = badgeEl.dataset.riskColor;
+      }
+    } catch (e) { /* ignore */ }
     try {
       // Fetch complete details from Service Desk API (same as right-sidebar)
       const response = await fetch(`/api/servicedesk/request/${issueKey}`);
@@ -492,12 +513,7 @@ class FlowingFooter {
     // Check if window.slaMonitor is available
     if (!window.slaMonitor || typeof window.slaMonitor.init !== 'function') {
       console.warn('⚠️ SLA Monitor not available');
-      slaContainer.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
-          <i class="fas fa-info-circle" style="margin-bottom: 8px; font-size: 16px;"></i><br>
-          SLA Monitor not available
-        </div>
-      `;
+      slaContainer.innerHTML = '<div class="ff-muted-center">SLA Monitor not available</div>';
       return;
     }
     try {
@@ -678,8 +694,8 @@ class FlowingFooter {
         }
       } else {
         slaContainer.innerHTML = `
-          <div style="text-align: center; padding: 16px; color: #9ca3af; font-size: 11px;">
-            <i class="fas fa-check-circle" style="margin-bottom: 6px; font-size: 14px; color: #10b981;"></i><br>
+          <div class="ff-muted-small">
+            <i class="fas fa-check-circle icon-green icon-lg mb-6"></i><br>
             No active SLA
           </div>
         `;
@@ -689,7 +705,7 @@ class FlowingFooter {
     } catch (error) {
       console.error('❌ Error initializing SLA Monitor:', error);
       slaContainer.innerHTML = `
-        <div style="text-align: center; padding: 16px; color: #ef4444; font-size: 11px;">
+        <div class="ff-muted-small text-danger">
           Failed to load SLA
         </div>
       `;
@@ -702,13 +718,13 @@ class FlowingFooter {
     const data = slaData || window.slaMonitor?.slaData?.[issueKey];
     if (!data || !data.ongoingCycle) {
       riskContainer.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; padding: 12px;">
-          <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <i class="fas fa-check" style="font-size: 20px; color: #10b981;"></i>
+        <div class="ff-risk-card">
+          <div class="ff-risk-avatar">
+            <i class="fas fa-check icon-green icon-xxl"></i>
           </div>
-          <div style="flex: 1;">
-            <p style="font-size: 11px; color: #10b981; font-weight: 600; margin: 0;">LOW RISK</p>
-            <p style="font-size: 9px; color: #9ca3af; margin: 2px 0 0 0;">No active SLA</p>
+          <div>
+            <p class="ff-risk-title">LOW RISK</p>
+            <p class="ff-risk-sub">No active SLA</p>
           </div>
         </div>
       `;
@@ -749,12 +765,12 @@ class FlowingFooter {
             <circle cx="30" cy="30" r="25" fill="none" stroke="#e5e7eb" stroke-width="5"/>
             <circle cx="30" cy="30" r="25" fill="none" stroke="${riskColor}" stroke-width="5" stroke-dasharray="${(percentage / 100) * 157} 157" stroke-linecap="round" />
           </svg>
-          <div class="risk-percent" style="color: ${riskColor};">${percentage}%</div>
+          <div class="risk-percent" data-risk-color="${riskColor}">${percentage}%</div>
         </div>
         <div class="risk-info">
           <div class="risk-header">
             <div class="risk-title">Breach Risk</div>
-            <div class="risk-badge" style="background:${riskBg}; color: ${riskColor};">${riskLevel}</div>
+            <div class="risk-badge" data-risk-bg="${riskBg}" data-risk-color="${riskColor}">${riskLevel}</div>
           </div>
           <div class="risk-body">
             <div class="risk-line"><span class="risk-line-label">Elapsed</span><span class="risk-line-value">${percentage}%</span></div>
@@ -785,7 +801,7 @@ class FlowingFooter {
     }
     // Final fallback: show unavailable message
     const commentsContainer = document.querySelector('.comments-section .comments-list');
-    if (commentsContainer) commentsContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">Comments unavailable</p>';
+    if (commentsContainer) commentsContainer.innerHTML = '<p class="ff-muted-center">Comments unavailable</p>';
   }
   // After rendering balanced content, adjust comments container height to match left column
   adjustCommentsHeight() {
@@ -831,19 +847,19 @@ class FlowingFooter {
           html += `
             <div class="attachment-item">
               <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
-                <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
+                <img src="${url}" alt="${filename}" class="ff-attachment-img" />
               </a>
-              <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+              <div class="ff-attachment-row">
                 <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
-                <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
+                <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
               </div>
             </div>
           `;
         } else {
           html += `
             <div class="attachment-item">
-              <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
-              <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
+              <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
+              <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
             </div>
           `;
         }
@@ -875,19 +891,19 @@ class FlowingFooter {
           html += `
             <div class="attachment-item">
               <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
-                <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
+                <img src="${url}" alt="${filename}" class="ff-attachment-img" />
               </a>
-              <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+              <div class="ff-attachment-row">
                 <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
-                <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
+                <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
               </div>
             </div>
           `;
         } else {
           html += `
             <div class="attachment-item">
-              <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
-              <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
+              <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
+              <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
             </div>
           `;
         }
@@ -1109,9 +1125,9 @@ class FlowingFooter {
         if (val && val.length > 120) {
           const label = k.replace('customfield_', 'CF-');
           longCustomFieldsHTML += `
-            <div style="grid-column: 1 / -1;">
-              <label style="font-size: 10px; font-weight: 700; color: #9ca3af; display:block; margin-bottom:6px;">${label}</label>
-              <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${val}</div>
+            <div class="long-custom-field">
+              <label class="long-custom-label">${label}</label>
+              <div class="long-custom-value">${val}</div>
             </div>
           `;
         }
@@ -1121,62 +1137,62 @@ class FlowingFooter {
     container.innerHTML = `
       ${description ? `
       <!-- Description Section (Full Width) - use native <details> so collapse is CSS-driven and simpler -->
-      <details open class="ticket-description-section" style="padding: 0; background: transparent; border-bottom: 1px solid rgba(59, 130, 246, 0.08);">
-        <summary class="section-label" style="display:flex; align-items:center; gap:8px; padding: 16px 20px; color: #4a5568; font-weight:600; font-size:13px; cursor:pointer;">
-          <span style="display:flex; align-items:center; gap:8px;">
+      <details open class="ticket-description-section">
+        <summary class="section-label">
+          <span class="summary-left">
             ${SVGIcons.file({ size: 14, className: 'inline-icon' })}
             <span>Descripción:</span>
           </span>
-          <span style="margin-left:auto;">${SVGIcons.chevronDown({ size: 14, className: 'inline-icon' })}</span>
+          <span class="summary-right">${SVGIcons.chevronDown({ size: 14, className: 'inline-icon' })}</span>
         </summary>
-        <div id="ticketDescriptionContent" class="ticket-description-content" style="padding: 0 20px 16px 20px; color: #4b5563; line-height:1.6; font-size:13px;">
-          ${description ? `<p style="margin:0 0 8px 0;">${description}</p>` : ''}
+        <div id="ticketDescriptionContent" class="ticket-description-content">
+          ${description ? `<p class="desc-paragraph">${description}</p>` : ''}
         </div>
       </details>
       ` : ''}
-      <div class="purple-divider" style="margin:0"></div>
+          <div class="purple-divider"></div>
       <!-- TWO COLUMNS LAYOUT -->
-      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+      <div class="footer-two-columns">
         <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
-        <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="left-column">
           <!-- ML Suggestions Banner -->
-          <div class="ml-suggestions-banner" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
-            <div class="banner-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+          <div class="ml-suggestions-banner">
+            <div class="banner-icon">
               <i class="fas fa-magic"></i>
             </div>
-            <div class="banner-content" style="flex: 1;">
-              <h4 style="color: #374151; font-size: 13px; margin: 0; font-weight: 600;">
+            <div class="banner-content">
+              <h4>
                 Analicé el ticket y tengo sugerencias 
-                <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">— Próximamente: ML predictions</span>
+                <span class="banner-sub">— Próximamente: ML predictions</span>
               </h4>
             </div>
           </div>
           ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
           <!-- Essential Fields Grid (3 columns) -->
-          <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <div class="essential-fields-grid">
             <!-- Priority -->
             ${priority ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-flag" style="color: #ef4444;"></i> Priority
+              <label class="field-label">
+                <i class="fas fa-flag icon-red"></i> Priority
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${priority}
               </div>
               <!-- ML Suggestion Inline (placeholder) -->
-              <div class="ml-suggestion-checkbox" style="margin-top: 6px; padding: 6px 8px; font-size: 10px; border-radius: 6px; background: linear-gradient(135deg, #f8f9ff, #ffffff); border: 1px solid #e3e8ff; display: flex; align-items: center; gap: 6px; opacity: 0.7;">
-                <span style="font-size: 11px;">✨</span>
-                <span style="flex: 1; color: #6b7280;">ML suggestions coming soon</span>
+              <div class="ml-suggestion-checkbox">
+                <span class="ml-suggestion-icon">✨</span>
+                <span class="ml-suggestion-text">ML suggestions coming soon</span>
               </div>
             </div>
             ` : ''}
             <!-- Assignee -->
             ${assignee || !assignee ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-user" style="color: #3b82f6;"></i> Assignee
+              <label class="field-label">
+                <i class="fas fa-user icon-blue"></i> Assignee
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${assignee || 'Unassigned'}
               </div>
             </div>
@@ -1184,10 +1200,10 @@ class FlowingFooter {
             <!-- Status -->
             ${status ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-tasks" style="color: #10b981;"></i> Status
+              <label class="field-label">
+                <i class="fas fa-tasks icon-green"></i> Status
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${status}
               </div>
             </div>
@@ -1195,10 +1211,10 @@ class FlowingFooter {
             <!-- Criticidad -->
             ${criticidad ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Criticidad
+              <label class="field-label">
+                <i class="fas fa-exclamation-triangle icon-red"></i> Criticidad
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${criticidad}
               </div>
             </div>
@@ -1206,10 +1222,10 @@ class FlowingFooter {
             <!-- Tipo de Solicitud -->
             ${tipoSolicitud ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-clipboard-list" style="color: #8b5cf6;"></i> Tipo de Solicitud
+              <label class="field-label">
+                <i class="fas fa-clipboard-list icon-purple"></i> Tipo de Solicitud
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${tipoSolicitud}
               </div>
             </div>
@@ -1217,10 +1233,10 @@ class FlowingFooter {
             <!-- Platform -->
             ${plataforma ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-laptop" style="color: #06b6d4;"></i> Plataforma
+              <label class="field-label">
+                <i class="fas fa-laptop icon-teal"></i> Plataforma
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${plataforma}
               </div>
             </div>
@@ -1228,10 +1244,10 @@ class FlowingFooter {
             <!-- Área -->
             ${area ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-sitemap" style="color: #8b5cf6;"></i> Área
+              <label class="field-label">
+                <i class="fas fa-sitemap icon-purple"></i> Área
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${area}
               </div>
             </div>
@@ -1239,10 +1255,10 @@ class FlowingFooter {
             <!-- Empresa -->
             ${empresa ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-building" style="color: #6366f1;"></i> Empresa
+              <label class="field-label">
+                <i class="fas fa-building icon-indigo"></i> Empresa
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input">
                 ${empresa}
               </div>
             </div>
@@ -1250,10 +1266,10 @@ class FlowingFooter {
             <!-- Producto -->
             ${producto ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-box" style="color: #ec4899;"></i> Producto
+              <label class="field-label">
+                <i class="fas fa-box icon-pink"></i> Producto
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input">
                 ${producto}
               </div>
             </div>
@@ -1261,10 +1277,10 @@ class FlowingFooter {
             <!-- Request Type -->
             ${requestType ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-ticket-alt" style="color: #3b82f6;"></i> Request Type
+              <label class="field-label">
+                <i class="fas fa-ticket-alt icon-blue"></i> Request Type
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input">
                 ${requestType}
               </div>
             </div>
@@ -1272,10 +1288,10 @@ class FlowingFooter {
             <!-- Reporter -->
             ${reporter || reporter2 ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-user-circle" style="color: #6b7280;"></i> Reporter
+              <label class="field-label">
+                <i class="fas fa-user-circle icon-muted"></i> Reporter
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input">
                 ${reporter || reporter2}
               </div>
             </div>
@@ -1283,10 +1299,10 @@ class FlowingFooter {
             <!-- Email -->
             ${email ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-envelope" style="color: #3b82f6;"></i> Email
+              <label class="field-label">
+                <i class="fas fa-envelope icon-blue"></i> Email
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 12px; word-break: break-all; color: var(--field-text);">
+              <div class="field-input">
                 ${email}
               </div>
             </div>
@@ -1294,10 +1310,10 @@ class FlowingFooter {
             <!-- Phone -->
             ${phone ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-phone" style="color: #10b981;"></i> Phone
+              <label class="field-label">
+                <i class="fas fa-phone icon-green"></i> Phone
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${phone}
               </div>
             </div>
@@ -1305,10 +1321,10 @@ class FlowingFooter {
             <!-- País -->
             ${pais ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-globe" style="color: #06b6d4;"></i> País
+              <label class="field-label">
+                <i class="fas fa-globe icon-teal"></i> País
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
+              <div class="field-input">
                 ${pais}
               </div>
             </div>
@@ -1316,157 +1332,129 @@ class FlowingFooter {
             <!-- País/Código -->
             ${paisCodigo ? `
             <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-flag" style="color: #10b981;"></i> País/Código
+              <label class="field-label">
+                <i class="fas fa-flag icon-green"></i> País/Código
               </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
+              <div class="field-input">
                 ${paisCodigo}
               </div>
             </div>
             ` : ''}
           </div>
           <!-- SLA Monitor & Breach Risk (2 columns grid) -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px;">
+          <div class="two-columns-grid">
             <!-- SLA Monitor (Column 1) -->
             <div class="sla-monitor-wrapper">
-              <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-                <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
-                  <i class="fas fa-spinner fa-spin" style="margin-bottom: 6px; font-size: 14px;"></i><br>
+              <div class="sla-monitor-container">
+                <div class="ff-muted-center">
+                  <i class="fas fa-spinner fa-spin spinner-large"></i><br>
                   Loading SLA...
                 </div>
               </div>
             </div>
             <!-- Breach Risk Analytics (Column 2) -->
-            <div class="sla-breach-risk" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="fas fa-shield-alt" style="font-size: 13px;"></i>
+            <div class="sla-breach-risk">
+              <div class="section-header-row">
+                <div class="risk-avatar-small">
+                  <i class="fas fa-shield-alt"></i>
                 </div>
-                <h4 style="font-size: 12px; font-weight: 600; color: #374151; margin: 0;">Breach Risk</h4>
+                <h4 class="risk-heading">Breach Risk</h4>
               </div>
-              <div class="breach-risk-content" style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
-                <i class="fas fa-spinner fa-spin" style="margin-bottom: 6px; font-size: 14px;"></i><br>
+              <div class="breach-risk-content">
+                <i class="fas fa-spinner fa-spin spinner-large"></i><br>
                 Analyzing...
               </div>
             </div>
           </div>
           <!-- Extra Details (Collapsible) -->
-          <div class="extra-details" style="margin-top: 8px;">
-            <button class="btn-toggle-details" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');" style="width: 100%; padding: 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--field-text); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-              <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+          <div class="extra-details">
+            <button class="btn-toggle-details" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');">
+              <i class="fas fa-chevron-down"></i>
               <span>Show More Details</span>
             </button>
-            <div class="extra-details-content" style="display: none; margin-top: 12px;">
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div class="extra-details-content">
+              <div class="details-grid-3col">
                 ${created ? `
-                <div>
-                  <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
-                    <i class="fas fa-calendar-plus" style="margin-right: 4px;"></i> Created
-                  </label>
-                  <div style="padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px;">
-                    ${formatDate(created)}
-                  </div>
+                <div class="detail-item">
+                  <label><i class="fas fa-calendar-plus"></i> Created</label>
+                  <div class="field-input">${formatDate(created)}</div>
                 </div>
                 ` : ''}
                 ${updated ? `
-                <div>
-                  <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
-                    <i class="fas fa-calendar-check" style="margin-right: 4px;"></i> Updated
-                  </label>
-                  <div style="padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px;">
-                    ${formatDate(updated)}
-                  </div>
+                <div class="detail-item">
+                  <label><i class="fas fa-calendar-check"></i> Updated</label>
+                  <div class="field-input">${formatDate(updated)}</div>
                 </div>
                 ` : ''}
                 ${area ? `
-                <div>
-                  <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
-                    <i class="fas fa-sitemap" style="margin-right: 4px;"></i> Área
-                  </label>
-                  <div style="padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px;">
-                    ${area}
-                  </div>
+                <div class="detail-item">
+                  <label><i class="fas fa-sitemap mr-6"></i> Área</label>
+                  <div class="detail-block">${area}</div>
                 </div>
                 ` : ''}
                 ${empresa ? `
-                <div>
-                  <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
-                    <i class="fas fa-building" style="margin-right: 4px;"></i> Empresa
-                  </label>
-                  <div style="padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px;">
-                    ${empresa}
-                  </div>
+                <div class="detail-item">
+                  <label><i class="fas fa-building"></i> Empresa</label>
+                  <div class="detail-block">${empresa}</div>
                 </div>
                 ` : ''}
                 ${producto ? `
                 <div>
-                  <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
-                    <i class="fas fa-box" style="margin-right: 4px;"></i> Producto
-                  </label>
-                  <div style="padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px;">
-                    ${producto}
-                  </div>
+                  <label class="detail-item"><i class="fas fa-box"></i> Producto</label>
+                  <div class="detail-block">${producto}</div>
                 </div>
                 ` : ''}
                 ${notasAnalisis ? `
-                <div style="grid-column: 1 / -1;">
-                  <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
-                    <i class="fas fa-sticky-note" style="margin-right: 4px;"></i> Notas/Análisis
-                  </label>
-                  <div style="padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px; max-height: 80px; overflow-y: auto;">
-                    ${notasAnalisis}
-                  </div>
+                <div class="long-custom-field">
+                  <label class="detail-item"><i class="fas fa-sticky-note"></i> Notas/Análisis</label>
+                  <div class="detail-block detail-block-scroll">${notasAnalisis}</div>
                 </div>
                 ` : ''}
                 ${resolucion ? `
-                <div style="grid-column: 1 / -1;">
-                  <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
-                    <i class="fas fa-check-circle" style="margin-right: 4px;"></i> Resolución
-                  </label>
-                  <div style="padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 11px; max-height: 80px; overflow-y: auto;">
-                    ${resolucion}
-                  </div>
+                <div class="long-custom-field">
+                  <label class="detail-item"><i class="fas fa-check-circle"></i> Resolución</label>
+                  <div class="detail-block detail-block-scroll">${resolucion}</div>
                 </div>
                 ` : ''}
               </div>
             </div>
           </div>
           <!-- Action Buttons -->
-          <div class="action-buttons-container" style="display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
-            <button onclick="window.flowingFooter.switchToChatView()" style="flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
-              <i class="fas fa-comments" style="margin-right: 6px;"></i> Back to Chat
+          <div class="action-buttons-container">
+            <button onclick="window.flowingFooter.switchToChatView()" class="ff-primary-action">
+              <i class="fas fa-comments mr-6"></i> Back to Chat
             </button>
           </div>
         </div>
         <div class="columns-divider" aria-hidden="true"></div>
         <!-- RIGHT COLUMN: Comments (moved up) -->
-        <div class="right-column" style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="right-column">
           <!-- Comments Section (moved up) -->
-          <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; max-height: 360px; overflow-y: auto;">
+          <div class="comments-section">
             <!-- Attachments preview (balanced/footer) -->
-            <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <div class="attachments-preview-footer" id="attachmentsPreviewFooter">
               <div class="attachments-list" id="attachmentsListFooter"></div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-              <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-comments" style="color: #6d28d9;"></i> Comments
+            <div class="section-header-row">
+              <h4 class="section-title">
+                <i class="fas fa-comments icon-purple"></i> Comments
               </h4>
-              <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
+              <span id="commentCountFooter" class="comment-count-footer">(0)</span>
             </div>
             <!-- Comment composer (balanced/footer view) -->
-            <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
-              <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" style="flex:1; resize: vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                <div style="display:flex; gap:8px;">
-                  <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })}</button>
-                  <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
+            <div class="comment-composer">
+              <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" class="footer-comment-textarea"></textarea>
+              <div class="composer-controls">
+                <div class="composer-row">
+                  <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })}</button>
+                  <button class="btn-add-comment-footer">Send</button>
                 </div>
-                <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
+                <label class="comment-internal-label"><input type="checkbox" id="commentInternalFooter"> Internal</label>
               </div>
             </div>
-            <div class="comments-list" style="display: flex; flex-direction: column; gap: 8px;">
-              <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 16px; margin-bottom: 8px;"></i><br>
+            <div class="comments-list">
+              <p class="ff-muted-center">
+                <i class="fas fa-spinner fa-spin spinner-large"></i><br>
                 Loading comments...
               </p>
             </div>

@@ -46,21 +46,40 @@ from utils.api_migration import (  # noqa: E402
     get_current_user
 )
 from utils.db import init_db  # noqa: E402
-# Blueprint imports
-from api.blueprints.issues import issues_bp  # noqa: E402
-from api.blueprints.comments_v2 import comments_v2_bp  # noqa: E402
-from api.blueprints.attachments import attachments_bp  # noqa: E402
-from api.blueprints.transitions import transitions_bp  # noqa: E402
-from api.blueprints.notifications import notifications_bp  # noqa: E402
-from api.blueprints.exports import exports_bp  # noqa: E402
-from api.blueprints.automations import automations_bp  # noqa: E402
-from api.blueprints.backgrounds import backgrounds_bp  # noqa: E402
-from api.blueprints.webhooks import webhooks_bp  # noqa: E402
-from api.blueprints.kanban import kanban_bp  # noqa: E402
-from api.blueprints.ml_deprecated import ml_deprecated_bp  # noqa: E402
-from api.blueprints.sync import sync_bp  # noqa: E402
-from api.blueprints.sla import sla_bp  # noqa: E402
-from api.blueprints.reports import reports_bp  # noqa: E402
+# Blueprint imports (safe dynamic imports - missing optional blueprints won't break startup)
+import importlib
+
+def _try_load_bp(module_name: str):
+    try:
+        mod = importlib.import_module(module_name)
+        # prefer attributes that follow the <name>_bp convention
+        for a in dir(mod):
+            if a.endswith('_bp'):
+                return getattr(mod, a)
+        # fallback common names
+        if hasattr(mod, 'bp'):
+            return getattr(mod, 'bp')
+        if hasattr(mod, 'blueprint'):
+            return getattr(mod, 'blueprint')
+        return None
+    except Exception:
+        # logger may not be initialized yet; use module logger via logging.getLogger
+        logging.getLogger(__name__).debug(f"Optional blueprint not found: {module_name}")
+        return None
+
+issues_bp = _try_load_bp('api.blueprints.issues')
+comments_v2_bp = _try_load_bp('api.blueprints.comments_v2')
+attachments_bp = _try_load_bp('api.blueprints.attachments')
+transitions_bp = _try_load_bp('api.blueprints.transitions')
+exports_bp = _try_load_bp('api.blueprints.exports')
+backgrounds_bp = _try_load_bp('api.blueprints.backgrounds')
+webhooks_bp = _try_load_bp('api.blueprints.webhooks')
+kanban_bp = _try_load_bp('api.blueprints.kanban')
+ml_deprecated_bp = _try_load_bp('api.blueprints.ml_deprecated')
+clean_bp = _try_load_bp('api.clean_api')
+sync_bp = _try_load_bp('api.blueprints.sync')
+sla_bp = _try_load_bp('api.blueprints.sla')
+reports_bp = _try_load_bp('api.blueprints.reports')
 # ML endpoints deprecated and consolidated under ml_deprecated_bp
 # legacy ML blueprints (ai, copilot, flowing, comment_suggestions, anomaly_detection)
 # have been disabled and replaced by `ml_deprecated_bp` so models remain on disk
@@ -113,21 +132,27 @@ except ImportError:
     logger.warning('⚠️ flask-compress not installed, compression disabled. Install: pip install flask-compress')
     pass
 # Register active blueprints
-app.register_blueprint(issues_bp)
-app.register_blueprint(comments_v2_bp)
-app.register_blueprint(attachments_bp)
-app.register_blueprint(transitions_bp)
-# ML blueprints were removed; register deprecation shim instead
-app.register_blueprint(ml_deprecated_bp)
-app.register_blueprint(sync_bp)
-app.register_blueprint(notifications_bp)
-app.register_blueprint(exports_bp)
-app.register_blueprint(automations_bp)
-app.register_blueprint(backgrounds_bp)
-app.register_blueprint(webhooks_bp)
-app.register_blueprint(kanban_bp)
-app.register_blueprint(sla_bp)
-app.register_blueprint(reports_bp)
+for _bp in (
+    issues_bp,
+    comments_v2_bp,
+    attachments_bp,
+    transitions_bp,
+    ml_deprecated_bp,
+    clean_bp,
+    sync_bp,
+    exports_bp,
+    backgrounds_bp,
+    webhooks_bp,
+    kanban_bp,
+    sla_bp,
+    reports_bp,
+):
+    if _bp:
+        try:
+            app.register_blueprint(_bp)
+            logger.info(f"Registered blueprint: {_bp.name if hasattr(_bp, 'name') else repr(_bp)}")
+        except Exception as e:
+            logger.warning(f"Failed to register blueprint: {_bp} -> {e}")
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {
     'data': None,

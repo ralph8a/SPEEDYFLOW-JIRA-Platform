@@ -1,38 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-JIRA Platform REST API v3
-Official Documentation: https://developer.atlassian.com/cloud/jira/platform/rest/v3/
-This module provides centralized access to JIRA Platform API endpoints.
-All endpoints follow the official JIRA Cloud REST API v3 specification.
-Base URL: https://{site}/rest/api/3/
-Authentication: Basic Auth (email + API token)
+Compatibility shim for older imports.
+
+This module now delegates to `api.jira_clients.get_platform_api()` to
+preserve backwards compatibility with modules that import
+`api.jira_platform_api.get_platform_api` or the class directly.
 """
-from typing import Dict, List, Optional, Any
+from typing import Any
 import logging
-from utils.common import _make_request, _get_credentials, _get_auth_header
-from utils.http_utils import retry_on_error
-from utils.config import config
+from api.jira_clients import get_platform_api, JiraPlatformAPI  # type: ignore
+
 logger = logging.getLogger(__name__)
-class JiraPlatformAPI:
-    """
-    JIRA Platform REST API v3 Client
-    Provides methods for:
-    - Issues (create, read, update, delete)
-    - Projects (list, get details)
-    - Users (search, get current user)
-    - Comments (add, edit, delete)
-    - Transitions (get available, perform transition)
-    - Fields (get custom fields, update fields)
-    """
-    def __init__(self):
-        """Initialize API client with credentials from config"""
-        self.site, self.email, self.api_token = _get_credentials(config)
-        if not self.site or not self.email or not self.api_token:
-            raise ValueError("JIRA credentials not configured. Check .env file.")
-        self.headers = _get_auth_header(self.email, self.api_token)
-        self.base_url = f"{self.site}/rest/api/3"
-        logger.info(f"✅ JIRA Platform API initialized: {self.site}")
+
+# Backwards compatible accessors
+def get_platform_api() -> JiraPlatformAPI:
+    return get_platform_api()
+
+__all__ = ["get_platform_api", "JiraPlatformAPI"]
     # ============================================================
     # PROJECTS
     # ============================================================

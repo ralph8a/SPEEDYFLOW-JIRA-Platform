@@ -90,8 +90,8 @@ class QuickTriage {
    */
   async open() {
     // Get current issues from window.app cache
-    const allIssues = window.app?.issuesCache 
-      ? Array.from(window.app.issuesCache.values()) 
+    const allIssues = window.app?.issuesCache
+      ? Array.from(window.app.issuesCache.values())
       : [];
     if (allIssues.length === 0) {
       this.showEmptyState();
@@ -129,6 +129,40 @@ class QuickTriage {
     document.body.appendChild(modal);
     // Animate in
     setTimeout(() => modal.classList.add('active'), 10);
+    // Delegate clicks inside modal for issue open/assign/snooze actions
+    modal.addEventListener('click', (e) => {
+      // Issue open (click on key or summary)
+      const issueKeyEl = e.target.closest('[data-issue-key]');
+      if (issueKeyEl && issueKeyEl.dataset && issueKeyEl.dataset.issueKey) {
+        const k = issueKeyEl.dataset.issueKey;
+        if (typeof window.openIssueDetails === 'function') {
+          window.openIssueDetails(k);
+        } else if (typeof window.flowingFooter?.switchToBalancedView === 'function') {
+          window.flowingFooter.switchToBalancedView(k);
+        } else {
+          console.warn('openIssueDetails not available for', k);
+        }
+        return;
+      }
+      // Assign button
+      const assignBtn = e.target.closest('[data-assign-key]');
+      if (assignBtn) {
+        const k = assignBtn.dataset.assignKey;
+        if (window.quickTriage) window.quickTriage.assignToMe(k);
+        return;
+      }
+      // Snooze buttons
+      const snoozeBtn = e.target.closest('[data-snooze-key]');
+      if (snoozeBtn) {
+        const k = snoozeBtn.dataset.snoozeKey;
+        const mins = parseInt(snoozeBtn.dataset.snoozeMins || '60', 10);
+        if (window.quickTriage) {
+          window.quickTriage.snoozeTicket(k, mins);
+          window.quickTriage.open();
+        }
+        return;
+      }
+    });
   }
   /**
    * Render list of triage issues
@@ -150,23 +184,23 @@ class QuickTriage {
       return `
         <div class="triage-issue-card" data-issue-key="${issue.key}">
           <div class="triage-issue-header">
-            <span class="triage-issue-key" onclick="openIssueDetails('${issue.key}')">${issue.key}</span>
+            <span class="triage-issue-key" data-issue-key="${issue.key}">${issue.key}</span>
             <span class="triage-severity ${severityClass}">${issue.severity || 'Normal'}</span>
             ${ageTag ? `<span class="triage-age-tag">${ageTag}</span>` : ''}
           </div>
-          <div class="triage-issue-summary" onclick="openIssueDetails('${issue.key}')">${issue.summary || 'No summary'}</div>
+          <div class="triage-issue-summary" data-issue-key="${issue.key}">${issue.summary || 'No summary'}</div>
           <div class="triage-issue-meta">
             ${isUnassigned ? '<span class="triage-meta-badge unassigned">👤 Unassigned</span>' : `<span class="triage-meta-badge">👤 ${issue.assignee}</span>`}
             ${issue.status ? `<span class="triage-meta-badge">📊 ${issue.status}</span>` : ''}
           </div>
           <div class="triage-issue-actions">
-            ${isUnassigned ? `<button class="triage-btn triage-btn-primary" onclick="window.quickTriage.assignToMe('${issue.key}')">
+            ${isUnassigned ? `<button class="triage-btn triage-btn-primary" data-assign-key="${issue.key}">
               👤 Assign to me
             </button>` : ''}
-            <button class="triage-btn triage-btn-secondary" onclick="window.quickTriage.snoozeTicket('${issue.key}', 60); window.quickTriage.open();">
+            <button class="triage-btn triage-btn-secondary" data-snooze-mins="60" data-snooze-key="${issue.key}">
               💤 Snooze 1h
             </button>
-            <button class="triage-btn triage-btn-secondary" onclick="window.quickTriage.snoozeTicket('${issue.key}', 1440); window.quickTriage.open();">
+            <button class="triage-btn triage-btn-secondary" data-snooze-mins="1440" data-snooze-key="${issue.key}">
               🌙 Snooze 24h
             </button>
           </div>

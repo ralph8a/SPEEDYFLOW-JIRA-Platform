@@ -1,0 +1,19 @@
+
+============================================================
+SPEEDYFLOW - JIRA Service Desk Platform
+============================================================
+
+Starting Flask server...
+Server: http://127.0.0.1:5005
+Root:   C:\Users\rafael.hernandez\Documents\SPEEDYFLOW-JIRA-Platform
+
+Features:
+  - Minimal stable endpoints only
+  - Glasmorphism UI (frontend)
+  - Multi-layer caching (Streamlit layer unaffected)
+
+Press Ctrl+C to stop.
+============================================================
+
+ * Serving Flask app 'api.server'
+ * Debug mode: off

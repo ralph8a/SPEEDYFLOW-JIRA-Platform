@@ -52,46 +52,21 @@ const backgroundManager = {
     console.log(`🎨 Detected theme: ${this.currentTheme}`);
     // Create background container immediately
     this.createBackgroundContainer();
-    // Try to load backgrounds from cache first
-    const cachedBgs = this.loadBackgroundsFromCache(this.currentTheme);
-    if (cachedBgs && cachedBgs.length > 0) {
-      console.log(`🎨 Loaded ${cachedBgs.length} backgrounds from cache for ${this.currentTheme}`);
-      this.backgrounds = cachedBgs;
-    } else {
-      console.log(`🎨 No cached backgrounds for ${this.currentTheme}, using placeholders`);
-      this.applyPlaceholderVariants(this.currentTheme);
-    }
-    // Generate backgrounds in background (non-blocking) with timeout
-    this.generateBackgroundsWithTimeout(this.currentTheme, 5000)
-      .catch(err => console.warn('🎨 Background generation timeout/error:', err));
+    // AI-generated backgrounds disabled: use placeholder variants only
+    console.log('🎨 AI-generated backgrounds disabled; using placeholders only');
+    this.applyPlaceholderVariants(this.currentTheme);
     // Apply current background from localStorage
     this.applyBackground(this.currentBackground);
     // Setup theme change listeners - Generate and apply backgrounds
     document.addEventListener('themeChange', (e) => {
       this.currentTheme = e.detail.theme;
       console.log(`🎨 Theme changed to: ${this.currentTheme}`);
-      // Try to load cached backgrounds for new theme
-      const cachedBgs = this.loadBackgroundsFromCache(this.currentTheme);
-      if (cachedBgs && cachedBgs.length > 0) {
-        console.log(`🎨 Using cached backgrounds for ${this.currentTheme}`);
-        this.backgrounds = cachedBgs;
-        // Apply the current background index (or 0 if out of range)
-        const bgIndex = this.currentBackground < this.backgrounds.length ? this.currentBackground : 0;
-        this.applyBackground(bgIndex);
-      } else {
-        console.log(`🎨 Applying placeholders while generating ${this.currentTheme}`);
-        this.applyPlaceholderVariants(this.currentTheme);
-        // Apply first placeholder
-        this.applyBackground(0);
-      }
-      // Generate backgrounds non-blocking with timeout
-      this.generateBackgroundsWithTimeout(this.currentTheme, 5000)
-        .then(() => {
-          // After generating, apply the same index or 0
-          const bgIndex = this.currentBackground < this.backgrounds.length ? this.currentBackground : 0;
-          this.applyBackground(bgIndex);
-        })
-        .catch(err => console.warn('🎨 Background generation timeout:', err));
+      // Use placeholders only for new theme
+      console.log(`🎨 Applying placeholders for ${this.currentTheme}`);
+      this.applyPlaceholderVariants(this.currentTheme);
+      // Apply first placeholder or current index
+      const bgIndex = this.currentBackground < this.backgrounds.length ? this.currentBackground : 0;
+      this.applyBackground(bgIndex);
       // Dispatch event
       document.dispatchEvent(new CustomEvent('backgroundsNeedRefresh', {
         detail: { theme: this.currentTheme }
@@ -104,7 +79,10 @@ const backgroundManager = {
         if (newTheme !== this.currentTheme) {
           this.currentTheme = newTheme;
           console.log(`🎨 System theme changed to: ${newTheme}`);
-          this.generateAndApply();
+          // Re-apply placeholders for new theme
+          this.applyPlaceholderVariants(this.currentTheme);
+          const bgIndex = this.currentBackground < this.backgrounds.length ? this.currentBackground : 0;
+          this.applyBackground(bgIndex);
         }
       });
     }
@@ -116,7 +94,10 @@ const backgroundManager = {
           if (detectedTheme !== this.currentTheme && detectedTheme !== localStorage.getItem('currentTheme')) {
             this.currentTheme = detectedTheme;
             console.log(`🎨 DOM theme class changed to: ${detectedTheme}`);
-            this.generateAndApply();
+            // Re-apply placeholders for new theme
+            this.applyPlaceholderVariants(this.currentTheme);
+            const bgIndex = this.currentBackground < this.backgrounds.length ? this.currentBackground : 0;
+            this.applyBackground(bgIndex);
           }
         }
       });
@@ -141,139 +122,10 @@ const backgroundManager = {
     overlay.className = 'background-overlay';
     container.appendChild(overlay);
     document.body.insertBefore(container, document.body.firstChild);
-    // REMOVED: Background manager should NOT modify UI component transparency
-    // Transparency is managed independently by glassmorphism-opacity-controller.js
-    // if (window.transparencyManager) {
-    //   window.transparencyManager.forceReapply();
-    // }
   },
-  /**
-   * Save backgrounds to localStorage cache
-   */
-  saveBackgroundsToCache(theme) {
-    try {
-      const cacheKey = `speedyflow_backgrounds_${theme}`;
-      // FIX: Cache up to 20 backgrounds (was 5) to support full pagination
-      const toCache = this.backgrounds.slice(0, 20);
-      localStorage.setItem(cacheKey, JSON.stringify(toCache));
-      console.log(`🎨 Saved ${toCache.length} backgrounds to cache for ${theme}`);
-    } catch (error) {
-      // Silently fail if localStorage is full
-      console.warn('🎨 Could not save to localStorage:', error.message);
-    }
-  },
-  /**
-   * Load backgrounds from localStorage cache
-   */
-  loadBackgroundsFromCache(theme) {
-    try {
-      const cacheKey = `speedyflow_backgrounds_${theme}`;
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const bgs = JSON.parse(cached);
-        if (Array.isArray(bgs) && bgs.length > 0) {
-          console.log(`🎨 Loaded ${bgs.length} backgrounds from cache`);
-          return bgs;
-        }
-      }
-    } catch (error) {
-      console.warn('🎨 Could not load from cache:', error.message);
-    }
-    return null;
-  },
-  /**
-   * Remove duplicate buttons from background selector modal
-   */
-  removeDuplicateModalButtons() {
-    const modal = document.querySelector('.background-selector-modal');
-    if (!modal) return;
-    // Find all button containers
-    const buttonContainers = modal.querySelectorAll('.modal-buttons, .button-container, .action-buttons');
-    // If we have multiple button containers, keep only the first one
-    for (let i = 1; i < buttonContainers.length; i++) {
-      console.log('🧹 Removing duplicate button container');
-      buttonContainers[i].remove();
-    }
-    // Remove duplicate individual buttons
-    const allButtons = modal.querySelectorAll('button');
-    const seenButtons = new Set();
-    allButtons.forEach(button => {
-      const buttonId = button.textContent.trim() + button.className;
-      if (seenButtons.has(buttonId)) {
-        console.log('🧹 Removing duplicate button:', button.textContent);
-        button.remove();
-      } else {
-        seenButtons.add(buttonId);
-      }
-    });
-  },
-  async generateBackgroundsWithTimeout(theme, timeoutMs = 5000) {
-    return Promise.race([
-      this.generateBackgrounds(theme),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Generation timeout')), timeoutMs)
-      )
-    ]);
-  },
-  async generateBackgrounds(theme) {
-    if (this.isGenerating) {
-      console.log('🔄 Already generating, skipping...');
-      return;
-    }
-    this.isGenerating = true;
-    console.log(`🔄 Generating backgrounds for theme: ${theme}`);
-    // Fix duplicate buttons in modal
-    this.removeDuplicateModalButtons();
-    try {
-      // Add timeout using AbortController
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const response = await fetch('/api/backgrounds/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      console.log(`✅ API Response success: ${data.success}, variants count: ${data.variants?.length || 0}`);
-      if (data.success && Array.isArray(data.variants) && data.variants.length > 0) {
-        this.backgrounds = data.variants;
-        console.log(`✅ Generated ${data.variants.length} backgrounds for ${theme}`);
-        console.log(`📊 OLLAMA: ${data.ollama_available ? 'Available' : 'Fallback'}`);
-        // Save to cache
-        this.saveBackgroundsToCache(theme);
-        // Dispatch custom event
-        document.dispatchEvent(new CustomEvent('backgroundsGenerated', {
-          detail: { theme, count: data.variants.length }
-        }));
-      } else {
-        console.warn('⚠️  Response missing variants array, using placeholder');
-        this.applyPlaceholderVariants(theme);
-      }
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        console.error('❌ Background generation timeout (>4s)');
-      } else {
-        console.error('❌ Error generating backgrounds:', error.message);
-      }
-      this.applyPlaceholderVariants(theme);
-    } finally {
-      this.isGenerating = false;
-    }
-  },
+  /* Caching of generated backgrounds disabled */
   applyPlaceholderVariants(theme) {
-    // Solid colors + gradient variants
-    const solidColors = theme === 'dark' 
-      ? [
-          { color: '#000000', name: 'Pure Black' },
-          { color: '#0a1929', name: 'Deep Blue' }
-        ]
-      : [
-          { color: '#ffffff', name: 'Pure White' },
-          { color: '#f8f9fa', name: 'Light Gray' }
-        ];
+
     // Create solid color SVGs
     const solidSvgs = solidColors.map((solid, idx) => {
       const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><rect width='1600' height='900' fill='${solid.color}'/></svg>`;
@@ -287,8 +139,8 @@ const backgroundManager = {
       };
     });
     // Gradient variants
-    const svgA = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='${theme==='dark'?'#0f172a':'#ffffff'}'/><stop offset='100%' stop-color='${theme==='dark'?'#1e3a8a':'#dbeafe'}'/></linearGradient><rect width='1600' height='900' fill='url(#g)'/></svg>`;
-    const svgB = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><linearGradient id='h' x1='1' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='${theme==='dark'?'#312e81':'#bfdbfe'}'/><stop offset='100%' stop-color='${theme==='dark'?'#1e3a8a':'#93c5fd'}'/></linearGradient><rect width='1600' height='900' fill='url(#h)'/></svg>`;
+    const svgA = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='${theme === 'dark' ? '#0f172a' : '#ffffff'}'/><stop offset='100%' stop-color='${theme === 'dark' ? '#1e3a8a' : '#dbeafe'}'/></linearGradient><rect width='1600' height='900' fill='url(#g)'/></svg>`;
+    const svgB = `<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'><linearGradient id='h' x1='1' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='${theme === 'dark' ? '#312e81' : '#bfdbfe'}'/><stop offset='100%' stop-color='${theme === 'dark' ? '#1e3a8a' : '#93c5fd'}'/></linearGradient><rect width='1600' height='900' fill='url(#h)'/></svg>`;
     const b64A = btoa(svgA); const b64B = btoa(svgB);
     const gradients = [
       { id: `${theme}-gradient-0`, data_uri: `data:image/svg+xml;base64,${b64A}`, theme, description: 'Gradient A', timestamp: new Date().toISOString() },
@@ -296,8 +148,7 @@ const backgroundManager = {
     ];
     // Combine: solid colors first, then gradients
     this.backgrounds = [...solidSvgs, ...gradients];
-    // Save placeholders to cache too
-    this.saveBackgroundsToCache(theme);
+    // Caching disabled for placeholders
     console.log(`🎨 Applied ${this.backgrounds.length} backgrounds (${solidSvgs.length} solid + ${gradients.length} gradients) for ${theme}`);
     document.dispatchEvent(new CustomEvent('backgroundsGenerated', { detail: { theme, count: this.backgrounds.length, placeholder: true } }));
   },
@@ -383,13 +234,7 @@ const backgroundManager = {
       targetY = window.innerHeight / 2;
     });
   },
-  /**
-   * Generate and apply backgrounds for current theme
-   */
-  async generateAndApply() {
-    await this.generateBackgrounds(this.currentTheme);
-    this.applyBackground(this.currentBackground);
-  },
+  /* AI generation disabled; generateAndApply removed */
   /**
    * Get list of available backgrounds
    */

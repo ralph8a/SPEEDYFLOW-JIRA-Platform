@@ -487,6 +487,7 @@
   <script src="/static/js/utils/svg-icons.js?v={{ timestamp }}"></script>
   <!-- Theme Manager - Centralized theme control -->
   <script src="/static/js/theme-manager.js?v={{ timestamp }}"></script>
+  <!-- Compatibility stubs removed: Flowing MVP exposes its own globals (no compat-stubs) -->
   <script src="/static/js/sidebar-toggle.js?v={{ timestamp }}"></script>
   <script src="/static/js/sidebar-tooltip-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-actions.js?v={{ timestamp }}"></script>
@@ -494,9 +495,8 @@
   <script src="/static/js/modules/mentions-autocomplete.js?v={{ timestamp }}"></script>
   <!-- Comments module must load before right-sidebar to provide comment utilities -->
   <script src="/static/js/modules/comments.js?v={{ timestamp }}"></script>
-  <script src="/static/js/right-sidebar.js?v={{ timestamp }}"></script>
   <script src="/static/js/mentions-system.js?v={{ timestamp }}"></script>
-  <script src="/static/js/notifications-panel.js?v={{ timestamp }}"></script>
+  <!-- Notifications panel removed (deprecated). To enable, add notifications-panel.js back and ensure /api/notifications exists -->
   <script src="/static/js/sla-monitor.js?v={{ timestamp }}"></script>
   <!-- ===== GLASSMORPHISM & TRANSPARENCY ===== -->
   <script src="/static/js/glassmorphism-opacity-controller.js?v={{ timestamp }}"></script>
@@ -523,7 +523,7 @@
   <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
   <!-- FLOWING MVP FOOTER SCRIPT -->
   <!-- Flowing Context (context-aware suggestions injected into right sidebar) -->
-  <script src="/static/js/flowing-context-aware.js?v={{ timestamp }}"></script>
+  <!-- Legacy context-aware script removed; Flowing MVP footer integration used instead -->
   <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
   <!-- FLOWING MVP INTEGRATION SCRIPT -->
   <script>
@@ -566,7 +566,7 @@
               window.flowingFooter.context.selectedIssue = ticketKey;
             }
           }
-        }, true); // Use capture phase to intercept before right-sidebar.js
+        }, true); // Capture phase used to integrate with Flowing MVP (right-sidebar deprecated)
         // Sync theme changes
         const themeObserver = new MutationObserver(() => {
           const bodyTheme = document.body.classList.contains('theme-dark') ? 'dark' : 'light';

@@ -17,6 +17,22 @@ class NotificationsPanel {
    */
   async init() {
     console.log('🔔 Initializing Notifications System...');
+    // Quick availability check: if API endpoints are not present, disable notifications gracefully
+    try {
+      const probe = await fetch('/api/notifications', { method: 'GET', cache: 'no-store' });
+      if (probe.status === 404) {
+        console.warn('⚠️ Notifications API not available (404). Notifications disabled.');
+        // Ensure badge is hidden
+        this.unreadCount = 0;
+        this.updateBadge();
+        return;
+      }
+    } catch (err) {
+      console.warn('⚠️ Notifications API check failed:', err, '— disabling notifications.');
+      this.unreadCount = 0;
+      this.updateBadge();
+      return;
+    }
     // Setup click handler
     this.setupButtonHandler();
     // Load existing notifications
