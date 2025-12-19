@@ -2980,30 +2980,9 @@ function attachListEventListeners() {
     });
   }
   
-  // View details buttons
-  document.querySelectorAll('.btn-view-details').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const issueKey = btn.getAttribute('data-issue-key');
-      if (window.openIssueDetails) {
-        window.openIssueDetails(issueKey);
-      }
-    });
-  });
-  
-  // Row click to view details
-  document.querySelectorAll('.issue-row').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Don't trigger if clicking on buttons or assignee edit
-      if (!e.target.closest('.btn-view-details') && 
-          !e.target.closest('.list-transition-trigger') &&
-          !e.target.closest('.col-assignee')) {
-        const issueKey = row.getAttribute('data-issue-key');
-        if (window.openIssueDetails) {
-          window.openIssueDetails(issueKey);
-        }
-      }
-    });
-  });
+  // View details behavior is centralized via `window.setupIssueCardClickHandlers`
+  // and `window.openIssueDetails`. Avoid adding duplicate listeners here.
+  console.log('ℹ️ [App] Details click handlers delegated to setupIssueCardClickHandlers/openIssueDetails');
   
   // Assignee edit toggle checkbox
   const editToggle = document.getElementById('enableAssigneeEdit');
