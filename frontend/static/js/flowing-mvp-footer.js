@@ -204,14 +204,33 @@ console.log('✅ Flowing MVP ready');
   }
 
 attachEventListeners() {
-  // Toggle button - Integrado con FlowingContext para sugerencias de IA
-  this.toggleBtn?.addEventListener('click', () => {
-    this.toggle();
-    // Si FlowingContext está disponible, mostrar sugerencias contextuales
-    if (window.FlowingContext && this.isExpanded) {
-      this.showContextualSuggestions();
-    }
-  });
+    // Toggle button - Integrado con FlowingContext para sugerencias de IA
+    try {
+      if (this.toggleBtn) {
+        // Replace node to avoid duplicate listeners
+        const newToggle = this.toggleBtn.cloneNode(true);
+        this.toggleBtn.parentNode && this.toggleBtn.parentNode.replaceChild(newToggle, this.toggleBtn);
+        this.toggleBtn = newToggle;
+
+        // Set initial aria state and icon
+        this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded));
+        this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾';
+
+        this.toggleBtn.addEventListener('click', () => {
+          this.toggle();
+          // update icon and aria state after toggle
+          try {
+            this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾';
+            this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded));
+          } catch (e) { /* ignore */ }
+
+          // Si FlowingContext está disponible, mostrar sugerencias contextuales
+          if (window.FlowingContext && this.isExpanded) {
+            this.showContextualSuggestions();
+          }
+        });
+      }
+    } catch (e) { console.warn('Could not attach toggleBtn listener', e); }
 
   // Close button removed - use 'Back to Chat' control instead
 
