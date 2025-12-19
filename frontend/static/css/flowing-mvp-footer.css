@@ -237,6 +237,29 @@ body.theme-dark .footer-title {
     font-size: 0.9rem;
 }
 
+/* Hide chat UI pieces when Balanced View is active on the footer.
+   We use the `balanced-active` class added to the footer by JS, and also
+   respect the expanded state class to avoid overlaps when footer is large. */
+.flowing-footer.balanced-active .flowing-composer,
+.flowing-footer.balanced-active #flowingMessages,
+.flowing-footer.balanced-active #flowingInput,
+.flowing-footer.balanced-active #flowingSendBtn,
+.flowing-footer.balanced-active #flowingToggleHit,
+.flowing-footer.balanced-active .flowing-toggle-btn,
+.flowing-footer.balanced-active .flowing-context-badge,
+.flowing-footer.balanced-active .flowing-suggestion,
+.flowing-footer.balanced-active .flowing-avatar {
+  display: none !important;
+}
+
+/* Fallback: also hide when footer is expanded AND balanced view visible via body class
+   This covers edge cases where balanced-active wasn't added due to DOM mapping issues. */
+body.flowing-footer-expanded .flowing-view.balanced-view ~ .flowing-composer,
+body.flowing-footer-expanded .flowing-view.balanced-view ~ #flowingMessages,
+body.flowing-footer-expanded .flowing-view.balanced-view ~ #flowingInput {
+  display: none !important;
+}
+
 .ticket-info-header.hidden {
     display: none;
 }
