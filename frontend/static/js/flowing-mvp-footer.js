@@ -1211,7 +1211,12 @@ class FlowingFooter {
       const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
       // Debug: log attachments payload to help diagnose missing thumbnails
       console.log('🔍 [Footer] attachments payload for', issue.key, attachments);
-      if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
+      if (!attachments || attachments.length === 0) {
+        if (rightContainer) rightContainer.innerHTML = '';
+        if (headerContainer) headerContainer.innerHTML = '';
+        const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show');
+        return;
+      }
       let html = '';
       let thumbHtml = '';
       attachments.forEach(att => {
@@ -1246,10 +1251,10 @@ class FlowingFooter {
         }
       });
 
-      // Insert into right column (full) and header (compact thumbs)
+      // Insert into right column: compact thumbs first, then full list. Do NOT populate header thumbs to avoid saturating header.
       try {
-        if (rightContainer) rightContainer.innerHTML = html;
-        if (headerContainer) headerContainer.innerHTML = thumbHtml;
+        if (rightContainer) rightContainer.innerHTML = `${thumbHtml}${html}`;
+        if (headerContainer) headerContainer.innerHTML = '';
       } catch (e) { /* ignore */ }
       // Description collapse now handled by native <details> element in the markup above; no JS required.
     } catch (e) {
@@ -1266,7 +1271,11 @@ class FlowingFooter {
       if (!listContainer) return;
       const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
       console.log('🔍 [Footer|renderFooterAttachments] attachments payload for', issue.key, attachments);
-      if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; return; }
+      if (!attachments || attachments.length === 0) {
+        const right = document.getElementById('attachmentsListRight'); if (right) right.innerHTML = '';
+        const header = document.getElementById('attachmentsListHeader'); if (header) header.innerHTML = '';
+        return;
+      }
       let html = '';
       attachments.forEach((att) => {
         const url = att.content || att.self || att.url || (`/ api / issues / ${issue.key} /attachments/${att.id} `);
@@ -1294,13 +1303,11 @@ class FlowingFooter {
     `;
         }
       });
-      listContainer.innerHTML = html;
-      try {
-        const headerList = document.getElementById('attachmentsListHeader');
-        if (headerList && headerList !== listContainer) headerList.innerHTML = html;
-        const rightList = document.getElementById('attachmentsListRight');
-        if (rightList && rightList !== listContainer) rightList.innerHTML = html;
-      } catch (e) { /* ignore */ }
+      // Put compact thumbs + full list into right column; clear header thumbnails
+      const right = document.getElementById('attachmentsListRight');
+      const header = document.getElementById('attachmentsListHeader');
+      if (right) right.innerHTML = `${thumbHtml}${html}`;
+      if (header) header.innerHTML = '';
     } catch (e) {
       console.warn('renderFooterAttachments error', e);
     }
@@ -1933,7 +1940,7 @@ class FlowingFooter {
       } catch (e) { /* ignore */ }
 
       // Add small buffer so elements don't touch footer border
-      const paddingExpanded = `${Math.max(footerHeight + 16, 200)}px`;
+      const paddingExpanded = `${Math.max(footerHeight + 16, 120)}px`;
       if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
       if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
       if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
