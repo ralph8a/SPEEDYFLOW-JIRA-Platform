@@ -561,6 +561,8 @@ class FlowingFooter {
   public_suggestActions(issueKey) { return this.suggestActions(issueKey); }
   public_explainSLA(issueKey) { return this.explainSLA(issueKey); }
   public_showContextualSuggestions() { return this.showContextualSuggestions(); }
+  // Public wrapper for switching to balanced view from external callers
+  public_switchToBalancedView(issueKey) { return this.switchToBalancedView(issueKey); }
 
   // Centralized view switcher to ensure exactly one view is visible at a time
   setActiveView(viewName) {
@@ -636,27 +638,27 @@ class FlowingFooter {
     if (!issue) {
       console.error('❌ Issue not found:', issueKey);
       container.innerHTML = `
-    < div style = "padding: 40px; text-align: center;" >
-          <p style="color: #ef4444; margin-bottom: 16px;">❌ Issue not found in current queue</p>
-          <button onclick="window.flowingFooter.switchToChatView()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-            <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Chat
+    <div style="padding:40px;text-align:center;">
+          <p style="color:#ef4444;margin-bottom:16px;">❌ Issue not found in current queue</p>
+          <button onclick="window._flowingFooter?.public_switchToChatView?.()" style="padding:10px 20px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+            <i class="fas fa-arrow-left" style="margin-right:8px;"></i> Back to Chat
           </button>
-        </div >
+        </div>
     `;
       return;
     }
 
     // Show loading state
     container.innerHTML = `
-    < div style = "padding: 40px; text-align: center;" >
-        <div class="loading-spinner" style="border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-        <p style="margin-top: 16px; color: #6b7280;">Loading complete ticket details...</p>
-      </div >
+    <div style="padding:40px;text-align:center;">
+        <div class="loading-spinner" style="border:4px solid #f3f4f6;border-top:4px solid #3b82f6;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin:0 auto;"></div>
+        <p style="margin-top:16px;color:#6b7280;">Loading complete ticket details...</p>
+      </div>
     `;
 
     try {
       // Fetch complete details from Service Desk API (same as right-sidebar)
-      const response = await fetch(`/ api / servicedesk / request / ${issueKey} `);
+      const response = await fetch(`/api/servicedesk/request/${issueKey}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status} `);
@@ -717,11 +719,11 @@ class FlowingFooter {
     if (!window.slaMonitor || typeof window.slaMonitor.init !== 'function') {
       console.warn('⚠️ SLA Monitor not available');
       slaContainer.innerHTML = `
-    < div style = "text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;" >
-          <i class="fas fa-info-circle" style="margin-bottom: 8px; font-size: 16px;"></i><br>
+        <div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px;">
+          <i class="fas fa-info-circle" style="margin-bottom:8px;font-size:16px;"></i><br>
           SLA Monitor not available
         </div>
-  `;
+      `;
       return;
     }
 
@@ -922,11 +924,11 @@ class FlowingFooter {
         }
       } else {
         slaContainer.innerHTML = `
-    < div style = "text-align: center; padding: 16px; color: #9ca3af; font-size: 11px;" >
-            <i class="fas fa-check-circle" style="margin-bottom: 6px; font-size: 14px; color: #10b981;"></i><br>
+          <div style="text-align:center;padding:16px;color:#9ca3af;font-size:11px;">
+            <i class="fas fa-check-circle" style="margin-bottom:6px;font-size:14px;color:#10b981;"></i><br>
             No active SLA
           </div>
-  `;
+        `;
 
         // Show no risk if no SLA
         this.renderBreachRisk(issueKey, null);
@@ -934,9 +936,7 @@ class FlowingFooter {
     } catch (error) {
       console.error('❌ Error initializing SLA Monitor:', error);
       slaContainer.innerHTML = `
-    < div style = "text-align: center; padding: 16px; color: #ef4444; font-size: 11px;" >
-      Failed to load SLA
-        </div >
+    <div style="text-align:center;padding:16px;color:#ef4444;font-size:11px;">Failed to load SLA</div>
     `;
     }
   }
@@ -1744,7 +1744,7 @@ class FlowingFooter {
 
         <!-- Action Buttons -->
         <div class="action-buttons-container" style="display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
-          <button onclick="window.flowingFooter.switchToChatView()" style="flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
+          <button onclick="window._flowingFooter?.public_switchToChatView?.()" style="flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
             <i class="fas fa-comments" style="margin-right: 6px;"></i> Back to Chat
           </button>
         </div>
@@ -2030,6 +2030,7 @@ if (typeof FlowingContext !== 'undefined') {
                 expand: 'public_expand',
                 collapse: 'public_collapse',
                 switchToChatView: 'public_switchToChatView',
+                switchToBalancedView: 'public_switchToBalancedView',
                 askAboutTicket: 'public_askAboutTicket',
                 suggestActions: 'public_suggestActions',
                 explainSLA: 'public_explainSLA',
@@ -2049,6 +2050,7 @@ if (typeof FlowingContext !== 'undefined') {
             expand: 'public_expand',
             collapse: 'public_collapse',
             switchToChatView: 'public_switchToChatView',
+            switchToBalancedView: 'public_switchToBalancedView',
             askAboutTicket: 'public_askAboutTicket',
             suggestActions: 'public_suggestActions',
             explainSLA: 'public_explainSLA',

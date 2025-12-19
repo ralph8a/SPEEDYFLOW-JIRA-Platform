@@ -91,7 +91,7 @@ FlowingFooter (class)
 // Listens for ticket clicks
 document.addEventListener('click', function(e) {
   const ticketCard = e.target.closest('.ticket-card, .kanban-card, .list-row');
-  if (ticketCard && window.flowingFooter) {
+   if (ticketCard && window._flowingFooter) {
     // Update context + expand footer
   }
 });

@@ -13,14 +13,14 @@ class ReportsComponent {
 
     async init() {
         console.log('📊 Reports: Initializing...');
-        
+
         // Check if cache is ready
         if (this.isCacheReady()) {
             console.log('⚡ Reports: Using cached tickets (instant)');
             this.loadFromCache();
         } else {
             console.log('⏳ Reports: Waiting for cache...');
-            
+
             // Fallback: If no preload after 10s, use API
             setTimeout(() => {
                 if (!this.isCacheReady()) {
@@ -44,11 +44,11 @@ class ReportsComponent {
     loadFromCache() {
         try {
             this.tickets = window.ML_CACHE_INDICATOR.getTickets();
-            
+
             console.log(`✅ Reports: Loaded ${this.tickets.length} tickets from cache`);
             console.log(`📍 Source: ${window.ML_CACHE_INDICATOR.queue_name}`);
             console.log(`⏰ Cached at: ${new Date(window.ML_CACHE_INDICATOR.cached_at).toLocaleString()}`);
-            
+
             // Build reports
             this.buildReports();
         } catch (error) {
@@ -63,10 +63,10 @@ class ReportsComponent {
     async loadFromAPI() {
         try {
             console.log('📡 Reports: Fetching from API...');
-            
+
             const response = await fetch('/api/tickets/all');
             const result = await response.json();
-            
+
             if (result.success) {
                 this.tickets = result.tickets;
                 console.log(`✅ Reports: Loaded ${this.tickets.length} tickets from API`);
@@ -85,10 +85,10 @@ class ReportsComponent {
         const summary = this.buildSummaryReport();
         const priority = this.buildPriorityReport();
         const sla = this.buildSlaReport();
-        
+
         // Render
         this.renderReports({ summary, priority, sla });
-        
+
         console.log('📊 Reports built successfully');
     }
 
@@ -99,17 +99,17 @@ class ReportsComponent {
         const total = this.tickets.length;
         const open = this.tickets.filter(t => t.status !== 'Closed' && t.status !== 'Resolved').length;
         const closed = total - open;
-        
-        const unassigned = this.tickets.filter(t => 
+
+        const unassigned = this.tickets.filter(t =>
             !t.assignee || t.assignee === 'Unassigned'
         ).length;
-        
+
         return {
             total,
             open,
             closed,
             unassigned,
-            source: this.isCacheReady() 
+            source: this.isCacheReady()
                 ? `${window.ML_CACHE_INDICATOR.queue_name} (cached)`
                 : 'API (live)'
         };
@@ -120,12 +120,12 @@ class ReportsComponent {
      */
     buildPriorityReport() {
         const priorities = {};
-        
+
         this.tickets.forEach(ticket => {
             const priority = ticket.priority || 'Unknown';
             priorities[priority] = (priorities[priority] || 0) + 1;
         });
-        
+
         return priorities;
     }
 
@@ -143,12 +143,12 @@ class ReportsComponent {
                 source: 'cached'
             };
         }
-        
+
         // Calculate manually
         const breached = this.tickets.filter(t => t.sla_breached).length;
         const at_risk = this.tickets.filter(t => t.sla_at_risk).length;
         const on_track = this.tickets.length - breached - at_risk;
-        
+
         return { breached, at_risk, on_track, source: 'calculated' };
     }
 
@@ -159,17 +159,17 @@ class ReportsComponent {
         console.log('📊 Summary Report:', summary);
         console.log('🎯 Priority Report:', priority);
         console.log('⏱️ SLA Report:', sla);
-        
+
         // Example: Update DOM
-        document.getElementById('total-tickets')?.textContent = summary.total;
-        document.getElementById('open-tickets')?.textContent = summary.open;
-        document.getElementById('closed-tickets')?.textContent = summary.closed;
-        document.getElementById('unassigned-tickets')?.textContent = summary.unassigned;
-        
-        document.getElementById('sla-breached')?.textContent = sla.breached;
-        document.getElementById('sla-at-risk')?.textContent = sla.at_risk;
-        document.getElementById('sla-on-track')?.textContent = sla.on_track;
-        
+        const elTotal = document.getElementById('total-tickets'); if (elTotal) elTotal.textContent = summary.total;
+        const elOpen = document.getElementById('open-tickets'); if (elOpen) elOpen.textContent = summary.open;
+        const elClosed = document.getElementById('closed-tickets'); if (elClosed) elClosed.textContent = summary.closed;
+        const elUnassigned = document.getElementById('unassigned-tickets'); if (elUnassigned) elUnassigned.textContent = summary.unassigned;
+
+        const elBreached = document.getElementById('sla-breached'); if (elBreached) elBreached.textContent = sla.breached;
+        const elAtRisk = document.getElementById('sla-at-risk'); if (elAtRisk) elAtRisk.textContent = sla.at_risk;
+        const elOnTrack = document.getElementById('sla-on-track'); if (elOnTrack) elOnTrack.textContent = sla.on_track;
+
         // Update source indicator
         const sourceElement = document.getElementById('data-source');
         if (sourceElement) {
@@ -186,7 +186,7 @@ class ReportsComponent {
             alert('No tickets to export');
             return;
         }
-        
+
         // Build CSV
         const headers = ['Key', 'Summary', 'Status', 'Priority', 'Assignee', 'Created'];
         const rows = this.tickets.map(t => [
@@ -197,12 +197,12 @@ class ReportsComponent {
             t.assignee || 'Unassigned',
             new Date(t.created).toLocaleDateString()
         ]);
-        
+
         const csv = [
             headers.join(','),
             ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
         ].join('\n');
-        
+
         // Download
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
@@ -211,7 +211,7 @@ class ReportsComponent {
         a.download = `tickets_report_${Date.now()}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        
+
         console.log(`✅ Exported ${this.tickets.length} tickets to CSV`);
     }
 
@@ -220,23 +220,23 @@ class ReportsComponent {
      */
     filterTickets(criteria) {
         let filtered = [...this.tickets];
-        
+
         if (criteria.status) {
             filtered = filtered.filter(t => t.status === criteria.status);
         }
-        
+
         if (criteria.priority) {
             filtered = filtered.filter(t => t.priority === criteria.priority);
         }
-        
+
         if (criteria.assignee) {
             filtered = filtered.filter(t => t.assignee === criteria.assignee);
         }
-        
+
         if (criteria.unassigned) {
             filtered = filtered.filter(t => !t.assignee || t.assignee === 'Unassigned');
         }
-        
+
         console.log(`🔍 Filtered: ${filtered.length} tickets (from ${this.tickets.length})`);
         return filtered;
     }
@@ -246,7 +246,7 @@ class ReportsComponent {
      */
     async refresh() {
         console.log('🔄 Reports: Refreshing data...');
-        
+
         // Always use API for refresh (bypass cache)
         await this.loadFromAPI();
     }
@@ -255,12 +255,12 @@ class ReportsComponent {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     window.reportsComponent = new ReportsComponent();
-    
+
     // Add export button handler
     document.getElementById('export-csv-btn')?.addEventListener('click', () => {
         window.reportsComponent.exportToCsv();
     });
-    
+
     // Add refresh button handler
     document.getElementById('refresh-btn')?.addEventListener('click', () => {
         window.reportsComponent.refresh();

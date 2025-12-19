@@ -617,7 +617,7 @@ class FlowingFooter {
       container.innerHTML = `
         <div class="not-found">
           <p class="error-text">❌ Issue not found in current queue</p>
-          <button onclick="window.flowingFooter.switchToChatView()" class="ff-btn ff-btn-primary">
+          <button onclick="window._flowingFooter?.public_switchToChatView?.()" class="ff-btn ff-btn-primary">
             <i class="fas fa-arrow-left inline-icon"></i> Back to Chat
           </button>
         </div>
@@ -1632,7 +1632,7 @@ class FlowingFooter {
           
           <!-- Action Buttons -->
           <div class="action-buttons-container" style="display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
-            <button onclick="window.flowingFooter.switchToChatView()" style="flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
+            <button onclick="window._flowingFooter?.public_switchToChatView?.()" style="flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
               <i class="fas fa-comments" style="margin-right: 6px;"></i> Back to Chat
             </button>
           </div>
@@ -2168,7 +2168,7 @@ if (typeof FlowingContext !== 'undefined') {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-  window.flowingFooter = new FlowingFooter();
+  window._flowingFooter = new FlowingFooter();
   console.log('✅ Flowing MVP Footer loaded');
 
   // Robust integration: attach direct handlers to issue details buttons and toggle button.
@@ -2180,7 +2180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (toggleBtn && !toggleBtn.dataset.ffHandler) {
         toggleBtn.addEventListener('click', (ev) => {
           try { ev.preventDefault(); ev.stopPropagation(); } catch(e){}
-          if (window.flowingFooter) window.flowingFooter.toggle();
+          if (window._flowingFooter) window._flowingFooter.toggle && window._flowingFooter.toggle();
         });
         toggleBtn.dataset.ffHandler = '1';
       }
@@ -2191,9 +2191,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', (ev) => {
           try { ev.preventDefault(); ev.stopPropagation(); } catch(e){}
           const issueKey = btn.dataset.issueKey || btn.dataset.key;
-          if (issueKey && window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
-            if (!window.flowingFooter.isExpanded) window.flowingFooter.expand();
-            window.flowingFooter.switchToBalancedView(issueKey);
+          if (issueKey && window._flowingFooter && typeof window._flowingFooter.public_switchToBalancedView === 'function') {
+            if (!window._flowingFooter.isExpanded) window._flowingFooter.public_expand && window._flowingFooter.public_expand();
+            window._flowingFooter.public_switchToBalancedView(issueKey);
           } else {
             // fallback to global handler
             if (typeof showTicketDetails === 'function') showTicketDetails(issueKey);

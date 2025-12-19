@@ -763,7 +763,7 @@
       
       // Wait for both app.js and flowing-mvp-footer.js to load
       const initFlowingIntegration = () => {
-        if (!window.flowingFooter) {
+        if (!window._flowingFooter) {
           console.warn('⏳ Waiting for Flowing MVP Footer to initialize...');
           setTimeout(initFlowingIntegration, 100);
           return;
@@ -774,7 +774,7 @@
           // Check if click is on a details button (kanban or list view)
           const detailsBtn = e.target.closest('.issue-details-btn, .btn-view-details');
           
-          if (detailsBtn && window.flowingFooter) {
+          if (detailsBtn && window._flowingFooter) {
             e.preventDefault(); // Prevent default right sidebar opening
             e.stopPropagation(); // Stop event from bubbling
             
@@ -784,12 +784,12 @@
               console.log('🎯 Details button clicked for ticket:', issueKey);
               
               // Expand footer if collapsed
-              if (!window.flowingFooter.isExpanded) {
-                window.flowingFooter.expand();
+              if (!window._flowingFooter?.isExpanded) {
+                window._flowingFooter?.public_expand?.();
               }
-              
+
               // Switch to balanced view with ticket details
-              window.flowingFooter.switchToBalancedView(issueKey);
+              window._flowingFooter?.public_switchToBalancedView?.(issueKey);
               
               // Prevent right sidebar from opening
               return false;
@@ -798,11 +798,11 @@
           
           // Alternative: Listen for ticket card clicks (optional fallback)
           const ticketCard = e.target.closest('.ticket-card, .kanban-card, .list-row');
-          if (ticketCard && !e.target.closest('.issue-details-btn, .btn-view-details') && window.flowingFooter) {
+          if (ticketCard && !e.target.closest('.issue-details-btn, .btn-view-details') && window._flowingFooter) {
             const ticketKey = ticketCard.dataset.issueKey || ticketCard.dataset.key;
-            if (ticketKey && window.flowingFooter.context) {
+            if (ticketKey && window._flowingFooter.context) {
               // Just update context, don't open balanced view (let right sidebar handle it)
-              window.flowingFooter.context.selectedIssue = ticketKey;
+              window._flowingFooter.context.selectedIssue = ticketKey;
             }
           }
         }, true); // Use capture phase to intercept before right-sidebar.js
