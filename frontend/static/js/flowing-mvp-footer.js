@@ -253,11 +253,11 @@ class FlowingFooter {
           this.toggleBtn.setAttribute('aria-controls', 'flowingContent');
           this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded));
           this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾';
-        } catch (e) {}
+        } catch (e) { }
 
         const activateBtn = (ev) => {
           this.toggle();
-          try { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } catch (e) {}
+          try { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } catch (e) { }
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
         };
 
@@ -1997,21 +1997,52 @@ class FlowingFooter {
   } catch (e) { window.FlowingContext = FlowingContext; }
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-  // prefer non-deprecated global name
-  window._flowingFooter = new FlowingFooter();
-  // create a deprecated alias that warns when accessed
-  try {
-    Object.defineProperty(window, 'flowingFooter', {
-      configurable: true,
-      get() { console.warn('window.flowingFooter is deprecated — use window._flowingFooter instead'); return window._flowingFooter; },
-      set(v) { console.warn('Setting window.flowingFooter is deprecated — set window._flowingFooter instead'); window._flowingFooter = v; }
+// Create a proxy so other scripts can call window.flowingFooter.* before the real instance is ready.
+(() => {
+  if (!window.flowingFooter) {
+    const queue = [];
+    const proxy = new Proxy({}, {
+      get(_, prop) {
+        if (prop === '_flush') return () => {
+          while (queue.length) {
+            const { method, args } = queue.shift();
+            try {
+              if (window._flowingFooter && typeof window._flowingFooter[method] === 'function') {
+                window._flowingFooter[method](...args);
+              }
+            } catch (e) { console.warn('Error flushing queued FlowingFooter call', method, e); }
+          }
+        };
+        // return a function that either forwards to real instance or queues the call
+        return (...args) => {
+          if (window._flowingFooter && typeof window._flowingFooter[prop] === 'function') {
+            return window._flowingFooter[prop](...args);
+          }
+          queue.push({ method: prop, args });
+        };
+      }
     });
-  } catch (e) {
-    // fallback
-    window.flowingFooter = window._flowingFooter;
+
+    // define a deprecated alias that warns when accessed but returns the proxy
+    try {
+      Object.defineProperty(window, 'flowingFooter', {
+        configurable: true,
+        get() { console.warn('window.flowingFooter is deprecated — use window._flowingFooter instead'); return proxy; },
+        set(v) { console.warn('Setting window.flowingFooter is deprecated — set window._flowingFooter instead'); window._flowingFooter = v; }
+      });
+    } catch (e) {
+      window.flowingFooter = proxy;
+    }
   }
 
-  console.log('✅ Flowing MVP Footer loaded');
-});
+  // Initialize real instance on DOMContentLoaded and flush queued calls
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      window._flowingFooter = new FlowingFooter();
+      if (window.flowingFooter && typeof window.flowingFooter._flush === 'function') window.flowingFooter._flush();
+      console.log('✅ Flowing MVP Footer loaded');
+    } catch (e) {
+      console.error('Failed to initialize FlowingFooter', e);
+    }
+  });
+})();
