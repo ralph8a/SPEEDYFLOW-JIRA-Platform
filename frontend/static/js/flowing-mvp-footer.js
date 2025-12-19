@@ -280,6 +280,18 @@ class FlowingFooter {
 
     // Send button
     this.sendBtn?.addEventListener('click', () => this.sendMessage());
+
+    // Global ESC handler to collapse Flowing footer
+    try {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+          // Only collapse if footer is present and expanded
+          if (this.isExpanded) {
+            this.collapse();
+          }
+        }
+      });
+    } catch (e) { /* ignore */ }
   }
 
   setupContextWatcher() {
@@ -528,7 +540,7 @@ class FlowingFooter {
             const headerH = headerEl ? Math.round(headerEl.getBoundingClientRect().height) : 72;
             document.documentElement.style.setProperty('--flowing-header-height', headerH + 'px');
           } catch (err) { document.documentElement.style.setProperty('--flowing-header-height', '72px'); }
-          document.body.classList.add('flowing-footer-expanded');
+          // Do not add a body class that translates/pushes the main content — keep footer overlay
         } catch (err) { /* ignore */ }
       }, 80);
     } catch (e) { /* ignore */ }
@@ -542,7 +554,7 @@ class FlowingFooter {
 
     // Adjust content padding for collapsed footer
     this.adjustContentPadding(true);
-    try { document.body.classList.remove('flowing-footer-expanded'); } catch (e) { }
+    // No longer toggling body.flowing-footer-expanded to avoid pushing main content
     try { if (this.footer) this.footer.style.maxHeight = ''; } catch (e) { }
     try { document.documentElement.style.removeProperty('--flowing-footer-height'); } catch (e) { }
     try { document.documentElement.style.removeProperty('--flowing-header-height'); } catch (e) { }
@@ -596,6 +608,9 @@ class FlowingFooter {
     } else if (viewName === 'balanced') {
       if (chatView) { chatView.style.display = 'none'; chatView.setAttribute('aria-hidden', 'true'); }
       if (balancedView) { balancedView.style.display = 'block'; balancedView.setAttribute('aria-hidden', 'false'); balancedView.focus && balancedView.focus(); }
+
+      // Add a persistent class on footer to let CSS hide chat UI elements reliably
+      try { if (this.footer) this.footer.classList.add('balanced-active'); } catch (e) { }
 
       // Hide header/inline IA chat UI pieces that should not be visible while
       // viewing a ticket in balanced view (suggestion badge, floating launcher, composer remnants)
