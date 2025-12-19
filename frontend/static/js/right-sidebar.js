@@ -1,301 +1,33 @@
 /**
- * SPEEDYFLOW - Right Sidebar Controller
- * Manejo de detalles de tickets, comentarios y actividad
+ * right-sidebar.js (disabled)
+ * The original implementation has been moved to `right-sidebar.deprecated.js`.
+ * This file is intentionally left as a small stub to avoid parse/runtime
+ * errors while the BalancedView replaces the old Right Sidebar functionality.
  */
 
-console.log('📥 [Load] right-sidebar.js loading...');
+console.log('⚠️ right-sidebar.js disabled: original content moved to right-sidebar.deprecated.js');
 
-const sidebarState = {
-  isOpen: false,
-  currentIssue: null,
-  currentPanel: 'detailsPanel'
+// No-op stubs exported to preserve integration points expected by other scripts
+window.rightSidebar = {
+  init: () => { /* disabled */ },
+  open: () => { /* disabled */ },
+  close: () => { /* disabled */ },
+  setupCardHandlers: () => { /* disabled */ },
+  switchPanel: () => { /* disabled */ },
+  setupMentionSystem: () => { /* disabled */ },
+  setupAttachmentsSystem: () => { /* disabled */ },
+  setupCommentShortcuts: () => { /* disabled */ }
 };
 
-// ===== INITIALIZE RIGHT SIDEBAR =====
-function initRightSidebar() {
-  setupSidebarEventListeners();
-  setupPanelTabs();
-  console.log('✅ [Right Sidebar] Base initialization complete - interaction systems will load when sidebar opens');
-}
+// Preserve global function names as harmless no-ops
+window.openIssueDetails = window.openIssueDetails || function() { /* disabled */ };
+window.closeSidebar = window.closeSidebar || function() { /* disabled */ };
+window.initRightSidebar = window.initRightSidebar || function() { /* disabled */ };
+window.setupMentionSystem = window.setupMentionSystem || function() { /* disabled */ };
+window.setupIssueCardClickHandlers = window.setupIssueCardClickHandlers || function() { /* disabled */ };
+window.setupAttachmentsSystem = window.setupAttachmentsSystem || function() { /* disabled */ };
+window.setupCommentShortcuts = window.setupCommentShortcuts || function() { /* disabled */ };
 
-// ===== SETUP EVENT LISTENERS =====
-function setupSidebarEventListeners() {
-  const rightSidebar = document.getElementById('rightSidebar');
-  const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-  
-  if (!closeSidebarBtn) return;
-
-  // Close button
-  closeSidebarBtn.addEventListener('click', closeSidebar);
-
-  // Close on ESC key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && sidebarState.isOpen) {
-      closeSidebar();
-    }
-  });
-}
-
-// ===== SETUP PANEL TABS =====
-function processCommentText(text) {
-  if (window.commentsModule && typeof window.commentsModule.processCommentText === 'function') {
-    return window.commentsModule.processCommentText(text);
-  }
-  return text || '';
-}
-  // Wait for next paint cycle to ensure DOM is fully visible
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      console.log('⏱️ [Right Sidebar] DOM settled, setting up systems...');
-      // Mention system is now automatic via mentions-system.js (type @ in textarea)
-      // setupMentionSystem(); // Disabled: button removed, auto-mention works better
-      setupAttachmentsSystem();
-      setupCommentShortcuts();
-      
-      // Now render attachments (DOM is ready and visible)
-      if (sidebarState.currentIssue) {
-        console.log('🎨 [Right Sidebar] Rendering attachments for:', sidebarState.currentIssue.key);
-        renderAttachments(sidebarState.currentIssue);
-      }
-
-      // Initialize inline editor with AI suggestions
-      if (window.sidebarEditor) {
-        window.sidebarEditor.initForIssue(issueKey);
-      }
-    }, 100);
-  });
-
-  // Setup comment button and mentions
-  const commentBtn = document.querySelector('.btn-add-comment');
-  const commentTextarea = document.getElementById('commentText');
-  const visibilityToggle = document.getElementById('commentInternal');
-  const visibilityLabel = document.querySelector('.visibility-label');
-  
-  if (commentBtn) {
-    // Remove previous listeners
-    const newBtn = commentBtn.cloneNode(true);
-    commentBtn.parentNode.replaceChild(newBtn, commentBtn);
-    
-    // Add new listener
-    newBtn.addEventListener('click', () => postComment(issueKey));
-  }
-  
-  // Setup visibility toggle
-  if (visibilityToggle && visibilityLabel) {
-    visibilityToggle.checked = false; // Reset to public
-    visibilityToggle.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        visibilityLabel.textContent = '🔒 Internal';
-      } else {
-        visibilityLabel.textContent = '🔓 Public';
-      }
-    });
-  }
-  
-  // Attach mentions autocomplete to textarea
-  if (commentTextarea && window.mentionsAutocomplete) {
-    // Small delay to ensure textarea is ready
-    setTimeout(() => {
-      window.mentionsAutocomplete.attachTo(commentTextarea, issueKey);
-    }, 100);
-  }
-  // If mentionsAutocomplete is not present, try loading it dynamically
-  else if (commentTextarea && !window.mentionsAutocomplete) {
-    (async () => {
-      try {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = '/static/js/modules/mentions-autocomplete.js?v=' + Date.now();
-          s.onload = resolve;
-          s.onerror = reject;
-          document.head.appendChild(s);
-        });
-        if (window.mentionsAutocomplete) {
-          setTimeout(() => window.mentionsAutocomplete.attachTo(commentTextarea, issueKey), 120);
-        }
-      } catch (e) {
-        console.warn('Failed to dynamically load mentions-autocomplete:', e);
-      }
-    })();
-  }
-  
-  // Initialize SLA Monitor if available
-  if (window.slaMonitor && typeof window.slaMonitor.init === 'function') {
-    window.slaMonitor.init(issueKey).then(() => {
-      // Render SLA panel only if real data exists
-      const slaContainer = document.getElementById('slaMonitorContainer');
-      if (slaContainer) {
-        if (window.slaMonitor.slaData[issueKey]) {
-          const slaPanel = window.slaMonitor.renderSLAPanel(issueKey);
-          slaContainer.innerHTML = '';
-          slaContainer.appendChild(slaPanel);
-        } else {
-          // Hide SLA container if no real data
-          slaContainer.style.display = 'none';
-        }
-      }
-    }).catch(err => {
-      console.error('SLA Monitor initialization failed:', err);
-    });
-  }
-}
-
-// ===== POPULATE ISSUE DETAILS =====
-function populateIssueDetails(issue) {
-  if (!issue) return;
-  
-  // Get cached data once (avoid duplicate lookups)
-  const cachedIssue = window.app?.issuesCache?.get(issue.key);
-  
-  // Pre-populate with cached data if available
-  if (cachedIssue) {
-    console.log(`💾 Pre-populating with cached data for ${issue.key}`);
-    
-    const tempIssue = { ...issue, ...cachedIssue };
-    sidebarState.currentIssue = tempIssue;
-    
-    // Show cached attachments immediately
-    if (cachedIssue.fields?.attachment || cachedIssue.attachment) {
-      requestAnimationFrame(() => {
-        setTimeout(() => renderAttachments(tempIssue), 100);
-      });
-    }
-  }
-  
-  // Fetch complete field structure from Service Desk API
-  // (Kanban data is flat, Service Desk API has nested issue.fields.* needed for All Fields)
-  console.log(`📡 Fetching complete field structure for ${issue.key}`);
-  fetchServiceDeskRequestDetails(issue.key);
-  
-  // Initialize SLA Monitor
-  if (window.slaMonitor) {
-    window.slaMonitor.init(issue.key).then(() => {
-      const slaContainer = document.getElementById('slaMonitorContainer');
-      if (slaContainer) {
-        if (window.slaMonitor.slaData[issue.key]) {
-          const slaPanel = window.slaMonitor.renderSLAPanel(issue.key);
-          const existingSLA = slaContainer.querySelector('.sla-panel');
-          if (existingSLA) existingSLA.remove();
-          slaContainer.appendChild(slaPanel);
-          slaContainer.style.display = 'block';
-        } else {
-          // Hide SLA container if no real data
-          slaContainer.style.display = 'none';
-        }
-      }
-    }).catch(err => {
-      console.error('SLA Monitor initialization failed:', err);
-    });
-  }
-}
-
-// ===== FETCH SERVICE DESK REQUEST DETAILS =====
-function fetchServiceDeskRequestDetails(issueKey) {
-  console.log('🔍 Fetching Service Desk details for:', issueKey);
-  
-  // Show loading state in active tab
-  const activeTab = document.querySelector('.fields-tab-content.active');
-  if (activeTab) {
-    activeTab.innerHTML = '<p style="text-align: center; padding: 20px; color: #999;">⏳ Loading all fields...</p>';
-  }
-  
-  // Fetch from Service Desk API endpoint
-  fetch(`/api/servicedesk/request/${issueKey}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(response => {
-      console.log('✅ Service Desk data received:', response);
-      
-      // Extract data from wrapper if present
-      const data = response.data || response;
-      
-      // Merge Service Desk data with existing issue data
-      const completeIssue = {
-        ...sidebarState.currentIssue,
-        ...data,
-        fields: {
-          ...sidebarState.currentIssue?.fields,
-          ...data.fields
-        }
-      };
-      
-      // Data merged successfully
-      
-      // Update state and render
-      sidebarState.currentIssue = completeIssue;
-      populateAllFields(completeIssue);
-      renderAttachments(completeIssue);
-    })
-    .catch(error => {
-      console.error('❌ Error fetching Service Desk details:', error);
-      
-      // Fallback to existing issue data
-      if (sidebarState.currentIssue) {
-        populateAllFields(sidebarState.currentIssue);
-      } else {
-        const activeTab = document.querySelector('.fields-tab-content.active');
-        if (activeTab) {
-          const errorIcon = typeof SVGIcons !== 'undefined' 
-            ? SVGIcons.alert({ size: 16, className: 'inline-icon' })
-            : '⚠️';
-          activeTab.innerHTML = `<p style="text-align: center; padding: 20px; color: #f00;">${errorIcon} Error loading fields</p>`;
-        }
-      }
-    });
-}
-
-// ===== LOAD COMMENTS =====
-function loadIssueComments(issueKey) {
-  if (window.commentsModule && typeof window.commentsModule.loadIssueComments === 'function') {
-    return window.commentsModule.loadIssueComments(issueKey, { listSelector: '#commentsList', countSelector: '#commentCount' });
-  }
-  console.warn('commentsModule not available - cannot load comments');
-}
-
-// ===== GET ISSUE ATTACHMENTS =====
-function getIssueAttachments(issue) {
-  if (!issue) return [];
-  
-  let attachments = [];
-  
-  if (issue.fields && Array.isArray(issue.fields.attachment)) {
-    attachments = issue.fields.attachment;
-  } else if (Array.isArray(issue.attachment)) {
-    attachments = issue.attachment;
-  } else if (Array.isArray(issue.attachments)) {
-    attachments = issue.attachments;
-  }
-  
-  return attachments || [];
-}
-
-// ===== FORMAT FILE SIZE =====
-function formatFileSize(bytes) {
-  if (!bytes || bytes === 0) return '0 B';
-  
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-// ===== GET FILE ICON =====
-function getFileIcon(filename) {
-  const ext = filename.split('.').pop().toLowerCase();
-  const iconMap = {
-    'pdf': '📄', 'doc': '📝', 'docx': '📝', 'xls': '📊', 'xlsx': '📊',
-    'txt': '📃', 'zip': '🗜️', 'rar': '🗜️', '7z': '🗜️',
-    'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️', 'webp': '🖼️'
-  };
-  return iconMap[ext] || '📎';
-}
-
-// ===== PROCESS COMMENT TEXT =====
 function processCommentText(text) {
   if (!text) return '';
   
