@@ -134,8 +134,8 @@ class FlowingFooter {
       content.innerHTML = `
         <div id="chatOnlyView" class="flowing-view chat-view" style="display:block;">
           <div id="flowingMessages" class="flowing-messages" aria-live="polite"></div>
-          <div class="flowing-composer" style="display:flex;align-items:center;gap:8px;padding:12px;border-top:1px solid rgba(0,0,0,0.04);">
-            <textarea id="flowingInput" rows="2" placeholder="Ask Flowing..." style="flex:1;min-height:40px;max-height:160px;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);box-sizing:border-box;"></textarea>
+          <div class="flowing-composer" style="display:flex;align-items:center;gap:8px;padding:12px;border-top:1px solid rgba(0,0,0,0.04);flex-wrap:nowrap;">
+            <textarea id="flowingInput" rows="2" placeholder="Ask Flowing..." style="flex:1 1 auto;min-width:0;min-height:40px;max-height:160px;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);box-sizing:border-box;resize:vertical;"></textarea>
             <button id="flowingSendBtn" class="flowing-send-btn" aria-label="Send message" style="flex:0 0 auto;padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;cursor:pointer;"> 
               <span id="flowingSendIcon">✈</span>
             </button>
