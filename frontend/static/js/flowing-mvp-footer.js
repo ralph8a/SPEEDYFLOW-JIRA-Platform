@@ -3,66 +3,7 @@
  * Collapsible chat assistant with context awareness
  */
 
-// Provide a lightweight proxy immediately so other scripts can call
-// `window.flowingFooter.someMethod()` before the real instance exists.
-// The real instance will be created on DOMContentLoaded and queued calls
-// will be flushed.
-if (!window.flowingFooter) {
-  (function () {
-    const queue = [];
-    const proxy = new Proxy({}, {
-      get(_, prop) {
-        if (prop === '_flush') return () => {
-          while (queue.length) {
-            const { method, args } = queue.shift();
-            try {
-              // map deprecated method names to new public API names
-              const mapping = {
-                expand: 'public_expand',
-                collapse: 'public_collapse',
-                switchToChatView: 'public_switchToChatView',
-                askAboutTicket: 'public_askAboutTicket',
-                suggestActions: 'public_suggestActions',
-                explainSLA: 'public_explainSLA',
-                showContextualSuggestions: 'public_showContextualSuggestions'
-              };
-              const targetMethod = mapping[method] || method;
-              if (window._flowingFooter && typeof window._flowingFooter[targetMethod] === 'function') {
-                window._flowingFooter[targetMethod](...args);
-              }
-            } catch (e) { console.warn('Error flushing queued FlowingFooter call', method, e); }
-          }
-        };
-        return (...args) => {
-          const mapping = {
-            expand: 'public_expand',
-            collapse: 'public_collapse',
-            switchToChatView: 'public_switchToChatView',
-            askAboutTicket: 'public_askAboutTicket',
-            suggestActions: 'public_suggestActions',
-            explainSLA: 'public_explainSLA',
-            showContextualSuggestions: 'public_showContextualSuggestions'
-          };
-          const target = mapping[prop] || prop;
-          if (window._flowingFooter && typeof window._flowingFooter[target] === 'function') {
-            return window._flowingFooter[target](...args);
-          }
-          queue.push({ method: target, args });
-        };
-      }
-    });
-
-    try {
-      Object.defineProperty(window, 'flowingFooter', {
-        configurable: true,
-        get() { console.warn('window.flowingFooter is deprecated — use window._flowingFooter instead'); return proxy; },
-        set(v) { console.warn('Setting window.flowingFooter is deprecated — set window._flowingFooter instead'); window._flowingFooter = v; }
-      });
-    } catch (e) {
-      window.flowingFooter = proxy;
-    }
-  })();
-}
+// Flowing MVP Footer script
 
 class FlowingFooter {
   constructor() {
@@ -620,10 +561,9 @@ class FlowingFooter {
   public_suggestActions(issueKey) { return this.suggestActions(issueKey); }
   public_explainSLA(issueKey) { return this.explainSLA(issueKey); }
   public_showContextualSuggestions() { return this.showContextualSuggestions(); }
-  switchToChatView() {
-
-    // Centralized view switcher to ensure exactly one view is visible at a time
-    setActiveView(viewName) {
+  
+  // Centralized view switcher to ensure exactly one view is visible at a time
+  setActiveView(viewName) {
       const chatView = document.getElementById('chatOnlyView');
       const balancedView = document.getElementById('balancedView');
 
