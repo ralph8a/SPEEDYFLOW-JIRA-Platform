@@ -1240,6 +1240,13 @@ class FlowingFooter {
       // Show preview container when attachments exist
       const preview = document.getElementById('attachmentsPreviewFooter');
       if (preview) preview.classList.add('show');
+      // Also populate header/right-column attachment placeholders if present
+      try {
+        const headerList = document.getElementById('attachmentsListHeader');
+        if (headerList) headerList.innerHTML = html;
+        const rightList = document.getElementById('attachmentsListRight');
+        if (rightList) rightList.innerHTML = html;
+      } catch (e) { /* ignore */ }
       // Description collapse now handled by native <details> element in the markup above; no JS required.
     } catch (e) {
       console.warn('renderAttachmentsForBalanced error', e);
@@ -1285,6 +1292,13 @@ class FlowingFooter {
       // Show preview container when attachments exist
       const preview = document.getElementById('attachmentsPreviewFooter');
       if (preview) preview.classList.add('show');
+      // Mirror into header/right lists when available
+      try {
+        const headerList = document.getElementById('attachmentsListHeader');
+        if (headerList) headerList.innerHTML = html;
+        const rightList = document.getElementById('attachmentsListRight');
+        if (rightList) rightList.innerHTML = html;
+      } catch (e) { /* ignore */ }
     } catch (e) {
       console.warn('renderFooterAttachments error', e);
     }
