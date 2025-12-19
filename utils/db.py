@@ -78,6 +78,20 @@ SCHEMA_SLAS = """
 -- CREATE INDEX IF NOT EXISTS idx_slas_breached ON slas(breached);
 """
 
+SCHEMA_HEADER_SUGGESTIONS = """
+CREATE TABLE IF NOT EXISTS header_suggestions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    action TEXT,
+    active INTEGER DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT,
+    metadata TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_header_suggestions_active ON header_suggestions(active);
+"""
+
 def get_db() -> sqlite3.Connection:
     global _connection
     if _connection is None:
@@ -92,6 +106,10 @@ def init_db() -> None:
         conn.execute(SCHEMA_NOTIFICATIONS)
         # Create users table
         for statement in SCHEMA_USERS.split(';'):
+            if statement.strip():
+                conn.execute(statement)
+        # Create header suggestions table
+        for statement in SCHEMA_HEADER_SUGGESTIONS.split(';'):
             if statement.strip():
                 conn.execute(statement)
         # SLAs table creation DISABLED - see SCHEMA_SLAS comment above
@@ -114,6 +132,14 @@ def init_db() -> None:
             if 'user_id' not in columns:
                 conn.execute("ALTER TABLE notifications ADD COLUMN user_id TEXT")
             
+            # Create header_suggestions table if missing columns (simple existence check)
+            try:
+                _ = conn.execute("PRAGMA table_info(header_suggestions)").fetchall()
+            except Exception:
+                for statement in SCHEMA_HEADER_SUGGESTIONS.split(';'):
+                    if statement.strip():
+                        conn.execute(statement)
+
             conn.commit()
         except Exception as e:
             # Columns might already exist, that's OK
@@ -289,6 +315,68 @@ def get_users_from_db(service_desk_id: str = None, query: str = None, max_age_ho
         })
     
     return users
+
+
+# ============================================================================
+# Header Suggestions CRUD
+# ============================================================================
+def create_header_suggestion(title: str, description: str = None, action: str = None, metadata: str = None, active: int = 1) -> Dict[str, Any]:
+    conn = get_db()
+    now = datetime.datetime.now().isoformat()
+    with _DB_LOCK:
+        cur = conn.execute(
+            """INSERT INTO header_suggestions (title, description, action, active, created_at, metadata) VALUES (?, ?, ?, ?, ?, ?)""",
+            (title, description or '', action or '', active, now, metadata)
+        )
+        conn.commit()
+        nid = cur.lastrowid
+        row = conn.execute("SELECT * FROM header_suggestions WHERE id=?", (nid,)).fetchone()
+    return _row_to_dict(row) if row else None
+
+
+def list_header_suggestions(active_only: bool = True) -> List[Dict[str, Any]]:
+    conn = get_db()
+    with _DB_LOCK:
+        if active_only:
+            rows = conn.execute("SELECT * FROM header_suggestions WHERE active=1 ORDER BY id DESC").fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM header_suggestions ORDER BY id DESC").fetchall()
+    return [_row_to_dict(r) for r in rows]
+
+
+def get_header_suggestion(nid: int) -> Optional[Dict[str, Any]]:
+    conn = get_db()
+    with _DB_LOCK:
+        row = conn.execute("SELECT * FROM header_suggestions WHERE id=?", (nid,)).fetchone()
+    return _row_to_dict(row) if row else None
+
+
+def update_header_suggestion(nid: int, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    conn = get_db()
+    now = datetime.datetime.now().isoformat()
+    fields = []
+    params = []
+    for k in ('title', 'description', 'action', 'metadata', 'active'):
+        if k in data:
+            fields.append(f"{k} = ?")
+            params.append(data[k])
+    if not fields:
+        return get_header_suggestion(nid)
+    params.extend([now, nid])
+    sql = f"UPDATE header_suggestions SET {', '.join(fields)}, updated_at = ? WHERE id = ?"
+    with _DB_LOCK:
+        conn.execute(sql, params)
+        conn.commit()
+        row = conn.execute("SELECT * FROM header_suggestions WHERE id=?", (nid,)).fetchone()
+    return _row_to_dict(row) if row else None
+
+
+def delete_header_suggestion(nid: int) -> bool:
+    conn = get_db()
+    with _DB_LOCK:
+        cur = conn.execute("DELETE FROM header_suggestions WHERE id=?", (nid,))
+        conn.commit()
+    return cur.rowcount > 0
 
 def clear_old_users(days: int = 30) -> int:
     """Delete users older than specified days."""
