@@ -757,14 +757,30 @@ class FlowingFooter {
       }
       if (board) {
         const brect = board.getBoundingClientRect();
-        // If board is lower on page, use its top as overlay top and match height
-        const overlayTop = Math.max(8, Math.round(brect.top));
-        const overlayHeight = Math.max(200, Math.round(brect.height));
-        this.footer.style.setProperty('--flowing-footer-overlay-top', overlayTop + 'px');
-        this.footer.style.setProperty('--flowing-footer-overlay-height', overlayHeight + 'px');
+        // Use board top as visual anchor but never above header bottom
+        const bTop = Math.round(brect.top);
+        const safeTop = Math.max(topOffset, Math.max(8, bTop));
+        // Avoid using brect.height because it may include artificially large padding-bottom
+        const viewportH = (window.innerHeight || document.documentElement.clientHeight || 800);
+        const bottomInset = 24; // leave a small gap from bottom
+        const availableHeight = Math.max(240, viewportH - safeTop - bottomInset);
+        this.footer.style.setProperty('--flowing-footer-overlay-top', safeTop + 'px');
+        this.footer.style.setProperty('--flowing-footer-overlay-height', availableHeight + 'px');
+
+        // Align horizontally with board where possible (accounts for sidebars)
+        try {
+          const left = Math.max(8, Math.round(brect.left || 280));
+          const right = Math.max(8, Math.round((window.innerWidth || document.documentElement.clientWidth) - (brect.right || (window.innerWidth || 1200))));
+          document.documentElement.style.setProperty('--flowing-footer-left', left + 'px');
+          document.documentElement.style.setProperty('--flowing-footer-right', right + 'px');
+        } catch (e) { /* ignore */ }
       } else {
+        // No board available: anchor under header and fill remaining viewport
+        const viewportH = (window.innerHeight || document.documentElement.clientHeight || 800);
+        const bottomInset = 24;
+        const available = Math.max(240, viewportH - topOffset - bottomInset);
         this.footer.style.setProperty('--flowing-footer-overlay-top', topOffset + 'px');
-        this.footer.style.setProperty('--flowing-footer-overlay-height', 'calc(100% - ' + topOffset + 'px)');
+        this.footer.style.setProperty('--flowing-footer-overlay-height', available + 'px');
       }
     } catch (e) { /* ignore */ }
   }

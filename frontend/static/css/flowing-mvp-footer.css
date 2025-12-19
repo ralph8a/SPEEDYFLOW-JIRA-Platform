@@ -177,10 +177,11 @@ body:has(.flowing-footer.collapsed) #listView {
   /* Floating element styling */
   border-radius: 16px 16px 0 0;
 
-  /* Align with main-content/board-wrapper (sidebar 280px + 16px padding) */
-  width: calc(100% - 280px - 32px);
-  left: 280px;
-  margin: 0 16px;
+  /* Align with main-content/board-wrapper (sidebar + padding). Left/right may be set by JS for precise placement. */
+  left: var(--flowing-footer-left, 280px);
+  right: var(--flowing-footer-right, 16px);
+  width: calc(100% - var(--flowing-footer-left, 280px) - var(--flowing-footer-right, 16px));
+  margin: 0;
 }
 
 /* When sidebar is collapsed (60px width) */
