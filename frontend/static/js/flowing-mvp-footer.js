@@ -1945,11 +1945,26 @@ class FlowingFooter {
       if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
       if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
     } catch (e) {
-      // Fallback conservative padding
-      const fallback = isCollapsed ? '80px' : '300px';
-      if (kanbanView) kanbanView.style.paddingBottom = fallback;
-      if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
-      if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
+      // Fallback: compute footer height if possible and reserve comparable space
+      try {
+        let footerHeightFallback = 300;
+        const footerElFb = document.getElementById('flowingFooter') || this.footer;
+        if (footerElFb) footerHeightFallback = Math.round(footerElFb.getBoundingClientRect().height);
+        else {
+          const cssH = getComputedStyle(document.documentElement).getPropertyValue('--flowing-footer-height');
+          if (cssH) footerHeightFallback = parseInt(cssH, 10) || footerHeightFallback;
+        }
+        const fallback = isCollapsed ? '80px' : `${Math.max(footerHeightFallback + 16, 120)}px`;
+        if (kanbanView) kanbanView.style.paddingBottom = fallback;
+        if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
+        if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
+      } catch (e2) {
+        // absolute fallback
+        const fallback = isCollapsed ? '80px' : '120px';
+        if (kanbanView) kanbanView.style.paddingBottom = fallback;
+        if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
+        if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
+      }
     }
   }
 
