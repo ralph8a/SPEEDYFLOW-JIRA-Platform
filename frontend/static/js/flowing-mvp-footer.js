@@ -608,6 +608,13 @@ class FlowingFooter {
       // Reset context
       this.context.selectedIssue = null;
       this.updateContextBadge();
+      // Restore header title and remove recommendations
+      try {
+        const headerTitle = this.footer.querySelector('.flowing-title');
+        if (headerTitle) headerTitle.textContent = 'Flowing MVP';
+        const rec = this.footer.querySelector('#flowingHeaderRecommendations');
+        if (rec && rec.parentNode) rec.parentNode.removeChild(rec);
+      } catch (e) { /* ignore */ }
       if (this.suggestionElement) {
         this.suggestionElement.textContent = 'Analyzing your queue...';
         this.resumeSuggestionRotation();
@@ -619,6 +626,61 @@ class FlowingFooter {
       // Add a persistent class on footer to let CSS hide chat UI elements reliably
       try { if (this.footer) this.footer.classList.add('balanced-active'); } catch (e) { }
       try { document.body.classList.add('flowing-balanced-active'); } catch (e) { }
+
+      // Compute top offset so footer does not cover the filter bar or header
+      try {
+        const selectors = ['.filter-bar-enhanced', '.filter-bar', '.header-enhanced', '.header'];
+        let topOffset = 72; // default
+        for (const sel of selectors) {
+          const el = document.querySelector(sel);
+          if (el) {
+            const r = el.getBoundingClientRect();
+            topOffset = Math.max(topOffset, Math.round(r.bottom) + 8);
+            break;
+          }
+        }
+        // Set CSS variable used by balanced-active mode
+        try { if (this.footer) this.footer.style.setProperty('--flowing-footer-overlay-top', topOffset + 'px'); } catch (e) {}
+      } catch (e) { /* ignore */ }
+
+      // Update header to show key + summary and top recommendations
+      try {
+        const headerTitle = this.footer.querySelector('.flowing-title');
+        const recContainerId = 'flowingHeaderRecommendations';
+        let recContainer = this.footer.querySelector('#' + recContainerId);
+        if (!recContainer) {
+          recContainer = document.createElement('div');
+          recContainer.id = recContainerId;
+          recContainer.style.marginLeft = '16px';
+          recContainer.style.fontSize = '13px';
+          recContainer.style.color = 'var(--text-secondary, #6b7280)';
+          recContainer.style.display = 'flex';
+          recContainer.style.flexDirection = 'column';
+          recContainer.style.gap = '4px';
+          // insert after context badge if present
+          const badge = this.footer.querySelector('.flowing-context-badge');
+          if (badge && badge.parentNode) badge.parentNode.insertBefore(recContainer, badge.nextSibling);
+          else this.footer.querySelector('.flowing-header')?.appendChild(recContainer);
+        }
+
+        // Set header title to issue key + summary if available
+        let headerText = 'Flowing MVP';
+        const issueKey = this.context.selectedIssue || (typeof issueKeyFromArgs !== 'undefined' ? issueKeyFromArgs : null);
+        let summary = '';
+        try {
+          if (this.context.selectedIssue && window.app?.issuesCache) {
+            const issueObj = window.app.issuesCache.get(this.context.selectedIssue) || {};
+            summary = issueObj?.summary || issueObj?.fields?.summary || '';
+          }
+        } catch (e) { /* ignore */ }
+        if (this.context.selectedIssue) headerText = this.context.selectedIssue + (summary ? (' — ' + summary) : '');
+        if (headerTitle) headerTitle.textContent = headerText;
+
+        // Prepare recommendations: run analysis and show top 3 suggestions
+        try { this.analyzeSuggestions(); } catch (e) {}
+        const recs = (this.suggestions || []).slice(0, 3);
+        recContainer.innerHTML = recs.map(s => `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${this._stripHTML(s.text || '')}</div>`).join('');
+      } catch (e) { /* ignore */ }
 
       // Hide header/inline IA chat UI pieces that should not be visible while
       // viewing a ticket in balanced view (suggestion badge, floating launcher, composer remnants)
