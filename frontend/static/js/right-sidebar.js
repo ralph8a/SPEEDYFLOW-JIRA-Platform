@@ -23,7 +23,31 @@ window.rightSidebar = window.rightSidebar || {
 };
 
 // Preserve function names expected elsewhere as safe no-ops
-window.openIssueDetails = window.openIssueDetails || function () { /* no-op */ };
+// Implement a lightweight openIssueDetails that delegates to the Flowing footer
+// If the real footer is available, call its public API; otherwise dispatch a
+// centralized CustomEvent so other modules (e.g., flowing-mvp-footer) can react.
+function openIssueDetailsImpl(issueKey) {
+  try {
+    if (!issueKey) return;
+    // Prefer direct API if the footer instance is ready
+    if (window._flowingFooter && typeof window._flowingFooter.public_switchToBalancedView === 'function') {
+      try { window._flowingFooter.public_switchToBalancedView(issueKey); return; } catch (e) { /* fallback */ }
+    }
+
+    // Otherwise, try the deprecated proxy
+    if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
+      try { window.flowingFooter.switchToBalancedView(issueKey); return; } catch (e) { /* fallback */ }
+    }
+
+    // As a final fallback, dispatch a CustomEvent other modules can listen to
+    try {
+      const ev = new CustomEvent('flowing:switchedToBalanced', { detail: issueKey });
+      window.dispatchEvent(ev);
+    } catch (e) { /* ignore */ }
+  } catch (err) { /* silent */ }
+}
+
+window.openIssueDetails = window.openIssueDetails || function (issueKey) { return openIssueDetailsImpl(issueKey); };
 window.closeSidebar = window.closeSidebar || function () { /* no-op */ };
 window.initRightSidebar = window.initRightSidebar || function () { /* no-op */ };
 window.setupMentionSystem = window.setupMentionSystem || function () { /* no-op */ };
