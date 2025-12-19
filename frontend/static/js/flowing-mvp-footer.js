@@ -413,7 +413,8 @@ class FlowingFooter {
       // Use suggestion.text (full HTML) when rendering
       this.suggestionElement.innerHTML = suggestion.text || '';
       this.suggestionElement.classList.remove('suggestion-critical', 'suggestion-warning', 'suggestion-info', 'suggestion-success');
-      this.suggestionElement.classList.add(`suggestion - ${suggestion.type} `);
+      // add base and type-specific class without spaces in the token
+      this.suggestionElement.classList.add('suggestion', `suggestion-${(suggestion.type || 'info')}`);
 
       // Move to next suggestion
       this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
