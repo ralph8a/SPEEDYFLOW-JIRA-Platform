@@ -121,8 +121,7 @@ class FlowingFooter {
             <span class="context-text">No context</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
-            <button id="flowingSoundBtn" aria-label="Toggle sound" title="Toggle sound" style="background:transparent;border:none;cursor:pointer;font-size:18px;line-height:1;padding:6px;">🔔</button>
-            <input id="flowingSoundVol" type="range" min="0" max="1" step="0.05" value="0.6" style="width:80px;vertical-align:middle;" />
+            <!-- Sound activation lives in App settings (ajustes). Controls are bound by FlowingAudio if present -->
           </div>
           <div id="flowingToggleHit" style="display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;background:transparent;cursor:pointer;">
             <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn" style="width:28px;height:28px;border-radius:6px;background:#fff;border:1px solid rgba(0,0,0,0.06);box-shadow:0 6px 18px rgba(99,102,241,0.06);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">▴</button>

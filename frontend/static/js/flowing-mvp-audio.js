@@ -13,7 +13,8 @@
 
         attachControls() {
             try {
-                const soundBtn = document.getElementById('flowingSoundBtn');
+                // Try multiple selectors: app settings toggle may be in header 'ajustes'
+                const soundBtn = document.getElementById('flowingSoundBtn') || document.getElementById('settingsSoundBtn') || document.querySelector('[data-sound-toggle]') || document.querySelector('.settings-sound');
                 const soundVol = document.getElementById('flowingSoundVol');
                 if (soundBtn) {
                     soundBtn.textContent = this.audioEnabled ? '🔔' : '🔕';
@@ -34,6 +35,15 @@
                     }, { passive: true });
                 }
             } catch (e) { console.warn('FlowingAudio.attachControls error', e); }
+            // Try to preload fallback audio file if present
+            try {
+                const url = '/static/sounds/vscode_notify.mp3';
+                fetch(url, { method: 'HEAD' }).then(r => {
+                    if (r.ok) {
+                        try { this.audioElement = new Audio(url); } catch (e) { /* ignore */ }
+                    }
+                }).catch(()=>{});
+            } catch (e) { /* ignore */ }
         }
 
         ensureAudioContext() {
@@ -68,6 +78,10 @@
         playAlert(kind = 'beep') {
             if (!this.audioEnabled) return;
             try {
+                // Prefer audio file if present (more pleasant timbre)
+                if (this.audioElement && typeof this.audioElement.play === 'function') {
+                    try { this.audioElement.volume = Math.max(0, Math.min(1, this.audioVolume || 0.6)); this.audioElement.currentTime = 0; this.audioElement.play().catch(()=>{}); return; } catch(e) { /* fallback to tones */ }
+                }
                 if (kind === 'beep') {
                     this.playTone(880, 0.06, 'sine');
                 } else if (kind === 'notify') {
