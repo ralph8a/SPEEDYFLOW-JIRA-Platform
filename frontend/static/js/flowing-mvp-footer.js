@@ -1581,9 +1581,9 @@ class FlowingFooter {
         })()) || k;
 
         html += `
-          <div class="field-wrapper">
-            <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">${label}</label>
-            <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">${val}</div>
+          <div class="field-wrapper" style="display:flex;flex-direction:column;gap:6px;">
+            <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">${label}</label>
+            <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${val}</div>
           </div>
         `;
       });
@@ -1640,7 +1640,7 @@ class FlowingFooter {
         ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
 
         <!-- Essential Fields Grid (generated dynamically) -->
-        <div id="essentialFieldsGrid" class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+        <div id="essentialFieldsGrid" class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
           ${initialEssentialHTML}
         </div>
 
