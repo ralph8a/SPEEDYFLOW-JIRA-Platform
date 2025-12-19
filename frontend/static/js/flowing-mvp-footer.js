@@ -1204,48 +1204,52 @@ class FlowingFooter {
   renderAttachmentsForBalanced(issue) {
     try {
       // Prefer showing attachments in the RIGHT column / header preview.
-      // Do NOT inject attachments into the comments area (`attachmentsListFooter`) to avoid duplicates.
-      const listContainer = document.getElementById('attachmentsListRight') || document.getElementById('attachmentsListHeader');
-      if (!listContainer) return;
+      // Build a full list for the right column and a compact thumbnail strip for the header.
+      const rightContainer = document.getElementById('attachmentsListRight');
+      const headerContainer = document.getElementById('attachmentsListHeader');
+      if (!rightContainer && !headerContainer) return;
       const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
       // Debug: log attachments payload to help diagnose missing thumbnails
       console.log('🔍 [Footer] attachments payload for', issue.key, attachments);
       if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
       let html = '';
+      let thumbHtml = '';
       attachments.forEach(att => {
-        const url = att.content || att.self || att.url || (`/ api / issues / ${issue.key} /attachments/${att.id} `);
-        console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
+        const url = att.content || att.self || att.url || (`/api/issues/${issue.key}/attachments/${att.id}`);
+        console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
         const filename = att.filename || att.name || att.displayName || 'attachment';
         const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
         if (isImage) {
           html += `
-    < div class="attachment-item" >
-              <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
-                <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
-              </a>
-              <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
-                <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
-              </div>
-            </div >
+    <div class="attachment-item">
+      <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
+        <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
+      </a>
+      <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+        <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip ? SVGIcons.paperclip({ size: 14, className: 'inline-icon' }) : ''} <span>${filename}</span></a>
+        <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download ? SVGIcons.download({ size: 14, className: 'inline-icon' }) : ''}</a>
+      </div>
+    </div>
     `;
+          // compact thumbnail for header
+          thumbHtml += `<div class="attachment-thumb-compact" title="${filename}" style="width:40px;height:30px;border-radius:6px;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .18s ease;" onmouseenter="this.style.transform='scale(1.2)';this.style.zIndex=999;" onmouseleave="this.style.transform='scale(1)';this.style.zIndex=unset;" onclick="window.open('${url}','_blank')"><img src="${url}" alt="${filename}" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>`;
         } else {
           html += `
-    < div class="attachment-item" >
-              <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
-              <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
-            </div >
+    <div class="attachment-item">
+      <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip ? SVGIcons.paperclip({ size: 14, className: 'inline-icon' }) : ''} <span>${filename}</span></a>
+      <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download ? SVGIcons.download({ size: 14, className: 'inline-icon' }) : ''}</a>
+    </div>
     `;
+          // compact non-image thumb
+          const short = filename.length > 10 ? filename.slice(0, 8) + '…' : filename;
+          thumbHtml += `<div class="attachment-thumb-compact" title="${filename}" style="min-width:40px;height:30px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;padding:4px;background:#f3f4f6;color:#374151;font-size:11px;cursor:pointer;transition:transform .18s ease;" onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex=999;" onmouseleave="this.style.transform='scale(1)';this.style.zIndex=unset;" onclick="window.open('${url}','_blank')">${short}</div>`;
         }
       });
-      // Populate the chosen container (right column or header preview)
-      listContainer.innerHTML = html;
-      // Also mirror into the other preview containers (non-comments areas)
+
+      // Insert into right column (full) and header (compact thumbs)
       try {
-        const headerList = document.getElementById('attachmentsListHeader');
-        if (headerList && headerList !== listContainer) headerList.innerHTML = html;
-        const rightList = document.getElementById('attachmentsListRight');
-        if (rightList && rightList !== listContainer) rightList.innerHTML = html;
+        if (rightContainer) rightContainer.innerHTML = html;
+        if (headerContainer) headerContainer.innerHTML = thumbHtml;
       } catch (e) { /* ignore */ }
       // Description collapse now handled by native <details> element in the markup above; no JS required.
     } catch (e) {
@@ -1300,6 +1304,95 @@ class FlowingFooter {
     } catch (e) {
       console.warn('renderFooterAttachments error', e);
     }
+  }
+
+  // Show a confirmation banner in the footer header for applying small field recommendations
+  showFieldRecommendationBanner(fieldKey, fieldLabel, suggestedValue, meta = {}) {
+    try {
+      const container = document.getElementById('balancedContentContainer');
+      if (!container) return;
+      // remove existing banner
+      const existing = document.getElementById('flowingRecBanner');
+      if (existing) existing.remove();
+
+      const banner = document.createElement('div');
+      banner.id = 'flowingRecBanner';
+      banner.style.cssText = 'position:relative;margin:8px 0;padding:12px;border-radius:8px;background:linear-gradient(90deg,#fff,#f8fafc);border:1px solid #e6e6f0;display:flex;align-items:center;gap:12px;';
+      banner.innerHTML = `
+        <div style="flex:1;">
+          <div style="font-weight:700;color:#374151;">Change ${fieldLabel} to <span style=\"color:#4f46e5\">${suggestedValue}</span>?</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:4px;">This will update the field on the ticket. You can preview or cancel.</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button id="flowingRecCancel" style="padding:8px 10px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;">Cancel</button>
+          <button id="flowingRecApply" style="padding:8px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-weight:700;">Apply</button>
+        </div>
+      `;
+
+      // insert banner after description if present, else at top of balanced container
+      const desc = container.querySelector('.ticket-description-section');
+      if (desc && desc.parentNode) desc.parentNode.insertBefore(banner, desc.nextSibling);
+      else container.insertBefore(banner, container.firstChild);
+
+      document.getElementById('flowingRecCancel').addEventListener('click', () => banner.remove());
+      document.getElementById('flowingRecApply').addEventListener('click', async () => {
+        try {
+          // Attempt to use app API if present
+          if (window.app && typeof window.app.updateIssueField === 'function') {
+            await window.app.updateIssueField(window._flowingFooter?.context?.selectedIssue, fieldKey, suggestedValue, meta);
+            banner.remove();
+            // update UI: replace field value in grid if present
+            const fieldNodes = document.querySelectorAll('#essentialFieldsGrid .field-wrapper .field-input');
+            fieldNodes.forEach(node => {
+              if ((node.previousElementSibling || {}).textContent && (node.previousElementSibling.textContent || '').toLowerCase().includes(fieldLabel.toLowerCase())) {
+                node.textContent = suggestedValue;
+              }
+            });
+            console.log('✅ Applied recommendation via app.updateIssueField');
+            return;
+          }
+          // Fallback: mock apply (no server)
+          banner.querySelector('div').innerHTML = '<strong style="color:#10b981">Recommendation applied (local preview)</strong>';
+          setTimeout(() => banner.remove(), 1600);
+        } catch (err) {
+          console.error('Could not apply recommendation', err);
+          banner.querySelector('div').innerHTML = '<strong style="color:#ef4444">Failed to apply recommendation</strong>';
+          setTimeout(() => banner.remove(), 2200);
+        }
+      });
+    } catch (e) { console.warn('showFieldRecommendationBanner error', e); }
+  }
+
+  // Show a small contact card banner near header to copy reporter info
+  showContactCard(name, email) {
+    try {
+      const header = document.getElementById('flowingHeader') || document.getElementById('flowingRoot');
+      if (!header) return;
+      // remove existing
+      const existing = document.getElementById('flowingContactCard');
+      if (existing) existing.remove();
+      const card = document.createElement('div');
+      card.id = 'flowingContactCard';
+      card.style.cssText = 'position:absolute;right:16px;top:56px;padding:10px;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 6px 18px rgba(31,41,55,0.06);z-index:1200;min-width:220px;';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#818cf8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;">${(name || '')[0] || '?'}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;color:#374151">${name || 'Informer'}</div>
+            <div style="font-size:12px;color:#6b7280">${email || ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="flowingContactCopy" style="padding:6px 8px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;">Copy email</button>
+          <button id="flowingContactClose" style="padding:6px 8px;border-radius:6px;border:none;background:#f3f4f6;">Close</button>
+        </div>
+      `;
+      header.appendChild(card);
+      document.getElementById('flowingContactClose').addEventListener('click', () => card.remove());
+      document.getElementById('flowingContactCopy').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(email || ''); document.getElementById('flowingContactCopy').textContent = 'Copied'; setTimeout(() => { if (card) card.remove(); }, 900); } catch (e) { console.warn('Clipboard copy failed', e); }
+      });
+    } catch (e) { console.warn('showContactCard error', e); }
   }
 
   setupFooterAttachmentButton() {
@@ -1429,185 +1522,185 @@ class FlowingFooter {
       return null;
     };
 
-    // Format field value (same logic as right-sidebar)
-    const formatValue = (value) => {
-      if (!value) return '';
-      if (typeof value === 'string') return value;
-      if (value.name) return value.name;
-      if (value.displayName) return value.displayName;
-      if (value.value) return value.value;
-      if (Array.isArray(value)) {
-        return value.map(v => v.name || v.value || v).join(', ');
-      }
-      return String(value);
-    };
+      // Format field value (same logic as right-sidebar)
+      const formatValue = (value) => {
+        if (!value) return '';
+        if (typeof value === 'string') return value;
+        if (value.name) return value.name;
+        if (value.displayName) return value.displayName;
+        if (value.value) return value.value;
+        if (Array.isArray(value)) {
+          return value.map(v => v.name || v.value || v).join(', ');
+        }
+        return String(value);
+      };
 
-    // Extract key fields from multiple sources (same as right-sidebar)
-    const summary = issue.summary || getField('summary') || 'No title';
-    // If no description provided, keep empty so we can hide the section
-    const rawDescription = issue.description || getField('description') || '';
-    // Helper to escape HTML
-    const escapeHtml = (str) => String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-    // Normalize line endings and remove excessive blank lines and leading breaks
-    const normalizeDescription = (txt) => {
-      if (!txt) return '';
-      let s = String(txt).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      // Remove leading blank lines/spaces
-      s = s.replace(/^\s*\n+/, '');
-      // Collapse 3+ consecutive newlines to two (paragraph)
-      s = s.replace(/\n{3,}/g, '\n\n');
-      // Trim trailing whitespace
-      s = s.replace(/\s+$/g, '');
-      return s;
-    };
-    const cleanedDescription = normalizeDescription(rawDescription);
-    // Convert to safe HTML with <br> for line breaks so layout is consistent
-    const description = cleanedDescription ? escapeHtml(cleanedDescription).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') : '';
+      // Extract key fields from multiple sources (same as right-sidebar)
+      const summary = issue.summary || getField('summary') || 'No title';
+      // If no description provided, keep empty so we can hide the section
+      const rawDescription = issue.description || getField('description') || '';
+      // Helper to escape HTML
+      const escapeHtml = (str) => String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      // Normalize line endings and remove excessive blank lines and leading breaks
+      const normalizeDescription = (txt) => {
+        if (!txt) return '';
+        let s = String(txt).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        // Remove leading blank lines/spaces
+        s = s.replace(/^\s*\n+/, '');
+        // Collapse 3+ consecutive newlines to two (paragraph)
+        s = s.replace(/\n{3,}/g, '\n\n');
+        // Trim trailing whitespace
+        s = s.replace(/\s+$/g, '');
+        return s;
+      };
+      const cleanedDescription = normalizeDescription(rawDescription);
+      // Convert to safe HTML with <br> for line breaks so layout is consistent
+      const description = cleanedDescription ? escapeHtml(cleanedDescription).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') : '';
 
-    // Standard fields
-    const priority = formatValue(issue.priority || getField('priority'));
-    const assignee = formatValue(issue.assignee || getField('assignee'));
-    const status = formatValue(issue.status || getField('status'));
-    const reporter = formatValue(issue.reporter || getField('reporter'));
-    const created = issue.created || getField('created');
-    const updated = issue.updated || getField('updated');
+      // Standard fields
+      const priority = formatValue(issue.priority || getField('priority'));
+      const assignee = formatValue(issue.assignee || getField('assignee'));
+      const status = formatValue(issue.status || getField('status'));
+      const reporter = formatValue(issue.reporter || getField('reporter'));
+      const created = issue.created || getField('created');
+      const updated = issue.updated || getField('updated');
 
-    // Custom fields - Multiple field mappings (from CUSTOM_FIELDS_REFERENCE.json)
-    const requestType = formatValue(getField('customfield_10010'));
+      // Custom fields - Multiple field mappings (from CUSTOM_FIELDS_REFERENCE.json)
+      const requestType = formatValue(getField('customfield_10010'));
 
-    // Criticidad - try multiple possible field IDs
-    const criticidad = formatValue(getField('customfield_10125') || getField('customfield_10037'));
+      // Criticidad - try multiple possible field IDs
+      const criticidad = formatValue(getField('customfield_10125') || getField('customfield_10037'));
 
-    // Tipo de Solicitud
-    const tipoSolicitud = formatValue(getField('customfield_10156'));
+      // Tipo de Solicitud
+      const tipoSolicitud = formatValue(getField('customfield_10156'));
 
-    // Plataforma - try multiple possible field IDs
-    const plataforma = formatValue(getField('customfield_10169') || getField('customfield_10129'));
+      // Plataforma - try multiple possible field IDs
+      const plataforma = formatValue(getField('customfield_10169') || getField('customfield_10129'));
 
-    // Área - try multiple possible field IDs
-    const area = formatValue(getField('customfield_10168') || getField('customfield_10130'));
+      // Área - try multiple possible field IDs
+      const area = formatValue(getField('customfield_10168') || getField('customfield_10130'));
 
-    // Empresa - try multiple possible field IDs
-    const empresa = formatValue(getField('customfield_10143') || getField('customfield_10131'));
+      // Empresa - try multiple possible field IDs
+      const empresa = formatValue(getField('customfield_10143') || getField('customfield_10131'));
 
-    // Producto - try multiple possible field IDs
-    const producto = formatValue(getField('customfield_10144') || getField('customfield_10132'));
+      // Producto - try multiple possible field IDs
+      const producto = formatValue(getField('customfield_10144') || getField('customfield_10132'));
 
-    // Contact info - try multiple possible field IDs
-    const email = formatValue(getField('customfield_10141') || getField('customfield_10133'));
-    const phone = formatValue(getField('customfield_10142') || getField('customfield_10134'));
+      // Contact info - try multiple possible field IDs
+      const email = formatValue(getField('customfield_10141') || getField('customfield_10133'));
+      const phone = formatValue(getField('customfield_10142') || getField('customfield_10134'));
 
-    // Additional info fields
-    const pais = formatValue(getField('customfield_10165') || getField('customfield_10166'));
-    const paisCodigo = formatValue(getField('customfield_10167'));
-    const notasAnalisis = formatValue(getField('customfield_10149'));
-    const resolucion = formatValue(getField('customfield_10151'));
-    const reporter2 = formatValue(getField('customfield_10111')); // Reporter/Informador
+      // Additional info fields
+      const pais = formatValue(getField('customfield_10165') || getField('customfield_10166'));
+      const paisCodigo = formatValue(getField('customfield_10167'));
+      const notasAnalisis = formatValue(getField('customfield_10149'));
+      const resolucion = formatValue(getField('customfield_10151'));
+      const reporter2 = formatValue(getField('customfield_10111')); // Reporter/Informador
 
-    // Format dates
-    const formatDate = (dateStr) => {
-      if (!dateStr) return '';
-      const date = new Date(dateStr);
-      return date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    };
+      // Format dates
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
 
-    // Collect long custom fields (strings > 120 chars) to show as full-width blocks
-    let longCustomFieldsHTML = '';
-    try {
-      const fld = issue.fields || {};
-      Object.keys(fld).forEach(k => {
-        if (!/^customfield_/.test(k)) return;
-        const raw = fld[k];
-        const val = formatValue(raw);
-        if (val && val.length > 120) {
-          const label = k.replace('customfield_', 'CF-');
-          longCustomFieldsHTML += `
+      // Collect long custom fields (strings > 120 chars) to show as full-width blocks
+      let longCustomFieldsHTML = '';
+      try {
+        const fld = issue.fields || {};
+        Object.keys(fld).forEach(k => {
+          if (!/^customfield_/.test(k)) return;
+          const raw = fld[k];
+          const val = formatValue(raw);
+          if (val && val.length > 120) {
+            const label = k.replace('customfield_', 'CF-');
+            longCustomFieldsHTML += `
     < div style = "grid-column: 1 / -1;" >
               <label style="font-size: 10px; font-weight: 700; color: #9ca3af; display:block; margin-bottom:6px;">${label}</label>
               <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${val}</div>
             </div >
     `;
-        }
-      });
-    } catch (e) { console.warn('Could not collect long custom fields', e); }
-
-    // Build essential fields HTML dynamically using available mappings when possible
-    const buildEssentialFieldsHTML = (mapping) => {
-      const keys = [];
-      // preferred order: form_fields, contact_info, system_fields
-      try {
-        if (mapping && mapping.categories) {
-          const cats = mapping.categories;
-          ['form_fields', 'contact_info', 'system_fields'].forEach(cat => {
-            const f = cats[cat] && cats[cat].fields ? Object.keys(cats[cat].fields) : [];
-            f.forEach(k => { if (!keys.includes(k)) keys.push(k); });
-          });
-        }
-      } catch (e) { /* ignore */ }
-
-      // ensure common core fields are present
-      ['priority', 'assignee', 'status', 'reporter', 'email', 'phone', 'summary'].forEach(k => { if (!keys.includes(k)) keys.push(k); });
-
-      let html = '';
-      // render up to many fields into the grid; filter out very long fields (handled earlier)
-      keys.forEach(k => {
-        let val = '';
-        if (k === 'priority') val = priority;
-        else if (k === 'assignee') val = assignee;
-        else if (k === 'status') val = status;
-        else if (k === 'reporter') val = reporter;
-        else val = formatValue(getField(k));
-        if (!val) return; // skip empty
-        // label from mapping if available
-        const label = (mapping && mapping.categories && (function () {
-          for (const cat of ['form_fields', 'contact_info', 'system_fields']) {
-            const f = mapping.categories[cat] && mapping.categories[cat].fields;
-            if (f && f[k] && f[k].label) return f[k].label;
           }
-          return k.replace(/_/g, ' ').replace(/customfield /g, 'CF ').replace(/customfield_/, 'CF-');
-        })()) || k;
+        });
+      } catch (e) { console.warn('Could not collect long custom fields', e); }
 
-        html += `
+      // Build essential fields HTML dynamically using available mappings when possible
+      const buildEssentialFieldsHTML = (mapping) => {
+        const keys = [];
+        // preferred order: form_fields, contact_info, system_fields
+        try {
+          if (mapping && mapping.categories) {
+            const cats = mapping.categories;
+            ['form_fields', 'contact_info', 'system_fields'].forEach(cat => {
+              const f = cats[cat] && cats[cat].fields ? Object.keys(cats[cat].fields) : [];
+              f.forEach(k => { if (!keys.includes(k)) keys.push(k); });
+            });
+          }
+        } catch (e) { /* ignore */ }
+
+        // ensure common core fields are present
+        ['priority', 'assignee', 'status', 'reporter', 'email', 'phone', 'summary'].forEach(k => { if (!keys.includes(k)) keys.push(k); });
+
+        let html = '';
+        // render up to many fields into the grid; filter out very long fields (handled earlier)
+        keys.forEach(k => {
+          let val = '';
+          if (k === 'priority') val = priority;
+          else if (k === 'assignee') val = assignee;
+          else if (k === 'status') val = status;
+          else if (k === 'reporter') val = reporter;
+          else val = formatValue(getField(k));
+          if (!val) return; // skip empty
+          // label from mapping if available
+          const label = (mapping && mapping.categories && (function () {
+            for (const cat of ['form_fields', 'contact_info', 'system_fields']) {
+              const f = mapping.categories[cat] && mapping.categories[cat].fields;
+              if (f && f[k] && f[k].label) return f[k].label;
+            }
+            return k.replace(/_/g, ' ').replace(/customfield /g, 'CF ').replace(/customfield_/, 'CF-');
+          })()) || k;
+
+          html += `
           <div class="field-wrapper" style="display:flex;flex-direction:column;gap:6px;">
             <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">${label}</label>
             <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${val}</div>
           </div>
         `;
-      });
-      return html;
-    };
+        });
+        return html;
+      };
 
-    // Try to obtain mapping from global or fetch fallback (non-blocking)
-    let mappingObj = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
-    const fetchMappingIfNeeded = async () => {
-      if (mappingObj) return mappingObj;
-      try {
-        const resp = await fetch('/data/CUSTOM_FIELDS_REFERENCE.json');
-        if (resp.ok) { mappingObj = await resp.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
-      } catch (e) { /* ignore */ }
-      try {
-        const resp2 = await fetch('/static/data/CUSTOM_FIELDS_REFERENCE.json');
-        if (resp2.ok) { mappingObj = await resp2.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
-      } catch (e) { /* ignore */ }
-      return null;
-    };
+      // Try to obtain mapping from global or fetch fallback (non-blocking)
+      let mappingObj = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
+      const fetchMappingIfNeeded = async () => {
+        if (mappingObj) return mappingObj;
+        try {
+          const resp = await fetch('/data/CUSTOM_FIELDS_REFERENCE.json');
+          if (resp.ok) { mappingObj = await resp.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+        } catch (e) { /* ignore */ }
+        try {
+          const resp2 = await fetch('/static/data/CUSTOM_FIELDS_REFERENCE.json');
+          if (resp2.ok) { mappingObj = await resp2.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+        } catch (e) { /* ignore */ }
+        return null;
+      };
 
-    // Initial essential fields HTML (best-effort without mapping)
-    let initialEssentialHTML = buildEssentialFieldsHTML(mappingObj || {});
+      // Initial essential fields HTML (best-effort without mapping)
+      let initialEssentialHTML = buildEssentialFieldsHTML(mappingObj || {});
 
-    // TWO-COLUMN LAYOUT WITH ATTACHMENTS (dynamic fields inserted)
-    container.innerHTML = `
+      // TWO-COLUMN LAYOUT WITH ATTACHMENTS (dynamic fields inserted)
+      container.innerHTML = `
       ${description ? `
       <!-- Description Section (Full Width) - use native <details> so collapse is CSS-driven and simpler -->
       <details open class="ticket-description-section" style="padding: 0; background: transparent; border-bottom: 1px solid rgba(59, 130, 246, 0.08);">
@@ -1623,7 +1716,7 @@ class FlowingFooter {
         </div>
       </details>
       ` : ''
-      }
+        }
       
       <div class="purple-divider" style="margin:0"></div>
 
@@ -1810,215 +1903,215 @@ class FlowingFooter {
   `;
 
 
-  }
-
-  adjustContentPadding(isCollapsed) {
-    const kanbanView = document.getElementById('kanbanView');
-    const boardWrapper = document.querySelector('.board-wrapper');
-    const rightSidebar = document.getElementById('rightSidebar');
-
-    try {
-      if (isCollapsed) {
-        // When collapsed, keep a small reserved area matching collapsed footer
-        const collapsedHeight = 80; // matches collapsed padding in CSS
-        const padding = `${collapsedHeight}px`;
-        if (kanbanView) kanbanView.style.paddingBottom = padding;
-        if (boardWrapper) boardWrapper.style.paddingBottom = padding;
-        if (rightSidebar) rightSidebar.style.paddingBottom = padding;
-        return;
-      }
-
-      // When expanded, compute footer height and reserve that space so the board isn't covered
-      const footerEl = document.getElementById('flowingFooter') || this.footer;
-      let footerHeight = 300; // sensible default
-      try {
-        if (footerEl) footerHeight = Math.round(footerEl.getBoundingClientRect().height);
-        else {
-          const cssH = getComputedStyle(document.documentElement).getPropertyValue('--flowing-footer-height');
-          if (cssH) footerHeight = parseInt(cssH, 10) || footerHeight;
-        }
-      } catch (e) { /* ignore */ }
-
-      // Add small buffer so elements don't touch footer border
-      const paddingExpanded = `${Math.max(footerHeight + 16, 200)}px`;
-      if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
-      if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
-      if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
-    } catch (e) {
-      // Fallback conservative padding
-      const fallback = isCollapsed ? '80px' : '300px';
-      if (kanbanView) kanbanView.style.paddingBottom = fallback;
-      if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
-      if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
     }
-  }
+
+    adjustContentPadding(isCollapsed) {
+      const kanbanView = document.getElementById('kanbanView');
+      const boardWrapper = document.querySelector('.board-wrapper');
+      const rightSidebar = document.getElementById('rightSidebar');
+
+      try {
+        if (isCollapsed) {
+          // When collapsed, keep a small reserved area matching collapsed footer
+          const collapsedHeight = 80; // matches collapsed padding in CSS
+          const padding = `${collapsedHeight}px`;
+          if (kanbanView) kanbanView.style.paddingBottom = padding;
+          if (boardWrapper) boardWrapper.style.paddingBottom = padding;
+          if (rightSidebar) rightSidebar.style.paddingBottom = padding;
+          return;
+        }
+
+        // When expanded, compute footer height and reserve that space so the board isn't covered
+        const footerEl = document.getElementById('flowingFooter') || this.footer;
+        let footerHeight = 300; // sensible default
+        try {
+          if (footerEl) footerHeight = Math.round(footerEl.getBoundingClientRect().height);
+          else {
+            const cssH = getComputedStyle(document.documentElement).getPropertyValue('--flowing-footer-height');
+            if (cssH) footerHeight = parseInt(cssH, 10) || footerHeight;
+          }
+        } catch (e) { /* ignore */ }
+
+        // Add small buffer so elements don't touch footer border
+        const paddingExpanded = `${Math.max(footerHeight + 16, 200)}px`;
+        if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
+        if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
+        if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
+      } catch (e) {
+        // Fallback conservative padding
+        const fallback = isCollapsed ? '80px' : '300px';
+        if (kanbanView) kanbanView.style.paddingBottom = fallback;
+        if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
+        if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
+      }
+    }
 
   async sendMessage() {
-    if (this.isLoading) return;
+      if (this.isLoading) return;
 
-    const message = this.input?.value.trim();
-    if (!message) return;
+      const message = this.input?.value.trim();
+      if (!message) return;
 
-    // Clear input
-    this.input.value = '';
-    this.input.style.height = 'auto';
+      // Clear input
+      this.input.value = '';
+      this.input.style.height = 'auto';
 
-    // Add user message
-    this.addMessage('user', message);
+      // Add user message
+      this.addMessage('user', message);
 
-    // Show loading
-    this.isLoading = true;
-    this.sendBtn.disabled = true;
-    const loadingMsg = this.addMessage('assistant', '', true);
+      // Show loading
+      this.isLoading = true;
+      this.sendBtn.disabled = true;
+      const loadingMsg = this.addMessage('assistant', '', true);
 
-    try {
-      // Send to backend
-      const response = await fetch('/api/copilot/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: message,
-          context: this.context
-        })
-      });
+      try {
+        // Send to backend
+        const response = await fetch('/api/copilot/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: message,
+            context: this.context
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText} `);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText} `);
+        }
+
+        const data = await response.json();
+
+        // Remove loading message
+        loadingMsg?.remove();
+
+        // Add assistant response
+        this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
+
+      } catch (error) {
+        console.error('❌ Flowing MVP error:', error);
+        loadingMsg?.remove();
+        this.addMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
+      } finally {
+        this.isLoading = false;
+        this.sendBtn.disabled = false;
       }
-
-      const data = await response.json();
-
-      // Remove loading message
-      loadingMsg?.remove();
-
-      // Add assistant response
-      this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
-
-    } catch (error) {
-      console.error('❌ Flowing MVP error:', error);
-      loadingMsg?.remove();
-      this.addMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
-    } finally {
-      this.isLoading = false;
-      this.sendBtn.disabled = false;
     }
-  }
 
-  addMessage(role, content, isLoading = false) {
-    if (!this.messagesContainer) return null;
+    addMessage(role, content, isLoading = false) {
+      if (!this.messagesContainer) return null;
 
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `flowing - message ${role}${isLoading ? ' loading' : ''} `;
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `flowing - message ${role}${isLoading ? ' loading' : ''} `;
 
-    const avatar = role === 'user' ? '👤' : 'SF';
-    const avatarClass = role === 'user' ? '' : 'copilot-sf-logo';
+      const avatar = role === 'user' ? '👤' : 'SF';
+      const avatarClass = role === 'user' ? '' : 'copilot-sf-logo';
 
-    messageDiv.innerHTML = `
+      messageDiv.innerHTML = `
     < div class="message-avatar ${avatarClass}" > ${avatar}</div >
       <div class="message-content">
         ${isLoading ? '<p>Thinking...</p>' : this.formatMessage(content)}
       </div>
   `;
 
-    this.messagesContainer.appendChild(messageDiv);
-    this.scrollToBottom();
+      this.messagesContainer.appendChild(messageDiv);
+      this.scrollToBottom();
 
-    return messageDiv;
-  }
-
-  formatMessage(content) {
-    // Convert markdown-style formatting to HTML
-    let formatted = content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>');
-
-    // Convert bullet points
-    if (formatted.includes('- ') || formatted.includes('• ')) {
-      const lines = formatted.split('</p><p>');
-      formatted = lines.map(line => {
-        if (line.includes('- ') || line.includes('• ')) {
-          const items = line.split(/<br>/).filter(l => l.trim());
-          const listItems = items.map(item => {
-            const cleaned = item.replace(/^[•\-]\s*/, '').trim();
-            return cleaned ? `< li > ${cleaned}</li > ` : '';
-          }).join('');
-          return `< ul > ${listItems}</ul > `;
-        }
-        return line;
-      }).join('</p><p>');
+      return messageDiv;
     }
 
-    // Wrap in paragraph if not already wrapped
-    if (!formatted.startsWith('<p>') && !formatted.startsWith('<ul>')) {
-      formatted = `< p > ${formatted}</p > `;
+    formatMessage(content) {
+      // Convert markdown-style formatting to HTML
+      let formatted = content
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+      // Convert bullet points
+      if (formatted.includes('- ') || formatted.includes('• ')) {
+        const lines = formatted.split('</p><p>');
+        formatted = lines.map(line => {
+          if (line.includes('- ') || line.includes('• ')) {
+            const items = line.split(/<br>/).filter(l => l.trim());
+            const listItems = items.map(item => {
+              const cleaned = item.replace(/^[•\-]\s*/, '').trim();
+              return cleaned ? `< li > ${cleaned}</li > ` : '';
+            }).join('');
+            return `< ul > ${listItems}</ul > `;
+          }
+          return line;
+        }).join('</p><p>');
+      }
+
+      // Wrap in paragraph if not already wrapped
+      if (!formatted.startsWith('<p>') && !formatted.startsWith('<ul>')) {
+        formatted = `< p > ${formatted}</p > `;
+      }
+
+      return formatted;
     }
 
-    return formatted;
-  }
-
-  scrollToBottom() {
-    if (this.messagesContainer) {
-      this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    scrollToBottom() {
+      if (this.messagesContainer) {
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+      }
     }
-  }
 
-  // Public API for external usage
-  askAboutTicket(issueKey) {
-    this.expand();
-    this.input.value = `Tell me about ticket ${issueKey} `;
-    this.input.focus();
-  }
+    // Public API for external usage
+    askAboutTicket(issueKey) {
+      this.expand();
+      this.input.value = `Tell me about ticket ${issueKey} `;
+      this.input.focus();
+    }
 
-  suggestActions(issueKey) {
-    this.expand();
-    this.input.value = `What should I do with ticket ${issueKey} ? `;
-    this.sendMessage();
-  }
+    suggestActions(issueKey) {
+      this.expand();
+      this.input.value = `What should I do with ticket ${issueKey} ? `;
+      this.sendMessage();
+    }
 
-  explainSLA(issueKey) {
-    this.expand();
-    this.input.value = `Explain the SLA status for ${issueKey}`;
-    this.sendMessage();
-  }
+    explainSLA(issueKey) {
+      this.expand();
+      this.input.value = `Explain the SLA status for ${issueKey}`;
+      this.sendMessage();
+    }
 
   /**
    * Mostrar sugerencias contextuales usando FlowingContext
    * Integra las capacidades de IA real del sistema Flowing
    */
   async showContextualSuggestions() {
-    if (!window.FlowingContext) {
-      console.warn('FlowingContext not available');
-      return;
-    }
-
-    try {
-      // Obtener sugerencias contextuales
-      const suggestions = await window.FlowingContext.getSuggestions();
-
-      if (!suggestions || !suggestions.suggestions || suggestions.suggestions.length === 0) {
+      if (!window.FlowingContext) {
+        console.warn('FlowingContext not available');
         return;
       }
 
-      // Mostrar mensaje con sugerencias
-      const suggestionsList = suggestions.suggestions.map(s =>
-        `• ${s.icon || '💡'} ${s.title} `
-      ).join('\n');
+      try {
+        // Obtener sugerencias contextuales
+        const suggestions = await window.FlowingContext.getSuggestions();
 
-      this.addMessage(
-        `** ${suggestions.title || 'Sugerencias Contextuales'}**\n\n${suggestionsList} \n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
-        'assistant'
-      );
-    } catch (error) {
-      console.error('Error showing contextual suggestions:', error);
+        if (!suggestions || !suggestions.suggestions || suggestions.suggestions.length === 0) {
+          return;
+        }
+
+        // Mostrar mensaje con sugerencias
+        const suggestionsList = suggestions.suggestions.map(s =>
+          `• ${s.icon || '💡'} ${s.title} `
+        ).join('\n');
+
+        this.addMessage(
+          `** ${suggestions.title || 'Sugerencias Contextuales'}**\n\n${suggestionsList} \n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
+          'assistant'
+        );
+      } catch (error) {
+        console.error('Error showing contextual suggestions:', error);
+      }
     }
   }
-}
 
-// Exponer FlowingContext globalmente para integración con footer
-if (typeof FlowingContext !== 'undefined') {
+  // Exponer FlowingContext globalmente para integración con footer
+  if(typeof FlowingContext !== 'undefined') {
   // prefer non-deprecated name
   window._FlowingContext = FlowingContext;
   // provide deprecated alias with warning
