@@ -583,6 +583,19 @@ class FlowingFooter {
     } else if (viewName === 'balanced') {
       if (chatView) { chatView.style.display = 'none'; chatView.setAttribute('aria-hidden', 'true'); }
       if (balancedView) { balancedView.style.display = 'block'; balancedView.setAttribute('aria-hidden', 'false'); balancedView.focus && balancedView.focus(); }
+
+      // Hide header/inline IA chat UI pieces that should not be visible while
+      // viewing a ticket in balanced view (suggestion badge, floating launcher, composer remnants)
+      try {
+        if (this.suggestionElement) this.suggestionElement.style.display = 'none';
+        const composer = this.footer?.querySelector('.flowing-composer');
+        if (composer) composer.style.display = 'none';
+
+        // Common possible floating launcher classes (legacy/prototypes) — hide if present
+        ['flowing-floating', 'ff-floating-launcher', 'flowing-launcher'].forEach(cls => {
+          document.querySelectorAll('.' + cls).forEach(el => { try { el.style.display = 'none'; } catch (e) {} });
+        });
+      } catch (e) { /* ignore errors when hiding optional nodes */ }
     }
   }
 
