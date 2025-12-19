@@ -5,6 +5,22 @@ body {
   transition: padding-bottom 0.25s ease;
 }
 
+/* Flowing MVP opacity/transparency manager variables (terciarias)
+   These allow runtime control from JS or a theming manager. */
+:root {
+  --ff-glass-backdrop: rgba(255, 255, 255, 0.85);
+  --ff-backdrop-blur: blur(12px);
+  --ff-border: rgba(59, 130, 246, 0.2);
+  --ff-shadow-1: 0 -8px 32px rgba(31, 38, 135, 0.15);
+  --ff-shadow-2: 0 -4px 16px rgba(0, 0, 0, 0.1);
+  --ff-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --ff-purple-splash-1: rgba(139, 92, 246, 0.06);
+  --ff-purple-splash-2: rgba(139, 92, 246, 0.03);
+  --ff-glass-overlay: rgba(255, 255, 255, 0.56);
+  --ff-blue-splash: rgba(59, 130, 246, 0.1);
+  --ff-card-bg: rgba(255, 255, 255, 0.95);
+}
+
 /* When Flowing footer is expanded, push main content up to leave room */
 /* Disabled push effect: do not translate main content when footer expands. */
 body.flowing-footer-expanded #kanbanView,
@@ -147,14 +163,11 @@ body:has(.flowing-footer.collapsed) #listView {
   bottom: 0;
   left: 0;
   /* Glassmorphism background using CSS variables (controlled by transparency manager) */
-  background: var(--glass-backdrop, rgba(255, 255, 255, 0.85));
-  backdrop-filter: var(--backdrop-blur, blur(12px));
-  -webkit-backdrop-filter: var(--backdrop-blur, blur(12px));
-  border-top: 1px solid var(--border, rgba(59, 130, 246, 0.2));
-  box-shadow:
-    0 -8px 32px rgba(31, 38, 135, 0.15),
-    0 -4px 16px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: var(--ff-glass-backdrop, var(--glass-backdrop, rgba(255, 255, 255, 0.85)));
+  backdrop-filter: var(--ff-backdrop-blur, var(--backdrop-blur, blur(12px)));
+  -webkit-backdrop-filter: var(--ff-backdrop-blur, var(--backdrop-blur, blur(12px)));
+  border-top: 1px solid var(--ff-border, var(--border, rgba(59, 130, 246, 0.2)));
+  box-shadow: var(--ff-shadow-1, 0 -8px 32px rgba(31, 38, 135, 0.15)), var(--ff-shadow-2, 0 -4px 16px rgba(0, 0, 0, 0.1)), var(--ff-shadow-inset, inset 0 1px 0 rgba(255, 255, 255, 0.5));
   z-index: var(--z-modal, 1000);
   transition: all 0.4s var(--transition-ease, cubic-bezier(0.4, 0, 0.2, 1));
   max-height: 60vh;
@@ -202,7 +215,7 @@ body.theme-dark .flowing-footer {
   cursor: pointer;
   transition: all var(--transition-base, 0.25s) ease;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: radial-gradient(circle at 8% 30%, rgba(139, 92, 246, 0.06) 0%, rgba(139, 92, 246, 0.03) 18%, transparent 35%), rgba(255, 255, 255, 0.56);
+  background: radial-gradient(circle at 8% 30%, var(--ff-purple-splash-1, rgba(139, 92, 246, 0.06)) 0%, var(--ff-purple-splash-2, rgba(139, 92, 246, 0.03)) 18%, transparent 35%), var(--ff-glass-overlay, rgba(255, 255, 255, 0.56));
   backdrop-filter: blur(10px) saturate(1.02);
 }
 
@@ -214,7 +227,7 @@ body.theme-dark .flowing-footer {
 [data-theme="dark"] .flowing-header,
 body.theme-dark .flowing-footer .flowing-header {
   border-bottom-color: rgba(255, 255, 255, 0.06);
-  background: radial-gradient(circle at 8% 30%, rgba(139, 92, 246, 0.06) 0%, rgba(139, 92, 246, 0.03) 18%, transparent 35%), rgba(17, 24, 39, 0.72);
+  background: radial-gradient(circle at 8% 30%, var(--ff-purple-splash-1, rgba(139, 92, 246, 0.06)) 0%, var(--ff-purple-splash-2, rgba(139, 92, 246, 0.03)) 18%, transparent 35%), rgba(17, 24, 39, 0.72);
   backdrop-filter: blur(10px) saturate(1.04);
 }
 
