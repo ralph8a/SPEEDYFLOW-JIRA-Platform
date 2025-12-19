@@ -347,19 +347,10 @@ body.flowing-balanced-active .board-wrapper {
   background-clip: padding-box;
 }
 
-/* Hide long description and any duplicate description block inside balanced view */
-.flowing-footer.balanced-active .ticket-description-section,
-.flowing-footer.balanced-active .ticket-description-content,
-.flowing-footer.balanced-active .ticket-description-section summary {
-  display: none !important;
-}
+/* In balanced view we KEEP long description and collapse chevron visible
+   (user requested these not be hidden). Any hiding of chat-only controls
+   remains handled separately. */
 
-/* Ensure collapse button/chevron hidden defensively */
-.flowing-footer.balanced-active #flowingToggleHit,
-.flowing-footer.balanced-active .flowing-toggle-btn,
-.flowing-footer.balanced-active .btn-footer-chevron {
-  display: none !important;
-}
 
 .ticket-info-header.hidden {
   display: none;
