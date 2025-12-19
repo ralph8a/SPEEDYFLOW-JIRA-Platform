@@ -73,7 +73,7 @@ class FlowingFooter {
       }
     }
 
-    
+
 
     // Normalize footer DOM: ensure a compact, consistent layout while preserving all functional IDs
     try {
@@ -190,7 +190,7 @@ class FlowingFooter {
     this.startSuggestionRotation();
 
     // Initialize audio controls (sound alerts)
-    try { this.initAudio(); } catch (e) { /* ignore */ }
+    try { window.FlowingAudio && window.FlowingAudio.attachControls && window.FlowingAudio.attachControls(); } catch (e) { /* ignore */ }
 
     // Ensure footer responds to sidebar collapse/expand events
     try {
@@ -244,7 +244,7 @@ class FlowingFooter {
         const activateToggle = (e) => {
           // ignore if event is a keyboard navigation (handled below)
           this.toggle();
-          try { this.playAlert('beep'); } catch (ee) { }
+          try { window.FlowingAudio && window.FlowingAudio.playAlert && window.FlowingAudio.playAlert('beep'); } catch (ee) { }
           try { if (this.toggleBtn) { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } } catch (err) { }
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
         };
@@ -272,7 +272,7 @@ class FlowingFooter {
 
         const activateBtn = (ev) => {
           this.toggle();
-          try { this.playAlert('beep'); } catch (ee) { }
+          try { window.FlowingAudio && window.FlowingAudio.playAlert && window.FlowingAudio.playAlert('beep'); } catch (ee) { }
           try { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } catch (e) { }
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
         };
@@ -305,81 +305,7 @@ class FlowingFooter {
     } catch (e) { /* ignore */ }
   }
 
-  // Audio helpers (moved here so methods are part of class, not inside init())
-  initAudio() {
-    try {
-      this.audioCtx = null;
-      this.audioEnabled = localStorage.getItem('flowing_sound_enabled') !== '0';
-      this.audioVolume = parseFloat(localStorage.getItem('flowing_sound_volume') || '0.6');
-      // bind UI controls if present
-      const soundBtn = document.getElementById('flowingSoundBtn');
-      const soundVol = document.getElementById('flowingSoundVol');
-      if (soundBtn) {
-        soundBtn.textContent = this.audioEnabled ? '🔔' : '🔕';
-        soundBtn.title = this.audioEnabled ? 'Sound enabled' : 'Sound muted';
-        soundBtn.addEventListener('click', () => {
-          this.audioEnabled = !this.audioEnabled;
-          localStorage.setItem('flowing_sound_enabled', this.audioEnabled ? '1' : '0');
-          soundBtn.textContent = this.audioEnabled ? '🔔' : '🔕';
-          soundBtn.title = this.audioEnabled ? 'Sound enabled' : 'Sound muted';
-          this.playAlert('beep');
-        });
-      }
-      if (soundVol) {
-        soundVol.value = this.audioVolume;
-        soundVol.addEventListener('input', (e) => {
-          this.audioVolume = parseFloat(e.target.value || 0.6);
-          localStorage.setItem('flowing_sound_volume', String(this.audioVolume));
-        });
-      }
-    } catch (e) { console.warn('initAudio error', e); }
-  }
 
-  ensureAudioContext() {
-    try {
-      if (!this.audioEnabled) return null;
-      if (!this.audioCtx) {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return null;
-        this.audioCtx = new Ctx();
-      }
-      return this.audioCtx;
-    } catch (e) { return null; }
-  }
-
-  playTone(frequency = 880, duration = 0.08, type = 'sine') {
-    try {
-      const ctx = this.ensureAudioContext();
-      if (!ctx) return;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(frequency, ctx.currentTime);
-      g.gain.setValueAtTime(Math.max(0, Math.min(1, this.audioVolume || 0.6)), ctx.currentTime);
-      o.connect(g);
-      g.connect(ctx.destination);
-      const now = ctx.currentTime;
-      o.start(now);
-      o.stop(now + duration);
-    } catch (e) { /* ignore */ }
-  }
-
-  playAlert(kind = 'beep') {
-    if (!this.audioEnabled) return;
-    try {
-      if (kind === 'beep') {
-        this.playTone(880, 0.06, 'sine');
-      } else if (kind === 'notify') {
-        // two-tone notify
-        this.playTone(880, 0.06, 'sine');
-        setTimeout(() => this.playTone(1320, 0.08, 'sine'), 110);
-      } else if (kind === 'error') {
-        this.playTone(220, 0.12, 'sawtooth');
-      } else {
-        this.playTone(660, 0.07, 'sine');
-      }
-    } catch (e) { /* ignore */ }
-  }
 
   setupContextWatcher() {
     // Watch for changes in window.state (set by app.js)
@@ -2117,8 +2043,8 @@ class FlowingFooter {
 
     try {
       // Play notification sound for assistant responses (unless loading)
-      if (role === 'assistant' && !isLoading && typeof this.playAlert === 'function') {
-        try { this.playAlert('notify'); } catch (e) { /* ignore */ }
+      if (role === 'assistant' && !isLoading && window.FlowingAudio && window.FlowingAudio.playAlert) {
+        try { window.FlowingAudio.playAlert('notify'); } catch (e) { /* ignore */ }
       }
     } catch (e) { /* ignore */ }
 
