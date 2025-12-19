@@ -106,22 +106,25 @@ class FlowingFooter {
       header.id = 'flowingHeader';
       header.className = 'flowing-header';
       header.innerHTML = `
-        <div class="flowing-header-left" style="display:flex; align-items:center; gap:10px;">
-          <div class="flowing-avatar flowing-sf-logo" style="width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; font-weight:700;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="flowing-avatar" style="width:40px;height:40px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;">
             ${typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall ? SVGIcons.logoSmall({ size: 20, className: 'inline-icon' }) : 'SF'}
           </div>
-          <div class="flowing-title-text" style="font-size:14px; color:var(--flowing-title-color,#111827); font-weight:700;">Flowing MVP</div>
+          <div class="flowing-title" style="font-weight:700;color:#1f2937;font-size:14px;line-height:1;">Flowing MVP</div>
         </div>
-        <div class="flowing-header-center" style="flex:1; display:flex; align-items:center; justify-content:center;">
-          <div id="flowingContextBadge" class="flowing-context-badge" aria-hidden="false" style="display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px; background:rgba(99,102,241,0.04); color:#374151; font-size:12px;">
-            <span class="context-icon" style="display:inline-flex; align-items:center;">${typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall ? SVGIcons.logoSmall({ size: 12, className: 'inline-icon' }) : ''}</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+          <div id="flowingContextBadge" class="flowing-context-badge" style="background:#f7f5ff;border:1px solid rgba(124,58,237,0.12);padding:6px 12px;border-radius:16px;color:#4b5563;font-size:13px;display:flex;align-items:center;gap:8px;">
+            <span class="context-icon">${(typeof SVGIcons !== 'undefined' && SVGIcons.chart) ? SVGIcons.chart({ size: 14, className: 'inline-icon' }) : ''}</span>
             <span class="context-text">No context</span>
           </div>
-        </div>
-        <div class="flowing-header-right" style="display:flex; align-items:center; gap:8px;">
-          <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn" style="padding:8px 10px; border-radius:8px; background:transparent; border:1px solid rgba(15,23,42,0.04); cursor:pointer;">▴</button>
+          <div id="flowingToggleHit" style="display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;background:transparent;cursor:pointer;">
+            <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn" style="width:28px;height:28px;border-radius:6px;background:#fff;border:1px solid rgba(0,0,0,0.06);box-shadow:0 6px 18px rgba(99,102,241,0.06);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">▴</button>
+          </div>
         </div>
       `;
+
+      // Header base styles for spacing and subtle background
+      header.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;width:100%;box-sizing:border-box;background:linear-gradient(180deg, rgba(99,102,241,0.03), rgba(99,102,241,0.01));border-bottom:1px solid rgba(99,102,241,0.04);';
 
       // Content container: keep existing structure expected by other functions
       const content = document.createElement('div');
@@ -204,54 +207,43 @@ console.log('✅ Flowing MVP ready');
   }
 
 attachEventListeners() {
-    // Toggle button - Integrado con FlowingContext para sugerencias de IA
-    try {
-      if (this.toggleBtn) {
-        // Replace node to avoid duplicate listeners
-        const newToggle = this.toggleBtn.cloneNode(true);
-        this.toggleBtn.parentNode && this.toggleBtn.parentNode.replaceChild(newToggle, this.toggleBtn);
-        this.toggleBtn = newToggle;
+  // Toggle button - Integrado con FlowingContext para sugerencias de IA
+  try {
+    // Prefer a larger hit area wrapper if present
+    const hit = document.getElementById('flowingToggleHit');
+    if (hit) {
+      const newHit = hit.cloneNode(true);
+      hit.parentNode && hit.parentNode.replaceChild(newHit, hit);
+      // find the button inside the hit area
+      const btn = newHit.querySelector('#flowingToggleBtn') || newHit.querySelector('button');
+      if (btn) this.toggleBtn = btn;
 
-        // Set initial aria state and icon
-        this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded));
-        this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾';
+      // set initial aria/icon
+      try { this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; } catch (e) { }
 
-        this.toggleBtn.addEventListener('click', () => {
-          this.toggle();
-          // update icon and aria state after toggle
-          try {
-            this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾';
-            this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded));
-          } catch (e) { /* ignore */ }
-
-          // Si FlowingContext está disponible, mostrar sugerencias contextuales
-          if (window.FlowingContext && this.isExpanded) {
-            this.showContextualSuggestions();
-          }
-        });
-      }
-    } catch (e) { console.warn('Could not attach toggleBtn listener', e); }
+      newHit.addEventListener('click', () => {
+        this.toggle();
+        try { if (this.toggleBtn) { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } } catch (e) { }
+        if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
+      });
+    } else if (this.toggleBtn) {
+      // fallback: attach to button directly (ensure single listener)
+      const newToggle = this.toggleBtn.cloneNode(true);
+      this.toggleBtn.parentNode && this.toggleBtn.parentNode.replaceChild(newToggle, this.toggleBtn);
+      this.toggleBtn = newToggle;
+      try { this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; } catch (e) { }
+      this.toggleBtn.addEventListener('click', () => {
+        this.toggle();
+        try { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } catch (e) { }
+        if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
+      });
+    }
+  } catch (e) { console.warn('Could not attach toggleBtn listener', e); }
 
   // Close button removed - use 'Back to Chat' control instead
 
   // Send button
   this.sendBtn?.addEventListener('click', () => this.sendMessage());
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div class="flowing-avatar" style="width:40px;height:40px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;">
-                ${typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall ? SVGIcons.logoSmall({ size: 20, className: 'inline-icon' }) : 'SF'}
-              </div>
-              <div class="flowing-title" style="font-weight:700;color:#1f2937;font-size:14px;line-height:1;">Flowing MVP</div>
-            </div>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
-              <div id="flowingContextBadge" class="flowing-context-badge" style="background:#f7f5ff;border:1px solid rgba(124,58,237,0.12);padding:6px 12px;border-radius:16px;color:#4b5563;font-size:13px;display:flex;align-items:center;gap:8px;">
-                <span class="context-icon">${(typeof SVGIcons !== 'undefined' && SVGIcons.chart) ? SVGIcons.chart({ size: 14, className: 'inline-icon' }) : ''}</span>
-                <span class="context-text">No context</span>
-              </div>
-              <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn" style="width:36px;height:36px;border-radius:8px;background:#fff;border:1px solid rgba(0,0,0,0.06);box-shadow:0 6px 18px rgba(99,102,241,0.06);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">▴</button>
-            </div>
-  `;
-          // Header base styles for spacing and subtle background
-          header.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;width:100%;box-sizing:border-box;background:linear-gradient(180deg, rgba(99,102,241,0.03), rgba(99,102,241,0.01));border-bottom:1px solid rgba(99,102,241,0.04);';
 
   setupContextWatcher() {
     // Watch for changes in window.state (set by app.js)
@@ -303,7 +295,7 @@ attachEventListeners() {
     });
 
     if (overdueTickets.length > 0) {
-      const txt = `${ SVGIcons.alert({ size: 14, className: 'inline-icon' }) } ${ overdueTickets.length } ticket${ overdueTickets.length > 1 ? 's' : '' } overdue(7 + days)`;
+      const txt = `${SVGIcons.alert({ size: 14, className: 'inline-icon' })} ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue(7 + days)`;
       this.suggestions.push({ text: txt, type: 'warning', key: this._stripHTML(txt) });
     }
 
@@ -313,7 +305,7 @@ attachEventListeners() {
     );
 
     if (urgentTickets.length > 0) {
-      const txt = `${ SVGIcons.xCircle({ size: 14, className: 'inline-icon' }) } ${ urgentTickets.length } urgent ticket${ urgentTickets.length > 1 ? 's' : '' } require attention`;
+      const txt = `${SVGIcons.xCircle({ size: 14, className: 'inline-icon' })} ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`;
       this.suggestions.push({ text: txt, type: 'critical', key: this._stripHTML(txt) });
     }
 
@@ -323,7 +315,7 @@ attachEventListeners() {
     );
 
     if (unassignedTickets.length > 0) {
-      const txt = `${ SVGIcons.user({ size: 14, className: 'inline-icon' }) } ${ unassignedTickets.length } unassigned ticket${ unassignedTickets.length > 1 ? 's' : '' } in queue`;
+      const txt = `${SVGIcons.user({ size: 14, className: 'inline-icon' })} ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`;
       this.suggestions.push({ text: txt, type: 'info', key: this._stripHTML(txt) });
     }
 
@@ -335,18 +327,18 @@ attachEventListeners() {
     });
 
     if (aboutToBreachTickets.length > 0) {
-      const txt = `${ SVGIcons.clock({ size: 14, className: 'inline-icon' }) } ${ aboutToBreachTickets.length } ticket${ aboutToBreachTickets.length > 1 ? 's' : '' } approaching SLA breach`;
+      const txt = `${SVGIcons.clock({ size: 14, className: 'inline-icon' })} ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`;
       this.suggestions.push({ text: txt, type: 'warning', key: this._stripHTML(txt) });
     }
 
     // All clear message
     if (this.suggestions.length === 0) {
-      const txt = `${ SVGIcons.success({ size: 14, className: 'inline-icon' }) } All tickets are up to date!`;
+      const txt = `${SVGIcons.success({ size: 14, className: 'inline-icon' })} All tickets are up to date!`;
       this.suggestions.push({ text: txt, type: 'success', key: this._stripHTML(txt) });
     }
 
     // Add general queue info
-    const txt = `${ SVGIcons.chart({ size: 14, className: 'inline-icon' }) } ${ issues.length } ticket${ issues.length > 1 ? 's' : '' } in current queue`;
+    const txt = `${SVGIcons.chart({ size: 14, className: 'inline-icon' })} ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`;
     this.suggestions.push({ text: txt, type: 'info', key: this._stripHTML(txt) });
   }
 
@@ -384,7 +376,7 @@ attachEventListeners() {
       // Use suggestion.text (full HTML) when rendering
       this.suggestionElement.innerHTML = suggestion.text || '';
       this.suggestionElement.classList.remove('suggestion-critical', 'suggestion-warning', 'suggestion-info', 'suggestion-success');
-      this.suggestionElement.classList.add(`suggestion - ${ suggestion.type } `);
+      this.suggestionElement.classList.add(`suggestion - ${suggestion.type} `);
 
       // Move to next suggestion
       this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
@@ -442,11 +434,11 @@ attachEventListeners() {
         }
       } catch (e) { /* ignore */ }
 
-      desiredText = summary ? `${ issueKey } — ${ summary } ` : `Ticket: ${ issueKey } `;
+      desiredText = summary ? `${issueKey} — ${summary} ` : `Ticket: ${issueKey} `;
     } else if (this.context.currentQueue) {
-      desiredText = `Queue: ${ this.context.currentQueue } (${ this.context.issuesCount } tickets)`;
+      desiredText = `Queue: ${this.context.currentQueue} (${this.context.issuesCount} tickets)`;
     } else if (this.context.currentDesk) {
-      desiredText = `Desk: ${ this.context.currentDesk } `;
+      desiredText = `Desk: ${this.context.currentDesk} `;
     }
 
     // Only update DOM when the text actually changes to avoid reflows/flashes
@@ -561,7 +553,7 @@ attachEventListeners() {
     this.updateContextBadge();
 
     if (this.suggestionElement) {
-      this.suggestionElement.textContent = `${ issueKey } - Viewing details`;
+      this.suggestionElement.textContent = `${issueKey} - Viewing details`;
       // pause rotation while viewing a ticket to avoid overwrites/flashes
       this.pauseSuggestionRotation();
     }
@@ -615,10 +607,10 @@ attachEventListeners() {
 
     try {
       // Fetch complete details from Service Desk API (same as right-sidebar)
-      const response = await fetch(`/ api / servicedesk / request / ${ issueKey } `);
+      const response = await fetch(`/ api / servicedesk / request / ${issueKey} `);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${ response.status } `);
+        throw new Error(`HTTP ${response.status} `);
       }
 
       const apiData = await response.json();
@@ -1020,7 +1012,7 @@ attachEventListeners() {
       const composerHeight = composer ? composer.getBoundingClientRect().height : 0;
       const paddingReserve = 40; // some breathing room
       const maxH = Math.max(120, Math.floor(leftHeight - composerHeight - paddingReserve));
-      commentsSection.style.maxHeight = `${ maxH } px`;
+      commentsSection.style.maxHeight = `${maxH} px`;
       commentsSection.style.overflowY = 'auto';
       // Also ensure comments list scrolls newest-first properly
       const list = commentsSection.querySelector('.comments-list');
@@ -1041,7 +1033,7 @@ attachEventListeners() {
       if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
       let html = '';
       attachments.forEach(att => {
-        const url = att.content || att.self || att.url || (`/ api / issues / ${ issue.key } /attachments/${ att.id } `);
+        const url = att.content || att.self || att.url || (`/ api / issues / ${issue.key} /attachments/${att.id} `);
         console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
         const filename = att.filename || att.name || att.displayName || 'attachment';
         const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
@@ -1086,7 +1078,7 @@ attachEventListeners() {
       if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
       let html = '';
       attachments.forEach((att) => {
-        const url = att.content || att.self || att.url || (`/ api / issues / ${ issue.key } /attachments/${ att.id } `);
+        const url = att.content || att.self || att.url || (`/ api / issues / ${issue.key} /attachments/${att.id} `);
         console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
         const filename = att.filename || att.name || att.displayName || 'attachment';
         const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
@@ -1196,9 +1188,9 @@ attachEventListeners() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
     if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${ diffMins }m ago`;
-    if (diffHours < 24) return `${ diffHours }h ago`;
-    if (diffDays < 7) return `${ diffDays }d ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
@@ -1362,8 +1354,7 @@ attachEventListeners() {
 
     // TWO-COLUMN LAYOUT WITH ML SUGGESTIONS
     container.innerHTML = `
-      ${
-    description ? `
+      ${description ? `
       <!-- Description Section (Full Width) - use native <details> so collapse is CSS-driven and simpler -->
       <details open class="ticket-description-section" style="padding: 0; background: transparent; border-bottom: 1px solid rgba(59, 130, 246, 0.08);">
         <summary class="section-label" style="display:flex; align-items:center; gap:8px; padding: 16px 20px; color: #4a5568; font-weight:600; font-size:13px; cursor:pointer;">
@@ -1378,7 +1369,7 @@ attachEventListeners() {
         </div>
       </details>
       ` : ''
-  }
+      }
       
       <div class="purple-divider" style="margin:0"></div>
       
@@ -1827,7 +1818,7 @@ attachEventListeners() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${ response.status }: ${ response.statusText } `);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} `);
       }
 
       const data = await response.json();
@@ -1852,13 +1843,13 @@ attachEventListeners() {
     if (!this.messagesContainer) return null;
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = `flowing - message ${ role }${ isLoading ? ' loading' : '' } `;
+    messageDiv.className = `flowing - message ${role}${isLoading ? ' loading' : ''} `;
 
     const avatar = role === 'user' ? '👤' : 'SF';
     const avatarClass = role === 'user' ? '' : 'copilot-sf-logo';
 
     messageDiv.innerHTML = `
-    < div class="message-avatar ${avatarClass}" > ${ avatar }</div >
+    < div class="message-avatar ${avatarClass}" > ${avatar}</div >
       <div class="message-content">
         ${isLoading ? '<p>Thinking...</p>' : this.formatMessage(content)}
       </div>
@@ -1887,9 +1878,9 @@ attachEventListeners() {
           const items = line.split(/<br>/).filter(l => l.trim());
           const listItems = items.map(item => {
             const cleaned = item.replace(/^[•\-]\s*/, '').trim();
-            return cleaned ? `< li > ${ cleaned }</li > ` : '';
+            return cleaned ? `< li > ${cleaned}</li > ` : '';
           }).join('');
-          return `< ul > ${ listItems }</ul > `;
+          return `< ul > ${listItems}</ul > `;
         }
         return line;
       }).join('</p><p>');
@@ -1897,7 +1888,7 @@ attachEventListeners() {
 
     // Wrap in paragraph if not already wrapped
     if (!formatted.startsWith('<p>') && !formatted.startsWith('<ul>')) {
-      formatted = `< p > ${ formatted }</p > `;
+      formatted = `< p > ${formatted}</p > `;
     }
 
     return formatted;
@@ -1912,19 +1903,19 @@ attachEventListeners() {
   // Public API for external usage
   askAboutTicket(issueKey) {
     this.expand();
-    this.input.value = `Tell me about ticket ${ issueKey } `;
+    this.input.value = `Tell me about ticket ${issueKey} `;
     this.input.focus();
   }
 
   suggestActions(issueKey) {
     this.expand();
-    this.input.value = `What should I do with ticket ${ issueKey } ? `;
+    this.input.value = `What should I do with ticket ${issueKey} ? `;
     this.sendMessage();
   }
 
   explainSLA(issueKey) {
     this.expand();
-    this.input.value = `Explain the SLA status for ${ issueKey }`;
+    this.input.value = `Explain the SLA status for ${issueKey}`;
     this.sendMessage();
   }
 
@@ -1948,11 +1939,11 @@ attachEventListeners() {
 
       // Mostrar mensaje con sugerencias
       const suggestionsList = suggestions.suggestions.map(s =>
-        `• ${ s.icon || '💡' } ${ s.title } `
+        `• ${s.icon || '💡'} ${s.title} `
       ).join('\n');
 
       this.addMessage(
-        `** ${ suggestions.title || 'Sugerencias Contextuales' }**\n\n${ suggestionsList } \n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
+        `** ${suggestions.title || 'Sugerencias Contextuales'}**\n\n${suggestionsList} \n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
         'assistant'
       );
     } catch (error) {
