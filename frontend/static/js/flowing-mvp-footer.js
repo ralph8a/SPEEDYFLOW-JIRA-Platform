@@ -336,8 +336,9 @@ class FlowingFooter {
 
     // Send button
     this.sendBtn?.addEventListener('click', () => this.sendMessage());
+  }
 
-    setupContextWatcher() {
+  setupContextWatcher() {
       // Watch for changes in window.state (set by app.js)
       setInterval(() => {
         const oldContext = JSON.stringify(this.context);
@@ -606,16 +607,16 @@ class FlowingFooter {
       this.switchToChatView();
 
       console.log('🤖 Flowing MVP collapsed');
-
-      // Public API wrappers (stable names) — call internal implementations
-      public_expand() { return this.expand(); }
-      public_collapse() { return this.collapse(); }
-      public_switchToChatView() { return this.switchToChatView(); }
-      public_askAboutTicket(issueKey) { return this.askAboutTicket(issueKey); }
-      public_suggestActions(issueKey) { return this.suggestActions(issueKey); }
-      public_explainSLA(issueKey) { return this.explainSLA(issueKey); }
-      public_showContextualSuggestions() { return this.showContextualSuggestions(); }
     }
+
+    // Public API wrappers (stable names) — call internal implementations
+    public_expand() { return this.expand(); }
+    public_collapse() { return this.collapse(); }
+    public_switchToChatView() { return this.switchToChatView(); }
+    public_askAboutTicket(issueKey) { return this.askAboutTicket(issueKey); }
+    public_suggestActions(issueKey) { return this.suggestActions(issueKey); }
+    public_explainSLA(issueKey) { return this.explainSLA(issueKey); }
+    public_showContextualSuggestions() { return this.showContextualSuggestions(); }
 
     switchToChatView() {
       const chatView = document.getElementById('chatOnlyView');
