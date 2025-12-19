@@ -444,7 +444,17 @@ class FlowingFooter {
       this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
 
       // Fade in new suggestion after a brief delay
-      setTimeout(() => this.suggestionElement.classList.add('visible'), 50);
+      setTimeout(() => {
+        this.suggestionElement.classList.add('visible');
+        try {
+          // Play gentle alert depending on suggestion importance
+          const type = (suggestion.type || 'info').toLowerCase();
+          const level = type === 'critical' ? 3 : (type === 'warning' ? 2 : 1);
+          if (window.FlowingAudio && window.FlowingAudio.playAlert) {
+            try { window.FlowingAudio.playAlert(level); } catch (e) { /* ignore */ }
+          }
+        } catch (e) { /* ignore */ }
+      }, 50);
     }, 260); // shorter fade to feel snappier but avoid flash
   }
 
