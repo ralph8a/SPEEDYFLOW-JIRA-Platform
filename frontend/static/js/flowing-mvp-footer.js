@@ -750,6 +750,9 @@ class FlowingFooter {
   switchToBalancedView(issueKey) {
     console.log('🎯 Switching to balanced view for:', issueKey);
 
+    // Ensure footer is expanded when showing balanced view so layout/padding are correct
+    try { this.expand(); } catch (e) { /* ignore */ }
+
     const chatView = document.getElementById('chatOnlyView');
     const balancedView = document.getElementById('balancedView');
 
