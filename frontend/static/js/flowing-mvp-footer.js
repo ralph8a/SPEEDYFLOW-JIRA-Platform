@@ -73,6 +73,8 @@ class FlowingFooter {
       }
     }
 
+    
+
     // Normalize footer DOM: ensure a compact, consistent layout while preserving all functional IDs
     try {
       // Remove stray header/root elements that may have been injected previously
@@ -117,6 +119,10 @@ class FlowingFooter {
           <div id="flowingContextBadge" class="flowing-context-badge" style="background:#f7f5ff;border:1px solid rgba(124,58,237,0.12);padding:6px 12px;border-radius:16px;color:#4b5563;font-size:13px;display:flex;align-items:center;gap:8px;">
             <span class="context-icon">${(typeof SVGIcons !== 'undefined' && SVGIcons.chart) ? SVGIcons.chart({ size: 14, className: 'inline-icon' }) : ''}</span>
             <span class="context-text">No context</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button id="flowingSoundBtn" aria-label="Toggle sound" title="Toggle sound" style="background:transparent;border:none;cursor:pointer;font-size:18px;line-height:1;padding:6px;">🔔</button>
+            <input id="flowingSoundVol" type="range" min="0" max="1" step="0.05" value="0.6" style="width:80px;vertical-align:middle;" />
           </div>
           <div id="flowingToggleHit" style="display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:10px;background:transparent;cursor:pointer;">
             <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn" style="width:28px;height:28px;border-radius:6px;background:#fff;border:1px solid rgba(0,0,0,0.06);box-shadow:0 6px 18px rgba(99,102,241,0.06);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">▴</button>
@@ -183,6 +189,9 @@ class FlowingFooter {
     this.setupContextWatcher();
     this.startSuggestionRotation();
 
+    // Initialize audio controls (sound alerts)
+    try { this.initAudio(); } catch (e) { /* ignore */ }
+
     // Ensure footer responds to sidebar collapse/expand events
     try {
       window.addEventListener('sidebarToggled', () => {
@@ -235,6 +244,7 @@ class FlowingFooter {
         const activateToggle = (e) => {
           // ignore if event is a keyboard navigation (handled below)
           this.toggle();
+          try { this.playAlert('beep'); } catch (ee) { }
           try { if (this.toggleBtn) { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } } catch (err) { }
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
         };
@@ -262,6 +272,7 @@ class FlowingFooter {
 
         const activateBtn = (ev) => {
           this.toggle();
+          try { this.playAlert('beep'); } catch (ee) { }
           try { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } catch (e) { }
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
         };
@@ -291,6 +302,82 @@ class FlowingFooter {
           }
         }
       });
+    } catch (e) { /* ignore */ }
+  }
+
+  // Audio helpers (moved here so methods are part of class, not inside init())
+  initAudio() {
+    try {
+      this.audioCtx = null;
+      this.audioEnabled = localStorage.getItem('flowing_sound_enabled') !== '0';
+      this.audioVolume = parseFloat(localStorage.getItem('flowing_sound_volume') || '0.6');
+      // bind UI controls if present
+      const soundBtn = document.getElementById('flowingSoundBtn');
+      const soundVol = document.getElementById('flowingSoundVol');
+      if (soundBtn) {
+        soundBtn.textContent = this.audioEnabled ? '🔔' : '🔕';
+        soundBtn.title = this.audioEnabled ? 'Sound enabled' : 'Sound muted';
+        soundBtn.addEventListener('click', () => {
+          this.audioEnabled = !this.audioEnabled;
+          localStorage.setItem('flowing_sound_enabled', this.audioEnabled ? '1' : '0');
+          soundBtn.textContent = this.audioEnabled ? '🔔' : '🔕';
+          soundBtn.title = this.audioEnabled ? 'Sound enabled' : 'Sound muted';
+          this.playAlert('beep');
+        });
+      }
+      if (soundVol) {
+        soundVol.value = this.audioVolume;
+        soundVol.addEventListener('input', (e) => {
+          this.audioVolume = parseFloat(e.target.value || 0.6);
+          localStorage.setItem('flowing_sound_volume', String(this.audioVolume));
+        });
+      }
+    } catch (e) { console.warn('initAudio error', e); }
+  }
+
+  ensureAudioContext() {
+    try {
+      if (!this.audioEnabled) return null;
+      if (!this.audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        this.audioCtx = new Ctx();
+      }
+      return this.audioCtx;
+    } catch (e) { return null; }
+  }
+
+  playTone(frequency = 880, duration = 0.08, type = 'sine') {
+    try {
+      const ctx = this.ensureAudioContext();
+      if (!ctx) return;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(frequency, ctx.currentTime);
+      g.gain.setValueAtTime(Math.max(0, Math.min(1, this.audioVolume || 0.6)), ctx.currentTime);
+      o.connect(g);
+      g.connect(ctx.destination);
+      const now = ctx.currentTime;
+      o.start(now);
+      o.stop(now + duration);
+    } catch (e) { /* ignore */ }
+  }
+
+  playAlert(kind = 'beep') {
+    if (!this.audioEnabled) return;
+    try {
+      if (kind === 'beep') {
+        this.playTone(880, 0.06, 'sine');
+      } else if (kind === 'notify') {
+        // two-tone notify
+        this.playTone(880, 0.06, 'sine');
+        setTimeout(() => this.playTone(1320, 0.08, 'sine'), 110);
+      } else if (kind === 'error') {
+        this.playTone(220, 0.12, 'sawtooth');
+      } else {
+        this.playTone(660, 0.07, 'sine');
+      }
     } catch (e) { /* ignore */ }
   }
 
@@ -2027,6 +2114,13 @@ class FlowingFooter {
 
     this.messagesContainer.appendChild(messageDiv);
     this.scrollToBottom();
+
+    try {
+      // Play notification sound for assistant responses (unless loading)
+      if (role === 'assistant' && !isLoading && typeof this.playAlert === 'function') {
+        try { this.playAlert('notify'); } catch (e) { /* ignore */ }
+      }
+    } catch (e) { /* ignore */ }
 
     return messageDiv;
   }
