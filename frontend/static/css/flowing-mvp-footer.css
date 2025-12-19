@@ -293,6 +293,40 @@ body.flowing-footer-expanded .flowing-view.balanced-view~#flowingInput {
   display: none !important;
 }
 
+/* When balanced view is active, expand the footer to cover the kanban area
+   and visually de-emphasize the board by reducing its opacity. */
+.flowing-footer.balanced-active {
+  position: fixed;
+  top: 72px; /* approximate header height; overlays the kanban */
+  bottom: 0;
+  height: calc(100% - 72px);
+  max-height: none !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 0 rgba(0,0,0,0); /* remove floating shadow when covering */
+  z-index: 2000; /* sit above the kanban */
+}
+
+/* Fade the main board when balanced view is active (body-level class added by JS) */
+body.flowing-balanced-active #kanbanView,
+body.flowing-balanced-active .board-wrapper {
+  opacity: 0.12 !important;
+  filter: blur(0px) !important;
+  pointer-events: none !important;
+  transition: opacity 180ms ease;
+}
+
+/* Chat messages container: make scrollable so composing does not push other elements */
+.flowing-footer .flowing-messages {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 40vh; /* reasonable default */
+}
+
+/* If footer is large, allow messages to take more space but still scroll */
+.flowing-footer:not(.collapsed) .flowing-messages {
+  max-height: 55vh;
+}
+
 .ticket-info-header.hidden {
   display: none;
 }

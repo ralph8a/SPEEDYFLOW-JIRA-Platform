@@ -560,6 +560,10 @@ class FlowingFooter {
     try { document.documentElement.style.removeProperty('--flowing-header-height'); } catch (e) { }
     try { document.documentElement.style.removeProperty('--flowing-footer-translate'); } catch (e) { }
 
+    // Ensure balanced-active flags removed when collapsing
+    try { if (this.footer) this.footer.classList.remove('balanced-active'); } catch (e) { }
+    try { document.body.classList.remove('flowing-balanced-active'); } catch (e) { }
+
     // Switch back to chat view when collapsing
     this.switchToChatView();
 
@@ -585,6 +589,9 @@ class FlowingFooter {
     if (viewName === 'chat') {
       if (chatView) { chatView.style.display = 'block'; chatView.setAttribute('aria-hidden', 'false'); }
       if (balancedView) { balancedView.style.display = 'none'; balancedView.setAttribute('aria-hidden', 'true'); }
+      // Remove balanced view styling classes
+      try { if (this.footer) this.footer.classList.remove('balanced-active'); } catch (e) { }
+      try { document.body.classList.remove('flowing-balanced-active'); } catch (e) { }
       // Restore chat UI pieces
       try {
         if (this.suggestionElement) this.suggestionElement.style.display = '';
@@ -611,6 +618,7 @@ class FlowingFooter {
 
       // Add a persistent class on footer to let CSS hide chat UI elements reliably
       try { if (this.footer) this.footer.classList.add('balanced-active'); } catch (e) { }
+      try { document.body.classList.add('flowing-balanced-active'); } catch (e) { }
 
       // Hide header/inline IA chat UI pieces that should not be visible while
       // viewing a ticket in balanced view (suggestion badge, floating launcher, composer remnants)
