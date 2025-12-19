@@ -178,31 +178,31 @@ class FlowingFooter {
     this.setupContextWatcher();
     this.startSuggestionRotation();
 
-    this.messagesContainer = document.getElementById('flowingMessages') || null;
-    this.input = document.getElementById('flowingInput') || null;
-    this.sendBtn = document.getElementById('flowingSendBtn') || null;
-    this.contextBadge = document.getElementById('flowingContextBadge') || null;
-    this.suggestionElement = document.getElementById('flowingSuggestion') || null;
-    document.body.classList.toggle('sidebar-collapsed', collapsed);
-    this.adjustContentPadding(collapsed);
-  });
+    // Ensure footer responds to sidebar collapse/expand events
+    try {
+      window.addEventListener('sidebarToggled', () => {
+        const sidebar = document.querySelector('.sidebar-content-component');
+        const collapsed = !!(sidebar && sidebar.classList.contains('collapsed'));
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        this.adjustContentPadding(collapsed);
+      });
 
-  // Observe class changes on sidebar to react to programmatic toggles
-  const sb = document.querySelector('.sidebar-content-component');
-  if(sb) {
-    const mo = new MutationObserver(() => {
-      const c = sb.classList.contains('collapsed');
-      document.body.classList.toggle('sidebar-collapsed', c);
-      this.adjustContentPadding(c);
-    });
-    mo.observe(sb, { attributes: true, attributeFilter: ['class'] });
-  }
-} catch (e) { console.warn('Could not attach sidebar observers for FlowingFooter:', e); }
+      // Observe class changes on sidebar to react to programmatic toggles
+      const sb = document.querySelector('.sidebar-content-component');
+      if (sb) {
+        const mo = new MutationObserver(() => {
+          const c = sb.classList.contains('collapsed');
+          document.body.classList.toggle('sidebar-collapsed', c);
+          this.adjustContentPadding(c);
+        });
+        mo.observe(sb, { attributes: true, attributeFilter: ['class'] });
+      }
+    } catch (e) { console.warn('Could not attach sidebar observers for FlowingFooter:', e); }
 
-// Set initial padding
-this.adjustContentPadding(true); // Start collapsed
+    // Set initial padding
+    this.adjustContentPadding(true); // Start collapsed
 
-console.log('✅ Flowing MVP ready');
+    console.log('✅ Flowing MVP ready');
   }
 
 attachEventListeners() {
