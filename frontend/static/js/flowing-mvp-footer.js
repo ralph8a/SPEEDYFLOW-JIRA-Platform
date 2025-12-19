@@ -2278,6 +2278,41 @@ class FlowingFooter {
       window._flowingFooter = new FlowingFooter();
       if (window.flowingFooter && typeof window.flowingFooter._flush === 'function') window.flowingFooter._flush();
       console.log('✅ Flowing MVP Footer loaded');
+
+      // Register centralized Flowing event listeners so other modules can
+      // control the footer via CustomEvents without directly calling methods.
+      try {
+        const footer = window._flowingFooter;
+        if (footer) {
+          // Expand
+          window.addEventListener('flowing:expanded', (ev) => {
+            try {
+              if (!footer.isExpanded) footer.expand();
+            } catch (e) { /* ignore */ }
+          });
+
+          // Collapse
+          window.addEventListener('flowing:collapsed', (ev) => {
+            try {
+              if (footer.isExpanded) footer.collapse();
+            } catch (e) { /* ignore */ }
+          });
+
+          // Switch to Balanced view (expects detail.issueKey or detail.key or detail)
+          window.addEventListener('flowing:switchedToBalanced', (ev) => {
+            try {
+              const d = ev && ev.detail;
+              const issueKey = d?.issueKey || d?.key || d || null;
+              if (issueKey) footer.switchToBalancedView(issueKey);
+            } catch (e) { /* ignore */ }
+          });
+
+          // Switch back to Chat view
+          window.addEventListener('flowing:switchedToChat', (ev) => {
+            try { footer.switchToChatView(); } catch (e) { /* ignore */ }
+          });
+        }
+      } catch (e) { console.warn('Could not register Flowing event listeners', e); }
     } catch (e) {
       console.error('Failed to initialize FlowingFooter', e);
     }
