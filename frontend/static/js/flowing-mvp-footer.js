@@ -1190,7 +1190,7 @@ class FlowingFooter {
       const composerHeight = composer ? composer.getBoundingClientRect().height : 0;
       const paddingReserve = 40; // some breathing room
       const maxH = Math.max(120, Math.floor(leftHeight - composerHeight - paddingReserve));
-      commentsSection.style.maxHeight = `${maxH} px`;
+      commentsSection.style.maxHeight = `${maxH}px`;
       commentsSection.style.overflowY = 'auto';
       // Also ensure comments list scrolls newest-first properly
       const list = commentsSection.querySelector('.comments-list');
@@ -1628,13 +1628,11 @@ class FlowingFooter {
       <div class="purple-divider" style="margin:0"></div>
 
       <!-- FOUR-COLUMN GRID: description full-width above, then 3 cols for fields + 1 col for attachments/comments -->
-    <div class="footer-grid-4" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+    <div class="footer-grid-4" style="display: grid; grid-template-columns: 60% 40%; gap: 16px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
 
-      <!-- LEFT AREA: spans columns 1-3 (essential fields) -->
-      <div class="left-column" style="grid-column: 1 / span 3; display: flex; flex-direction: column; gap: 12px;">
+      <!-- LEFT AREA: occupies first column (60%) for essential fields -->
+      <div class="left-column" style="grid-column: 1 / 2; display: flex; flex-direction: column; gap: 12px;">
 
-        ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
-        
         ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
 
         <!-- Essential Fields Grid (generated dynamically) -->
