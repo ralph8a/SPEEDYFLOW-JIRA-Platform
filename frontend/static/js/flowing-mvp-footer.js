@@ -627,21 +627,8 @@ class FlowingFooter {
       try { if (this.footer) this.footer.classList.add('balanced-active'); } catch (e) { }
       try { document.body.classList.add('flowing-balanced-active'); } catch (e) { }
 
-      // Compute top offset so footer does not cover the filter bar or header
-      try {
-        const selectors = ['.filter-bar-enhanced', '.filter-bar', '.header-enhanced', '.header'];
-        let topOffset = 72; // default
-        for (const sel of selectors) {
-          const el = document.querySelector(sel);
-          if (el) {
-            const r = el.getBoundingClientRect();
-            topOffset = Math.max(topOffset, Math.round(r.bottom) + 8);
-            break;
-          }
-        }
-        // Set CSS variable used by balanced-active mode
-        try { if (this.footer) this.footer.style.setProperty('--flowing-footer-overlay-top', topOffset + 'px'); } catch (e) {}
-      } catch (e) { /* ignore */ }
+      // Compute overlay position/size so footer does not cover the filter bar or header
+      try { this.computeBalancedOverlayPosition(); } catch (e) { /* ignore */ }
 
       // Update header to show key + summary and top recommendations
       try {
@@ -677,7 +664,7 @@ class FlowingFooter {
         if (headerTitle) headerTitle.textContent = headerText;
 
         // Prepare recommendations: run analysis and show top 3 suggestions
-        try { this.analyzeSuggestions(); } catch (e) {}
+        try { this.analyzeSuggestions(); } catch (e) { }
         const recs = (this.suggestions || []).slice(0, 3);
         recContainer.innerHTML = recs.map(s => `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${this._stripHTML(s.text || '')}</div>`).join('');
       } catch (e) { /* ignore */ }
@@ -733,6 +720,31 @@ class FlowingFooter {
 
   resumeSuggestionRotation() {
     this.suggestionPaused = false;
+  }
+
+  // Compute and set CSS vars so the balanced overlay matches the kanban columns
+  computeBalancedOverlayPosition() {
+    try {
+      const board = document.querySelector('.board-wrapper') || document.getElementById('kanbanView');
+      const header = document.querySelector('.header-enhanced') || document.querySelector('.header') || document.querySelector('header');
+      if (!this.footer) return;
+      let topOffset = 72;
+      if (header) {
+        const hrect = header.getBoundingClientRect();
+        topOffset = Math.max(topOffset, Math.round(hrect.bottom) + 8);
+      }
+      if (board) {
+        const brect = board.getBoundingClientRect();
+        // If board is lower on page, use its top as overlay top and match height
+        const overlayTop = Math.max(8, Math.round(brect.top));
+        const overlayHeight = Math.max(200, Math.round(brect.height));
+        this.footer.style.setProperty('--flowing-footer-overlay-top', overlayTop + 'px');
+        this.footer.style.setProperty('--flowing-footer-overlay-height', overlayHeight + 'px');
+      } else {
+        this.footer.style.setProperty('--flowing-footer-overlay-top', topOffset + 'px');
+        this.footer.style.setProperty('--flowing-footer-overlay-height', 'calc(100% - ' + topOffset + 'px)');
+      }
+    } catch (e) { /* ignore */ }
   }
 
   async loadTicketIntoBalancedView(issueKey) {
@@ -1067,23 +1079,23 @@ class FlowingFooter {
 
     if (!data || !data.ongoingCycle) {
       riskContainer.innerHTML = `
-    < div style = "display: flex; align-items: center; gap: 12px; padding: 12px;" >
-          <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <i class="fas fa-check" style="font-size: 20px; color: #10b981;"></i>
-          </div>
-          <div style="flex: 1;">
-            <p style="font-size: 11px; color: #10b981; font-weight: 600; margin: 0;">LOW RISK</p>
-            <p style="font-size: 9px; color: #9ca3af; margin: 2px 0 0 0;">No active SLA</p>
-          </div>
-        </div >
-    `;
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;">
+        <div style="width:50px;height:50px;border-radius:50%;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fas fa-check" style="font-size:20px;color:#10b981;"></i>
+        </div>
+        <div style="flex:1;">
+          <p style="font-size:11px;color:#10b981;font-weight:600;margin:0;">LOW RISK</p>
+          <p style="font-size:9px;color:#9ca3af;margin:2px 0 0 0;">No active SLA</p>
+        </div>
+      </div>
+      `;
       return;
     }
 
     // Calculate breach probability based on elapsed vs remaining time
-    const elapsed = data.ongoingCycle.elapsedTime?.millis || 0;
-    const remaining = data.ongoingCycle.remainingTime?.millis || 1;
-    const total = elapsed + remaining;
+    const elapsed = Number(data.ongoingCycle.elapsedTime?.millis || 0);
+    const remaining = Number(data.ongoingCycle.remainingTime?.millis || 0);
+    const total = elapsed + remaining || 1;
     const percentage = Math.round((elapsed / total) * 100);
 
     // Determine risk level
@@ -1111,28 +1123,28 @@ class FlowingFooter {
     }
 
     riskContainer.innerHTML = `
-    < div class="risk-card" >
-        <div class="risk-gauge" aria-hidden="true">
+      <div class="risk-card" style="display:flex;gap:12px;align-items:center;">
+        <div class="risk-gauge" aria-hidden="true" style="position:relative;min-width:72px;min-height:72px;">
           <svg width="72" height="72" viewBox="0 0 60 60" class="risk-gauge-svg" aria-hidden="true">
             <circle cx="30" cy="30" r="25" fill="none" stroke="#e5e7eb" stroke-width="5"/>
             <circle cx="30" cy="30" r="25" fill="none" stroke="${riskColor}" stroke-width="5" stroke-dasharray="${(percentage / 100) * 157} 157" stroke-linecap="round" />
           </svg>
-          <div class="risk-percent" style="color: ${riskColor};">${percentage}%</div>
+          <div class="risk-percent" style="position:absolute;left:0;top:0;width:72px;height:72px;display:flex;align-items:center;justify-content:center;font-weight:700;color:${riskColor};">${percentage}%</div>
         </div>
 
-        <div class="risk-info">
-          <div class="risk-header">
-            <div class="risk-title">Breach Risk</div>
-            <div class="risk-badge" style="background:${riskBg}; color: ${riskColor};">${riskLevel}</div>
+        <div class="risk-info" style="flex:1;">
+          <div class="risk-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+            <div class="risk-title" style="font-weight:700;color:#374151;">Breach Risk</div>
+            <div class="risk-badge" style="background:${riskBg}; color:${riskColor}; padding:6px 8px;border-radius:8px;font-weight:700;font-size:12px;">${riskLevel}</div>
           </div>
 
-          <div class="risk-body">
-            <div class="risk-line"><span class="risk-line-label">Elapsed</span><span class="risk-line-value">${percentage}%</span></div>
-            <div class="risk-line"><span class="risk-line-label">Remaining</span><span class="risk-line-value ${percentage >= 75 ? 'risk-warning' : ''}">${data.ongoingCycle.remainingTime?.readable || data.ongoingCycle.remainingTime || 'N/A'}</span></div>
-            ${percentage >= 75 ? `<div class="risk-note">${SVGIcons.alert({ size: 12, className: 'inline-icon' })} Near deadline — attention recommended</div>` : ''}
+          <div class="risk-body" style="font-size:12px;color:#4b5563;">
+            <div class="risk-line" style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;"><span class="risk-line-label" style="color:#6b7280;">Elapsed</span><span class="risk-line-value">${percentage}%</span></div>
+            <div class="risk-line" style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;"><span class="risk-line-label" style="color:#6b7280;">Remaining</span><span class="risk-line-value ${percentage >= 75 ? 'risk-warning' : ''}">${data.ongoingCycle.remainingTime?.readable || data.ongoingCycle.remainingTime || 'N/A'}</span></div>
+            ${percentage >= 75 ? `<div class="risk-note" style="margin-top:6px;color:${riskColor};font-weight:600;">${SVGIcons.alert ? SVGIcons.alert({ size: 12, className: 'inline-icon' }) : ''} Near deadline — attention recommended</div>` : ''}
           </div>
         </div>
-      </div >
+      </div>
     `;
   }
 
@@ -1545,23 +1557,16 @@ class FlowingFooter {
       <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
       <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
 
-        <!-- ML Suggestions Banner -->
-        <div class="ml-suggestions-banner" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
-          <div class="banner-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
-            <i class="fas fa-magic"></i>
-          </div>
-          <div class="banner-content" style="flex: 1;">
-            <h4 style="color: #374151; font-size: 13px; margin: 0; font-weight: 600;">
-              Analicé el ticket y tengo sugerencias
-              <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">— Próximamente: ML predictions</span>
-            </h4>
-          </div>
+        <!-- Attachments preview (replaces ML suggestions banner) -->
+        <div id="attachmentsPreviewHeader" class="attachments-preview-header" style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+          <div style="font-size:12px;color:#6b7280;font-weight:600;">Attachments</div>
+          <div id="attachmentsListHeader" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
         </div>
 
         ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
 
-        <!-- Essential Fields Grid (3 columns) -->
-        <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+        <!-- Essential Fields Grid (4 columns) -->
+        <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
 
           <!-- Priority -->
           ${priority ? `
@@ -1872,33 +1877,12 @@ class FlowingFooter {
       <!-- RIGHT COLUMN: ML Actions & Comments (42%) -->
       <div class="right-column" style="display: flex; flex-direction: column; gap: 12px;">
 
-        <!-- ML Actions & Suggested Comments -->
-        <div class="ml-actions-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px;">
-          <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
-            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> ML Actions & Suggested Comments
+        <!-- Attachments area (replaces ML Actions) -->
+        <div class="attachments-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+          <h4 style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px 0;display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-paperclip" style="color:#6d28d9;"></i> Attachments
           </h4>
-          <div class="suggested-comments" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-            <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-              <span style="flex: 1;">Investigating issue, analyzing logs...</span>
-              <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-            <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-              <span style="flex: 1;">Escalating to backend team...</span>
-              <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-          </div>
-          <div class="quick-actions" style="display: flex; gap: 8px;">
-            <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
-              <i class="fas fa-clone" style="margin-right: 4px;"></i> Find Duplicates
-            </button>
-            <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
-              <i class="fas fa-clock" style="margin-right: 4px;"></i> Estimate Time
-            </button>
-          </div>
+          <div id="attachmentsListRight" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
         </div>
 
         <div class="purple-divider"></div>
