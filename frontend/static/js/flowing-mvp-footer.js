@@ -593,7 +593,7 @@ class FlowingFooter {
 
         // Common possible floating launcher classes (legacy/prototypes) — hide if present
         ['flowing-floating', 'ff-floating-launcher', 'flowing-launcher'].forEach(cls => {
-          document.querySelectorAll('.' + cls).forEach(el => { try { el.style.display = 'none'; } catch (e) {} });
+          document.querySelectorAll('.' + cls).forEach(el => { try { el.style.display = 'none'; } catch (e) { } });
         });
       } catch (e) { /* ignore errors when hiding optional nodes */ }
     }
@@ -1842,13 +1842,46 @@ class FlowingFooter {
   adjustContentPadding(isCollapsed) {
     const kanbanView = document.getElementById('kanbanView');
     const boardWrapper = document.querySelector('.board-wrapper');
+    const listView = document.getElementById('listView');
     const rightSidebar = document.getElementById('rightSidebar');
 
-    const padding = isCollapsed ? '65px' : '70px';
+    try {
+      if (isCollapsed) {
+        // When collapsed, keep a small reserved area matching collapsed footer
+        const collapsedHeight = 80; // matches collapsed padding in CSS
+        const padding = `${collapsedHeight}px`;
+        if (kanbanView) kanbanView.style.paddingBottom = padding;
+        if (boardWrapper) boardWrapper.style.paddingBottom = padding;
+        if (listView) listView.style.paddingBottom = padding;
+        if (rightSidebar) rightSidebar.style.paddingBottom = padding;
+        return;
+      }
 
-    if (kanbanView) kanbanView.style.paddingBottom = padding;
-    if (boardWrapper) boardWrapper.style.paddingBottom = padding;
-    if (rightSidebar) rightSidebar.style.paddingBottom = padding;
+      // When expanded, compute footer height and reserve that space so the board isn't covered
+      const footerEl = document.getElementById('flowingFooter') || this.footer;
+      let footerHeight = 300; // sensible default
+      try {
+        if (footerEl) footerHeight = Math.round(footerEl.getBoundingClientRect().height);
+        else {
+          const cssH = getComputedStyle(document.documentElement).getPropertyValue('--flowing-footer-height');
+          if (cssH) footerHeight = parseInt(cssH, 10) || footerHeight;
+        }
+      } catch (e) { /* ignore */ }
+
+      // Add small buffer so elements don't touch footer border
+      const paddingExpanded = `${Math.max(footerHeight + 16, 200)}px`;
+      if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
+      if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
+      if (listView) listView.style.paddingBottom = paddingExpanded;
+      if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
+    } catch (e) {
+      // Fallback conservative padding
+      const fallback = isCollapsed ? '80px' : '300px';
+      if (kanbanView) kanbanView.style.paddingBottom = fallback;
+      if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
+      if (listView) listView.style.paddingBottom = fallback;
+      if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
+    }
   }
 
   async sendMessage() {
