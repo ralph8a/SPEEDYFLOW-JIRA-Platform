@@ -1941,8 +1941,16 @@ class FlowingFooter {
 
       const balancedEl = document.getElementById('balancedContentContainer');
       if (balancedEl) {
-        balancedEl.style.maxHeight = `${footerHeight}px`;
-        balancedEl.style.overflowY = 'auto';
+        // Ensure balanced container matches footer height but never too small.
+        // Use explicit height so content area equals footer size and can scroll internally.
+        const minH = 360; // reasonable minimum to avoid severe clipping
+        const desired = Math.max(footerHeight, minH);
+        // apply with a small timeout to ensure layout stabilised when called during render
+        setTimeout(() => {
+          balancedEl.style.height = `${desired}px`;
+          balancedEl.style.maxHeight = `${desired}px`;
+          balancedEl.style.overflowY = 'auto';
+        }, 0);
       }
       // Do not modify kanbanView/boardWrapper/rightSidebar here because Balanced view overlays them
     } catch (e) {
