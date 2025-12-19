@@ -7,7 +7,6 @@ class FlowingFooter {
   constructor() {
     this.footer = null;
     this.toggleBtn = null;
-    this.closeBtn = null;
     this.messagesContainer = null;
     this.input = null;
     this.sendBtn = null;
@@ -240,7 +239,7 @@ attachEventListeners() {
     }
   } catch (e) { console.warn('Could not attach toggleBtn listener', e); }
 
-  // Close button removed - use 'Back to Chat' control instead
+  // Close button removed - use 'Back to Chat' control instead (no DOM close button created)
 
   // Send button
   this.sendBtn?.addEventListener('click', () => this.sendMessage());
