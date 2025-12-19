@@ -1916,7 +1916,6 @@ class FlowingFooter {
     const kanbanView = document.getElementById('kanbanView');
     const boardWrapper = document.querySelector('.board-wrapper');
     const rightSidebar = document.getElementById('rightSidebar');
-
     try {
       if (isCollapsed) {
         // When collapsed, keep a small reserved area matching collapsed footer
@@ -1928,7 +1927,8 @@ class FlowingFooter {
         return;
       }
 
-      // When expanded, compute footer height and reserve that space so the board isn't covered
+      // When expanded, compute footer height and ensure the balanced content container
+      // respects the footer size instead of altering the Kanban/board padding (those are hidden)
       const footerEl = document.getElementById('flowingFooter') || this.footer;
       let footerHeight = 300; // sensible default
       try {
@@ -1939,32 +1939,14 @@ class FlowingFooter {
         }
       } catch (e) { /* ignore */ }
 
-      // Add small buffer so elements don't touch footer border
-      const paddingExpanded = `${Math.max(footerHeight + 16, 120)}px`;
-      if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
-      if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
-      if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
-    } catch (e) {
-      // Fallback: compute footer height if possible and reserve comparable space
-      try {
-        let footerHeightFallback = 300;
-        const footerElFb = document.getElementById('flowingFooter') || this.footer;
-        if (footerElFb) footerHeightFallback = Math.round(footerElFb.getBoundingClientRect().height);
-        else {
-          const cssH = getComputedStyle(document.documentElement).getPropertyValue('--flowing-footer-height');
-          if (cssH) footerHeightFallback = parseInt(cssH, 10) || footerHeightFallback;
-        }
-        const fallback = isCollapsed ? '80px' : `${Math.max(footerHeightFallback + 16, 120)}px`;
-        if (kanbanView) kanbanView.style.paddingBottom = fallback;
-        if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
-        if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
-      } catch (e2) {
-        // absolute fallback
-        const fallback = isCollapsed ? '80px' : '120px';
-        if (kanbanView) kanbanView.style.paddingBottom = fallback;
-        if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
-        if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
+      const balancedEl = document.getElementById('balancedContentContainer');
+      if (balancedEl) {
+        balancedEl.style.maxHeight = `${footerHeight}px`;
+        balancedEl.style.overflowY = 'auto';
       }
+      // Do not modify kanbanView/boardWrapper/rightSidebar here because Balanced view overlays them
+    } catch (e) {
+      console.warn('adjustContentPadding error', e);
     }
   }
 
