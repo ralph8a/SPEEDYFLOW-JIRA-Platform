@@ -74,14 +74,32 @@ class FlowingFooter {
 
     // Normalize footer DOM: ensure a compact, consistent layout while preserving all functional IDs
     try {
-      // We'll create three clear parts inside #flowingFooter:
+      // Remove stray header/root elements that may have been injected previously
+      try {
+        const straySelectors = ['.flowing-header', '.ml-footer-header', '.flowing-footer-header', '#flowingHeader', '#flowingRoot'];
+        straySelectors.forEach(sel => {
+          document.querySelectorAll(sel).forEach(el => {
+            if (!this.footer || !this.footer.contains(el)) {
+              try { el.parentNode && el.parentNode.removeChild(el); } catch (e) { }
+            }
+          });
+        });
+      } catch (cleanupErr) { console.warn('Could not cleanup stray headers', cleanupErr); }
+
+      // We'll create or reuse a root element inside #flowingFooter:
       // 1) measurement root (`flowingRoot`) - used for layout measurements
       // 2) interactive header (`flowingHeader`) - contains title, context badge and toggle
       // 3) content container (`flowingContent`) - chat / balanced views live here
 
-      const root = document.createElement('div');
-      root.id = 'flowingRoot';
-      root.className = 'flowing-root';
+      let root = this.footer.querySelector('#flowingRoot');
+      if (!root) {
+        root = document.createElement('div');
+        root.id = 'flowingRoot';
+        root.className = 'flowing-root';
+      } else {
+        // reuse existing root but clear it so we don't stack content
+        try { root.innerHTML = ''; } catch (e) { /* ignore */ }
+      }
 
       // Header (interactive container) - keep it as a container, not just a button
       const header = document.createElement('div');
