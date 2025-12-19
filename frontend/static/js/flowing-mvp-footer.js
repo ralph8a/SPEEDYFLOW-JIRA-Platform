@@ -630,6 +630,13 @@ class FlowingFooter {
   // Public wrapper for switching to balanced view from external callers
   public_switchToBalancedView(issueKey) { return this.switchToBalancedView(issueKey); }
 
+  // Explicit Flowing-specific API names to avoid ambiguity with other publics
+  flowing_expand() { return this.expand(); }
+  flowing_collapse() { return this.collapse(); }
+  flowing_toggle() { return this.toggle(); }
+  flowing_switchToChatView() { return this.switchToChatView(); }
+  flowing_switchToBalancedView(issueKey) { return this.switchToBalancedView(issueKey); }
+
   // Centralized view switcher to ensure exactly one view is visible at a time
   setActiveView(viewName) {
     const chatView = document.getElementById('chatOnlyView');

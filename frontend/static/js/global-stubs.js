@@ -67,18 +67,18 @@
         return {
             expand(issueKey) {
                 // Try footer API first, else DOM fallback
-                const res = callFooter('public_expand', []);
+                const res = callFooter('flowing_expand', []);
                 if (res === undefined) domExpand();
                 try { window.dispatchEvent(new CustomEvent('flowing:expanded', { detail: { issueKey } })); } catch (e) { }
             },
             collapse() {
-                const res = callFooter('public_collapse', []);
+                const res = callFooter('flowing_collapse', []);
                 if (res === undefined) domCollapse();
                 try { window.dispatchEvent(new CustomEvent('flowing:collapsed')); } catch (e) { }
             },
             toggle() {
                 // Prefer footer toggle if present
-                const res = callFooter('toggle', []);
+                const res = callFooter('flowing_toggle', []);
                 if (res === undefined) {
                     // fallback toggle based on DOM class
                     try {
@@ -93,17 +93,17 @@
                 if (window.state && typeof window.state === 'object') { window.state.selectedIssue = issueKey; window.state.viewMode = 'balanced'; }
 
                 // Expand + delegate to footer to load content
-                const resExp = callFooter('public_expand', []);
+                const resExp = callFooter('flowing_expand', []);
                 if (resExp === undefined) domExpand();
 
-                const res = callFooter('public_switchToBalancedView', [issueKey]);
+                const res = callFooter('flowing_switchToBalancedView', [issueKey]);
                 if (res === undefined) domSwitchToBalanced(issueKey);
 
                 try { window.dispatchEvent(new CustomEvent('flowing:switchedToBalanced', { detail: { issueKey } })); } catch (e) { }
             },
             switchToChatView() {
                 if (window.state && typeof window.state === 'object') { window.state.selectedIssue = null; window.state.viewMode = 'kanban'; }
-                const res = callFooter('public_switchToChatView', []);
+                const res = callFooter('flowing_switchToChatView', []);
                 if (res === undefined) domSwitchToChat();
                 try { window.dispatchEvent(new CustomEvent('flowing:switchedToChat')); } catch (e) { }
             }
