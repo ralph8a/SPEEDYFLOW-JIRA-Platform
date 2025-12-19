@@ -2,6 +2,20 @@
 // These are safe no-ops and can be overridden by full implementations.
 (function () {
     // Centralized Flowing shell: unify expand/collapse and view switching logic here.
+
+    // Quiet module-level verbose console.log output unless explicitly enabled by
+    // setting `window.__FLOWING_DEBUG = true` from the browser console.
+    // This prevents noisy debug logs from altering developer workflows.
+    (function () {
+        try {
+            if (!window.__FLOWING_DEBUG) {
+                const _origLog = console.log.bind(console);
+                console.log = function () { /* suppressed debug */ };
+                // keep a pointer in case someone wants to restore
+                console.__flowing_orig_log = _origLog;
+            }
+        } catch (e) { /* silent */ }
+    })();
     window.FlowingShell = window.FlowingShell || (function () {
         // Internal helper to call footer API when available
         function callFooter(method, args) {
