@@ -1522,185 +1522,185 @@ class FlowingFooter {
       return null;
     };
 
-      // Format field value (same logic as right-sidebar)
-      const formatValue = (value) => {
-        if (!value) return '';
-        if (typeof value === 'string') return value;
-        if (value.name) return value.name;
-        if (value.displayName) return value.displayName;
-        if (value.value) return value.value;
-        if (Array.isArray(value)) {
-          return value.map(v => v.name || v.value || v).join(', ');
-        }
-        return String(value);
-      };
+    // Format field value (same logic as right-sidebar)
+    const formatValue = (value) => {
+      if (!value) return '';
+      if (typeof value === 'string') return value;
+      if (value.name) return value.name;
+      if (value.displayName) return value.displayName;
+      if (value.value) return value.value;
+      if (Array.isArray(value)) {
+        return value.map(v => v.name || v.value || v).join(', ');
+      }
+      return String(value);
+    };
 
-      // Extract key fields from multiple sources (same as right-sidebar)
-      const summary = issue.summary || getField('summary') || 'No title';
-      // If no description provided, keep empty so we can hide the section
-      const rawDescription = issue.description || getField('description') || '';
-      // Helper to escape HTML
-      const escapeHtml = (str) => String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-      // Normalize line endings and remove excessive blank lines and leading breaks
-      const normalizeDescription = (txt) => {
-        if (!txt) return '';
-        let s = String(txt).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        // Remove leading blank lines/spaces
-        s = s.replace(/^\s*\n+/, '');
-        // Collapse 3+ consecutive newlines to two (paragraph)
-        s = s.replace(/\n{3,}/g, '\n\n');
-        // Trim trailing whitespace
-        s = s.replace(/\s+$/g, '');
-        return s;
-      };
-      const cleanedDescription = normalizeDescription(rawDescription);
-      // Convert to safe HTML with <br> for line breaks so layout is consistent
-      const description = cleanedDescription ? escapeHtml(cleanedDescription).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') : '';
+    // Extract key fields from multiple sources (same as right-sidebar)
+    const summary = issue.summary || getField('summary') || 'No title';
+    // If no description provided, keep empty so we can hide the section
+    const rawDescription = issue.description || getField('description') || '';
+    // Helper to escape HTML
+    const escapeHtml = (str) => String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    // Normalize line endings and remove excessive blank lines and leading breaks
+    const normalizeDescription = (txt) => {
+      if (!txt) return '';
+      let s = String(txt).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      // Remove leading blank lines/spaces
+      s = s.replace(/^\s*\n+/, '');
+      // Collapse 3+ consecutive newlines to two (paragraph)
+      s = s.replace(/\n{3,}/g, '\n\n');
+      // Trim trailing whitespace
+      s = s.replace(/\s+$/g, '');
+      return s;
+    };
+    const cleanedDescription = normalizeDescription(rawDescription);
+    // Convert to safe HTML with <br> for line breaks so layout is consistent
+    const description = cleanedDescription ? escapeHtml(cleanedDescription).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') : '';
 
-      // Standard fields
-      const priority = formatValue(issue.priority || getField('priority'));
-      const assignee = formatValue(issue.assignee || getField('assignee'));
-      const status = formatValue(issue.status || getField('status'));
-      const reporter = formatValue(issue.reporter || getField('reporter'));
-      const created = issue.created || getField('created');
-      const updated = issue.updated || getField('updated');
+    // Standard fields
+    const priority = formatValue(issue.priority || getField('priority'));
+    const assignee = formatValue(issue.assignee || getField('assignee'));
+    const status = formatValue(issue.status || getField('status'));
+    const reporter = formatValue(issue.reporter || getField('reporter'));
+    const created = issue.created || getField('created');
+    const updated = issue.updated || getField('updated');
 
-      // Custom fields - Multiple field mappings (from CUSTOM_FIELDS_REFERENCE.json)
-      const requestType = formatValue(getField('customfield_10010'));
+    // Custom fields - Multiple field mappings (from CUSTOM_FIELDS_REFERENCE.json)
+    const requestType = formatValue(getField('customfield_10010'));
 
-      // Criticidad - try multiple possible field IDs
-      const criticidad = formatValue(getField('customfield_10125') || getField('customfield_10037'));
+    // Criticidad - try multiple possible field IDs
+    const criticidad = formatValue(getField('customfield_10125') || getField('customfield_10037'));
 
-      // Tipo de Solicitud
-      const tipoSolicitud = formatValue(getField('customfield_10156'));
+    // Tipo de Solicitud
+    const tipoSolicitud = formatValue(getField('customfield_10156'));
 
-      // Plataforma - try multiple possible field IDs
-      const plataforma = formatValue(getField('customfield_10169') || getField('customfield_10129'));
+    // Plataforma - try multiple possible field IDs
+    const plataforma = formatValue(getField('customfield_10169') || getField('customfield_10129'));
 
-      // Área - try multiple possible field IDs
-      const area = formatValue(getField('customfield_10168') || getField('customfield_10130'));
+    // Área - try multiple possible field IDs
+    const area = formatValue(getField('customfield_10168') || getField('customfield_10130'));
 
-      // Empresa - try multiple possible field IDs
-      const empresa = formatValue(getField('customfield_10143') || getField('customfield_10131'));
+    // Empresa - try multiple possible field IDs
+    const empresa = formatValue(getField('customfield_10143') || getField('customfield_10131'));
 
-      // Producto - try multiple possible field IDs
-      const producto = formatValue(getField('customfield_10144') || getField('customfield_10132'));
+    // Producto - try multiple possible field IDs
+    const producto = formatValue(getField('customfield_10144') || getField('customfield_10132'));
 
-      // Contact info - try multiple possible field IDs
-      const email = formatValue(getField('customfield_10141') || getField('customfield_10133'));
-      const phone = formatValue(getField('customfield_10142') || getField('customfield_10134'));
+    // Contact info - try multiple possible field IDs
+    const email = formatValue(getField('customfield_10141') || getField('customfield_10133'));
+    const phone = formatValue(getField('customfield_10142') || getField('customfield_10134'));
 
-      // Additional info fields
-      const pais = formatValue(getField('customfield_10165') || getField('customfield_10166'));
-      const paisCodigo = formatValue(getField('customfield_10167'));
-      const notasAnalisis = formatValue(getField('customfield_10149'));
-      const resolucion = formatValue(getField('customfield_10151'));
-      const reporter2 = formatValue(getField('customfield_10111')); // Reporter/Informador
+    // Additional info fields
+    const pais = formatValue(getField('customfield_10165') || getField('customfield_10166'));
+    const paisCodigo = formatValue(getField('customfield_10167'));
+    const notasAnalisis = formatValue(getField('customfield_10149'));
+    const resolucion = formatValue(getField('customfield_10151'));
+    const reporter2 = formatValue(getField('customfield_10111')); // Reporter/Informador
 
-      // Format dates
-      const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        return date.toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      };
+    // Format dates
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    };
 
-      // Collect long custom fields (strings > 120 chars) to show as full-width blocks
-      let longCustomFieldsHTML = '';
-      try {
-        const fld = issue.fields || {};
-        Object.keys(fld).forEach(k => {
-          if (!/^customfield_/.test(k)) return;
-          const raw = fld[k];
-          const val = formatValue(raw);
-          if (val && val.length > 120) {
-            const label = k.replace('customfield_', 'CF-');
-            longCustomFieldsHTML += `
+    // Collect long custom fields (strings > 120 chars) to show as full-width blocks
+    let longCustomFieldsHTML = '';
+    try {
+      const fld = issue.fields || {};
+      Object.keys(fld).forEach(k => {
+        if (!/^customfield_/.test(k)) return;
+        const raw = fld[k];
+        const val = formatValue(raw);
+        if (val && val.length > 120) {
+          const label = k.replace('customfield_', 'CF-');
+          longCustomFieldsHTML += `
     < div style = "grid-column: 1 / -1;" >
               <label style="font-size: 10px; font-weight: 700; color: #9ca3af; display:block; margin-bottom:6px;">${label}</label>
               <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${val}</div>
             </div >
     `;
+        }
+      });
+    } catch (e) { console.warn('Could not collect long custom fields', e); }
+
+    // Build essential fields HTML dynamically using available mappings when possible
+    const buildEssentialFieldsHTML = (mapping) => {
+      const keys = [];
+      // preferred order: form_fields, contact_info, system_fields
+      try {
+        if (mapping && mapping.categories) {
+          const cats = mapping.categories;
+          ['form_fields', 'contact_info', 'system_fields'].forEach(cat => {
+            const f = cats[cat] && cats[cat].fields ? Object.keys(cats[cat].fields) : [];
+            f.forEach(k => { if (!keys.includes(k)) keys.push(k); });
+          });
+        }
+      } catch (e) { /* ignore */ }
+
+      // ensure common core fields are present
+      ['priority', 'assignee', 'status', 'reporter', 'email', 'phone', 'summary'].forEach(k => { if (!keys.includes(k)) keys.push(k); });
+
+      let html = '';
+      // render up to many fields into the grid; filter out very long fields (handled earlier)
+      keys.forEach(k => {
+        let val = '';
+        if (k === 'priority') val = priority;
+        else if (k === 'assignee') val = assignee;
+        else if (k === 'status') val = status;
+        else if (k === 'reporter') val = reporter;
+        else val = formatValue(getField(k));
+        if (!val) return; // skip empty
+        // label from mapping if available
+        const label = (mapping && mapping.categories && (function () {
+          for (const cat of ['form_fields', 'contact_info', 'system_fields']) {
+            const f = mapping.categories[cat] && mapping.categories[cat].fields;
+            if (f && f[k] && f[k].label) return f[k].label;
           }
-        });
-      } catch (e) { console.warn('Could not collect long custom fields', e); }
+          return k.replace(/_/g, ' ').replace(/customfield /g, 'CF ').replace(/customfield_/, 'CF-');
+        })()) || k;
 
-      // Build essential fields HTML dynamically using available mappings when possible
-      const buildEssentialFieldsHTML = (mapping) => {
-        const keys = [];
-        // preferred order: form_fields, contact_info, system_fields
-        try {
-          if (mapping && mapping.categories) {
-            const cats = mapping.categories;
-            ['form_fields', 'contact_info', 'system_fields'].forEach(cat => {
-              const f = cats[cat] && cats[cat].fields ? Object.keys(cats[cat].fields) : [];
-              f.forEach(k => { if (!keys.includes(k)) keys.push(k); });
-            });
-          }
-        } catch (e) { /* ignore */ }
-
-        // ensure common core fields are present
-        ['priority', 'assignee', 'status', 'reporter', 'email', 'phone', 'summary'].forEach(k => { if (!keys.includes(k)) keys.push(k); });
-
-        let html = '';
-        // render up to many fields into the grid; filter out very long fields (handled earlier)
-        keys.forEach(k => {
-          let val = '';
-          if (k === 'priority') val = priority;
-          else if (k === 'assignee') val = assignee;
-          else if (k === 'status') val = status;
-          else if (k === 'reporter') val = reporter;
-          else val = formatValue(getField(k));
-          if (!val) return; // skip empty
-          // label from mapping if available
-          const label = (mapping && mapping.categories && (function () {
-            for (const cat of ['form_fields', 'contact_info', 'system_fields']) {
-              const f = mapping.categories[cat] && mapping.categories[cat].fields;
-              if (f && f[k] && f[k].label) return f[k].label;
-            }
-            return k.replace(/_/g, ' ').replace(/customfield /g, 'CF ').replace(/customfield_/, 'CF-');
-          })()) || k;
-
-          html += `
+        html += `
           <div class="field-wrapper" style="display:flex;flex-direction:column;gap:6px;">
             <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">${label}</label>
             <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${val}</div>
           </div>
         `;
-        });
-        return html;
-      };
+      });
+      return html;
+    };
 
-      // Try to obtain mapping from global or fetch fallback (non-blocking)
-      let mappingObj = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
-      const fetchMappingIfNeeded = async () => {
-        if (mappingObj) return mappingObj;
-        try {
-          const resp = await fetch('/data/CUSTOM_FIELDS_REFERENCE.json');
-          if (resp.ok) { mappingObj = await resp.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
-        } catch (e) { /* ignore */ }
-        try {
-          const resp2 = await fetch('/static/data/CUSTOM_FIELDS_REFERENCE.json');
-          if (resp2.ok) { mappingObj = await resp2.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
-        } catch (e) { /* ignore */ }
-        return null;
-      };
+    // Try to obtain mapping from global or fetch fallback (non-blocking)
+    let mappingObj = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
+    const fetchMappingIfNeeded = async () => {
+      if (mappingObj) return mappingObj;
+      try {
+        const resp = await fetch('/data/CUSTOM_FIELDS_REFERENCE.json');
+        if (resp.ok) { mappingObj = await resp.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+      } catch (e) { /* ignore */ }
+      try {
+        const resp2 = await fetch('/static/data/CUSTOM_FIELDS_REFERENCE.json');
+        if (resp2.ok) { mappingObj = await resp2.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+      } catch (e) { /* ignore */ }
+      return null;
+    };
 
-      // Initial essential fields HTML (best-effort without mapping)
-      let initialEssentialHTML = buildEssentialFieldsHTML(mappingObj || {});
+    // Initial essential fields HTML (best-effort without mapping)
+    let initialEssentialHTML = buildEssentialFieldsHTML(mappingObj || {});
 
-      // TWO-COLUMN LAYOUT WITH ATTACHMENTS (dynamic fields inserted)
-      container.innerHTML = `
+    // TWO-COLUMN LAYOUT WITH ATTACHMENTS (dynamic fields inserted)
+    container.innerHTML = `
       ${description ? `
       <!-- Description Section (Full Width) - use native <details> so collapse is CSS-driven and simpler -->
       <details open class="ticket-description-section" style="padding: 0; background: transparent; border-bottom: 1px solid rgba(59, 130, 246, 0.08);">
@@ -1716,12 +1716,12 @@ class FlowingFooter {
         </div>
       </details>
       ` : ''
-        }
+      }
       
       <div class="purple-divider" style="margin:0"></div>
 
       <!-- FOUR-COLUMN GRID: description full-width above, then 3 cols for fields + 1 col for attachments/comments -->
-    <div class="footer-grid-4" style="display: grid; grid-template-columns: 60% 40%; gap: 16px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+    <div class="footer-grid-4" style="display: grid; grid-template-columns: 60% 40%; gap: 12px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
 
       <!-- LEFT AREA: occupies first column (60%) for essential fields -->
       <div class="left-column" style="grid-column: 1 / 2; display: flex; flex-direction: column; gap: 12px;">
@@ -1851,8 +1851,8 @@ class FlowingFooter {
         </div>
       </div>
 
-      <!-- RIGHT COLUMN: attachments & comments (column 4) -->
-      <div class="right-column" style="grid-column: 4 / span 1; display: flex; flex-direction: column; gap: 12px;">
+      <!-- RIGHT COLUMN: attachments & comments (column 2) -->
+      <div class="right-column" style="grid-column: 2 / span 1; display: flex; flex-direction: column; gap: 12px;">
 
         <!-- Attachments area (replaces ML Actions) -->
         <div class="attachments-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
@@ -1903,215 +1903,215 @@ class FlowingFooter {
   `;
 
 
-    }
+  }
 
-    adjustContentPadding(isCollapsed) {
-      const kanbanView = document.getElementById('kanbanView');
-      const boardWrapper = document.querySelector('.board-wrapper');
-      const rightSidebar = document.getElementById('rightSidebar');
+  adjustContentPadding(isCollapsed) {
+    const kanbanView = document.getElementById('kanbanView');
+    const boardWrapper = document.querySelector('.board-wrapper');
+    const rightSidebar = document.getElementById('rightSidebar');
 
-      try {
-        if (isCollapsed) {
-          // When collapsed, keep a small reserved area matching collapsed footer
-          const collapsedHeight = 80; // matches collapsed padding in CSS
-          const padding = `${collapsedHeight}px`;
-          if (kanbanView) kanbanView.style.paddingBottom = padding;
-          if (boardWrapper) boardWrapper.style.paddingBottom = padding;
-          if (rightSidebar) rightSidebar.style.paddingBottom = padding;
-          return;
-        }
-
-        // When expanded, compute footer height and reserve that space so the board isn't covered
-        const footerEl = document.getElementById('flowingFooter') || this.footer;
-        let footerHeight = 300; // sensible default
-        try {
-          if (footerEl) footerHeight = Math.round(footerEl.getBoundingClientRect().height);
-          else {
-            const cssH = getComputedStyle(document.documentElement).getPropertyValue('--flowing-footer-height');
-            if (cssH) footerHeight = parseInt(cssH, 10) || footerHeight;
-          }
-        } catch (e) { /* ignore */ }
-
-        // Add small buffer so elements don't touch footer border
-        const paddingExpanded = `${Math.max(footerHeight + 16, 200)}px`;
-        if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
-        if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
-        if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
-      } catch (e) {
-        // Fallback conservative padding
-        const fallback = isCollapsed ? '80px' : '300px';
-        if (kanbanView) kanbanView.style.paddingBottom = fallback;
-        if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
-        if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
+    try {
+      if (isCollapsed) {
+        // When collapsed, keep a small reserved area matching collapsed footer
+        const collapsedHeight = 80; // matches collapsed padding in CSS
+        const padding = `${collapsedHeight}px`;
+        if (kanbanView) kanbanView.style.paddingBottom = padding;
+        if (boardWrapper) boardWrapper.style.paddingBottom = padding;
+        if (rightSidebar) rightSidebar.style.paddingBottom = padding;
+        return;
       }
+
+      // When expanded, compute footer height and reserve that space so the board isn't covered
+      const footerEl = document.getElementById('flowingFooter') || this.footer;
+      let footerHeight = 300; // sensible default
+      try {
+        if (footerEl) footerHeight = Math.round(footerEl.getBoundingClientRect().height);
+        else {
+          const cssH = getComputedStyle(document.documentElement).getPropertyValue('--flowing-footer-height');
+          if (cssH) footerHeight = parseInt(cssH, 10) || footerHeight;
+        }
+      } catch (e) { /* ignore */ }
+
+      // Add small buffer so elements don't touch footer border
+      const paddingExpanded = `${Math.max(footerHeight + 16, 200)}px`;
+      if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
+      if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
+      if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
+    } catch (e) {
+      // Fallback conservative padding
+      const fallback = isCollapsed ? '80px' : '300px';
+      if (kanbanView) kanbanView.style.paddingBottom = fallback;
+      if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
+      if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
     }
+  }
 
   async sendMessage() {
-      if (this.isLoading) return;
+    if (this.isLoading) return;
 
-      const message = this.input?.value.trim();
-      if (!message) return;
+    const message = this.input?.value.trim();
+    if (!message) return;
 
-      // Clear input
-      this.input.value = '';
-      this.input.style.height = 'auto';
+    // Clear input
+    this.input.value = '';
+    this.input.style.height = 'auto';
 
-      // Add user message
-      this.addMessage('user', message);
+    // Add user message
+    this.addMessage('user', message);
 
-      // Show loading
-      this.isLoading = true;
-      this.sendBtn.disabled = true;
-      const loadingMsg = this.addMessage('assistant', '', true);
+    // Show loading
+    this.isLoading = true;
+    this.sendBtn.disabled = true;
+    const loadingMsg = this.addMessage('assistant', '', true);
 
-      try {
-        // Send to backend
-        const response = await fetch('/api/copilot/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: message,
-            context: this.context
-          })
-        });
+    try {
+      // Send to backend
+      const response = await fetch('/api/copilot/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: message,
+          context: this.context
+        })
+      });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText} `);
-        }
-
-        const data = await response.json();
-
-        // Remove loading message
-        loadingMsg?.remove();
-
-        // Add assistant response
-        this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
-
-      } catch (error) {
-        console.error('❌ Flowing MVP error:', error);
-        loadingMsg?.remove();
-        this.addMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
-      } finally {
-        this.isLoading = false;
-        this.sendBtn.disabled = false;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText} `);
       }
+
+      const data = await response.json();
+
+      // Remove loading message
+      loadingMsg?.remove();
+
+      // Add assistant response
+      this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
+
+    } catch (error) {
+      console.error('❌ Flowing MVP error:', error);
+      loadingMsg?.remove();
+      this.addMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
+    } finally {
+      this.isLoading = false;
+      this.sendBtn.disabled = false;
     }
+  }
 
-    addMessage(role, content, isLoading = false) {
-      if (!this.messagesContainer) return null;
+  addMessage(role, content, isLoading = false) {
+    if (!this.messagesContainer) return null;
 
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `flowing - message ${role}${isLoading ? ' loading' : ''} `;
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `flowing - message ${role}${isLoading ? ' loading' : ''} `;
 
-      const avatar = role === 'user' ? '👤' : 'SF';
-      const avatarClass = role === 'user' ? '' : 'copilot-sf-logo';
+    const avatar = role === 'user' ? '👤' : 'SF';
+    const avatarClass = role === 'user' ? '' : 'copilot-sf-logo';
 
-      messageDiv.innerHTML = `
+    messageDiv.innerHTML = `
     < div class="message-avatar ${avatarClass}" > ${avatar}</div >
       <div class="message-content">
         ${isLoading ? '<p>Thinking...</p>' : this.formatMessage(content)}
       </div>
   `;
 
-      this.messagesContainer.appendChild(messageDiv);
-      this.scrollToBottom();
+    this.messagesContainer.appendChild(messageDiv);
+    this.scrollToBottom();
 
-      return messageDiv;
+    return messageDiv;
+  }
+
+  formatMessage(content) {
+    // Convert markdown-style formatting to HTML
+    let formatted = content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+
+    // Convert bullet points
+    if (formatted.includes('- ') || formatted.includes('• ')) {
+      const lines = formatted.split('</p><p>');
+      formatted = lines.map(line => {
+        if (line.includes('- ') || line.includes('• ')) {
+          const items = line.split(/<br>/).filter(l => l.trim());
+          const listItems = items.map(item => {
+            const cleaned = item.replace(/^[•\-]\s*/, '').trim();
+            return cleaned ? `< li > ${cleaned}</li > ` : '';
+          }).join('');
+          return `< ul > ${listItems}</ul > `;
+        }
+        return line;
+      }).join('</p><p>');
     }
 
-    formatMessage(content) {
-      // Convert markdown-style formatting to HTML
-      let formatted = content
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code>$1</code>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
-
-      // Convert bullet points
-      if (formatted.includes('- ') || formatted.includes('• ')) {
-        const lines = formatted.split('</p><p>');
-        formatted = lines.map(line => {
-          if (line.includes('- ') || line.includes('• ')) {
-            const items = line.split(/<br>/).filter(l => l.trim());
-            const listItems = items.map(item => {
-              const cleaned = item.replace(/^[•\-]\s*/, '').trim();
-              return cleaned ? `< li > ${cleaned}</li > ` : '';
-            }).join('');
-            return `< ul > ${listItems}</ul > `;
-          }
-          return line;
-        }).join('</p><p>');
-      }
-
-      // Wrap in paragraph if not already wrapped
-      if (!formatted.startsWith('<p>') && !formatted.startsWith('<ul>')) {
-        formatted = `< p > ${formatted}</p > `;
-      }
-
-      return formatted;
+    // Wrap in paragraph if not already wrapped
+    if (!formatted.startsWith('<p>') && !formatted.startsWith('<ul>')) {
+      formatted = `< p > ${formatted}</p > `;
     }
 
-    scrollToBottom() {
-      if (this.messagesContainer) {
-        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-      }
-    }
+    return formatted;
+  }
 
-    // Public API for external usage
-    askAboutTicket(issueKey) {
-      this.expand();
-      this.input.value = `Tell me about ticket ${issueKey} `;
-      this.input.focus();
+  scrollToBottom() {
+    if (this.messagesContainer) {
+      this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
     }
+  }
 
-    suggestActions(issueKey) {
-      this.expand();
-      this.input.value = `What should I do with ticket ${issueKey} ? `;
-      this.sendMessage();
-    }
+  // Public API for external usage
+  askAboutTicket(issueKey) {
+    this.expand();
+    this.input.value = `Tell me about ticket ${issueKey} `;
+    this.input.focus();
+  }
 
-    explainSLA(issueKey) {
-      this.expand();
-      this.input.value = `Explain the SLA status for ${issueKey}`;
-      this.sendMessage();
-    }
+  suggestActions(issueKey) {
+    this.expand();
+    this.input.value = `What should I do with ticket ${issueKey} ? `;
+    this.sendMessage();
+  }
+
+  explainSLA(issueKey) {
+    this.expand();
+    this.input.value = `Explain the SLA status for ${issueKey}`;
+    this.sendMessage();
+  }
 
   /**
    * Mostrar sugerencias contextuales usando FlowingContext
    * Integra las capacidades de IA real del sistema Flowing
    */
   async showContextualSuggestions() {
-      if (!window.FlowingContext) {
-        console.warn('FlowingContext not available');
+    if (!window.FlowingContext) {
+      console.warn('FlowingContext not available');
+      return;
+    }
+
+    try {
+      // Obtener sugerencias contextuales
+      const suggestions = await window.FlowingContext.getSuggestions();
+
+      if (!suggestions || !suggestions.suggestions || suggestions.suggestions.length === 0) {
         return;
       }
 
-      try {
-        // Obtener sugerencias contextuales
-        const suggestions = await window.FlowingContext.getSuggestions();
+      // Mostrar mensaje con sugerencias
+      const suggestionsList = suggestions.suggestions.map(s =>
+        `• ${s.icon || '💡'} ${s.title} `
+      ).join('\n');
 
-        if (!suggestions || !suggestions.suggestions || suggestions.suggestions.length === 0) {
-          return;
-        }
-
-        // Mostrar mensaje con sugerencias
-        const suggestionsList = suggestions.suggestions.map(s =>
-          `• ${s.icon || '💡'} ${s.title} `
-        ).join('\n');
-
-        this.addMessage(
-          `** ${suggestions.title || 'Sugerencias Contextuales'}**\n\n${suggestionsList} \n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
-          'assistant'
-        );
-      } catch (error) {
-        console.error('Error showing contextual suggestions:', error);
-      }
+      this.addMessage(
+        `** ${suggestions.title || 'Sugerencias Contextuales'}**\n\n${suggestionsList} \n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
+        'assistant'
+      );
+    } catch (error) {
+      console.error('Error showing contextual suggestions:', error);
     }
   }
+}
 
-  // Exponer FlowingContext globalmente para integración con footer
-  if(typeof FlowingContext !== 'undefined') {
+// Exponer FlowingContext globalmente para integración con footer
+if (typeof FlowingContext !== 'undefined') {
   // prefer non-deprecated name
   window._FlowingContext = FlowingContext;
   // provide deprecated alias with warning
