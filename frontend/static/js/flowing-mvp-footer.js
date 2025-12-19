@@ -1842,7 +1842,6 @@ class FlowingFooter {
   adjustContentPadding(isCollapsed) {
     const kanbanView = document.getElementById('kanbanView');
     const boardWrapper = document.querySelector('.board-wrapper');
-    const listView = document.getElementById('listView');
     const rightSidebar = document.getElementById('rightSidebar');
 
     try {
@@ -1852,7 +1851,6 @@ class FlowingFooter {
         const padding = `${collapsedHeight}px`;
         if (kanbanView) kanbanView.style.paddingBottom = padding;
         if (boardWrapper) boardWrapper.style.paddingBottom = padding;
-        if (listView) listView.style.paddingBottom = padding;
         if (rightSidebar) rightSidebar.style.paddingBottom = padding;
         return;
       }
@@ -1872,14 +1870,12 @@ class FlowingFooter {
       const paddingExpanded = `${Math.max(footerHeight + 16, 200)}px`;
       if (kanbanView) kanbanView.style.paddingBottom = paddingExpanded;
       if (boardWrapper) boardWrapper.style.paddingBottom = paddingExpanded;
-      if (listView) listView.style.paddingBottom = paddingExpanded;
       if (rightSidebar) rightSidebar.style.paddingBottom = paddingExpanded;
     } catch (e) {
       // Fallback conservative padding
       const fallback = isCollapsed ? '80px' : '300px';
       if (kanbanView) kanbanView.style.paddingBottom = fallback;
       if (boardWrapper) boardWrapper.style.paddingBottom = fallback;
-      if (listView) listView.style.paddingBottom = fallback;
       if (rightSidebar) rightSidebar.style.paddingBottom = fallback;
     }
   }
