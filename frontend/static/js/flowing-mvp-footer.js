@@ -573,6 +573,19 @@ class FlowingFooter {
     if (viewName === 'chat') {
       if (chatView) { chatView.style.display = 'block'; chatView.setAttribute('aria-hidden', 'false'); }
       if (balancedView) { balancedView.style.display = 'none'; balancedView.setAttribute('aria-hidden', 'true'); }
+      // Restore chat UI pieces
+      try {
+        if (this.suggestionElement) this.suggestionElement.style.display = '';
+        if (this.messagesContainer) this.messagesContainer.style.display = '';
+        if (this.input) this.input.style.display = '';
+        if (this.sendBtn) this.sendBtn.style.display = '';
+        if (this.toggleBtn) this.toggleBtn.style.display = '';
+        if (this.contextBadge) this.contextBadge.style.display = '';
+        // Re-show common floating launcher classes
+        ['flowing-floating', 'ff-floating-launcher', 'flowing-launcher'].forEach(cls => {
+          document.querySelectorAll('.' + cls).forEach(el => { try { el.style.display = ''; } catch (e) { } });
+        });
+      } catch (e) { /* ignore */ }
       // Reset context
       this.context.selectedIssue = null;
       this.updateContextBadge();
@@ -588,6 +601,11 @@ class FlowingFooter {
       // viewing a ticket in balanced view (suggestion badge, floating launcher, composer remnants)
       try {
         if (this.suggestionElement) this.suggestionElement.style.display = 'none';
+        if (this.messagesContainer) this.messagesContainer.style.display = 'none';
+        if (this.input) this.input.style.display = 'none';
+        if (this.sendBtn) this.sendBtn.style.display = 'none';
+        if (this.toggleBtn) this.toggleBtn.style.display = 'none';
+        if (this.contextBadge) this.contextBadge.style.display = 'none';
         const composer = this.footer?.querySelector('.flowing-composer');
         if (composer) composer.style.display = 'none';
 
