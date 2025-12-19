@@ -262,8 +262,8 @@ function setupIssueCardClickHandlers() {
   console.log('🔧 [Setup] ===== EXECUTING setupIssueCardClickHandlers =====');
 
   // Setup details buttons with proper drag and drop compatibility
-  // Support multiple possible selectors (legacy and camelCase)
-  const detailsButtons = document.querySelectorAll('.issue-details-btn, .issueDetailsBtn');
+  // Single canonical selector to avoid confusion
+  const detailsButtons = document.querySelectorAll('.issueDetailsBtn');
   console.log('📋 [Setup] Found', detailsButtons.length, 'details buttons');
 
   detailsButtons.forEach((btn, index) => {
@@ -654,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Simple global backup (no stopPropagation)
     document.addEventListener('click', function (e) {
-      const btn = e.target.closest('.issue-details-btn, .issueDetailsBtn');
+      const btn = e.target.closest('.issueDetailsBtn');
       if (btn && !btn.onclick) { // Only if no onclick set
         // resolve issue key robustly
         const getIssueKeyFromBtn = (el) => {
