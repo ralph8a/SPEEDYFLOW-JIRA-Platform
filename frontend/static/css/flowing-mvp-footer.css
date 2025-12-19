@@ -19,6 +19,9 @@ body {
   --ff-glass-overlay: rgba(255, 255, 255, 0.56);
   --ff-blue-splash: rgba(59, 130, 246, 0.1);
   --ff-card-bg: rgba(255, 255, 255, 0.95);
+  --flowing-footer-max: 90vh;
+  --flowing-footer-collapsed-padding: 80px;
+  --flowing-header-height: 72px;
 }
 
 /* When Flowing footer is expanded, push main content up to leave room */
@@ -28,7 +31,7 @@ body.flowing-footer-expanded .board-wrapper,
 body.flowing-footer-expanded #listView,
 body.flowing-footer-expanded .list-wrapper,
 body.flowing-footer-expanded .header-enhanced,
-body.flowing-footer-expanded .filter-bar-enhanced {
+body.flowing-foo body.flowing-footer-expanded .filter-bar-enhanced {
   transform: none !important;
   transition: none !important;
 }
@@ -45,7 +48,7 @@ body.sidebar-collapsed.flowing-footer-expanded .filter-bar-enhanced {
 /* Expanded state visual: allow taller footer with smooth transition */
 .flowing-footer:not(.collapsed) {
   transition: max-height 0.28s ease, box-shadow 0.2s ease;
-  max-height: 640px;
+  max-height: var(--flowing-footer-max, 90vh);
 }
 
 
@@ -87,21 +90,14 @@ body.sidebar-collapsed.flowing-footer-expanded .filter-bar-enhanced {
   margin: 0 auto;
 }
 
-/* Ensure board-wrapper has padding for footer visibility */
-.board-wrapper,
-#kanbanView,
-#listView {
-  padding-bottom: 300px !important;
-  /* Space for expanded footer */
-  transition: padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* Ensure board-wrapper has padding for footer visibility (no-op - host app controls spacing) */
 
 /* Adjust padding when footer is collapsed */
 .flowing-footer.collapsed~.main-wrapper .board-wrapper,
 body:has(.flowing-footer.collapsed) .board-wrapper,
 body:has(.flowing-footer.collapsed) #kanbanView,
 body:has(.flowing-footer.collapsed) #listView {
-  padding-bottom: 80px !important;
+  padding-bottom: var(--flowing-footer-collapsed-padding, 80px) !important;
   /* Space for collapsed footer */
 }
 
@@ -1613,12 +1609,7 @@ body.theme-dark .btn-footer-toggle {
    Collapsible glassmorphic chat assistant
    ============================================ */
 
-/* Ensure main content area has space for footer */
-#kanbanView,
-.board-wrapper {
-  padding-bottom: 70px !important;
-  transition: padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* NOTE: host app controls layout spacing. Default no forced padding here. */
 
 /* Main Footer Container */
 .flowing-footer {
@@ -2183,15 +2174,9 @@ body.sidebar-collapsed .flowing-footer {
     max-height: 60px;
   }
 
-  #kanbanView,
-  .board-wrapper {
-    padding-bottom: 80px !important;
-  }
-
-  body:has(.flowing-footer.collapsed) #kanbanView,
-  body:has(.flowing-footer.collapsed) .board-wrapper {
-    padding-bottom: 70px !important;
-  }
+  /* Do not force host layout padding here. The collapsed footer state
+     already reserves 80px via the dedicated selector earlier in this file.
+     This prevents conflicting padding values on small viewports. */
 
   .flowing-toggle-btn {
     padding: 12px 16px;
@@ -2435,6 +2420,56 @@ body.theme-dark .footer-two-columns .panel-card {
   flex: 1;
   min-width: 0;
   padding-left: 8px;
+}
+
+/* ===== Balanced view container adjustments ===== */
+/* Ensure balanced overlay content fills the footer overlay area and scrolls internally */
+.flowing-header {
+  /* header styles are defined earlier; keep placeholder for specificity tuning */
+}
+
+.flowing-footer.balanced-active .flowing-content {
+  /* position content below the header and let it fill the overlay height */
+  margin-top: var(--flowing-header-height, 72px);
+  height: calc(100% - var(--flowing-header-height, 72px));
+  min-height: 240px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#balancedView {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#balancedContentContainer {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 12px 20px 12px;
+}
+
+/* Ensure the two-column layout inside balanced content stretches to full height and scrolls internally */
+.flowing-footer.balanced-active .footer-two-columns {
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+/* On very small viewports, ensure balanced overlay does not exceed viewport */
+@media (max-height: 600px) {
+  .flowing-footer.balanced-active {
+    top: calc(var(--flowing-footer-overlay-top, 56px));
+    height: calc(100vh - var(--flowing-footer-overlay-top, 56px));
+  }
+
+  .flowing-footer.balanced-active .flowing-content {
+    min-height: 200px;
+  }
 }
 
 .risk-header {
@@ -2703,3 +2738,60 @@ body.theme-dark .flowing-footer,
   font-size: 11px;
   color: #4c1d95;
 }
+
+/* ----------------------- OVERRIDES (app-specific safety) ----------------------- */
+/* Ensure host app layout is not forced by footer CSS */
+#kanbanView,
+.board-wrapper,
+#listView {
+  padding-bottom: 0 !important;
+}
+
+/* Composer/layout safety: strongly enforce single-line composer to prevent send button wrapping */
+.flowing-composer {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px !important;
+  box-sizing: border-box;
+  flex-wrap: nowrap !important;
+}
+
+.flowing-composer textarea,
+.flowing-composer #flowingInput,
+.flowing-composer .flowing-input,
+.flowing-composer #unifiedInput {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.flowing-composer .flowing-send-btn,
+.flowing-composer .btn-send,
+.flowing-composer button {
+  flex: 0 0 auto !important;
+}
+
+/* Suggestion placement: ensure suggestion element in header is centered and visible */
+.flowing-header #flowingSuggestion,
+.footer-header-center #flowingSuggestion {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-width: 180px;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Balanced content container defaults: avoid hard max/min sizing enforced by JS
+   but provide reasonable responsive constraints here. */
+#balancedContentContainer {
+  min-height: 240px !important;
+  max-height: calc(100vh - var(--flowing-footer-overlay-top, 72px) - 40px) !important;
+  height: auto !important;
+  overflow-y: auto !important;
+}
+
+/* End overrides */

@@ -8,6 +8,48 @@ logger = logging.getLogger(__name__)
 models_bp = Blueprint('models', __name__)
 
 
+@models_bp.route('/api/models/predict/sla_breach', methods=['POST'])
+def api_predict_sla_breach():
+    """Predict SLA breach using server-side ML predictor.
+
+    Accepts JSON body with either:
+      - { "issue_key": "PROJ-1" }
+    or
+      - { "summary": "...", "description": "..." }
+
+    Returns JSON { will_breach, breach_probability, risk_level }
+    """
+    from flask import request
+    data = request.get_json() or {}
+    issue_key = data.get('issue_key')
+    summary = data.get('summary')
+    description = data.get('description')
+
+    # If issue_key provided but no summary/description, try to fetch from API
+    if issue_key and not (summary or description):
+        try:
+            from utils.api_migration import get_api_client
+            client = get_api_client()
+            issue = client.get_issue(issue_key, expand=['*'])
+            if issue:
+                summary = issue.get('summary') or (issue.get('fields') or {}).get('summary')
+                # description may be nested
+                description = issue.get('description') or (issue.get('fields') or {}).get('description')
+        except Exception as e:
+            return jsonify({'error': 'Could not fetch issue data', 'details': str(e)}), 500
+
+    if not summary and not description:
+        return jsonify({'error': 'summary or issue_key required'}), 400
+
+    try:
+        from utils.ml_predictor import SpeedyflowMLPredictor
+        predictor = SpeedyflowMLPredictor()
+        res = predictor.predict_sla_breach(summary or '', description or '')
+        return jsonify({'success': True, 'prediction': res})
+    except Exception as e:
+        return jsonify({'error': 'prediction failed', 'details': str(e)}), 500
+
+
 @models_bp.route('/api/models/options', methods=['GET'])
 def api_models_options():
     """Return label encoders mapping as JSON.

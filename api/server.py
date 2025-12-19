@@ -55,27 +55,94 @@ from utils.api_migration import (  # noqa: E402
 from utils.db import init_db  # noqa: E402
 
 # Blueprint imports
-from api.blueprints.issues import issues_bp  # noqa: E402
-from api.blueprints.comments_v2 import comments_v2_bp  # noqa: E402
-from api.blueprints.attachments import attachments_bp  # noqa: E402
-from api.blueprints.transitions import transitions_bp  # noqa: E402
-from api.blueprints.ai import ai_bp  # noqa: E402
-from api.blueprints.notifications import notifications_bp  # noqa: E402
-from api.blueprints.exports import exports_bp  # noqa: E402
-from api.blueprints.automations import automations_bp  # noqa: E402
-from api.blueprints.backgrounds import backgrounds_bp  # noqa: E402
-from api.blueprints.webhooks import webhooks_bp  # noqa: E402
-from api.blueprints.kanban import kanban_bp  # noqa: E402
-from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
-from api.blueprints.header_suggestions import header_suggestions_bp  # noqa: E402
-from api.blueprints.sync import sync_bp  # noqa: E402
-from api.blueprints.sla import sla_bp  # noqa: E402
-from api.blueprints.copilot import copilot_bp  # noqa: E402
-from api.blueprints.reports import reports_bp  # noqa: E402
-from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
-from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
-from api.blueprints.comment_suggestions import comment_suggestions_bp  # noqa: E402
-from api.blueprints.anomaly_detection import anomaly_detection_bp  # noqa: E402
+try:
+    from api.blueprints.issues import issues_bp  # noqa: E402
+except Exception:
+    issues_bp = None
+try:
+    from api.blueprints.comments_v2 import comments_v2_bp  # noqa: E402
+except Exception:
+    comments_v2_bp = None
+try:
+    from api.blueprints.attachments import attachments_bp  # noqa: E402
+except Exception:
+    attachments_bp = None
+try:
+    from api.blueprints.transitions import transitions_bp  # noqa: E402
+except Exception:
+    transitions_bp = None
+try:
+    from api.blueprints.ai import ai_bp  # noqa: E402
+except Exception:
+    ai_bp = None
+try:
+    from api.blueprints.notifications import notifications_bp  # noqa: E402
+except Exception:
+    notifications_bp = None
+try:
+    from api.blueprints.exports import exports_bp  # noqa: E402
+except Exception:
+    exports_bp = None
+try:
+    from api.blueprints.automations import automations_bp  # noqa: E402
+except Exception:
+    automations_bp = None
+try:
+    from api.blueprints.backgrounds import backgrounds_bp  # noqa: E402
+except Exception:
+    backgrounds_bp = None
+try:
+    from api.blueprints.webhooks import webhooks_bp  # noqa: E402
+except Exception:
+    webhooks_bp = None
+try:
+    from api.blueprints.kanban import kanban_bp  # noqa: E402
+except Exception:
+    kanban_bp = None
+try:
+    from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
+except Exception:
+    ai_suggestions_bp = None
+try:
+    from api.blueprints.header_suggestions import header_suggestions_bp  # noqa: E402
+except Exception:
+    header_suggestions_bp = None
+try:
+    from api.blueprints.sync import sync_bp  # noqa: E402
+except Exception:
+    sync_bp = None
+try:
+    from api.blueprints.sla import sla_bp  # noqa: E402
+except Exception:
+    sla_bp = None
+try:
+    from api.blueprints.copilot import copilot_bp  # noqa: E402
+except Exception:
+    copilot_bp = None
+try:
+    from api.blueprints.reports import reports_bp  # noqa: E402
+except Exception:
+    reports_bp = None
+try:
+    from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
+except Exception:
+    flowing_semantic_bp = None
+try:
+    from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
+except Exception:
+    flowing_comments_bp = None
+try:
+    from api.blueprints.comment_suggestions import comment_suggestions_bp  # noqa: E402
+except Exception:
+    comment_suggestions_bp = None
+try:
+    from api.blueprints.anomaly_detection import anomaly_detection_bp  # noqa: E402
+except Exception:
+    anomaly_detection_bp = None
+try:
+    from api.blueprints.models import models_bp  # noqa: E402
+except Exception:
+    models_bp = None
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore
@@ -131,27 +198,38 @@ except ImportError:
     pass
 
 # Register active blueprints
-app.register_blueprint(issues_bp)
-app.register_blueprint(comments_v2_bp)
-app.register_blueprint(attachments_bp)
-app.register_blueprint(transitions_bp)
-app.register_blueprint(ai_bp)
-app.register_blueprint(sync_bp)
-app.register_blueprint(notifications_bp)
-app.register_blueprint(exports_bp)
-app.register_blueprint(automations_bp)
-app.register_blueprint(backgrounds_bp)
-app.register_blueprint(webhooks_bp)
-app.register_blueprint(kanban_bp)
-app.register_blueprint(ai_suggestions_bp)
-app.register_blueprint(header_suggestions_bp)
-app.register_blueprint(sla_bp)
-app.register_blueprint(copilot_bp)
-app.register_blueprint(reports_bp)
-app.register_blueprint(flowing_semantic_bp)  # Flowing MVP: Semantic search & duplicates
-app.register_blueprint(flowing_comments_bp)  # Flowing MVP: Comment assistance
-app.register_blueprint(comment_suggestions_bp)  # ML: Smart comment suggestions
-app.register_blueprint(anomaly_detection_bp)  # ML: Anomaly detection dashboard
+for bp_name, bp in [
+    ('issues', issues_bp),
+    ('comments_v2', comments_v2_bp),
+    ('attachments', attachments_bp),
+    ('transitions', transitions_bp),
+    ('ai', ai_bp),
+    ('sync', sync_bp),
+    ('notifications', notifications_bp),
+    ('exports', exports_bp),
+    ('automations', automations_bp),
+    ('backgrounds', backgrounds_bp),
+    ('webhooks', webhooks_bp),
+    ('kanban', kanban_bp),
+    ('ai_suggestions', ai_suggestions_bp),
+    ('header_suggestions', header_suggestions_bp),
+    ('sla', sla_bp),
+    ('copilot', copilot_bp),
+    ('reports', reports_bp),
+    ('flowing_semantic', flowing_semantic_bp),
+    ('flowing_comments', flowing_comments_bp),
+    ('comment_suggestions', comment_suggestions_bp),
+    ('anomaly_detection', anomaly_detection_bp),
+    ('models', models_bp),
+]:
+    if bp is not None:
+        try:
+            app.register_blueprint(bp)
+            logger.info(f"Registered blueprint: {bp_name}")
+        except Exception as e:
+            logger.warning(f"Failed to register blueprint {bp_name}: {e}")
+    else:
+        logger.warning(f"Blueprint not available, skipping: {bp_name}")
 
 # In-memory cache for desks aggregation (initialized empty)
 DESKS_CACHE = {

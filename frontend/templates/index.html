@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="SpeedyFlow - JIRA Service Desk Integration Platform">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-light" content="ffffff">
   <title>SpeedyFlow - Ticket Management</title>
   
   <!-- ============================================================
@@ -50,198 +50,11 @@
   <!-- Purple accents for Flowing MVP -->
   <link rel="stylesheet" href="/static/css/components/purple-accents.css?v={{ timestamp }}">
   
+  <!-- Sidebar layout overrides (moved from inline to component CSS) -->
+  <link rel="stylesheet" href="/static/css/components/sidebar-inline.css?v={{ timestamp }}">
   
-  <!-- INLINE STYLES FOR SIDEBAR ACTION BUTTON -->
-  <style>
-    /* PERFECT ALIGNMENT: All sidebar components align with header/filter/board */
-    
-    /* Sidebar Header: Align with header-enhanced top */
-    .sidebar-header-component {
-      top: 16px !important; /* Same as header margin */
-      left: 16px !important;
-      margin: 0 !important;
-    }
-    
-    /* Action Button: Position between header and filter */
-    #sidebarActionComponent {
-      top: 112px !important; /* After header total height (16 + 12 + 56 + 12 + 16) */
-      left: 16px !important;
-      width: 280px !important;
-      min-height: 56px !important;
-      height: 56px !important;
-      padding: 12px 14px !important; /* Same as sidebar-header-component */
-      margin: 0 !important;
-      box-sizing: border-box !important;
-    }
-    
-    /* Quick Action Button: Match sidebar-toggle-btn exactly */
-    #quickActionBtn {
-      background: linear-gradient(135deg, rgb(59, 130, 246), rgb(37, 99, 235)) !important;
-      width: 40px !important;
-      height: 40px !important;
-      min-width: 40px !important;
-      min-height: 40px !important;
-      border-radius: 10px !important;
-      font-size: 22px !important; /* Slightly larger icon */
-      padding: 0 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      border: none !important;
-    }
-    
-    #quickActionBtn .toggle-icon {
-      font-size: 22px !important; /* Match button font-size */
-      line-height: 1 !important;
-      display: block !important;
-    }
-    
-    #quickActionBtn:hover {
-      background: linear-gradient(135deg, rgb(37, 99, 235), rgb(29, 78, 216)) !important;
-      transform: scale(1.05) !important;
-    }
-    
-    /* Sidebar Content: Align with kanban board start */
-    .sidebar-content-component {
-      top: 206px !important; /* After header (112px) + filter (94px) = 206px */
-      left: 16px !important;
-      height: calc(100vh - 222px) !important; /* 206px + 16px bottom margin */
-      margin: 0 !important;
-    }
-  </style>
-  
-  <!-- DEBUG SCRIPT: Force button visibility -->
-  <script>
-    console.log('🔍 DEBUG: Initializing sidebar action button...');
-    document.addEventListener('DOMContentLoaded', function() {
-      // Inject SVG icons into sidebar menu
-      if (typeof SVGIcons !== 'undefined') {
-        // Main navigation icons (16px for sidebar)
-        const iconMappings = {
-          'icon-new-ticket': SVGIcons.plus({ size: 16 }),
-          'icon-my-tickets': SVGIcons.folder({ size: 16 }),
-          'icon-all-tickets': SVGIcons.clipboard({ size: 16 }),
-          'icon-starred': SVGIcons.star({ size: 16 }),
-          // Utilities icons
-          'icon-search': SVGIcons.search({ size: 16 }),
-          'icon-reports': SVGIcons.chart({ size: 16 }),
-          'icon-notifications': SVGIcons.bell({ size: 16 }),
-          'icon-refresh': SVGIcons.refresh({ size: 16 }),
-          'icon-clear-cache': SVGIcons.trash({ size: 16 })
-        };
-        
-        Object.keys(iconMappings).forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.innerHTML = iconMappings[id];
-          }
-        });
-        
-        // Header icons (18px for header)
-        const headerIconMappings = {
-          'icon-header-help': SVGIcons.help({ size: 18 }),
-          'icon-header-settings': SVGIcons.settings({ size: 18 }),
-          'icon-header-user': SVGIcons.user({ size: 18 })
-        };
-        
-        Object.keys(headerIconMappings).forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.innerHTML = headerIconMappings[id];
-          }
-        });
-        
-        // ML Dashboard tab icons (20px for tabs)
-        const mlIconMappings = {
-          'icon-ml-overview': SVGIcons.chart({ size: 20 }),
-          'icon-ml-forecast': SVGIcons.alert({ size: 20 }),
-          'icon-ml-trends': SVGIcons.trendUp({ size: 20 }),
-          'icon-ml-team': SVGIcons.users({ size: 20 })
-        };
-        
-        Object.keys(mlIconMappings).forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.innerHTML = mlIconMappings[id];
-          }
-        });
-        
-        // Filter bar icons (16px for filter labels)
-        const filterIconMappings = {
-          'icon-filter-desk': SVGIcons.building({ size: 16 }), // Organization/building icon
-          'icon-filter-queue': SVGIcons.clipboard({ size: 16 }),
-          'icon-filter-view': SVGIcons.eye({ size: 16 }),
-          'icon-view-board': SVGIcons.chart({ size: 18 }),
-          'icon-view-list': SVGIcons.list({ size: 18 }) // Proper list icon
-        };
-        
-        Object.keys(filterIconMappings).forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.innerHTML = filterIconMappings[id];
-          }
-        });
-        
-        // Right sidebar detail icons (16px)
-        const sidebarDetailIconMappings = {
-          'icon-ticket-info': SVGIcons.clipboard({ size: 16 }),
-          'icon-tab-essential': SVGIcons.star({ size: 16 }),
-          'icon-tab-details': SVGIcons.clipboard({ size: 16 }),
-          'icon-tab-technical': SVGIcons.settings({ size: 16 })
-        };
-        
-        Object.keys(sidebarDetailIconMappings).forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.innerHTML = sidebarDetailIconMappings[id];
-          }
-        });
-
-        // Flowing MVP send icon
-        const flowingSendIconEl = document.getElementById('flowingSendIcon');
-        if (flowingSendIconEl) flowingSendIconEl.innerHTML = SVGIcons.send({ size: 14, className: 'svg-assemble' });
-        
-        console.log('✅ All SVG icons injected (sidebar, header, ML dashboard, filter bar, right sidebar)');
-      } else {
-        console.warn('⚠️ SVGIcons not loaded, sidebar icons will not render');
-      }
-      
-      setTimeout(function() {
-        const sidebarContent = document.querySelector('.sidebar-content-component');
-        const actionComponent = document.querySelector('.sidebar-action-component');
-        const actionBtn = document.getElementById('quickActionBtn');
-        
-        console.log('📍 Sidebar content:', sidebarContent);
-        console.log('📍 Action component:', actionComponent);
-        console.log('🔘 Action button:', actionBtn);
-        
-        if (sidebarContent && actionComponent) {
-          // Sync collapsed state with sidebar
-          if (sidebarContent.classList.contains('collapsed')) {
-            actionComponent.classList.add('collapsed');
-            console.log('🔄 Sidebar is collapsed, syncing action button');
-          } else {
-            actionComponent.classList.remove('collapsed');
-            console.log('✅ Sidebar is expanded, action button ready');
-          }
-        }
-        
-        // Listen for sidebar toggle events
-        window.addEventListener('sidebarToggled', function() {
-          console.log('🔔 Sidebar toggled event received');
-          if (sidebarContent && actionComponent) {
-            if (sidebarContent.classList.contains('collapsed')) {
-              actionComponent.classList.add('collapsed');
-            } else {
-              actionComponent.classList.remove('collapsed');
-            }
-          }
-        });
-        
-        console.log('✅ Sidebar action button initialized');
-      }, 100);
-    });
-  </script>
+  <!-- DEBUG SCRIPT (removed) -->
+  <!-- Deprecated debug helpers removed to reduce duplicate UI initialization and avoid DOM conflicts. -->
   
   <!-- Chart.js for interactive charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -256,10 +69,7 @@
   
 </head>
 <body class="theme-light">
-  <script>
-    console.log('🚀 BODY LOADED - Checking for sidebar-action-component...');
-    console.log('📍 Elements in DOM:', document.querySelectorAll('aside').length, 'asides found');
-  </script>
+  <!-- Removed debug logs: BODY load console messages were only used during early development. -->
   
   <div class="app-container" role="application" aria-label="SpeedyFlow Ticket Workspace">
     <!-- SIDEBAR (UNIFIED REBUILD) -->
@@ -271,7 +81,7 @@
     </aside>
 
     <!-- SIDEBAR ACTION BUTTON (Clone of header style) -->
-    <aside class="sidebar-header-component" id="sidebarActionComponent" role="complementary" aria-label="Quick Actions" style="top: 112px !important;">
+    <aside class="sidebar-header-component" id="sidebarActionComponent" role="complementary" aria-label="Quick Actions">
       <button id="quickActionBtn" class="sidebar-toggle-btn" aria-label="Quick Action" title="Quick Action">
         <span class="toggle-icon">⚡</span>
       </button>
@@ -298,7 +108,7 @@
             <button type="button" class="sidebar-menu-item" id="notificationsBtn" aria-label="Notifications" data-tooltip="Notifications">
               <span class="icon" id="icon-notifications"></span>
               <span class="label">Notifications</span>
-              <span class="notification-badge" style="display: none;">0</span>
+              <span class="notification-badge">0</span>
             </button>
             <button type="button" class="sidebar-menu-item" id="refreshBtn" aria-label="Refresh" data-tooltip="Refresh"><span class="icon" id="icon-refresh"></span><span class="label">Refresh</span></button>
             <button type="button" class="sidebar-menu-item" id="clearCacheBtn" aria-label="Clear Cache" title="Clear local cache to force refresh" data-tooltip="Clear Cache"><span class="icon" id="icon-clear-cache"></span><span class="label">Clear Cache</span></button>
@@ -437,231 +247,17 @@
         <div id="kanbanView" class="kanban-board" aria-live="polite">
           <div class="placeholder-pro" id="kanbanPlaceholder">Loading tickets...</div>
         </div>
-        <div id="listView" class="list-view" style="display:none" aria-live="polite">
+        <div id="listView" class="list-view" aria-live="polite">
           <div class="placeholder-pro" id="listPlaceholder">Loading tickets...</div>
         </div>
       </div>
-
-      <!-- RIGHT SIDEBAR (TICKET DETAILS) -->
-      <div class="right-sidebar" id="rightSidebar" style="display: none; padding-bottom: 70px;">
-      <!-- CLOSE BUTTON -->
-      <button class="btn-close-sidebar" id="closeSidebarBtn">✕</button>
-
-      <!-- TWO COLUMN LAYOUT -->
-      <div class="sidebar-two-columns">
-        
-        <!-- LEFT COLUMN: DETAILS -->
-        <div class="sidebar-column sidebar-details">
-          <div class="column-header">
-            <h3>Ticket Details</h3>
-          </div>
-          <div class="purple-divider" style="margin:8px 0;"></div>
-
-          <div class="column-content">
-            <!-- SLA MONITOR (First, most important) -->
-            <div id="slaMonitorContainer" style="margin-bottom: 12px;">
-              <!-- SLA Monitor renders here dynamically -->
-            </div>
-
-            <!-- ALL FIELDS (Organized in tabs by importance) -->
-            <div class="detail-group detail-group-all-fields">
-              <div class="detail-label">
-                <span><span id="icon-ticket-info"></span> Ticket Information</span>
-              </div>
-              
-              <!-- TABS NAVIGATION -->
-              <div class="fields-tabs">
-                <button class="fields-tab active" data-tab="essential">
-                  <span id="icon-tab-essential"></span> Essential
-                </button>
-                <button class="fields-tab" data-tab="details">
-                  <span id="icon-tab-details"></span> Details
-                </button>
-                <button class="fields-tab" data-tab="technical">
-                  <span id="icon-tab-technical"></span> Technical
-                </button>
-              </div>
-              
-              <!-- TAB CONTENT -->
-              <div class="fields-tab-content active" id="tab-essential">
-                <!-- Essential fields (populated dynamically) -->
-              </div>
-              <div class="fields-tab-content" id="tab-details">
-                <!-- Detail fields (populated dynamically) -->
-              </div>
-              <div class="fields-tab-content" id="tab-technical">
-                <!-- Technical fields (populated dynamically) -->
-              </div>
-            </div>
-
-            <!-- ATTACHMENTS SECTION -->
-            <div class="detail-group detail-group-attachments" id="attachmentsSection" style="display: none;">
-              <div class="detail-label">
-                <span>📎 Attachments</span>
-                <span class="detail-label-hint" id="attachmentCountLabel">(0)</span>
-              </div>
-              <div id="existingAttachmentsContainer" class="attachments-display-container">
-                <!-- Populated dynamically by right-sidebar.js -->
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RIGHT COLUMN: COMMENTS -->
-        <div class="sidebar-column sidebar-comments">
-          <div class="column-header">
-            <h3>Comments <span class="comment-count" id="commentCount">(0)</span></h3>
-          </div>
-
-          <div class="column-content">
-            <div class="comments-list" id="commentsList">
-              <p class="no-comments">Loading comments...</p>
-            </div>
-          </div>
-
-          <!-- COMMENT INPUT AREA -->
-          <div class="comment-input-container">
-            <!-- ATTACHMENTS TOOLBAR -->
-            <div class="comment-toolbar">
-              <button class="comment-toolbar-btn" id="attachBtn" title="Attach file">
-                <span class="toolbar-icon">📎</span>
-                <span class="toolbar-text">Attach</span>
-              </button>
-              <div class="comment-hint">
-                <span style="opacity: 0.6; font-size: 11px;">💡 Type @ to mention someone</span>
-              </div>
-              <div class="visibility-toggle">
-                <input type="checkbox" id="commentInternal" />
-                <label for="commentInternal" class="visibility-label">🔓 Public</label>
-              </div>
-            </div>
-
-            <!-- MENTIONS DROPDOWN -->
-            <div class="mentions-dropdown" id="mentionsDropdown">
-              <input 
-                type="text" 
-                class="mentions-search" 
-                id="mentionsSearch" 
-                placeholder="Search users..."
-              >
-              <div class="mentions-list" id="mentionsList"></div>
-            </div>
-
-            <!-- ATTACHMENTS PREVIEW -->
-            <div class="attachments-preview" id="attachmentsPreview">
-              <div class="attachments-list" id="attachmentsList"></div>
-            </div>
-
-            <!-- COMMENT TEXTAREA -->
-            <textarea 
-              id="commentText" 
-              class="comment-input" 
-              placeholder="Add a comment... (Press Ctrl+Enter to post)"
-              rows="4">
-            </textarea>
-
-            <!-- POST BUTTON -->
-            <button class="btn-add-comment">Post Comment</button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ACTIVITY PANEL (Hidden by default, switchable) -->
-      <div class="sidebar-panel" id="activityPanel" style="display: none;">
-        <div class="panel-header">
-          <h3 class="panel-title">Activity</h3>
-        </div>
-
-        <div class="panel-content">
-          <div class="activity-timeline" id="activityTimeline">
-            <p class="no-activity">No activity yet</p>
-          </div>
-        </div>
-      </div>
-      </div>
     </div>
   </div>
 
-  <!-- ===== FLOWING MVP FOOTER (Integrated) ===== -->
-  <div id="flowingFooter" class="flowing-footer collapsed">
-    <!-- Toggle Button -->
-    <button id="flowingToggleBtn" class="flowing-toggle-btn" title="Flowing MVP Assistant">
-      <span class="flowing-icon flowing-sf-logo">SF</span>
-      <div class="flowing-info">
-        <span class="flowing-label">Flowing MVP</span>
-        <span class="flowing-suggestion" id="flowingSuggestion">Analyzing your queue...</span>
-      </div>
-      <span class="flowing-chevron">▲</span>
-      <span id="flowingCloseBtn" class="flowing-close-btn" title="Close">✕</span>
-    </button>
 
-    <!-- Flowing Content -->
-    <div class="flowing-content">
+     <!-- Flowing Content (rendered dynamically by `flowing-mvp-footer.js`) -->
+  <div class="flowing-content" aria-hidden="true"></div>
 
-      <!-- Chat-Only View (Default) -->
-      <div id="chatOnlyView">
-        <!-- Messages Container -->
-        <div id="flowingMessages" class="flowing-messages">
-          <div class="flowing-message assistant">
-            <div class="message-avatar flowing-sf-logo">SF</div>
-            <div class="message-content">
-              <p>👋 Hi! I'm Flowing MVP, your SpeedyFlow Ticket Solving Mate! I can help you with:</p>
-              <ul>
-                <li>📋 Analyzing ticket priorities and patterns</li>
-                <li>⏱️ Explaining SLA statuses and deadlines</li>
-                <li>🎯 Suggesting next actions for tickets</li>
-                <li>📊 Providing insights on queue metrics</li>
-              </ul>
-              <p>Just ask me anything!</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Input Area -->
-        <div class="flowing-input-area">
-          <div class="flowing-context-badge" id="flowingContextBadge">
-            <span class="context-icon" aria-hidden="true"></span>
-            <span class="context-text">No context</span>
-          </div>
-          <div class="flowing-input-wrapper">
-            <input type="text" id="flowingInput" class="flowing-input" placeholder="Ask me anything about your tickets..." />
-            <button id="flowingSendBtn" class="flowing-send-btn" title="Send">
-              <span id="flowingSendIcon" class="inline-icon svg-assemble"></span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Balanced View (Hidden by default, shown when ticket selected) -->
-      <div id="balancedView" class="balanced-view" style="display: none;">
-        <!-- This will be dynamically populated with ticket details when a ticket is selected -->
-        <div id="balancedContentContainer">
-          <!-- Ticket details will be loaded here by flowing-mvp-footer.js -->
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- ===== END FLOWING MVP FOOTER ===== -->
-
-  <script>
-    // Detectar usuario actual desde JIRA
-    fetch('/api/user')
-      .then(r => r.json())
-      .then(data => {
-        const user = data.displayName || data.name || 'You';
-        localStorage.setItem('currentUser', user);
-        localStorage.setItem('userFullName', data.displayName || 'John Doe');
-        localStorage.setItem('userEmail', data.emailAddress || 'user@example.com');
-      })
-      .catch(() => {
-        localStorage.setItem('currentUser', 'You');
-        localStorage.setItem('userFullName', 'John Doe');
-        localStorage.setItem('userEmail', 'user@example.com');
-      });
-  </script>
-  
-  <!-- ===== CORE APPLICATION SCRIPTS ===== -->
   <!-- Constants & Configuration (MUST load first) -->
   <script src="/static/js/constants/card-sizing.js"></script>
   
@@ -688,7 +284,8 @@
   <!-- ===== BACKGROUND & AI EFFECTS ===== -->
   <script src="/static/js/background-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/background-selector-ui.js?v={{ timestamp }}"></script>
-  
+  <script src="/static/js/global-stubs.js?v={{ timestamp }}"></script>
+
   <!-- ===== UI ENHANCEMENTS ===== -->
   <script src="/static/js/app.js?v={{ timestamp }}"></script>
   <script src="/static/js/auto-severity-config.js?v={{ timestamp }}"></script>
@@ -699,10 +296,9 @@
   <!-- ===== AI & ML MODULES ===== -->
   <script src="/static/js/modules/ai-queue-analyzer.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/view-toggle-filters.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/ai-field-suggestions.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/ml-comment-suggestions.js?v={{ timestamp }}"></script>
-  <!-- DISABLED: ml-anomaly-dashboard.js (obsolete, auto-opens modal) -->
+  <!-- Previously disabled: ml-anomaly-dashboard.js (obsolete) - removed to avoid auto-opening modals -->
 
   <!-- ===== DRAG & DROP TRANSITIONS ===== -->
   <script src="/static/views/board/drag-transition-vertical.js?v={{ timestamp }}"></script>
@@ -714,112 +310,21 @@
   <script src="/static/js/smart-functions-modal.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-analytics.js?v={{ timestamp }}"></script>
 
+    <!-- FLOWING MVP FOOTER -->
+    <!-- Flowing Content (rendered dynamically by `flowing-mvp-footer.js`) -->
+  <!-- Root container for Flowing MVP (required by flowing-mvp-footer.js) -->
   
-  <!-- ===== DIAGNOSTIC SCRIPT ===== -->
-  <script>
-    // Check if new comment elements are loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const mentionBtn = document.getElementById('mentionBtn');
-        const attachBtn = document.getElementById('attachBtn');
-        const commentToolbar = document.querySelector('.comment-toolbar');
-        
-        console.log('=== Right Sidebar Diagnostic ===');
-        console.log('✓ mentionBtn exists:', !!mentionBtn);
-        console.log('✓ attachBtn exists:', !!attachBtn);
-        console.log('✓ comment-toolbar exists:', !!commentToolbar);
-        
-        if (!mentionBtn) {
-          console.warn('⚠️ mentionBtn NOT FOUND - check HTML structure');
-        }
-        if (!attachBtn) {
-          console.warn('⚠️ attachBtn NOT FOUND - check HTML structure');
-        }
-        if (!commentToolbar) {
-          console.warn('⚠️ comment-toolbar NOT FOUND - check CSS loading');
-        }
-        
-        // Check if setupMentionSystem function exists
-        console.log('✓ setupMentionSystem function exists:', typeof window.setupMentionSystem === 'function');
-        console.log('✓ setupAttachmentsSystem function exists:', typeof window.setupAttachmentsSystem === 'function');
-        console.log('✓ window.commentsModule exists:', !!window.commentsModule);
-        console.log('✓ window.mentionsAutocomplete exists:', !!window.mentionsAutocomplete);
-        console.log('✓ window.mentionSystem exists:', !!window.mentionSystem);
-      }, 500);
-    });
-  </script>
+  <div id="flowingFooter" class="flowing-footer" aria-hidden="false"></div>
+  <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
+  <div id="flowingHeader" class="flowing-header"></div>
+  <!-- Loader fallback: ensures footer script is loaded if original request failed -->
+  <script src="/static/js/flowing-mvp-loader.js?v={{ timestamp }}"></script>
+
 
   <!-- User Setup Modal -->
   <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
-  
-  <!-- FLOWING MVP FOOTER SCRIPT -->
-  <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
-  
-  <!-- FLOWING MVP INTEGRATION SCRIPT -->
-  <script>
-    // Integration script: Connect Flowing MVP with main app
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🔗 Integrating Flowing MVP Footer with main app...');
-      
-      // Wait for both app.js and flowing-mvp-footer.js to load
-      const initFlowingIntegration = () => {
-        if (!window._flowingFooter) {
-          console.warn('⏳ Waiting for Flowing MVP Footer to initialize...');
-          setTimeout(initFlowingIntegration, 100);
-          return;
-        }
-        
-        // CRITICAL: Listen for ticket details button clicks
-        document.addEventListener('click', function(e) {
-          // Check if click is on a details button (kanban or list view)
-          const detailsBtn = e.target.closest('.issue-details-btn, .btn-view-details');
-          
-          if (detailsBtn && window._flowingFooter) {
-            e.preventDefault(); // Prevent default right sidebar opening
-            e.stopPropagation(); // Stop event from bubbling
-            
-            const issueKey = detailsBtn.dataset.issueKey || detailsBtn.dataset.key;
-            
-            if (issueKey) {
-              console.log('🎯 Details button clicked for ticket:', issueKey);
-              
-              // Expand footer if collapsed
-              if (!window._flowingFooter?.isExpanded) {
-                window._flowingFooter?.public_expand?.();
-              }
 
-              // Switch to balanced view with ticket details
-              window._flowingFooter?.public_switchToBalancedView?.(issueKey);
-              
-              // Prevent right sidebar from opening
-              return false;
-            }
-          }
-          
-          // Alternative: Listen for ticket card clicks (optional fallback)
-          const ticketCard = e.target.closest('.ticket-card, .kanban-card, .list-row');
-          if (ticketCard && !e.target.closest('.issue-details-btn, .btn-view-details') && window._flowingFooter) {
-            const ticketKey = ticketCard.dataset.issueKey || ticketCard.dataset.key;
-            if (ticketKey && window._flowingFooter.context) {
-              // Just update context, don't open balanced view (let right sidebar handle it)
-              window._flowingFooter.context.selectedIssue = ticketKey;
-            }
-          }
-        }, true); // Use capture phase to intercept before right-sidebar.js
-        
-        // Sync theme changes
-        const themeObserver = new MutationObserver(() => {
-          const bodyTheme = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
-          document.body.setAttribute('data-theme', bodyTheme);
-        });
-        themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-        
-        console.log('✅ Flowing MVP Footer integrated successfully');
-        console.log('💡 Click on ticket details buttons to view in Flowing MVP');
-      };
-      
-      initFlowingIntegration();
-    });
-  </script>
+  <!-- (duplicate script block removed) -->
+
 </body>
 </html>

@@ -1,0 +1,91 @@
+/* Inline sidebar layout rules moved from index.html
+   - Moved here to avoid inline styles and improve maintainability
+   - Keep selectors scoped to avoid conflicts with other sidebar implementations
+*/
+
+.sidebar-header-component {
+    top: 16px !important;
+    /* Same as header margin */
+    left: 16px !important;
+    margin: 0 !important;
+}
+
+#sidebarActionComponent {
+    top: 112px !important;
+    /* After header total height (16 + 12 + 56 + 12 + 16) */
+    left: 16px !important;
+    width: 280px !important;
+    min-height: 56px !important;
+    height: 56px !important;
+    padding: 12px 14px !important;
+    /* Same as sidebar-header-component */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+#quickActionBtn {
+    background: linear-gradient(135deg, rgb(59, 130, 246), rgb(37, 99, 235)) !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    border-radius: 10px !important;
+    font-size: 22px !important;
+    /* Slightly larger icon */
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+}
+
+#quickActionBtn .toggle-icon {
+    font-size: 22px !important;
+    /* Match button font-size */
+    line-height: 1 !important;
+    display: block !important;
+}
+
+#quickActionBtn:hover {
+    background: linear-gradient(135deg, rgb(37, 99, 235), rgb(29, 78, 216)) !important;
+    transform: scale(1.05) !important;
+}
+
+.sidebar-content-component {
+    top: 206px !important;
+    /* After header (112px) + filter (94px) = 206px */
+    left: 16px !important;
+    height: calc(100vh - 222px) !important;
+    /* 206px + 16px bottom margin */
+    margin: 0 !important;
+}
+
+/* Extracted inline styles from `index.html` */
+.notification-badge {
+    display: none;
+}
+
+.purple-divider {
+    margin: 8px 0;
+}
+
+#slaMonitorContainer {
+    margin-bottom: 12px;
+}
+
+#listView {
+    display: none;
+}
+
+#attachmentsSection {
+    display: none;
+}
+
+#activityPanel {
+    display: none;
+}
+
+.comment-hint span {
+    opacity: 0.6;
+    font-size: 11px;
+}
