@@ -22,6 +22,8 @@
   
   <!-- THEME BLOCKER: Prevents flash by applying theme BEFORE CSS renders -->
   <script src="/static/js/theme-blocker.js"></script>
+  <!-- FlowingContext shim (load early so other scripts can access window._FlowingContext safely) -->
+  <script src="/static/js/flowing-context-shim.js?v={{ timestamp }}"></script>
   
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
   <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
@@ -255,8 +257,7 @@
   </div>
 
 
-     <!-- Flowing Content (rendered dynamically by `flowing-mvp-footer.js`) -->
-  <div class="flowing-content" aria-hidden="true"></div>
+      <!-- Flowing Content root is created inside #flowingFooter by flowing-mvp-footer.js -->
 
   <!-- Constants & Configuration (MUST load first) -->
   <script src="/static/js/constants/card-sizing.js"></script>
@@ -315,8 +316,11 @@
   <!-- Root container for Flowing MVP (required by flowing-mvp-footer.js) -->
   
   <div id="flowingFooter" class="flowing-footer" aria-hidden="false"></div>
+  <!-- Flowing audio utilities (optional but recommended) -->
+  <script src="/static/js/flowing-mvp-audio.js?v={{ timestamp }}"></script>
+  <!-- Lightweight shim for FlowingContext to enable header suggestions in dev/test -->
+  <script src="/static/js/flowing-context-shim.js?v={{ timestamp }}"></script>
   <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
-  <div id="flowingHeader" class="flowing-header"></div>
   <!-- Loader fallback: ensures footer script is loaded if original request failed -->
   <script src="/static/js/flowing-mvp-loader.js?v={{ timestamp }}"></script>
 

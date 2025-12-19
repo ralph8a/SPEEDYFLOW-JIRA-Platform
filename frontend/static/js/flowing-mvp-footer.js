@@ -204,12 +204,16 @@ class FlowingFooter {
 
     // Ensure footer responds to sidebar collapse/expand events
     try {
-      window.addEventListener('sidebarToggled', () => {
-        const sidebar = document.querySelector('.sidebar-content-component');
-        const collapsed = !!(sidebar && sidebar.classList.contains('collapsed'));
-        document.body.classList.toggle('sidebar-collapsed', collapsed);
-        this.adjustContentPadding(collapsed);
-      });
+      if (typeof window.addEventListener === 'function') {
+        window.addEventListener('sidebarToggled', () => {
+          const sidebar = document.querySelector('.sidebar-content-component');
+          const collapsed = !!(sidebar && sidebar.classList && typeof sidebar.classList.contains === 'function' ? sidebar.classList.contains('collapsed') : (sidebar && (sidebar.className || '').indexOf('collapsed') !== -1));
+          if (document && document.body && typeof document.body.classList === 'object' && typeof document.body.classList.toggle === 'function') {
+            document.body.classList.toggle('sidebar-collapsed', collapsed);
+          }
+          this.adjustContentPadding(collapsed);
+        });
+      }
 
       // Observe class changes on sidebar to react to programmatic toggles
       const sb = document.querySelector('.sidebar-content-component');
@@ -235,8 +239,13 @@ class FlowingFooter {
       // Prefer a larger hit area wrapper if present
       const hit = document.getElementById('flowingToggleHit');
       if (hit) {
-        const newHit = hit.cloneNode(true);
-        hit.parentNode && hit.parentNode.replaceChild(newHit, hit);
+        let newHit = hit;
+        try {
+          if (typeof hit.cloneNode === 'function') {
+            newHit = hit.cloneNode(true);
+            hit.parentNode && hit.parentNode.replaceChild(newHit, hit);
+          }
+        } catch (e) { /* fallback to using original hit */ }
         // find the button inside the hit area
         const btn = newHit.querySelector('#flowingToggleBtn') || newHit.querySelector('button');
         if (btn) this.toggleBtn = btn;
@@ -259,19 +268,23 @@ class FlowingFooter {
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
         };
 
-        newHit.addEventListener('click', activateToggle);
-        // support keyboard activation (Enter / Space)
-        newHit.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter' || ev.key === ' ') {
-            ev.preventDefault();
-            activateToggle(ev);
-          }
-        });
+        if (typeof newHit.addEventListener === 'function') {
+          newHit.addEventListener('click', activateToggle);
+          // support keyboard activation (Enter / Space)
+          newHit.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              activateToggle(ev);
+            }
+          });
+        }
       } else if (this.toggleBtn) {
         // fallback: attach to button directly (ensure single listener) and make it keyboard-accessible
-        const newToggle = this.toggleBtn.cloneNode(true);
-        this.toggleBtn.parentNode && this.toggleBtn.parentNode.replaceChild(newToggle, this.toggleBtn);
-        this.toggleBtn = newToggle;
+        try {
+          const newToggle = (typeof this.toggleBtn.cloneNode === 'function') ? this.toggleBtn.cloneNode(true) : this.toggleBtn;
+          this.toggleBtn.parentNode && this.toggleBtn.parentNode.replaceChild(newToggle, this.toggleBtn);
+          this.toggleBtn = newToggle;
+        } catch (e) { /* ignore */ }
         try {
           this.toggleBtn.setAttribute('role', 'button');
           this.toggleBtn.setAttribute('tabindex', '0');
@@ -287,13 +300,15 @@ class FlowingFooter {
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
         };
 
-        this.toggleBtn.addEventListener('click', activateBtn);
-        this.toggleBtn.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter' || ev.key === ' ') {
-            ev.preventDefault();
-            activateBtn(ev);
-          }
-        });
+        if (this.toggleBtn && typeof this.toggleBtn.addEventListener === 'function') {
+          this.toggleBtn.addEventListener('click', activateBtn);
+          this.toggleBtn.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              activateBtn(ev);
+            }
+          });
+        }
       }
     } catch (e) { console.warn('Could not attach toggleBtn listener', e); }
 
@@ -1327,7 +1342,7 @@ class FlowingFooter {
         if (headerContainer) {
           while (headerContainer.firstChild) headerContainer.removeChild(headerContainer.firstChild);
         }
-        const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show');
+        const preview = document.getElementById('attachmentsPreviewFooter'); if (preview && preview.classList && typeof preview.classList.remove === 'function') preview.classList.remove('show');
         return;
       }
 
@@ -1379,7 +1394,10 @@ class FlowingFooter {
       if (!container) return;
       // remove existing banner
       const existing = document.getElementById('flowingRecBanner');
-      if (existing) existing.remove();
+      if (existing) {
+        if (typeof existing.remove === 'function') existing.remove();
+        else if (existing.parentNode) existing.parentNode.removeChild(existing);
+      }
 
       const banner = document.createElement('div');
       banner.id = 'flowingRecBanner';
@@ -1404,13 +1422,21 @@ class FlowingFooter {
       if (desc && desc.parentNode) desc.parentNode.insertBefore(banner, desc.nextSibling);
       else container.insertBefore(banner, container.firstChild);
 
-      cancelBtn.addEventListener('click', () => banner.remove());
+      cancelBtn.addEventListener('click', () => {
+        if (banner) {
+          if (typeof banner.remove === 'function') banner.remove();
+          else if (banner.parentNode) banner.parentNode.removeChild(banner);
+        }
+      });
       applyBtn.addEventListener('click', async () => {
         try {
           // Attempt to use app API if present
           if (window.app && typeof window.app.updateIssueField === 'function') {
             await window.app.updateIssueField(window._flowingFooter?.context?.selectedIssue, fieldKey, suggestedValue, meta);
-            banner.remove();
+            if (banner) {
+              if (typeof banner.remove === 'function') banner.remove();
+              else if (banner.parentNode) banner.parentNode.removeChild(banner);
+            }
             // update UI: replace field value in grid if present
             const fieldNodes = document.querySelectorAll('#essentialFieldsGrid .field-wrapper .field-input');
             fieldNodes.forEach(node => {
@@ -1427,14 +1453,24 @@ class FlowingFooter {
           subtitle.textContent = '';
           const status = document.createElement('div'); status.style.fontWeight = '700'; status.style.color = '#10b981'; status.textContent = 'Recommendation applied (local preview)';
           left.appendChild(status);
-          setTimeout(() => banner.remove(), 1600);
+          setTimeout(() => {
+            if (banner) {
+              if (typeof banner.remove === 'function') banner.remove();
+              else if (banner.parentNode) banner.parentNode.removeChild(banner);
+            }
+          }, 1600);
         } catch (err) {
           console.error('Could not apply recommendation', err);
           title.textContent = '';
           subtitle.textContent = '';
           const statusErr = document.createElement('div'); statusErr.style.fontWeight = '700'; statusErr.style.color = '#ef4444'; statusErr.textContent = 'Failed to apply recommendation';
           left.appendChild(statusErr);
-          setTimeout(() => banner.remove(), 2200);
+          setTimeout(() => {
+            if (banner) {
+              if (typeof banner.remove === 'function') banner.remove();
+              else if (banner.parentNode) banner.parentNode.removeChild(banner);
+            }
+          }, 2200);
         }
       });
     } catch (e) { console.warn('showFieldRecommendationBanner error', e); }
@@ -1447,7 +1483,10 @@ class FlowingFooter {
       if (!header) return;
       // remove existing
       const existing = document.getElementById('flowingContactCard');
-      if (existing) existing.remove();
+      if (existing) {
+        if (typeof existing.remove === 'function') existing.remove();
+        else if (existing.parentNode) existing.parentNode.removeChild(existing);
+      }
       const card = document.createElement('div');
       card.id = 'flowingContactCard';
       card.style.cssText = 'position:absolute;right:16px;top:56px;padding:10px;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 6px 18px rgba(31,41,55,0.06);z-index:1200;min-width:220px;';
@@ -1468,9 +1507,14 @@ class FlowingFooter {
       card.appendChild(top); card.appendChild(footerBtns);
       header.appendChild(card);
 
-      closeBtn.addEventListener('click', () => card.remove());
+      closeBtn.addEventListener('click', () => {
+        if (card) {
+          if (typeof card.remove === 'function') card.remove();
+          else if (card.parentNode) card.parentNode.removeChild(card);
+        }
+      });
       copyBtn.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(email || ''); copyBtn.textContent = 'Copied'; setTimeout(() => { if (card) card.remove(); }, 900); } catch (e) { console.warn('Clipboard copy failed', e); }
+        try { await navigator.clipboard.writeText(email || ''); copyBtn.textContent = 'Copied'; setTimeout(() => { if (card) { if (typeof card.remove === 'function') card.remove(); else if (card.parentNode) card.parentNode.removeChild(card); } }, 900); } catch (e) { console.warn('Clipboard copy failed', e); }
       });
     } catch (e) { console.warn('showContactCard error', e); }
   }
@@ -1540,7 +1584,7 @@ class FlowingFooter {
           const idx = parseInt(btn.dataset.index);
           window.footerAttachedFiles.splice(idx, 1);
           if (window.footerAttachedFiles.length === 0) {
-            attachmentsPreview?.classList.remove('show');
+            if (attachmentsPreview && attachmentsPreview.classList && typeof attachmentsPreview.classList.remove === 'function') attachmentsPreview.classList.remove('show');
             while (attachmentsList.firstChild) attachmentsList.removeChild(attachmentsList.firstChild);
           } else {
             this.addFooterAttachments([]);
@@ -1871,8 +1915,13 @@ class FlowingFooter {
       // has reasonable responsive constraints so it doesn't get clipped.
       const balancedEl = document.getElementById('balancedContentContainer');
       const headerEl = document.getElementById('flowingHeader') || (this.footer && this.footer.querySelector('.flowing-header'));
-      const headerH = headerEl ? Math.round(headerEl.getBoundingClientRect().height) : 72;
-      const viewportH = window.innerHeight || document.documentElement.clientHeight;
+      let headerH = 72;
+      try {
+        if (headerEl && typeof headerEl.getBoundingClientRect === 'function') {
+          headerH = Math.round(headerEl.getBoundingClientRect().height);
+        }
+      } catch (err) { headerH = 72; }
+      const viewportH = (typeof window.innerHeight === 'number') ? window.innerHeight : (document && document.documentElement && typeof document.documentElement.clientHeight === 'number') ? document.documentElement.clientHeight : 800;
       const maxH = Math.max(240, viewportH - headerH - 40); // leave margin to viewport bottom
 
       if (balancedEl) {
@@ -1923,14 +1972,20 @@ class FlowingFooter {
       const data = await response.json();
 
       // Remove loading message
-      loadingMsg?.remove();
+      if (loadingMsg) {
+        if (typeof loadingMsg.remove === 'function') loadingMsg.remove();
+        else if (loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
+      }
 
       // Add assistant response
       this.addMessage('assistant', data.response || 'Sorry, I encountered an error.');
 
     } catch (error) {
       console.error('❌ Flowing MVP error:', error);
-      loadingMsg?.remove();
+      if (loadingMsg) {
+        if (typeof loadingMsg.remove === 'function') loadingMsg.remove();
+        else if (loadingMsg.parentNode) loadingMsg.parentNode.removeChild(loadingMsg);
+      }
       this.addMessage('assistant', '❌ Sorry, I encountered an error. Please try again.');
     } finally {
       this.isLoading = false;
@@ -2100,18 +2155,48 @@ class FlowingFooter {
 }
 
 // Exponer FlowingContext globalmente para integración con footer
-if (typeof FlowingContext !== 'undefined') {
-  // prefer non-deprecated name
-  window._FlowingContext = FlowingContext;
-  // provide deprecated alias with warning
+// Preferencia: use `window._FlowingContext` as the canonical name.
+// Provide a deprecated `window.FlowingContext` alias that warns only once
+// to avoid noisy logs when many modules access it.
+(() => {
   try {
-    Object.defineProperty(window, 'FlowingContext', {
-      configurable: true,
-      get() { console.warn('window.FlowingContext is deprecated — access window._FlowingContext instead'); return window._FlowingContext; },
-      set(v) { console.warn('Setting window.FlowingContext is deprecated — set window._FlowingContext instead'); window._FlowingContext = v; }
-    });
-  } catch (e) { window.FlowingContext = FlowingContext; }
-}
+    const hasNative = typeof FlowingContext !== 'undefined';
+    // If a non-deprecated object already exists, prefer it
+    if (hasNative) {
+      window._FlowingContext = FlowingContext;
+    }
+
+    // If there is already a _FlowingContext (e.g., shim), keep it
+    // else, if FlowingContext existed we already copied it above
+
+    // Define a lazy alias which returns the canonical object without
+    // spamming the console. Use a one-time warning flag.
+    if (!Object.getOwnPropertyDescriptor(window, 'FlowingContext') || !Object.getOwnPropertyDescriptor(window, 'FlowingContext').get) {
+      let warned = false;
+      Object.defineProperty(window, 'FlowingContext', {
+        configurable: true,
+        get() {
+          if (!warned) {
+            console.warn('window.FlowingContext is deprecated — access window._FlowingContext instead');
+            warned = true;
+          }
+          return window._FlowingContext;
+        },
+        set(v) {
+          // Mirror into canonical name, but do not warn repeatedly
+          if (!warned) {
+            console.warn('Setting window.FlowingContext is deprecated — set window._FlowingContext instead');
+            warned = true;
+          }
+          window._FlowingContext = v;
+        }
+      });
+    }
+  } catch (e) {
+    // Best-effort: if the environment is constrained, avoid throwing
+    try { window.FlowingContext = window._FlowingContext || window.FlowingContext; } catch (_e) { /* ignore */ }
+  }
+})();
 
 // Create a proxy so other scripts can call window.flowingFooter.* before the real instance is ready.
 (() => {
