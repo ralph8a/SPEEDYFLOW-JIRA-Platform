@@ -556,6 +556,7 @@ class FlowingFooter {
 
   expand() {
     this.footer?.classList.remove('collapsed');
+    try { if (this.footer) this.footer.classList.add('expanded'); } catch (e) { }
     this.isExpanded = true;
     this.input?.focus();
 
@@ -597,6 +598,7 @@ class FlowingFooter {
 
   collapse() {
     this.footer?.classList.add('collapsed');
+    try { if (this.footer) this.footer.classList.remove('expanded'); } catch (e) { }
     this.isExpanded = false;
 
     // Adjust content padding for collapsed footer
