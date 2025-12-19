@@ -88,15 +88,20 @@ class FlowingFooter {
       header.id = 'flowingHeader';
       header.className = 'flowing-header';
       header.innerHTML = `
-        <div class="flowing-header-left">
-          <div class="flowing-avatar flowing-sf-logo">SF</div>
-          <div class="flowing-title-text"><strong>Flowing MVP</strong></div>
+        <div class="flowing-header-left" style="display:flex; align-items:center; gap:10px;">
+          <div class="flowing-avatar flowing-sf-logo" style="width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; font-weight:700;">
+            ${typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall ? SVGIcons.logoSmall({ size: 20, className: 'inline-icon' }) : 'SF'}
+          </div>
+          <div class="flowing-title-text" style="font-size:14px; color:var(--flowing-title-color,#111827); font-weight:700;">Flowing MVP</div>
         </div>
-        <div class="flowing-header-center"> 
-          <div id="flowingContextBadge" class="flowing-context-badge" aria-hidden="false"><span class="context-icon"></span><span class="context-text">No context</span></div>
+        <div class="flowing-header-center" style="flex:1; display:flex; align-items:center; justify-content:center;">
+          <div id="flowingContextBadge" class="flowing-context-badge" aria-hidden="false" style="display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px; background:rgba(99,102,241,0.04); color:#374151; font-size:12px;">
+            <span class="context-icon" style="display:inline-flex; align-items:center;">${typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall ? SVGIcons.logoSmall({ size: 12, className: 'inline-icon' }) : ''}</span>
+            <span class="context-text">No context</span>
+          </div>
         </div>
-        <div class="flowing-header-right">
-          <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn">▴</button>
+        <div class="flowing-header-right" style="display:flex; align-items:center; gap:8px;">
+          <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn" style="padding:8px 10px; border-radius:8px; background:transparent; border:1px solid rgba(15,23,42,0.04); cursor:pointer;">▴</button>
         </div>
       `;
 
@@ -130,7 +135,7 @@ class FlowingFooter {
         } catch (e) { }
       };
       // If there are legacy elements, move them into the new content container
-      ['flowingMessages','flowingInput','flowingSendBtn','balancedContentContainer','flowingSuggestion','flowingContextBadge','attachmentsListFooter','attachmentsPreviewFooter'].forEach(id => moveIfExists(id, content));
+      ['flowingMessages', 'flowingInput', 'flowingSendBtn', 'balancedContentContainer', 'flowingSuggestion', 'flowingContextBadge', 'attachmentsListFooter', 'attachmentsPreviewFooter'].forEach(id => moveIfExists(id, content));
 
       // Replace footer contents with our normalized structure
       this.footer.innerHTML = '';
@@ -153,62 +158,63 @@ class FlowingFooter {
     this.setupContextWatcher();
     this.startSuggestionRotation();
 
-    // Ensure footer responds to sidebar collapse/expand events
-    try {
-      window.addEventListener('sidebarToggled', () => {
-        const sidebar = document.querySelector('.sidebar-content-component');
-        const collapsed = !!(sidebar && sidebar.classList.contains('collapsed'));
-        document.body.classList.toggle('sidebar-collapsed', collapsed);
-        this.adjustContentPadding(collapsed);
-      });
+    this.messagesContainer = document.getElementById('flowingMessages') || null;
+    this.input = document.getElementById('flowingInput') || null;
+    this.sendBtn = document.getElementById('flowingSendBtn') || null;
+    this.contextBadge = document.getElementById('flowingContextBadge') || null;
+    this.suggestionElement = document.getElementById('flowingSuggestion') || null;
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    this.adjustContentPadding(collapsed);
+  });
 
-      // Observe class changes on sidebar to react to programmatic toggles
-      const sb = document.querySelector('.sidebar-content-component');
-      if (sb) {
-        const mo = new MutationObserver(() => {
-          const c = sb.classList.contains('collapsed');
-          document.body.classList.toggle('sidebar-collapsed', c);
-          this.adjustContentPadding(c);
-        });
-        mo.observe(sb, { attributes: true, attributeFilter: ['class'] });
-      }
-    } catch (e) { console.warn('Could not attach sidebar observers for FlowingFooter:', e); }
+  // Observe class changes on sidebar to react to programmatic toggles
+  const sb = document.querySelector('.sidebar-content-component');
+  if(sb) {
+    const mo = new MutationObserver(() => {
+      const c = sb.classList.contains('collapsed');
+      document.body.classList.toggle('sidebar-collapsed', c);
+      this.adjustContentPadding(c);
+    });
+    mo.observe(sb, { attributes: true, attributeFilter: ['class'] });
+  }
+} catch (e) { console.warn('Could not attach sidebar observers for FlowingFooter:', e); }
 
-    // Set initial padding
-    this.adjustContentPadding(true); // Start collapsed
+// Set initial padding
+this.adjustContentPadding(true); // Start collapsed
 
-    console.log('✅ Flowing MVP ready');
+console.log('✅ Flowing MVP ready');
   }
 
-  attachEventListeners() {
-    // Toggle button - Integrado con FlowingContext para sugerencias de IA
-    this.toggleBtn?.addEventListener('click', () => {
-      this.toggle();
-      // Si FlowingContext está disponible, mostrar sugerencias contextuales
-      if (window.FlowingContext && this.isExpanded) {
-        this.showContextualSuggestions();
-      }
-    });
+attachEventListeners() {
+  // Toggle button - Integrado con FlowingContext para sugerencias de IA
+  this.toggleBtn?.addEventListener('click', () => {
+    this.toggle();
+    // Si FlowingContext está disponible, mostrar sugerencias contextuales
+    if (window.FlowingContext && this.isExpanded) {
+      this.showContextualSuggestions();
+    }
+  });
 
-    // Close button removed - use 'Back to Chat' control instead
+  // Close button removed - use 'Back to Chat' control instead
 
-    // Send button
-    this.sendBtn?.addEventListener('click', () => this.sendMessage());
-
-    // Input handling
-    this.input?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        this.sendMessage();
-      }
-    });
-
-    // Auto-resize textarea
-    this.input?.addEventListener('input', () => {
-      this.input.style.height = 'auto';
-      this.input.style.height = Math.min(this.input.scrollHeight, 120) + 'px';
-    });
-  }
+  // Send button
+  this.sendBtn?.addEventListener('click', () => this.sendMessage());
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="flowing-avatar" style="width:40px;height:40px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;">
+                ${typeof SVGIcons !== 'undefined' && SVGIcons.logoSmall ? SVGIcons.logoSmall({ size: 20, className: 'inline-icon' }) : 'SF'}
+              </div>
+              <div class="flowing-title" style="font-weight:700;color:#1f2937;font-size:14px;line-height:1;">Flowing MVP</div>
+            </div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+              <div id="flowingContextBadge" class="flowing-context-badge" style="background:#f7f5ff;border:1px solid rgba(124,58,237,0.12);padding:6px 12px;border-radius:16px;color:#4b5563;font-size:13px;display:flex;align-items:center;gap:8px;">
+                <span class="context-icon">${(typeof SVGIcons !== 'undefined' && SVGIcons.chart) ? SVGIcons.chart({ size: 14, className: 'inline-icon' }) : ''}</span>
+                <span class="context-text">No context</span>
+              </div>
+              <button id="flowingToggleBtn" aria-label="Toggle Flowing" class="flowing-toggle-btn" style="width:36px;height:36px;border-radius:8px;background:#fff;border:1px solid rgba(0,0,0,0.06);box-shadow:0 6px 18px rgba(99,102,241,0.06);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:700;">▴</button>
+            </div>
+  `;
+          // Header base styles for spacing and subtle background
+          header.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 16px;width:100%;box-sizing:border-box;background:linear-gradient(180deg, rgba(99,102,241,0.03), rgba(99,102,241,0.01));border-bottom:1px solid rgba(99,102,241,0.04);';
 
   setupContextWatcher() {
     // Watch for changes in window.state (set by app.js)
@@ -260,7 +266,7 @@ class FlowingFooter {
     });
 
     if (overdueTickets.length > 0) {
-      const txt = `${SVGIcons.alert({ size: 14, className: 'inline-icon' })} ${overdueTickets.length} ticket${overdueTickets.length > 1 ? 's' : ''} overdue (7+ days)`;
+      const txt = `${ SVGIcons.alert({ size: 14, className: 'inline-icon' }) } ${ overdueTickets.length } ticket${ overdueTickets.length > 1 ? 's' : '' } overdue(7 + days)`;
       this.suggestions.push({ text: txt, type: 'warning', key: this._stripHTML(txt) });
     }
 
@@ -270,7 +276,7 @@ class FlowingFooter {
     );
 
     if (urgentTickets.length > 0) {
-      const txt = `${SVGIcons.xCircle({ size: 14, className: 'inline-icon' })} ${urgentTickets.length} urgent ticket${urgentTickets.length > 1 ? 's' : ''} require attention`;
+      const txt = `${ SVGIcons.xCircle({ size: 14, className: 'inline-icon' }) } ${ urgentTickets.length } urgent ticket${ urgentTickets.length > 1 ? 's' : '' } require attention`;
       this.suggestions.push({ text: txt, type: 'critical', key: this._stripHTML(txt) });
     }
 
@@ -280,7 +286,7 @@ class FlowingFooter {
     );
 
     if (unassignedTickets.length > 0) {
-      const txt = `${SVGIcons.user({ size: 14, className: 'inline-icon' })} ${unassignedTickets.length} unassigned ticket${unassignedTickets.length > 1 ? 's' : ''} in queue`;
+      const txt = `${ SVGIcons.user({ size: 14, className: 'inline-icon' }) } ${ unassignedTickets.length } unassigned ticket${ unassignedTickets.length > 1 ? 's' : '' } in queue`;
       this.suggestions.push({ text: txt, type: 'info', key: this._stripHTML(txt) });
     }
 
@@ -292,18 +298,18 @@ class FlowingFooter {
     });
 
     if (aboutToBreachTickets.length > 0) {
-      const txt = `${SVGIcons.clock({ size: 14, className: 'inline-icon' })} ${aboutToBreachTickets.length} ticket${aboutToBreachTickets.length > 1 ? 's' : ''} approaching SLA breach`;
+      const txt = `${ SVGIcons.clock({ size: 14, className: 'inline-icon' }) } ${ aboutToBreachTickets.length } ticket${ aboutToBreachTickets.length > 1 ? 's' : '' } approaching SLA breach`;
       this.suggestions.push({ text: txt, type: 'warning', key: this._stripHTML(txt) });
     }
 
     // All clear message
     if (this.suggestions.length === 0) {
-      const txt = `${SVGIcons.success({ size: 14, className: 'inline-icon' })} All tickets are up to date!`;
+      const txt = `${ SVGIcons.success({ size: 14, className: 'inline-icon' }) } All tickets are up to date!`;
       this.suggestions.push({ text: txt, type: 'success', key: this._stripHTML(txt) });
     }
 
     // Add general queue info
-    const txt = `${SVGIcons.chart({ size: 14, className: 'inline-icon' })} ${issues.length} ticket${issues.length > 1 ? 's' : ''} in current queue`;
+    const txt = `${ SVGIcons.chart({ size: 14, className: 'inline-icon' }) } ${ issues.length } ticket${ issues.length > 1 ? 's' : '' } in current queue`;
     this.suggestions.push({ text: txt, type: 'info', key: this._stripHTML(txt) });
   }
 
@@ -341,7 +347,7 @@ class FlowingFooter {
       // Use suggestion.text (full HTML) when rendering
       this.suggestionElement.innerHTML = suggestion.text || '';
       this.suggestionElement.classList.remove('suggestion-critical', 'suggestion-warning', 'suggestion-info', 'suggestion-success');
-      this.suggestionElement.classList.add(`suggestion-${suggestion.type}`);
+      this.suggestionElement.classList.add(`suggestion - ${ suggestion.type } `);
 
       // Move to next suggestion
       this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
@@ -399,11 +405,11 @@ class FlowingFooter {
         }
       } catch (e) { /* ignore */ }
 
-      desiredText = summary ? `${issueKey} — ${summary}` : `Ticket: ${issueKey}`;
+      desiredText = summary ? `${ issueKey } — ${ summary } ` : `Ticket: ${ issueKey } `;
     } else if (this.context.currentQueue) {
-      desiredText = `Queue: ${this.context.currentQueue} (${this.context.issuesCount} tickets)`;
+      desiredText = `Queue: ${ this.context.currentQueue } (${ this.context.issuesCount } tickets)`;
     } else if (this.context.currentDesk) {
-      desiredText = `Desk: ${this.context.currentDesk}`;
+      desiredText = `Desk: ${ this.context.currentDesk } `;
     }
 
     // Only update DOM when the text actually changes to avoid reflows/flashes
@@ -518,7 +524,7 @@ class FlowingFooter {
     this.updateContextBadge();
 
     if (this.suggestionElement) {
-      this.suggestionElement.textContent = `${issueKey} - Viewing details`;
+      this.suggestionElement.textContent = `${ issueKey } - Viewing details`;
       // pause rotation while viewing a ticket to avoid overwrites/flashes
       this.pauseSuggestionRotation();
     }
@@ -552,30 +558,30 @@ class FlowingFooter {
     if (!issue) {
       console.error('❌ Issue not found:', issueKey);
       container.innerHTML = `
-        <div style="padding: 40px; text-align: center;">
+    < div style = "padding: 40px; text-align: center;" >
           <p style="color: #ef4444; margin-bottom: 16px;">❌ Issue not found in current queue</p>
           <button onclick="window.flowingFooter.switchToChatView()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
             <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Chat
           </button>
-        </div>
-      `;
+        </div >
+    `;
       return;
     }
 
     // Show loading state
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center;">
+    < div style = "padding: 40px; text-align: center;" >
         <div class="loading-spinner" style="border: 4px solid #f3f4f6; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
         <p style="margin-top: 16px; color: #6b7280;">Loading complete ticket details...</p>
-      </div>
+      </div >
     `;
 
     try {
       // Fetch complete details from Service Desk API (same as right-sidebar)
-      const response = await fetch(`/api/servicedesk/request/${issueKey}`);
+      const response = await fetch(`/ api / servicedesk / request / ${ issueKey } `);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`HTTP ${ response.status } `);
       }
 
       const apiData = await response.json();
@@ -633,11 +639,11 @@ class FlowingFooter {
     if (!window.slaMonitor || typeof window.slaMonitor.init !== 'function') {
       console.warn('⚠️ SLA Monitor not available');
       slaContainer.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
+    < div style = "text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;" >
           <i class="fas fa-info-circle" style="margin-bottom: 8px; font-size: 16px;"></i><br>
           SLA Monitor not available
         </div>
-      `;
+  `;
       return;
     }
 
@@ -667,7 +673,7 @@ class FlowingFooter {
         // Wait for DOM to be ready before customizing (nextTick)
         setTimeout(() => {
           // Customize layout for footer compact view
-          // `.sla-panel` was removed — fallback to `.sla-monitor` or `.sla-cycle`
+          // `.sla - panel` was removed — fallback to `.sla - monitor` or `.sla - cycle`
           const slaPanelElement = slaContainer.querySelector('.sla-panel') || slaContainer.querySelector('.sla-monitor') || slaContainer.querySelector('.sla-cycle');
           if (slaPanelElement) {
             console.log('🔧 Customizing SLA panel layout...');
@@ -838,11 +844,11 @@ class FlowingFooter {
         }
       } else {
         slaContainer.innerHTML = `
-          <div style="text-align: center; padding: 16px; color: #9ca3af; font-size: 11px;">
+    < div style = "text-align: center; padding: 16px; color: #9ca3af; font-size: 11px;" >
             <i class="fas fa-check-circle" style="margin-bottom: 6px; font-size: 14px; color: #10b981;"></i><br>
             No active SLA
           </div>
-        `;
+  `;
 
         // Show no risk if no SLA
         this.renderBreachRisk(issueKey, null);
@@ -850,10 +856,10 @@ class FlowingFooter {
     } catch (error) {
       console.error('❌ Error initializing SLA Monitor:', error);
       slaContainer.innerHTML = `
-        <div style="text-align: center; padding: 16px; color: #ef4444; font-size: 11px;">
-          Failed to load SLA
-        </div>
-      `;
+    < div style = "text-align: center; padding: 16px; color: #ef4444; font-size: 11px;" >
+      Failed to load SLA
+        </div >
+    `;
     }
   }
 
@@ -866,7 +872,7 @@ class FlowingFooter {
 
     if (!data || !data.ongoingCycle) {
       riskContainer.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; padding: 12px;">
+    < div style = "display: flex; align-items: center; gap: 12px; padding: 12px;" >
           <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
             <i class="fas fa-check" style="font-size: 20px; color: #10b981;"></i>
           </div>
@@ -874,8 +880,8 @@ class FlowingFooter {
             <p style="font-size: 11px; color: #10b981; font-weight: 600; margin: 0;">LOW RISK</p>
             <p style="font-size: 9px; color: #9ca3af; margin: 2px 0 0 0;">No active SLA</p>
           </div>
-        </div>
-      `;
+        </div >
+    `;
       return;
     }
 
@@ -910,7 +916,7 @@ class FlowingFooter {
     }
 
     riskContainer.innerHTML = `
-      <div class="risk-card">
+    < div class="risk-card" >
         <div class="risk-gauge" aria-hidden="true">
           <svg width="72" height="72" viewBox="0 0 60 60" class="risk-gauge-svg" aria-hidden="true">
             <circle cx="30" cy="30" r="25" fill="none" stroke="#e5e7eb" stroke-width="5"/>
@@ -931,7 +937,7 @@ class FlowingFooter {
             ${percentage >= 75 ? `<div class="risk-note">${SVGIcons.alert({ size: 12, className: 'inline-icon' })} Near deadline — attention recommended</div>` : ''}
           </div>
         </div>
-      </div>
+      </div >
     `;
   }
 
@@ -977,7 +983,7 @@ class FlowingFooter {
       const composerHeight = composer ? composer.getBoundingClientRect().height : 0;
       const paddingReserve = 40; // some breathing room
       const maxH = Math.max(120, Math.floor(leftHeight - composerHeight - paddingReserve));
-      commentsSection.style.maxHeight = `${maxH}px`;
+      commentsSection.style.maxHeight = `${ maxH } px`;
       commentsSection.style.overflowY = 'auto';
       // Also ensure comments list scrolls newest-first properly
       const list = commentsSection.querySelector('.comments-list');
@@ -998,13 +1004,13 @@ class FlowingFooter {
       if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
       let html = '';
       attachments.forEach(att => {
-        const url = att.content || att.self || att.url || (`/api/issues/${issue.key}/attachments/${att.id}`);
+        const url = att.content || att.self || att.url || (`/ api / issues / ${ issue.key } /attachments/${ att.id } `);
         console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
         const filename = att.filename || att.name || att.displayName || 'attachment';
         const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
         if (isImage) {
           html += `
-            <div class="attachment-item">
+    < div class="attachment-item" >
               <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
                 <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
               </a>
@@ -1012,15 +1018,15 @@ class FlowingFooter {
                 <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
                 <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
               </div>
-            </div>
-          `;
+            </div >
+    `;
         } else {
           html += `
-            <div class="attachment-item">
+    < div class="attachment-item" >
               <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
               <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
-            </div>
-          `;
+            </div >
+    `;
         }
       });
       listContainer.innerHTML = html;
@@ -1043,13 +1049,13 @@ class FlowingFooter {
       if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
       let html = '';
       attachments.forEach((att) => {
-        const url = att.content || att.self || att.url || (`/api/issues/${issue.key}/attachments/${att.id}`);
+        const url = att.content || att.self || att.url || (`/ api / issues / ${ issue.key } /attachments/${ att.id } `);
         console.log('🔍 [Footer] attachment:', att.id || att.filename || att.name, 'url=', url, 'thumbnail=', att.thumbnail || att.thumbnailUrl || null, 'mimeType=', att.mimeType);
         const filename = att.filename || att.name || att.displayName || 'attachment';
         const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
         if (isImage) {
           html += `
-            <div class="attachment-item">
+    < div class="attachment-item" >
               <a class="attachment-thumb" href="${url}" target="_blank" rel="noopener noreferrer">
                 <img src="${url}" alt="${filename}" style="max-width:120px; max-height:90px; border-radius:6px; display:block;" />
               </a>
@@ -1057,15 +1063,15 @@ class FlowingFooter {
                 <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" download>${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
                 <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
               </div>
-            </div>
-          `;
+            </div >
+    `;
         } else {
           html += `
-            <div class="attachment-item">
+    < div class="attachment-item" >
               <a class="attachment-link" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:rgba(0,0,0,0.04); color:inherit; text-decoration:none;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })} <span>${filename}</span></a>
               <a class="attachment-download-btn" href="${url}" target="_blank" rel="noopener noreferrer" download title="Download" style="margin-left:6px; text-decoration:none;">${SVGIcons.download({ size: 14, className: 'inline-icon' })}</a>
-            </div>
-          `;
+            </div >
+    `;
         }
       });
       listContainer.innerHTML = html;
@@ -1118,11 +1124,11 @@ class FlowingFooter {
       let html = '';
       window.footerAttachedFiles.forEach((file, idx) => {
         html += `
-          <div class="attachment-item">
+    < div class="attachment-item" >
             <span class="attachment-name" title="${file.name}">${SVGIcons.file({ size: 14, className: 'inline-icon' })} <span>${file.name}</span></span>
             <button class="attachment-remove" data-index="${idx}">${SVGIcons.close({ size: 12, className: 'inline-icon' })}</button>
-          </div>
-        `;
+          </div >
+    `;
       });
       attachmentsList.innerHTML = html;
       // Setup remove handlers
@@ -1153,9 +1159,9 @@ class FlowingFooter {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
     if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 60) return `${ diffMins }m ago`;
+    if (diffHours < 24) return `${ diffHours }h ago`;
+    if (diffDays < 7) return `${ diffDays }d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
@@ -1308,18 +1314,19 @@ class FlowingFooter {
         if (val && val.length > 120) {
           const label = k.replace('customfield_', 'CF-');
           longCustomFieldsHTML += `
-            <div style="grid-column: 1 / -1;">
+    < div style = "grid-column: 1 / -1;" >
               <label style="font-size: 10px; font-weight: 700; color: #9ca3af; display:block; margin-bottom:6px;">${label}</label>
               <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${val}</div>
-            </div>
-          `;
+            </div >
+    `;
         }
       });
     } catch (e) { console.warn('Could not collect long custom fields', e); }
 
     // TWO-COLUMN LAYOUT WITH ML SUGGESTIONS
     container.innerHTML = `
-      ${description ? `
+      ${
+    description ? `
       <!-- Description Section (Full Width) - use native <details> so collapse is CSS-driven and simpler -->
       <details open class="ticket-description-section" style="padding: 0; background: transparent; border-bottom: 1px solid rgba(59, 130, 246, 0.08);">
         <summary class="section-label" style="display:flex; align-items:center; gap:8px; padding: 16px 20px; color: #4a5568; font-weight:600; font-size:13px; cursor:pointer;">
@@ -1333,36 +1340,37 @@ class FlowingFooter {
           ${description ? `<p style="margin:0 0 8px 0;">${description}</p>` : ''}
         </div>
       </details>
-      ` : ''}
+      ` : ''
+  }
       
       <div class="purple-divider" style="margin:0"></div>
       
-      <!-- TWO COLUMNS LAYOUT -->
-      <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
-        
-        <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
-        <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
-          
-          <!-- ML Suggestions Banner -->
-          <div class="ml-suggestions-banner" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
-            <div class="banner-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
-              <i class="fas fa-magic"></i>
-            </div>
-            <div class="banner-content" style="flex: 1;">
-              <h4 style="color: #374151; font-size: 13px; margin: 0; font-weight: 600;">
-                Analicé el ticket y tengo sugerencias 
-                <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">— Próximamente: ML predictions</span>
-              </h4>
-            </div>
+      <!--TWO COLUMNS LAYOUT-- >
+    <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+
+      <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
+      <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
+
+        <!-- ML Suggestions Banner -->
+        <div class="ml-suggestions-banner" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
+          <div class="banner-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+            <i class="fas fa-magic"></i>
           </div>
-          
-          ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
-          
-          <!-- Essential Fields Grid (3 columns) -->
-          <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-            
-            <!-- Priority -->
-            ${priority ? `
+          <div class="banner-content" style="flex: 1;">
+            <h4 style="color: #374151; font-size: 13px; margin: 0; font-weight: 600;">
+              Analicé el ticket y tengo sugerencias
+              <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">— Próximamente: ML predictions</span>
+            </h4>
+          </div>
+        </div>
+
+        ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
+
+        <!-- Essential Fields Grid (3 columns) -->
+        <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+
+          <!-- Priority -->
+          ${priority ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-flag" style="color: #ef4444;"></i> Priority
@@ -1377,9 +1385,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Assignee -->
-            ${assignee || !assignee ? `
+
+          <!-- Assignee -->
+          ${assignee || !assignee ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-user" style="color: #3b82f6;"></i> Assignee
@@ -1389,9 +1397,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Status -->
-            ${status ? `
+
+          <!-- Status -->
+          ${status ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-tasks" style="color: #10b981;"></i> Status
@@ -1401,9 +1409,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Criticidad -->
-            ${criticidad ? `
+
+          <!-- Criticidad -->
+          ${criticidad ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Criticidad
@@ -1413,9 +1421,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Tipo de Solicitud -->
-            ${tipoSolicitud ? `
+
+          <!-- Tipo de Solicitud -->
+          ${tipoSolicitud ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-clipboard-list" style="color: #8b5cf6;"></i> Tipo de Solicitud
@@ -1425,9 +1433,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Platform -->
-            ${plataforma ? `
+
+          <!-- Platform -->
+          ${plataforma ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-laptop" style="color: #06b6d4;"></i> Plataforma
@@ -1437,9 +1445,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Área -->
-            ${area ? `
+
+          <!-- Área -->
+          ${area ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-sitemap" style="color: #8b5cf6;"></i> Área
@@ -1449,9 +1457,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Empresa -->
-            ${empresa ? `
+
+          <!-- Empresa -->
+          ${empresa ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-building" style="color: #6366f1;"></i> Empresa
@@ -1461,9 +1469,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Producto -->
-            ${producto ? `
+
+          <!-- Producto -->
+          ${producto ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-box" style="color: #ec4899;"></i> Producto
@@ -1473,9 +1481,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Request Type -->
-            ${requestType ? `
+
+          <!-- Request Type -->
+          ${requestType ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-ticket-alt" style="color: #3b82f6;"></i> Request Type
@@ -1485,9 +1493,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Reporter -->
-            ${reporter || reporter2 ? `
+
+          <!-- Reporter -->
+          ${reporter || reporter2 ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-user-circle" style="color: #6b7280;"></i> Reporter
@@ -1497,9 +1505,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Email -->
-            ${email ? `
+
+          <!-- Email -->
+          ${email ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-envelope" style="color: #3b82f6;"></i> Email
@@ -1509,9 +1517,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Phone -->
-            ${phone ? `
+
+          <!-- Phone -->
+          ${phone ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-phone" style="color: #10b981;"></i> Phone
@@ -1521,9 +1529,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- País -->
-            ${pais ? `
+
+          <!-- País -->
+          ${pais ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-globe" style="color: #06b6d4;"></i> País
@@ -1533,9 +1541,9 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-            
-            <!-- País/Código -->
-            ${paisCodigo ? `
+
+          <!-- País/Código -->
+          ${paisCodigo ? `
             <div class="field-wrapper">
               <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
                 <i class="fas fa-flag" style="color: #10b981;"></i> País/Código
@@ -1545,45 +1553,45 @@ class FlowingFooter {
               </div>
             </div>
             ` : ''}
-          </div>
-          
-          <!-- SLA Monitor & Breach Risk (2 columns grid) -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px;">
-            <!-- SLA Monitor (Column 1) -->
-            <div class="sla-monitor-wrapper">
-              <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-                <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
-                  <i class="fas fa-spinner fa-spin" style="margin-bottom: 6px; font-size: 14px;"></i><br>
-                  Loading SLA...
-                </div>
-              </div>
-            </div>
-            
-            <!-- Breach Risk Analytics (Column 2) -->
-            <div class="sla-breach-risk" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="fas fa-shield-alt" style="font-size: 13px;"></i>
-                </div>
-                <h4 style="font-size: 12px; font-weight: 600; color: #374151; margin: 0;">Breach Risk</h4>
-              </div>
-              
-              <div class="breach-risk-content" style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
+        </div>
+
+        <!-- SLA Monitor & Breach Risk (2 columns grid) -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px;">
+          <!-- SLA Monitor (Column 1) -->
+          <div class="sla-monitor-wrapper">
+            <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+              <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
                 <i class="fas fa-spinner fa-spin" style="margin-bottom: 6px; font-size: 14px;"></i><br>
-                Analyzing...
+                  Loading SLA...
               </div>
             </div>
           </div>
-          
-          <!-- Extra Details (Collapsible) -->
-          <div class="extra-details" style="margin-top: 8px;">
-            <button class="btn-toggle-details" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');" style="width: 100%; padding: 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--field-text); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-              <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
-              <span>Show More Details</span>
-            </button>
-            <div class="extra-details-content" style="display: none; margin-top: 12px;">
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-                ${created ? `
+
+          <!-- Breach Risk Analytics (Column 2) -->
+          <div class="sla-breach-risk" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+              <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-shield-alt" style="font-size: 13px;"></i>
+              </div>
+              <h4 style="font-size: 12px; font-weight: 600; color: #374151; margin: 0;">Breach Risk</h4>
+            </div>
+
+            <div class="breach-risk-content" style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">
+              <i class="fas fa-spinner fa-spin" style="margin-bottom: 6px; font-size: 14px;"></i><br>
+                Analyzing...
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra Details (Collapsible) -->
+        <div class="extra-details" style="margin-top: 8px;">
+          <button class="btn-toggle-details" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'; this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');" style="width: 100%; padding: 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--field-text); font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+            <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+            <span>Show More Details</span>
+          </button>
+          <div class="extra-details-content" style="display: none; margin-top: 12px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              ${created ? `
                 <div>
                   <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
                     <i class="fas fa-calendar-plus" style="margin-right: 4px;"></i> Created
@@ -1593,7 +1601,7 @@ class FlowingFooter {
                   </div>
                 </div>
                 ` : ''}
-                ${updated ? `
+              ${updated ? `
                 <div>
                   <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
                     <i class="fas fa-calendar-check" style="margin-right: 4px;"></i> Updated
@@ -1603,7 +1611,7 @@ class FlowingFooter {
                   </div>
                 </div>
                 ` : ''}
-                ${area ? `
+              ${area ? `
                 <div>
                   <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
                     <i class="fas fa-sitemap" style="margin-right: 4px;"></i> Área
@@ -1613,7 +1621,7 @@ class FlowingFooter {
                   </div>
                 </div>
                 ` : ''}
-                ${empresa ? `
+              ${empresa ? `
                 <div>
                   <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
                     <i class="fas fa-building" style="margin-right: 4px;"></i> Empresa
@@ -1623,7 +1631,7 @@ class FlowingFooter {
                   </div>
                 </div>
                 ` : ''}
-                ${producto ? `
+              ${producto ? `
                 <div>
                   <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
                     <i class="fas fa-box" style="margin-right: 4px;"></i> Producto
@@ -1633,7 +1641,7 @@ class FlowingFooter {
                   </div>
                 </div>
                 ` : ''}
-                ${notasAnalisis ? `
+              ${notasAnalisis ? `
                 <div style="grid-column: 1 / -1;">
                   <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
                     <i class="fas fa-sticky-note" style="margin-right: 4px;"></i> Notas/Análisis
@@ -1643,7 +1651,7 @@ class FlowingFooter {
                   </div>
                 </div>
                 ` : ''}
-                ${resolucion ? `
+              ${resolucion ? `
                 <div style="grid-column: 1 / -1;">
                   <label style="font-size: 10px; font-weight: 600; color: #9ca3af; display: block; margin-bottom: 4px;">
                     <i class="fas fa-check-circle" style="margin-right: 4px;"></i> Resolución
@@ -1653,89 +1661,89 @@ class FlowingFooter {
                   </div>
                 </div>
                 ` : ''}
-              </div>
             </div>
           </div>
-          
-          <!-- Action Buttons -->
-          <div class="action-buttons-container" style="display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
-            <button onclick="window.flowingFooter.switchToChatView()" style="flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
-              <i class="fas fa-comments" style="margin-right: 6px;"></i> Back to Chat
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons-container" style="display: flex; gap: 10px; padding-top: 12px; border-top: 1px solid #e5e7eb; margin-top: 8px;">
+          <button onclick="window.flowingFooter.switchToChatView()" style="flex: 1; padding: 10px 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
+            <i class="fas fa-comments" style="margin-right: 6px;"></i> Back to Chat
+          </button>
+        </div>
+      </div>
+
+      <div class="columns-divider" aria-hidden="true"></div>
+
+      <!-- RIGHT COLUMN: ML Actions & Comments (42%) -->
+      <div class="right-column" style="display: flex; flex-direction: column; gap: 12px;">
+
+        <!-- ML Actions & Suggested Comments -->
+        <div class="ml-actions-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px;">
+          <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> ML Actions & Suggested Comments
+          </h4>
+          <div class="suggested-comments" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+            <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+              <span style="flex: 1;">Investigating issue, analyzing logs...</span>
+              <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+            <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
+              <span style="flex: 1;">Escalating to backend team...</span>
+              <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          <div class="quick-actions" style="display: flex; gap: 8px;">
+            <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
+              <i class="fas fa-clone" style="margin-right: 4px;"></i> Find Duplicates
+            </button>
+            <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
+              <i class="fas fa-clock" style="margin-right: 4px;"></i> Estimate Time
             </button>
           </div>
         </div>
 
-        <div class="columns-divider" aria-hidden="true"></div>
+        <div class="purple-divider"></div>
 
-        <!-- RIGHT COLUMN: ML Actions & Comments (42%) -->
-        <div class="right-column" style="display: flex; flex-direction: column; gap: 12px;">
-          
-          <!-- ML Actions & Suggested Comments -->
-          <div class="ml-actions-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px;">
-            <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
-              <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> ML Actions & Suggested Comments
+        <!-- Comments Section (Placeholder) -->
+        <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; max-height: 280px; overflow-y: auto;">
+          <!-- Attachments preview (balanced/footer) -->
+          <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <div class="attachments-list" id="attachmentsListFooter"></div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">
+              <i class="fas fa-comments" style="color: #6d28d9;"></i> Comments
             </h4>
-            <div class="suggested-comments" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-              <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                <span style="flex: 1;">Investigating issue, analyzing logs...</span>
-                <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
-                  <i class="fas fa-copy"></i>
-                </button>
+            <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
+          </div>
+
+          <!-- Comment composer (balanced/footer view) -->
+          <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
+            <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" style="flex:1; resize: vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; gap:8px;">
+                <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })}</button>
+                <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
               </div>
-              <div class="suggestion-item" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; color: var(--field-text); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;">
-                <span style="flex: 1;">Escalating to backend team...</span>
-                <button style="padding: 4px 8px; background: #f3f4f6; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
-                  <i class="fas fa-copy"></i>
-                </button>
-              </div>
-            </div>
-            <div class="quick-actions" style="display: flex; gap: 8px;">
-              <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
-                <i class="fas fa-clone" style="margin-right: 4px;"></i> Find Duplicates
-              </button>
-              <button style="flex: 1; padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--field-text); cursor: pointer; transition: all 0.2s;">
-                <i class="fas fa-clock" style="margin-right: 4px;"></i> Estimate Time
-              </button>
+              <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
             </div>
           </div>
-          
-          <div class="purple-divider"></div>
-          
-          <!-- Comments Section (Placeholder) -->
-          <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; max-height: 280px; overflow-y: auto;">
-            <!-- Attachments preview (balanced/footer) -->
-            <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <div class="attachments-list" id="attachmentsListFooter"></div>
-            </div>
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-              <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-comments" style="color: #6d28d9;"></i> Comments
-              </h4>
-              <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
-            </div>
 
-            <!-- Comment composer (balanced/footer view) -->
-            <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
-              <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" style="flex:1; resize: vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                <div style="display:flex; gap:8px;">
-                  <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip({ size: 14, className: 'inline-icon' })}</button>
-                  <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
-                </div>
-                <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
-              </div>
-            </div>
-
-            <div class="comments-list" style="display: flex; flex-direction: column; gap: 8px;">
-              <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 16px; margin-bottom: 8px;"></i><br>
+          <div class="comments-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
+              <i class="fas fa-spinner fa-spin" style="font-size: 16px; margin-bottom: 8px;"></i><br>
                 Loading comments...
-              </p>
-            </div>
+            </p>
           </div>
         </div>
       </div>
-    `;
+    </div>
+  `;
 
 
   }
@@ -1782,7 +1790,7 @@ class FlowingFooter {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`HTTP ${ response.status }: ${ response.statusText } `);
       }
 
       const data = await response.json();
@@ -1807,17 +1815,17 @@ class FlowingFooter {
     if (!this.messagesContainer) return null;
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = `flowing-message ${role}${isLoading ? ' loading' : ''}`;
+    messageDiv.className = `flowing - message ${ role }${ isLoading ? ' loading' : '' } `;
 
     const avatar = role === 'user' ? '👤' : 'SF';
     const avatarClass = role === 'user' ? '' : 'copilot-sf-logo';
 
     messageDiv.innerHTML = `
-      <div class="message-avatar ${avatarClass}">${avatar}</div>
+    < div class="message-avatar ${avatarClass}" > ${ avatar }</div >
       <div class="message-content">
         ${isLoading ? '<p>Thinking...</p>' : this.formatMessage(content)}
       </div>
-    `;
+  `;
 
     this.messagesContainer.appendChild(messageDiv);
     this.scrollToBottom();
@@ -1842,9 +1850,9 @@ class FlowingFooter {
           const items = line.split(/<br>/).filter(l => l.trim());
           const listItems = items.map(item => {
             const cleaned = item.replace(/^[•\-]\s*/, '').trim();
-            return cleaned ? `<li>${cleaned}</li>` : '';
+            return cleaned ? `< li > ${ cleaned }</li > ` : '';
           }).join('');
-          return `<ul>${listItems}</ul>`;
+          return `< ul > ${ listItems }</ul > `;
         }
         return line;
       }).join('</p><p>');
@@ -1852,7 +1860,7 @@ class FlowingFooter {
 
     // Wrap in paragraph if not already wrapped
     if (!formatted.startsWith('<p>') && !formatted.startsWith('<ul>')) {
-      formatted = `<p>${formatted}</p>`;
+      formatted = `< p > ${ formatted }</p > `;
     }
 
     return formatted;
@@ -1867,19 +1875,19 @@ class FlowingFooter {
   // Public API for external usage
   askAboutTicket(issueKey) {
     this.expand();
-    this.input.value = `Tell me about ticket ${issueKey}`;
+    this.input.value = `Tell me about ticket ${ issueKey } `;
     this.input.focus();
   }
 
   suggestActions(issueKey) {
     this.expand();
-    this.input.value = `What should I do with ticket ${issueKey}?`;
+    this.input.value = `What should I do with ticket ${ issueKey } ? `;
     this.sendMessage();
   }
 
   explainSLA(issueKey) {
     this.expand();
-    this.input.value = `Explain the SLA status for ${issueKey}`;
+    this.input.value = `Explain the SLA status for ${ issueKey }`;
     this.sendMessage();
   }
 
@@ -1903,11 +1911,11 @@ class FlowingFooter {
 
       // Mostrar mensaje con sugerencias
       const suggestionsList = suggestions.suggestions.map(s =>
-        `• ${s.icon || '💡'} ${s.title}`
+        `• ${ s.icon || '💡' } ${ s.title } `
       ).join('\n');
 
       this.addMessage(
-        `**${suggestions.title || 'Sugerencias Contextuales'}**\n\n${suggestionsList}\n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
+        `** ${ suggestions.title || 'Sugerencias Contextuales' }**\n\n${ suggestionsList } \n\n_Click en "✨ Flowing AI" en cualquier sugerencia para ejecutarla._`,
         'assistant'
       );
     } catch (error) {
