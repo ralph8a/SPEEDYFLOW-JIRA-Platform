@@ -217,24 +217,56 @@ class FlowingFooter {
         const btn = newHit.querySelector('#flowingToggleBtn') || newHit.querySelector('button');
         if (btn) this.toggleBtn = btn;
 
-        // set initial aria/icon
-        try { this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; } catch (e) { }
+        // make hit area accessible and set initial aria/icon
+        try {
+          newHit.setAttribute('role', 'button');
+          newHit.setAttribute('tabindex', '0');
+          newHit.setAttribute('aria-label', 'Toggle Flowing footer');
+          if (this.toggleBtn) this.toggleBtn.setAttribute('aria-controls', 'flowingContent');
+          if (this.toggleBtn) this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded));
+          if (this.toggleBtn) this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾';
+        } catch (e) { }
 
-        newHit.addEventListener('click', () => {
+        const activateToggle = (e) => {
+          // ignore if event is a keyboard navigation (handled below)
           this.toggle();
-          try { if (this.toggleBtn) { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } } catch (e) { }
+          try { if (this.toggleBtn) { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } } catch (err) { }
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
+        };
+
+        newHit.addEventListener('click', activateToggle);
+        // support keyboard activation (Enter / Space)
+        newHit.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            activateToggle(ev);
+          }
         });
       } else if (this.toggleBtn) {
-        // fallback: attach to button directly (ensure single listener)
+        // fallback: attach to button directly (ensure single listener) and make it keyboard-accessible
         const newToggle = this.toggleBtn.cloneNode(true);
         this.toggleBtn.parentNode && this.toggleBtn.parentNode.replaceChild(newToggle, this.toggleBtn);
         this.toggleBtn = newToggle;
-        try { this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; } catch (e) { }
-        this.toggleBtn.addEventListener('click', () => {
+        try {
+          this.toggleBtn.setAttribute('role', 'button');
+          this.toggleBtn.setAttribute('tabindex', '0');
+          this.toggleBtn.setAttribute('aria-controls', 'flowingContent');
+          this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded));
+          this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾';
+        } catch (e) {}
+
+        const activateBtn = (ev) => {
           this.toggle();
-          try { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } catch (e) { }
+          try { this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); } catch (e) {}
           if (window.FlowingContext && this.isExpanded) this.showContextualSuggestions();
+        };
+
+        this.toggleBtn.addEventListener('click', activateBtn);
+        this.toggleBtn.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            activateBtn(ev);
+          }
         });
       }
     } catch (e) { console.warn('Could not attach toggleBtn listener', e); }
@@ -1952,34 +1984,34 @@ class FlowingFooter {
   }
 
   // Exponer FlowingContext globalmente para integración con footer
-  if (typeof FlowingContext !== 'undefined') {
-    // prefer non-deprecated name
-    window._FlowingContext = FlowingContext;
-    // provide deprecated alias with warning
-    try {
-      Object.defineProperty(window, 'FlowingContext', {
-        configurable: true,
-        get() { console.warn('window.FlowingContext is deprecated — access window._FlowingContext instead'); return window._FlowingContext; },
-        set(v) { console.warn('Setting window.FlowingContext is deprecated — set window._FlowingContext instead'); window._FlowingContext = v; }
-      });
-    } catch (e) { window.FlowingContext = FlowingContext; }
+  if(typeof FlowingContext !== 'undefined') {
+  // prefer non-deprecated name
+  window._FlowingContext = FlowingContext;
+  // provide deprecated alias with warning
+  try {
+    Object.defineProperty(window, 'FlowingContext', {
+      configurable: true,
+      get() { console.warn('window.FlowingContext is deprecated — access window._FlowingContext instead'); return window._FlowingContext; },
+      set(v) { console.warn('Setting window.FlowingContext is deprecated — set window._FlowingContext instead'); window._FlowingContext = v; }
+    });
+  } catch (e) { window.FlowingContext = FlowingContext; }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  // prefer non-deprecated global name
+  window._flowingFooter = new FlowingFooter();
+  // create a deprecated alias that warns when accessed
+  try {
+    Object.defineProperty(window, 'flowingFooter', {
+      configurable: true,
+      get() { console.warn('window.flowingFooter is deprecated — use window._flowingFooter instead'); return window._flowingFooter; },
+      set(v) { console.warn('Setting window.flowingFooter is deprecated — set window._flowingFooter instead'); window._flowingFooter = v; }
+    });
+  } catch (e) {
+    // fallback
+    window.flowingFooter = window._flowingFooter;
   }
 
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', () => {
-    // prefer non-deprecated global name
-    window._flowingFooter = new FlowingFooter();
-    // create a deprecated alias that warns when accessed
-    try {
-      Object.defineProperty(window, 'flowingFooter', {
-        configurable: true,
-        get() { console.warn('window.flowingFooter is deprecated — use window._flowingFooter instead'); return window._flowingFooter; },
-        set(v) { console.warn('Setting window.flowingFooter is deprecated — set window._flowingFooter instead'); window._flowingFooter = v; }
-      });
-    } catch (e) {
-      // fallback
-      window.flowingFooter = window._flowingFooter;
-    }
-
-    console.log('✅ Flowing MVP Footer loaded');
-  });
+  console.log('✅ Flowing MVP Footer loaded');
+});
