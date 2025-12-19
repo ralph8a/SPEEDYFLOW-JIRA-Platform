@@ -1629,11 +1629,11 @@ class FlowingFooter {
       
       <div class="purple-divider" style="margin:0"></div>
 
-      <!--TWO COLUMNS LAYOUT-- >
-    <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+      <!-- FOUR-COLUMN GRID: description full-width above, then 3 cols for fields + 1 col for attachments/comments -->
+    <div class="footer-grid-4" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
 
-      <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
-      <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
+      <!-- LEFT AREA: spans columns 1-3 (essential fields) -->
+      <div class="left-column" style="grid-column: 1 / span 3; display: flex; flex-direction: column; gap: 12px;">
 
         ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
         
@@ -1762,10 +1762,8 @@ class FlowingFooter {
         </div>
       </div>
 
-      <div class="columns-divider" aria-hidden="true"></div>
-
-      <!-- RIGHT COLUMN: ML Actions & Comments (42%) -->
-      <div class="right-column" style="display: flex; flex-direction: column; gap: 12px;">
+      <!-- RIGHT COLUMN: attachments & comments (column 4) -->
+      <div class="right-column" style="grid-column: 4 / span 1; display: flex; flex-direction: column; gap: 12px;">
 
         <!-- Attachments area (replaces ML Actions) -->
         <div class="attachments-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
