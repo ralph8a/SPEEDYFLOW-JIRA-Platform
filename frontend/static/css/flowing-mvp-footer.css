@@ -299,12 +299,13 @@ body.flowing-footer-expanded .flowing-view.balanced-view~#flowingInput {
   position: fixed;
   top: var(--flowing-footer-overlay-top, 72px);
   /* set by JS to avoid covering filterbar */
-  bottom: 0;
-  height: calc(100% - var(--flowing-footer-overlay-top, 72px));
+  bottom: auto;
+  height: var(--flowing-footer-overlay-height, calc(100% - var(--flowing-footer-overlay-top, 72px)));
   max-height: none !important;
-  border-radius: 0 !important;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  /* remove floating shadow when covering */
+  border-radius: 12px !important;
+  border: 1px solid rgba(124, 58, 237, 0.08);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(99, 102, 241, 0.06), 0 0 60px rgba(99, 102, 241, 0.04) inset;
+  /* remove floating shadow when covering, add subtle purple/blue splashes */
   z-index: 2000;
   /* sit above the kanban */
 }
@@ -315,7 +316,13 @@ body.flowing-balanced-active .board-wrapper {
   opacity: 0.12 !important;
   filter: blur(0px) !important;
   pointer-events: none !important;
-  transition: opacity 180ms ease;
+  transition: opacity 1200ms ease;
+  /* much slower fade */
+}
+
+.flowing-footer.balanced-active #flowingToggleHit,
+.flowing-footer.balanced-active .flowing-toggle-btn {
+  display: none !important;
 }
 
 /* Chat messages container: make scrollable so composing does not push other elements */
@@ -329,6 +336,29 @@ body.flowing-balanced-active .board-wrapper {
 /* If footer is large, allow messages to take more space but still scroll */
 .flowing-footer:not(.collapsed) .flowing-messages {
   max-height: 55vh;
+}
+
+/* Balanced view content adjustments: lower content with padding, hide description and collapse button, and rounded borders */
+.flowing-footer.balanced-active .flowing-content {
+  padding: 20px 20px 28px 20px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  margin: 12px 12px 18px 12px;
+  background-clip: padding-box;
+}
+
+/* Hide long description and any duplicate description block inside balanced view */
+.flowing-footer.balanced-active .ticket-description-section,
+.flowing-footer.balanced-active .ticket-description-content,
+.flowing-footer.balanced-active .ticket-description-section summary {
+  display: none !important;
+}
+
+/* Ensure collapse button/chevron hidden defensively */
+.flowing-footer.balanced-active #flowingToggleHit,
+.flowing-footer.balanced-active .flowing-toggle-btn,
+.flowing-footer.balanced-active .btn-footer-chevron {
+  display: none !important;
 }
 
 .ticket-info-header.hidden {
