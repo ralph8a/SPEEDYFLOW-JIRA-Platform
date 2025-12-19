@@ -1544,7 +1544,71 @@ class FlowingFooter {
       });
     } catch (e) { console.warn('Could not collect long custom fields', e); }
 
-    // TWO-COLUMN LAYOUT WITH ML SUGGESTIONS
+    // Build essential fields HTML dynamically using available mappings when possible
+    const buildEssentialFieldsHTML = (mapping) => {
+      const keys = [];
+      // preferred order: form_fields, contact_info, system_fields
+      try {
+        if (mapping && mapping.categories) {
+          const cats = mapping.categories;
+          ['form_fields', 'contact_info', 'system_fields'].forEach(cat => {
+            const f = cats[cat] && cats[cat].fields ? Object.keys(cats[cat].fields) : [];
+            f.forEach(k => { if (!keys.includes(k)) keys.push(k); });
+          });
+        }
+      } catch (e) { /* ignore */ }
+
+      // ensure common core fields are present
+      ['priority', 'assignee', 'status', 'reporter', 'email', 'phone', 'summary'].forEach(k => { if (!keys.includes(k)) keys.push(k); });
+
+      let html = '';
+      // render up to many fields into the grid; filter out very long fields (handled earlier)
+      keys.forEach(k => {
+        let val = '';
+        if (k === 'priority') val = priority;
+        else if (k === 'assignee') val = assignee;
+        else if (k === 'status') val = status;
+        else if (k === 'reporter') val = reporter;
+        else val = formatValue(getField(k));
+        if (!val) return; // skip empty
+        // label from mapping if available
+        const label = (mapping && mapping.categories && (function () {
+          for (const cat of ['form_fields', 'contact_info', 'system_fields']) {
+            const f = mapping.categories[cat] && mapping.categories[cat].fields;
+            if (f && f[k] && f[k].label) return f[k].label;
+          }
+          return k.replace(/_/g, ' ').replace(/customfield /g, 'CF ').replace(/customfield_/, 'CF-');
+        })()) || k;
+
+        html += `
+          <div class="field-wrapper">
+            <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">${label}</label>
+            <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">${val}</div>
+          </div>
+        `;
+      });
+      return html;
+    };
+
+    // Try to obtain mapping from global or fetch fallback (non-blocking)
+    let mappingObj = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
+    const fetchMappingIfNeeded = async () => {
+      if (mappingObj) return mappingObj;
+      try {
+        const resp = await fetch('/data/CUSTOM_FIELDS_REFERENCE.json');
+        if (resp.ok) { mappingObj = await resp.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+      } catch (e) { /* ignore */ }
+      try {
+        const resp2 = await fetch('/static/data/CUSTOM_FIELDS_REFERENCE.json');
+        if (resp2.ok) { mappingObj = await resp2.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+      } catch (e) { /* ignore */ }
+      return null;
+    };
+
+    // Initial essential fields HTML (best-effort without mapping)
+    let initialEssentialHTML = buildEssentialFieldsHTML(mappingObj || {});
+
+    // TWO-COLUMN LAYOUT WITH ATTACHMENTS (dynamic fields inserted)
     container.innerHTML = `
       ${description ? `
       <!-- Description Section (Full Width) - use native <details> so collapse is CSS-driven and simpler -->
@@ -1564,208 +1628,20 @@ class FlowingFooter {
       }
       
       <div class="purple-divider" style="margin:0"></div>
-      
+
       <!--TWO COLUMNS LAYOUT-- >
     <div class="footer-two-columns" style="display: grid; grid-template-columns: 58% 1px 41%; gap: 20px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
 
       <!-- LEFT COLUMN: Essential Fields + ML Suggestions (58%) -->
       <div class="left-column" style="display: flex; flex-direction: column; gap: 16px;">
 
-        <!-- Attachments preview (replaces ML suggestions banner) -->
-        <div id="attachmentsPreviewHeader" class="attachments-preview-header" style="display:flex;align-items:center;gap:12px;padding:8px 0;">
-          <div style="font-size:12px;color:#6b7280;font-weight:600;">Attachments</div>
-          <div id="attachmentsListHeader" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
-        </div>
-
+        ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
+        
         ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
 
-        <!-- Essential Fields Grid (4 columns) -->
-        <div class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-
-          <!-- Priority -->
-          ${priority ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-flag" style="color: #ef4444;"></i> Priority
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${priority}
-              </div>
-              <!-- ML Suggestion Inline (placeholder) -->
-              <div class="ml-suggestion-checkbox" style="margin-top: 6px; padding: 6px 8px; font-size: 10px; border-radius: 6px; background: linear-gradient(135deg, #f8f9ff, #ffffff); border: 1px solid #e3e8ff; display: flex; align-items: center; gap: 6px; opacity: 0.7;">
-                <span style="font-size: 11px;">✨</span>
-                <span style="flex: 1; color: #6b7280;">ML suggestions coming soon</span>
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Assignee -->
-          ${assignee || !assignee ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-user" style="color: #3b82f6;"></i> Assignee
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${assignee || 'Unassigned'}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Status -->
-          ${status ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-tasks" style="color: #10b981;"></i> Status
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${status}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Criticidad -->
-          ${criticidad ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Criticidad
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${criticidad}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Tipo de Solicitud -->
-          ${tipoSolicitud ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-clipboard-list" style="color: #8b5cf6;"></i> Tipo de Solicitud
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${tipoSolicitud}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Platform -->
-          ${plataforma ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-laptop" style="color: #06b6d4;"></i> Plataforma
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${plataforma}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Área -->
-          ${area ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-sitemap" style="color: #8b5cf6;"></i> Área
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${area}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Empresa -->
-          ${empresa ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-building" style="color: #6366f1;"></i> Empresa
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
-                ${empresa}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Producto -->
-          ${producto ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-box" style="color: #ec4899;"></i> Producto
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
-                ${producto}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Request Type -->
-          ${requestType ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-ticket-alt" style="color: #3b82f6;"></i> Request Type
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
-                ${requestType}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Reporter -->
-          ${reporter || reporter2 ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-user-circle" style="color: #6b7280;"></i> Reporter
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
-                ${reporter || reporter2}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Email -->
-          ${email ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-envelope" style="color: #3b82f6;"></i> Email
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 12px; word-break: break-all; color: var(--field-text);">
-                ${email}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- Phone -->
-          ${phone ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-phone" style="color: #10b981;"></i> Phone
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${phone}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- País -->
-          ${pais ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-globe" style="color: #06b6d4;"></i> País
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: var(--field-text);">
-                ${pais}
-              </div>
-            </div>
-            ` : ''}
-
-          <!-- País/Código -->
-          ${paisCodigo ? `
-            <div class="field-wrapper">
-              <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                <i class="fas fa-flag" style="color: #10b981;"></i> País/Código
-              </label>
-              <div class="field-input" style="padding: 8px 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px;">
-                ${paisCodigo}
-              </div>
-            </div>
-            ` : ''}
+        <!-- Essential Fields Grid (generated dynamically) -->
+        <div id="essentialFieldsGrid" class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          ${initialEssentialHTML}
         </div>
 
         <!-- SLA Monitor & Breach Risk (2 columns grid) -->
@@ -1897,6 +1773,8 @@ class FlowingFooter {
             <i class="fas fa-paperclip" style="color:#6d28d9;"></i> Attachments
           </h4>
           <div id="attachmentsListRight" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+          <!-- Also show compact header preview here when available -->
+          <div id="attachmentsListHeader" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:#6b7280;font-size:12px;"></div>
         </div>
 
         <div class="purple-divider"></div>
