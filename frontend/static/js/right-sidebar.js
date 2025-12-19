@@ -262,11 +262,28 @@ function setupIssueCardClickHandlers() {
   console.log('🔧 [Setup] ===== EXECUTING setupIssueCardClickHandlers =====');
 
   // Setup details buttons with proper drag and drop compatibility
-  const detailsButtons = document.querySelectorAll('.issue-details-btn');
+  // Support multiple possible selectors (legacy and camelCase)
+  const detailsButtons = document.querySelectorAll('.issue-details-btn, .issueDetailsBtn');
   console.log('📋 [Setup] Found', detailsButtons.length, 'details buttons');
 
   detailsButtons.forEach((btn, index) => {
-    const issueKey = btn.getAttribute('data-issue-key');
+    // Robustly resolve issue key from several possible attributes or nearby elements
+    const getIssueKeyFromBtn = (el) => {
+      if (!el) return null;
+      // direct attributes
+      const candidates = [el.getAttribute('data-issue-key'), el.dataset.issueKey, el.dataset.issue, el.getAttribute('data-key'), el.getAttribute('data-issue')];
+      for (const c of candidates) if (c) return c;
+      // check parent card elements for common attributes
+      let p = el.closest('[data-issue-key], [data-issue], [data-key]');
+      if (p) return p.getAttribute('data-issue-key') || p.getAttribute('data-issue') || p.getAttribute('data-key');
+      // try to find an issue key pattern in text content of element or parent
+      const txt = (el.textContent || '') + ' ' + (el.closest('.card')?.textContent || '');
+      const m = txt.match(/([A-Z][A-Z0-9]+-\d+)/);
+      if (m) return m[1];
+      return null;
+    };
+
+    const issueKey = getIssueKeyFromBtn(btn);
     console.log(`🔧 [Setup] Configuring button ${index + 1}:`, issueKey);
 
     // Force styling
@@ -294,9 +311,11 @@ function setupIssueCardClickHandlers() {
 
       // Small delay to ensure it's a deliberate click, not part of drag
       setTimeout(() => {
-        if (typeof openIssueDetails === 'function') {
+        if (typeof openIssueDetails === 'function' && issueKey) {
           console.log('✅ [CLICK] Calling openIssueDetails for:', issueKey);
           openIssueDetails(issueKey);
+        } else if (!issueKey) {
+          console.warn('⚠️ [CLICK] Could not resolve issue key for clicked button', btn);
         } else {
           console.error('❌ [CLICK] openIssueDetails function not found');
         }
@@ -635,18 +654,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Simple global backup (no stopPropagation)
     document.addEventListener('click', function (e) {
-      const btn = e.target.closest('.issue-details-btn');
+      const btn = e.target.closest('.issue-details-btn, .issueDetailsBtn');
       if (btn && !btn.onclick) { // Only if no onclick set
-        const issueKey = btn.getAttribute('data-issue-key');
+        // resolve issue key robustly
+        const getIssueKeyFromBtn = (el) => {
+          if (!el) return null;
+          const candidates = [el.getAttribute('data-issue-key'), el.dataset.issueKey, el.dataset.issue, el.getAttribute('data-key'), el.getAttribute('data-issue')];
+          for (const c of candidates) if (c) return c;
+          const p = el.closest('[data-issue-key], [data-issue], [data-key]');
+          if (p) return p.getAttribute('data-issue-key') || p.getAttribute('data-issue') || p.getAttribute('data-key');
+          const txt = (el.textContent || '') + ' ' + (el.closest('.card')?.textContent || '');
+          const m = txt.match(/([A-Z][A-Z0-9]+-\d+)/);
+          if (m) return m[1];
+          return null;
+        };
+
+        const issueKey = getIssueKeyFromBtn(btn);
 
         if (issueKey) {
           console.log('🎯 [Global Backup] Click on details button:', issueKey);
-
           if (typeof openIssueDetails === 'function') {
             openIssueDetails(issueKey);
           } else {
             console.error('❌ [Global Backup] openIssueDetails function not found');
           }
+        } else {
+          console.warn('⚠️ [Global Backup] Could not resolve issue key for clicked button', btn);
         }
       }
     });
