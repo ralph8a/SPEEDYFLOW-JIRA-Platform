@@ -67,6 +67,7 @@ from api.blueprints.backgrounds import backgrounds_bp  # noqa: E402
 from api.blueprints.webhooks import webhooks_bp  # noqa: E402
 from api.blueprints.kanban import kanban_bp  # noqa: E402
 from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
+from api.blueprints.header_suggestions import header_suggestions_bp  # noqa: E402
 from api.blueprints.sync import sync_bp  # noqa: E402
 from api.blueprints.sla import sla_bp  # noqa: E402
 from api.blueprints.copilot import copilot_bp  # noqa: E402
@@ -143,6 +144,7 @@ app.register_blueprint(backgrounds_bp)
 app.register_blueprint(webhooks_bp)
 app.register_blueprint(kanban_bp)
 app.register_blueprint(ai_suggestions_bp)
+app.register_blueprint(header_suggestions_bp)
 app.register_blueprint(sla_bp)
 app.register_blueprint(copilot_bp)
 app.register_blueprint(reports_bp)
