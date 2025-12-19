@@ -1203,7 +1203,9 @@ class FlowingFooter {
 
   renderAttachmentsForBalanced(issue) {
     try {
-      const listContainer = document.getElementById('attachmentsListFooter');
+      // Prefer showing attachments in the RIGHT column / header preview.
+      // Do NOT inject attachments into the comments area (`attachmentsListFooter`) to avoid duplicates.
+      const listContainer = document.getElementById('attachmentsListRight') || document.getElementById('attachmentsListHeader');
       if (!listContainer) return;
       const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
       // Debug: log attachments payload to help diagnose missing thumbnails
@@ -1236,16 +1238,14 @@ class FlowingFooter {
     `;
         }
       });
+      // Populate the chosen container (right column or header preview)
       listContainer.innerHTML = html;
-      // Show preview container when attachments exist
-      const preview = document.getElementById('attachmentsPreviewFooter');
-      if (preview) preview.classList.add('show');
-      // Also populate header/right-column attachment placeholders if present
+      // Also mirror into the other preview containers (non-comments areas)
       try {
         const headerList = document.getElementById('attachmentsListHeader');
-        if (headerList) headerList.innerHTML = html;
+        if (headerList && headerList !== listContainer) headerList.innerHTML = html;
         const rightList = document.getElementById('attachmentsListRight');
-        if (rightList) rightList.innerHTML = html;
+        if (rightList && rightList !== listContainer) rightList.innerHTML = html;
       } catch (e) { /* ignore */ }
       // Description collapse now handled by native <details> element in the markup above; no JS required.
     } catch (e) {
@@ -1256,11 +1256,13 @@ class FlowingFooter {
   // Footer attachments handling (separate from right-sidebar)
   renderFooterAttachments(issue) {
     try {
-      const listContainer = document.getElementById('attachmentsListFooter');
+      // Footer attachments are for user-uploaded files; do not duplicate these into comments area when rendering existing issue attachments.
+      // Prefer to render existing issue attachments into the right-column preview instead.
+      const listContainer = document.getElementById('attachmentsListRight') || document.getElementById('attachmentsListHeader');
       if (!listContainer) return;
       const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
       console.log('🔍 [Footer|renderFooterAttachments] attachments payload for', issue.key, attachments);
-      if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; const preview = document.getElementById('attachmentsPreviewFooter'); if (preview) preview.classList.remove('show'); return; }
+      if (!attachments || attachments.length === 0) { listContainer.innerHTML = ''; return; }
       let html = '';
       attachments.forEach((att) => {
         const url = att.content || att.self || att.url || (`/ api / issues / ${issue.key} /attachments/${att.id} `);
@@ -1289,15 +1291,11 @@ class FlowingFooter {
         }
       });
       listContainer.innerHTML = html;
-      // Show preview container when attachments exist
-      const preview = document.getElementById('attachmentsPreviewFooter');
-      if (preview) preview.classList.add('show');
-      // Mirror into header/right lists when available
       try {
         const headerList = document.getElementById('attachmentsListHeader');
-        if (headerList) headerList.innerHTML = html;
+        if (headerList && headerList !== listContainer) headerList.innerHTML = html;
         const rightList = document.getElementById('attachmentsListRight');
-        if (rightList) rightList.innerHTML = html;
+        if (rightList && rightList !== listContainer) rightList.innerHTML = html;
       } catch (e) { /* ignore */ }
     } catch (e) {
       console.warn('renderFooterAttachments error', e);
