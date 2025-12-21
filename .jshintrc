@@ -1,0 +1,11 @@
+{
+    "esversion": 11,
+    "asi": true,
+    "browser": true,
+    "devel": true,
+    "node": true,
+    "globals": {
+        "window": true,
+        "document": true
+    }
+}

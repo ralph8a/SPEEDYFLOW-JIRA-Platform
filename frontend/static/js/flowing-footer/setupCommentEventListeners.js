@@ -7,50 +7,40 @@
  * as a readable archive. Do NOT include it in production builds unless you
  * intentionally want to restore the old right-sidebar behavior.
  */
-
 /* Archived implementation: start */
-
 // Original right-sidebar implementation (archived)
 // Copy below preserved for reference.
-
 /*
 Contents of original implementation:
 
 */
-
 // ===== BEGIN COPIED IMPLEMENTATION =====
-
 /**
  * right-sidebar.js (disabled)
  * The original implementation has been moved to `right-sidebar.deprecated.js`.
  * This file is intentionally left as a small stub to avoid parse/runtime
  * errors while the BalancedView replaces the old Right Sidebar functionality.
  */
-
 console.log('⚠️ right-sidebar.js disabled: original content moved to right-sidebar.deprecated.js');
-
 // No-op stubs exported to preserve integration points expected by other scripts
 window.rightSidebar = {
-    init: () => { /* disabled */ },
-    open: () => { /* disabled */ },
-    close: () => { /* disabled */ },
-    setupCardHandlers: () => { /* disabled */ },
-    switchPanel: () => { /* disabled */ },
-    setupMentionSystem: () => { /* disabled */ },
-    setupAttachmentsSystem: () => { /* disabled */ },
-    setupCommentShortcuts: () => { /* disabled */ }
+    init: () => { },
+    open: () => { },
+    close: () => { },
+    setupCardHandlers: () => { },
+    switchPanel: () => { },
+    setupMentionSystem: () => { },
+    setupAttachmentsSystem: () => { },
+    setupCommentShortcuts: () => { }
 };
-
 // Preserve global function names as harmless no-ops
-window.openIssueDetails = window.openIssueDetails || function () { /* disabled */ };
-window.closeSidebar = window.closeSidebar || function () { /* disabled */ };
-window.initRightSidebar = window.initRightSidebar || function () { /* disabled */ };
-window.setupMentionSystem = window.setupMentionSystem || function () { /* disabled */ };
-window.setupIssueCardClickHandlers = window.setupIssueCardClickHandlers || function () { /* disabled */ };
-window.setupAttachmentsSystem = window.setupAttachmentsSystem || function () { /* disabled */ };
-window.setupCommentShortcuts = window.setupCommentShortcuts || function () { /* disabled */ };
-
-
+window.openIssueDetails = window.openIssueDetails || function () { };
+window.closeSidebar = window.closeSidebar || function () { };
+window.initRightSidebar = window.initRightSidebar || function () { };
+window.setupMentionSystem = window.setupMentionSystem || function () { };
+window.setupIssueCardClickHandlers = window.setupIssueCardClickHandlers || function () { };
+window.setupAttachmentsSystem = window.setupAttachmentsSystem || function () { };
+window.setupCommentShortcuts = window.setupCommentShortcuts || function () { };
 // ===== SETUP COMMENT EVENT LISTENERS =====
 function setupCommentEventListeners(issueKey) {
     if (window.commentsModule && typeof window.commentsModule.setupCommentEventListeners === 'function') {
@@ -58,7 +48,6 @@ function setupCommentEventListeners(issueKey) {
     }
     console.warn('commentsModule not available - cannot setup comment event listeners');
 }
-
 // ===== POST COMMENT =====
 function postComment(issueKey) {
     if (window.commentsModule && typeof window.commentsModule.postComment === 'function') {
@@ -67,7 +56,6 @@ function postComment(issueKey) {
     }
     console.warn('commentsModule not available - cannot post comment');
 }
-
 // ===== CLOSE SIDEBAR =====
 function closeSidebar() {
     const rightSidebar = document.getElementById('rightSidebar');
@@ -90,7 +78,6 @@ function closeSidebar() {
         sidebarState.currentIssue = null;
     }, 300);
 }
-
 // ===== EXTRACT FIELD VALUE FROM NESTED PATHS =====
 function extractFieldValue(obj, paths) {
     if (!obj) return null;
@@ -120,7 +107,6 @@ function extractFieldValue(obj, paths) {
 
     return null;
 }
-
 // ===== POPULATE ALL FIELDS DYNAMICALLY =====
 function populateAllFields(issue) {
     const fields = extractAllFields(issue);
@@ -155,7 +141,6 @@ function populateAllFields(issue) {
     console.log('🎨 Setting up tab switching after render...');
     setTimeout(() => setupTabSwitching(), 100);
 }
-
 function renderFieldsInTab(tabId, fields) {
     const container = document.getElementById(tabId);
     if (!container) return;
@@ -204,7 +189,6 @@ function renderFieldsInTab(tabId, fields) {
     html += '</div>';
     container.innerHTML = html;
 }
-
 function setupTabSwitching() {
     const tabs = document.querySelectorAll('.fields-tab');
     const contents = document.querySelectorAll('.fields-tab-content');
@@ -237,7 +221,6 @@ function setupTabSwitching() {
 
     console.log('✅ Tab switching initialized for', tabs.length, 'tabs');
 }
-
 function getFieldPriority(label) {
     const priorityMap = {
         'Description': 0, '📝 Description': 0,
@@ -250,7 +233,6 @@ function getFieldPriority(label) {
     };
     return priorityMap[label] || 100;
 }
-
 // ===== EXTRACT ALL RELEVANT FIELDS =====
 function extractAllFields(issue) {
     const fields = [];
@@ -386,7 +368,7 @@ function extractAllFields(issue) {
         'customfield_10187', // SLA's Splunk
         'customfield_10190', // SLA's Soporte Aplicaciones
         'customfield_10259', // SLA War Room
-        'customfield_11957'  // Salud de Servicios
+        'customfield_11957' // Salud de Servicios
     ];
 
     // Helper to extract fields from an object
@@ -472,7 +454,6 @@ function extractAllFields(issue) {
     }
 
     // Total: ${fields.length} fields extracted
-
     // Define priority order for important fields
     const priorityOrder = {
         // Tier 0: Description (most important, full width)
@@ -505,7 +486,6 @@ function extractAllFields(issue) {
 
         // Tier 5: Other fields
         // (unlisted fields get 100)
-
         // Tier 6: System/technical fields (bottom)
         '🎯 Request Type': 200,
         '🌐 Language': 201,
@@ -527,7 +507,6 @@ function extractAllFields(issue) {
 
     return fields;
 }
-
 // ===== HUMANIZE FIELD NAME =====
 function humanizeFieldName(fieldName) {
     return fieldName
@@ -537,7 +516,6 @@ function humanizeFieldName(fieldName) {
         .trim()
         .replace(/\b\w/g, l => l.toUpperCase());
 }
-
 // ===== DETECT FIELD TYPE =====
 function detectFieldType(value) {
     if (Array.isArray(value)) return 'array';
@@ -571,7 +549,6 @@ function detectFieldType(value) {
     }
     return 'unknown';
 }
-
 // ===== FORMAT FIELD VALUE =====
 function formatFieldValue(value, type, issueKey) {
     if (!value && value !== 0 && value !== false) return '—';
@@ -691,7 +668,6 @@ function formatFieldValue(value, type, issueKey) {
             return String(value);
     }
 }
-
 // ===== FORMAT DATE =====
 function formatDate(dateString) {
     if (!dateString || dateString === '—') return '—';
@@ -706,7 +682,6 @@ function formatDate(dateString) {
         return dateString;
     }
 }
-
 // ===== FORMAT COMMENT TIME (relative) =====
 function formatCommentTime(dateString) {
     if (window.commentsModule && typeof window.commentsModule.formatCommentTime === 'function') {
@@ -720,7 +695,6 @@ function formatCommentTime(dateString) {
         return dateString;
     }
 }
-
 // ===== RENDER ATTACHMENTS =====
 function renderAttachments(issue) {
     const attachmentsSection = document.getElementById('attachmentsSection');
@@ -767,14 +741,12 @@ function renderAttachments(issue) {
         // Determine icon based on MIME type (only for non-images)
         let icon = SVGIcons.file({ size: 18, className: 'attachment-icon-svg' });
         // Future: map specific mime -> different icons; fallback to file icon
-
         html += `
       <div class="attachment-card">
         <div class="attachment-icon">
           ${isImage && thumbnail ?
                 `<img src="${thumbnail}" alt="${filename}" class="attachment-thumbnail" onclick="window.open('${url}', '_blank')" style="cursor: pointer;">` :
-                icon
-            }
+                icon}
         </div>
         <div class="attachment-details">
           <a href="${url}" target="_blank" class="attachment-filename" title="${filename}">
@@ -797,7 +769,6 @@ function renderAttachments(issue) {
     html += '</div>';
     attachmentsContainer.innerHTML = html;
 }
-
 // ===== INTEGRATION WITH KANBAN CARDS =====
 function setupIssueCardClickHandlers() {
     console.log('🔧 [Setup] ===== EXECUTING setupIssueCardClickHandlers =====');
@@ -847,7 +818,6 @@ function setupIssueCardClickHandlers() {
         console.log('✅ [Setup] Button configured with mousedown handler for:', issueKey);
     });
 }
-
 // ===== SETUP MENTIONS SYSTEM =====
 function setupMentionSystem() {
     console.log('🔧 [Mentions] Setting up mention system...');
@@ -934,7 +904,6 @@ function setupMentionSystem() {
 
     console.log('✅ [Mentions] Setup complete');
 }
-
 function loadAvailableUsers() {
     const mentionsList = document.getElementById('mentionsList');
 
@@ -993,7 +962,6 @@ function loadAvailableUsers() {
             mentionsList.innerHTML = `<div class="mention-item" style="color: #f00; padding: 8px;">Error loading users</div>`;
         });
 }
-
 function filterMentions(query) {
     const mentionItems = document.querySelectorAll('.mention-item');
     mentionItems.forEach(item => {
@@ -1001,7 +969,6 @@ function filterMentions(query) {
         item.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
     });
 }
-
 // ===== SETUP ATTACHMENTS SYSTEM =====
 function setupAttachmentsSystem() {
     console.log('🔧 [Attachments] Setting up attachments system...');
@@ -1073,7 +1040,6 @@ function setupAttachmentsSystem() {
 
     console.log('✅ [Attachments] Setup complete');
 }
-
 // Delegated click: if user clicks attach button but setup failed earlier, retry setup
 document.addEventListener('click', (e) => {
     const target = e.target.closest('#attachBtn, .comment-toolbar-btn');
@@ -1087,9 +1053,7 @@ document.addEventListener('click', (e) => {
         } catch (err) { /* silent */ }
     }
 });
-
 let attachedFiles = [];
-
 function addAttachments(files) {
     const attachmentsList = document.getElementById('attachmentsList');
     const attachmentsPreview = document.getElementById('attachmentsPreview');
@@ -1121,14 +1085,12 @@ function addAttachments(files) {
         });
     });
 }
-
 // ===== SETUP COMMENT KEYBOARD SHORTCUTS =====
 function setupCommentShortcuts() {
     if (window.commentsModule && typeof window.commentsModule.setupCommentShortcuts === 'function') {
         return window.commentsModule.setupCommentShortcuts();
     }
 }
-
 // ===== EXPORT FOR USE =====
 window.rightSidebar = {
     init: initRightSidebar,
@@ -1140,7 +1102,6 @@ window.rightSidebar = {
     setupAttachmentsSystem,
     setupCommentShortcuts
 };
-
 // Export functions globally for direct access
 console.log('🌍 [Global] Exporting right-sidebar functions to window...');
 window.openIssueDetails = openIssueDetails;
@@ -1154,14 +1115,12 @@ console.log('✅ [Global] Functions exported:', {
 });
 window.setupAttachmentsSystem = setupAttachmentsSystem;
 window.setupCommentShortcuts = setupCommentShortcuts;
-
 // Hook into app.js render functions
 const originalRenderKanban = window.renderKanban;
 window.renderKanban = function () {
     originalRenderKanban?.call(this);
     setupIssueCardClickHandlers();
 };
-
 // Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
@@ -1194,17 +1153,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }, 100);
 });
-
 // Also call immediately if DOM is already loaded
 if (document.readyState === 'loading') {
     console.log('📄 [Right Sidebar] DOM still loading, will init on DOMContentLoaded');
 } else {
     console.log('📄 [Right Sidebar] DOM already loaded, initializing immediately...');
 }
-
 // ===== FIELD EXPANSION REMOVED =====
 // Text fields now display complete content by default without truncation
-
 // Also call immediately if DOM is already loaded (continued from above)
 if (document.readyState !== 'loading') {
     setTimeout(() => {
@@ -1216,14 +1172,8 @@ if (document.readyState !== 'loading') {
         setTimeout(() => setupTabSwitching(), 100);
     }, 100);
 }
-
 // Initialize tab switching early (for static HTML tabs)
 setTimeout(() => {
     console.log('📋 Early tab initialization...');
     setupTabSwitching();
 }, 500);
-
-// ===== END COPIED IMPLEMENTATION =====
-
-/* Archived implementation: end */
-
