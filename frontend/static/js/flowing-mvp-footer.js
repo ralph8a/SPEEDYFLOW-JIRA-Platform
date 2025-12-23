@@ -362,9 +362,9 @@ class FlowingFooter {
             // Fade in new suggestion after a brief delay
             setTimeout(() => {
                 this.suggestionElement.classList.add('visible');
-                    try {
-                        // Audio alerts deprecated — no-op
-                    } catch (e) { /* ignore */ }
+                try {
+                    // Audio alerts deprecated — no-op
+                } catch (e) { /* ignore */ }
             }, 50);
         }, 260); // shorter fade to feel snappier but avoid flash
     }
