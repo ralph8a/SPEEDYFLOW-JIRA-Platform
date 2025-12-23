@@ -126,78 +126,14 @@ class SLAMonitor {
       }
     }, 0);
 
-    // Kick off breach prediction asynchronously (do not block render)
-    try { this.attachBreachPrediction(container, issueKey, cycle); } catch (e) { /* ignore */ }
+    // Breach prediction is handled by the dedicated `sla-predictor` module.
+    // Consumers may listen to the `sla:prediction` event or call the
+    // predictor directly. No DOM mutations are performed here.
 
     return container;
   }
 
-  // After rendering, asynchronously request SLA breach prediction from server ML predictor
-  async attachBreachPrediction(container, issueKey, cycle) {
-    try {
-      if (!issueKey) return;
-
-      // Prefer the centralized predictor module when available so the
-      // prediction-fetching logic is colocated and testable.
-      let pred = null;
-      try {
-        const predictor = (typeof window !== 'undefined' && window.slaPredictor && typeof window.slaPredictor.predictSlaBreach === 'function') ? window.slaPredictor : null;
-        if (predictor) {
-          pred = await predictor.predictSlaBreach(issueKey);
-        } else {
-          // Fallback to inline fetch for environments where the module
-          // is not yet loaded.
-          const resp = await fetch('/api/models/predict/sla_breach', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ issue_key: issueKey })
-          });
-          if (!resp || !resp.ok) return;
-          const data = await resp.json();
-          pred = data?.prediction || data;
-        }
-      } catch (e) {
-        try { console.warn('SLA prediction fetch failed', e); } catch (err) { }
-        pred = null;
-      }
-
-      if (!pred) return;
-
-      // Merge prediction into SLA data model so other consumers (e.g., Flowing footer)
-      // can read the model/prediction without depending on DOM-only attachments.
-      try {
-        if (!this.slaData[issueKey]) this.slaData[issueKey] = {};
-        // store prediction under several common keys for resilience
-        this.slaData[issueKey].model = pred;
-        this.slaData[issueKey].prediction = pred;
-
-        // Ensure there's an ongoingCycle object and attach prediction there as well
-        if (!this.slaData[issueKey].ongoingCycle) {
-          if (Array.isArray(this.slaData[issueKey].cycles) && this.slaData[issueKey].cycles.length) {
-            this.slaData[issueKey].ongoingCycle = this.slaData[issueKey].cycles[0];
-          } else if (cycle) {
-            this.slaData[issueKey].ongoingCycle = cycle;
-          } else {
-            this.slaData[issueKey].ongoingCycle = {};
-          }
-        }
-        try { this.slaData[issueKey].ongoingCycle.prediction = pred; } catch (e) { /* ignore */ }
-
-        // Notify consumers: dispatch an event and call footer renderer if present
-        try {
-          try { window.dispatchEvent(new CustomEvent('sla:prediction', { detail: { issueKey, prediction: pred } })); } catch (e) { /* ignore */ }
-          const footer = (typeof window.getFlowingFooter === 'function') ? window.getFlowingFooter() : (window._flowingFooter || window.flowingFooter);
-          if (footer && typeof footer.renderBreachRisk === 'function') {
-            try { footer.renderBreachRisk(issueKey); } catch (e) { /* ignore */ }
-          }
-        } catch (e) { /* ignore */ }
-      } catch (e) {
-        console.warn('Could not merge SLA prediction into slaData:', e);
-      }
-    } catch (e) {
-      console.warn('Could not fetch SLA breach prediction', e);
-    }
-  }
+  // Prediction logic migrated to `frontend/static/js/modules/sla-predictor.js`.
 
   /**
    * Render SLA cycle

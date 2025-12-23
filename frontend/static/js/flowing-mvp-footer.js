@@ -129,11 +129,13 @@ class FlowingFooter {
             if (!this._slaPredictionAttached) {
                 window.addEventListener('sla:prediction', (ev) => {
                     try {
-                        const issueKey = ev?.detail?.issueKey || (ev && ev.detail);
+                        const detail = ev?.detail || ev;
+                        const issueKey = detail?.issueKey || detail;
+                        const prediction = detail?.prediction || null;
                         if (!issueKey) return;
-                        // Render breach risk for the issue (footer will decide where to show it)
+                        // Render breach risk for the issue and pass the prediction
                         if (typeof this.renderBreachRisk === 'function') {
-                            try { this.renderBreachRisk(issueKey); } catch (e) { /* ignore */ }
+                            try { this.renderBreachRisk(issueKey, prediction); } catch (e) { /* ignore */ }
                         }
                     } catch (e) { /* ignore */ }
                 }, { passive: true });
