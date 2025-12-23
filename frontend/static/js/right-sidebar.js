@@ -30,41 +30,12 @@ function openIssueDetailsImpl(issueKey) {
   try {
     if (!issueKey) return;
 
-    // 1) Prefer proxy (it queues calls if footer not ready)
+    // Dispatch a centralized CustomEvent so any listener (Flowing MVP or others)
+    // can react and open the balanced view. Right-sidebar is deprecated and
+    // should not call Flowing internals directly.
     try {
-      if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
-        window.flowingFooter.switchToBalancedView(issueKey);
-        return;
-      }
+      window.dispatchEvent(new CustomEvent('flowing:switchedToBalanced', { detail: issueKey }));
     } catch (e) { /* ignore */ }
-
-    // 2) If real instance is available, call public API directly
-    try {
-      if (window._flowingFooter && typeof window._flowingFooter.public_switchToBalancedView === 'function') {
-        window._flowingFooter.public_switchToBalancedView(issueKey);
-        return;
-      }
-    } catch (e) { /* ignore */ }
-
-    // 3) Dispatch event and schedule a couple of retries in case footer initializes shortly
-    const dispatch = () => {
-      try { window.dispatchEvent(new CustomEvent('flowing:switchedToBalanced', { detail: issueKey })); } catch (e) { }
-    };
-
-    dispatch();
-    // retry a few times to cover init races
-    let attempts = 0;
-    const retry = () => {
-      attempts += 1;
-      if (window._flowingFooter && typeof window._flowingFooter.public_switchToBalancedView === 'function') {
-        try { window._flowingFooter.public_switchToBalancedView(issueKey); return; } catch (e) { }
-      }
-      if (window.flowingFooter && typeof window.flowingFooter.switchToBalancedView === 'function') {
-        try { window.flowingFooter.switchToBalancedView(issueKey); return; } catch (e) { }
-      }
-      if (attempts < 5) setTimeout(retry, 200);
-    };
-    setTimeout(retry, 200);
   } catch (err) { /* silent */ }
 }
 
