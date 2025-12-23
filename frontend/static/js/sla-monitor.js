@@ -136,23 +136,33 @@ class SLAMonitor {
   async attachBreachPrediction(container, issueKey, cycle) {
     try {
       if (!issueKey) return;
-      const resp = await fetch('/api/models/predict/sla_breach', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ issue_key: issueKey })
-      });
-      if (!resp.ok) return;
-      const data = await resp.json();
-      const pred = data.prediction || data;
+
+      // Prefer the centralized predictor module when available so the
+      // prediction-fetching logic is colocated and testable.
+      let pred = null;
+      try {
+        const predictor = (typeof window !== 'undefined' && window.slaPredictor && typeof window.slaPredictor.predictSlaBreach === 'function') ? window.slaPredictor : null;
+        if (predictor) {
+          pred = await predictor.predictSlaBreach(issueKey);
+        } else {
+          // Fallback to inline fetch for environments where the module
+          // is not yet loaded.
+          const resp = await fetch('/api/models/predict/sla_breach', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ issue_key: issueKey })
+          });
+          if (!resp || !resp.ok) return;
+          const data = await resp.json();
+          pred = data?.prediction || data;
+        }
+      } catch (e) {
+        try { console.warn('SLA prediction fetch failed', e); } catch (err) { }
+        pred = null;
+      }
+
       if (!pred) return;
 
-      // NOTE: Previously this method created and appended a DOM node
-      // with the breach prediction into the SLA panel. To avoid having
-      // multiple UI locations (and to centralize presentation in the
-      // Flowing footer / balanced view), we now only merge the
-      // prediction into the SLA data model and notify consumers.
-      // Consumers (FlowingFooter or a dedicated SLA panel renderer)
-      // should render the prediction UI by reading `slaMonitor.slaData`.
       // Merge prediction into SLA data model so other consumers (e.g., Flowing footer)
       // can read the model/prediction without depending on DOM-only attachments.
       try {

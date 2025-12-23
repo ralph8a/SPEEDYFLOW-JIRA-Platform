@@ -42,7 +42,7 @@ export function $$(selector, parent = document) {
  */
 export function createElement(tag, attrs = {}, children = []) {
   const element = document.createElement(tag);
-  
+
   // Set attributes
   Object.entries(attrs).forEach(([key, value]) => {
     if (key === 'className') {
@@ -58,7 +58,7 @@ export function createElement(tag, attrs = {}, children = []) {
       element.setAttribute(key, value);
     }
   });
-  
+
   // Add children
   const childArray = Array.isArray(children) ? children : [children];
   childArray.forEach(child => {
@@ -68,7 +68,7 @@ export function createElement(tag, attrs = {}, children = []) {
       element.appendChild(document.createTextNode(String(child)));
     }
   });
-  
+
   return element;
 }
 
@@ -103,10 +103,10 @@ export function toggleClass(element, className, force = undefined) {
  * @returns {Function} Cleanup function
  */
 export function on(element, event, handler, options = {}) {
-  if (!element) return () => {};
-  
+  if (!element) return () => { };
+
   element.addEventListener(event, handler, options);
-  
+
   return () => element.removeEventListener(event, handler, options);
 }
 
@@ -130,17 +130,17 @@ export function once(element, event, handler) {
  * @returns {Function} Cleanup function
  */
 export function delegate(parent, event, selector, handler) {
-  if (!parent) return () => {};
-  
+  if (!parent) return () => { };
+
   const wrappedHandler = (e) => {
     const target = e.target.closest(selector);
     if (target && parent.contains(target)) {
       handler.call(target, e);
     }
   };
-  
+
   parent.addEventListener(event, wrappedHandler);
-  
+
   return () => parent.removeEventListener(event, wrappedHandler);
 }
 
@@ -204,7 +204,7 @@ export function toggle(element, force = undefined) {
  */
 export function data(element, key, value = undefined) {
   if (!element) return null;
-  
+
   if (value !== undefined) {
     element.dataset[key] = value;
   } else {
@@ -264,13 +264,13 @@ export function setStyles(element, styles) {
  */
 export function animate(element, styles, duration = 300) {
   if (!element) return Promise.resolve();
-  
+
   return new Promise(resolve => {
     setStyles(element, {
       transition: `all ${duration}ms ease`,
       ...styles
     });
-    
+
     setTimeout(() => {
       element.style.transition = '';
       resolve();
@@ -298,11 +298,11 @@ export function ready(callback) {
  */
 export function insertHTML(element, html, position = 'beforeend') {
   if (!element) return;
-  
+
   // Create temporary container
   const temp = document.createElement('div');
   temp.innerHTML = html;
-  
+
   // Insert sanitized elements
   const nodes = Array.from(temp.childNodes);
   nodes.forEach(node => {
