@@ -155,14 +155,15 @@ class FlowingFooter {
             return;
         }
 
-        // Ensure header exists and is visible; do NOT create fallbacks here —
-        // header/footer must be declared in the page template (index.html)
+        // Ensure header exists — avoid changing attributes that other modules
+        // may rely on (do NOT remove `hidden` or overwrite `aria-hidden`).
+        // Only touch inline styles minimally to avoid surprising overrides.
         if (this.headerEl) {
             try {
-                this.headerEl.style.display = 'block';
-                this.headerEl.style.visibility = 'visible';
-                if (this.headerEl.removeAttribute) this.headerEl.removeAttribute('hidden');
-                if (this.headerEl.setAttribute) this.headerEl.setAttribute('aria-hidden', 'false');
+                // Do not forcibly remove attributes set by other modules. Keep
+                // attribute-level state intact; prefer class/style-only changes.
+                this.headerEl.style.display = this.headerEl.style.display || 'block';
+                this.headerEl.style.visibility = this.headerEl.style.visibility || 'visible';
             } catch (e) { /* ignore */ }
         }
 

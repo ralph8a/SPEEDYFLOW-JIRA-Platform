@@ -152,6 +152,10 @@ export function delegate(parent, event, selector, handler) {
 export function show(element, display = 'block') {
   if (!element) return;
   element.classList.remove('hidden');
+  // Prefer using aria-hidden for accessibility and centralized CSS rules.
+  try { element.setAttribute('aria-hidden', 'false'); } catch (e) { /* ignore */ }
+  // Only set inline display if explicitly hidden via inline style to avoid
+  // overriding stylesheet-based visibility rules.
   if (element.style.display === 'none') {
     element.style.display = display;
   }
@@ -164,6 +168,9 @@ export function show(element, display = 'block') {
 export function hide(element) {
   if (!element) return;
   element.classList.add('hidden');
+  // Mark element as hidden for accessibility and let CSS handle presentation
+  try { element.setAttribute('aria-hidden', 'true'); } catch (e) { /* ignore */ }
+  // Keep inline none to ensure immediate hide when necessary
   element.style.display = 'none';
 }
 
@@ -174,13 +181,13 @@ export function hide(element) {
  */
 export function toggle(element, force = undefined) {
   if (!element) return;
-  
   if (force === true) {
     show(element);
   } else if (force === false) {
     hide(element);
   } else {
-    if (element.classList.contains('hidden') || element.style.display === 'none') {
+    const attrHidden = (element.getAttribute && element.getAttribute('aria-hidden') === 'true');
+    if (attrHidden || element.classList.contains('hidden') || element.style.display === 'none') {
       show(element);
     } else {
       hide(element);

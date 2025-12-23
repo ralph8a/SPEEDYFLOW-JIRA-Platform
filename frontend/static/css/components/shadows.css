@@ -5,9 +5,9 @@
 
 :root {
   /* Softer, lower-elevation shadows by default */
-  --shadow: 0 8px 24px rgba(2,6,23,0.10);
-  --shadow-md: 0 10px 30px rgba(2,6,23,0.12);
-  --shadow-sm: 0 4px 12px rgba(2,6,23,0.08);
+  --shadow: 0 8px 24px rgba(2, 6, 23, 0.10);
+  --shadow-md: 0 10px 30px rgba(2, 6, 23, 0.12);
+  --shadow-sm: 0 4px 12px rgba(2, 6, 23, 0.08);
   --transition-base: 220ms;
   --transition-fast: 120ms;
   /* Typography color tokens (simplified palette for consistent UI)
@@ -17,10 +17,14 @@
      --ff-accent-strong: stronger accent for titles
      --ff-success/: success, danger, warning
   */
-  --ff-text-primary: #1f2937; /* slate-800 */
-  --ff-text-muted: #6b7280; /* gray-500 */
-  --ff-accent: #6366f1; /* indigo-500 */
-  --ff-accent-strong: #111827; /* slate-900 */
+  --ff-text-primary: #1f2937;
+  /* slate-800 */
+  --ff-text-muted: #6b7280;
+  /* gray-500 */
+  --ff-accent: #6366f1;
+  /* indigo-500 */
+  --ff-accent-strong: #111827;
+  /* slate-900 */
   --ff-success: #10b981;
   --ff-danger: #ef4444;
   --ff-warning: #f59e0b;
@@ -33,7 +37,7 @@
 }
 
 /* Keep other large panels flat by default */
-:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-column, .right-column, .comments-section) {
+:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-section, .right-section, .comments-section) {
   box-shadow: none !important;
 }
 
@@ -63,15 +67,16 @@
 }
 
 /* Subtle inner shadows for cards that contain images */
-.issue-card .card-image, .comment .comment-avatar {
+.issue-card .card-image,
+.comment .comment-avatar {
   box-shadow: var(--shadow-sm) inset !important;
 }
 
 /* Dark mode overrides: force readable backgrounds and contrast */
-body[data-theme="dark"] :where(.ticket-description-section, .field-input, .ml-actions-section, .comments-section, .suggestion-item, .flowing-footer, .left-column, .right-column, .panel, .panel-card, .issue-card) {
-  background: linear-gradient(180deg, rgba(10,12,18,0.6), rgba(8,10,14,0.6)) !important;
+body[data-theme="dark"] :where(.ticket-description-section, .field-input, .ml-actions-section, .comments-section, .suggestion-item, .flowing-footer, .left-section, .right-section, .panel, .panel-card, .issue-card) {
+  background: linear-gradient(180deg, rgba(10, 12, 18, 0.6), rgba(8, 10, 14, 0.6)) !important;
   color: #e6eef8 !important;
-  border-color: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 /* Global typography color normalization
@@ -106,16 +111,29 @@ a,
 }
 
 /* Strong headings */
-h1,h2,h3,h4,h5,h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
 .flowing-title,
 .footer-title {
   color: var(--ff-accent-strong) !important;
 }
 
 /* Status colors mapped to tokens */
-.status-success { color: var(--ff-success) !important; }
-.status-danger { color: var(--ff-danger) !important; }
-.status-warning { color: var(--ff-warning) !important; }
+.status-success {
+  color: var(--ff-success) !important;
+}
+
+.status-danger {
+  color: var(--ff-danger) !important;
+}
+
+.status-warning {
+  color: var(--ff-warning) !important;
+}
 
 /* Dark theme: pick lighter palette for text while preserving tokens */
 body[data-theme="dark"] {
@@ -129,7 +147,9 @@ body[data-theme="dark"] {
    and adapt automatically to dark mode via the variables above. This avoids
    hard-coded colors in legacy CSS causing poor contrast in dark theme.
 */
-.flowing-footer, .footer-two-columns, #balancedView {
+.flowing-footer,
+.footer-two-columns,
+#balancedView {
   color: var(--ff-text-primary) !important;
   background-color: transparent !important;
 }
@@ -140,7 +160,8 @@ body[data-theme="dark"] {
 .footer-subtext,
 .ticket-summary,
 .ticket-key,
-.left-column, .right-column {
+.left-section,
+.right-section {
   color: var(--ff-text-muted) !important;
 }
 
@@ -154,12 +175,14 @@ body[data-theme="dark"] {
 /* Dark-mode specific tweaks for footer backgrounds to preserve glassmorphism */
 body[data-theme="dark"] .flowing-footer,
 body.theme-dark .flowing-footer {
-  background: linear-gradient(180deg, rgba(17,24,39,0.76), rgba(12,14,18,0.72)) !important;
-  border-top-color: rgba(255,255,255,0.04) !important;
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.76), rgba(12, 14, 18, 0.72)) !important;
+  border-top-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 /* Ensure white text for small labels in dark mode */
-body[data-theme="dark"] .field-label, body[data-theme="dark"] .comment-author, body[data-theme="dark"] .comment-time {
+body[data-theme="dark"] .field-label,
+body[data-theme="dark"] .comment-author,
+body[data-theme="dark"] .comment-time {
   color: #cbd5e1 !important;
 }
 
@@ -167,16 +190,17 @@ body[data-theme="dark"] .field-label, body[data-theme="dark"] .comment-author, b
 body[data-theme="dark"] .mentions-autocomplete-dropdown {
   background: #071022 !important;
   color: #e6eef8 !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
 }
 
 /* Attachments preview in dark mode */
-body[data-theme="dark"] .attachments-preview, body[data-theme="dark"] .attachments-preview-footer {
+body[data-theme="dark"] .attachments-preview,
+body[data-theme="dark"] .attachments-preview-footer {
   background: transparent !important;
 }
 
 /* Remove shadows for large layout panels to keep UI light and avoid heavy elevation */
-:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-column, .right-column) {
+:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-section, .right-section) {
   box-shadow: none !important;
 }

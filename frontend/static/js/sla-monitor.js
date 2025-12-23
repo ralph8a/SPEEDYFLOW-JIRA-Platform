@@ -57,13 +57,14 @@ class SLAMonitor {
   renderSLAPanel(issueKey) {
     const slaData = this.slaData[issueKey];
 
-    // If no real SLA data, return a hidden empty container (no white box)
+    // If no real SLA data, return an empty container marked hidden for
+    // accessibility. Avoid forcing inline `display` styles here so callers
+    // (like the Flowing footer) can decide presentation via CSS/classes.
     if (!slaData) {
       console.log(`❌ No SLA data for ${issueKey}, not rendering panel`);
       const container = document.createElement('div');
       container.className = 'sla-panel-empty';
-      container.setAttribute('aria-hidden', 'true');
-      container.style.display = 'none';
+      try { container.setAttribute('aria-hidden', 'true'); } catch (e) { /* ignore */ }
       return container;
     }
 
