@@ -563,6 +563,7 @@ class FlowingFooter {
                 try {
                     const footerRect = (this.footer && typeof this.footer.getBoundingClientRect === 'function') ? this.footer.getBoundingClientRect() : null;
                     let availableHeight;
+                    const paddingTop = (headerH + 16);
                     if (footerRect && footerRect.height > 0) {
                         // Reserve space for header within the footer
                         availableHeight = Math.max(240, Math.floor(footerRect.height - headerH - 16));
@@ -571,23 +572,31 @@ class FlowingFooter {
                         availableHeight = Math.max(240, maxH);
                     }
 
-                    balancedEl.style.minHeight = '240px';
-                    balancedEl.style.maxHeight = `${availableHeight}px`;
-                    // Use explicit height to ensure contents can expand to fill
-                    // the footer's vertical space instead of being clipped.
-                    balancedEl.style.height = `${availableHeight}px`;
+                    // Because .balanced-content-container uses box-sizing:border-box
+                    // and we apply paddingTop, set the total element height to the
+                    // content area (availableHeight) + padding so inner grid can use
+                    // the full availableHeight without being clipped by padding.
+                    const totalHeight = availableHeight + paddingTop;
+
+                    balancedEl.style.minHeight = `${240 + paddingTop}px`;
+                    balancedEl.style.maxHeight = `${totalHeight}px`;
+                    // Use explicit height (including padding) so contents can expand
+                    // to fill the footer's vertical space instead of being clipped.
+                    balancedEl.style.height = `${totalHeight}px`;
                     balancedEl.style.overflowY = 'auto';
 
                     // Ensure balanced content is padded below header so it doesn't
                     // render beneath the footer header when the balanced view is active.
-                    try { balancedEl.style.paddingTop = (headerH + 16) + 'px'; } catch (e) { /* ignore */ }
+                    try { balancedEl.style.paddingTop = `${paddingTop}px`; } catch (e) { /* ignore */ }
                 } catch (e) {
-                    // Best-effort fallback
-                    balancedEl.style.minHeight = '240px';
-                    balancedEl.style.maxHeight = `${maxH}px`;
-                    balancedEl.style.height = 'auto';
+                    // Best-effort fallback: size using viewport-based max and include padding
+                    const fallbackPadding = (headerH + 16);
+                    const fallbackTotal = Math.max(240, maxH) + fallbackPadding;
+                    balancedEl.style.minHeight = `${240 + fallbackPadding}px`;
+                    balancedEl.style.maxHeight = `${fallbackTotal}px`;
+                    balancedEl.style.height = `${fallbackTotal}px`;
                     balancedEl.style.overflowY = 'auto';
-                    try { balancedEl.style.paddingTop = (headerH + 16) + 'px'; } catch (e) { /* ignore */ }
+                    try { balancedEl.style.paddingTop = `${fallbackPadding}px`; } catch (e) { /* ignore */ }
                 }
             }
         } catch (e) {
