@@ -70,8 +70,12 @@
         }
 
         function domSwitchToChat() {
-            // Chat view has been removed; fallback to collapse to preserve UX
-            try { domCollapse(); } catch (e) { /* ignore */ }
+            try {
+                const chatView = document.getElementById('chatOnlyView');
+                const balancedView = document.getElementById('balancedView');
+                if (balancedView) balancedView.style.display = 'none';
+                if (chatView) chatView.style.display = 'block';
+            } catch (e) { /* ignore */ }
         }
 
         return {
@@ -112,11 +116,10 @@
                 try { window.dispatchEvent(new CustomEvent('flowing:switchedToBalanced', { detail: { issueKey } })); } catch (e) { }
             },
             switchToChatView() {
-                // Chat view has been removed. Treat requests to switch back as a collapse action.
                 if (window.state && typeof window.state === 'object') { window.state.selectedIssue = null; window.state.viewMode = 'kanban'; }
-                const res = callFooter('flowing_collapse', []);
-                if (res === undefined) domCollapse();
-                try { window.dispatchEvent(new CustomEvent('flowing:collapsed')); } catch (e) { }
+                const res = callFooter('flowing_switchToChatView', []);
+                if (res === undefined) domSwitchToChat();
+                try { window.dispatchEvent(new CustomEvent('flowing:switchedToChat')); } catch (e) { }
             }
         };
     })();

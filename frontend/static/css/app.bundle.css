@@ -22,23 +22,35 @@
 /* ============================================================
    PHASE 1: FOUNDATION (Design tokens, variables, base layout)
    ============================================================ */
-@import url('core/design-system.css');    /* Design tokens: colors, spacing, radius, typography */
-@import url('core/variables.css');        /* CSS custom properties for dynamic theming */
-@import url('core/animations.css');       /* Centralized CSS animations and keyframes */
-@import url('core/font-presets.css');     /* Font family presets system */
-@import url('core/typography-system.css'); /* Cohesive typography system: Aptos + Century */
-@import url('core/font-glyph-adaptations.css'); /* Adaptations for combining fonts with Aptos/Century */
-@import url('core/positioning-system.css'); /* Centralized positioning, display, z-index system */
-@import url('core/layout.css');           /* Base layout: grid, flexbox, positioning */
+@import url('core/design-system.css');
+/* Design tokens: colors, spacing, radius, typography */
+@import url('core/variables.css');
+/* CSS custom properties for dynamic theming */
+@import url('core/animations.css');
+/* Centralized CSS animations and keyframes */
+@import url('core/font-presets.css');
+/* Font family presets system */
+@import url('core/typography-system.css');
+/* Cohesive typography system: Aptos + Century */
+@import url('core/font-glyph-adaptations.css');
+/* Adaptations for combining fonts with Aptos/Century */
+@import url('core/positioning-system.css');
+/* Centralized positioning, display, z-index system */
+@import url('core/layout.css');
+/* Base layout: grid, flexbox, positioning */
 
 /* ============================================================
    PHASE 2: THEME SYSTEM (Color palettes, effects, modes)
    ============================================================ */
-@import url('themes-consolidated/theme-light.css');            /* Light theme palette */
-@import url('themes-consolidated/theme-dark.css');             /* Dark theme palette */
-@import url('core/glassmorphism.css');                       /* Centralized glassmorphism system */
+@import url('themes-consolidated/theme-light.css');
+/* Light theme palette */
+@import url('themes-consolidated/theme-dark.css');
+/* Dark theme palette */
+@import url('core/glassmorphism.css');
+/* Centralized glassmorphism system */
 /* Transparency exemptions consolidated into glassmorphism.css */
-@import url('themes-consolidated/background-manager.css');     /* Background selector styles */
+@import url('themes-consolidated/background-manager.css');
+/* Background selector styles */
 
 /* ============================================================
    PHASE 3: COMPONENTS (UI elements - strategic consolidation)
@@ -53,22 +65,54 @@
 @import url('components/badges-utilities.css');
 
 /* Specialized Components */
-@import url('components/filter-bar.css'); /* Filter bar with unified glassmorphism */
-@import url('../views/board/kanban.css');        /* Kanban board styling */
-@import url('../views/list/list-view.css');     /* List view table styling */
-@import url('components/cards-responsive.css');      /* Responsive card styling */
-@import url('components/issue-details-btn.css');     /* Issue details button - Edge-style */
-@import url('components/right-sidebar.css');         /* Right sidebar with ticket details & comments */
-@import url('components/comments.css');      /* Comments & mentions system (includes v2) */
-@import url('components/comment-attachments.css'); /* Comment attachment styling */
-@import url('components/notifications.css'); /* Notification display */
-@import url('components/sidebar-actions.css');  /* Sidebar actions, toasts & notifications panel */
-@import url('components/sidebar-inline-editor.css'); /* AI-powered inline editor for fields */
-@import url('components/ai-suggestions.css');  /* AI field suggestions modal */
-@import url('components/ai-queue-analyzer.css');  /* AI queue analyzer global button & modal */
-@import url('components/font-preset-selector.css');  /* Font family customization selector */
-@import url('../views/board/transition-bar-vertical.css');  /* Vertical transition bar for kanban drag & drop */
-@import url('../views/list/transition-bar-horizontal.css');  /* Horizontal transition bar for list view */
+@import url('components/filter-bar.css');
+/* Filter bar with unified glassmorphism */
+@import url('../views/board/kanban.css');
+/* Kanban board styling */
+@import url('../views/list/list-view.css');
+/* List view table styling */
+@import url('components/cards-responsive.css');
+/* Responsive card styling */
+@import url('components/issue-details-btn.css');
+/* Issue details button - Edge-style */
+@import url('components/right-sidebar.css');
+/* Right sidebar with ticket details & comments */
+@import url('components/comments.css');
+/* Comments & mentions system (includes v2) */
+@import url('components/comment-attachments.css');
+/* Comment attachment styling */
+@import url('components/notifications.css');
+/* Notification display */
+@import url('components/sidebar-actions.css');
+/* Sidebar actions, toasts & notifications panel */
+@import url('components/sidebar-inline-editor.css');
+/* AI-powered inline editor for fields */
+@import url('components/ai-suggestions.css');
+/* AI field suggestions modal */
+@import url('components/ai-queue-analyzer.css');
+/* AI queue analyzer global button & modal */
+@import url('components/font-preset-selector.css');
+/* Font family customization selector */
+@import url('../views/board/transition-bar-vertical.css');
+/* Vertical transition bar for kanban drag & drop */
+@import url('../views/list/transition-bar-horizontal.css');
+/* Horizontal transition bar for list view */
+
+/* ============================================================
+   Addendum: Previously linked CSS (now consolidated into app.bundle.css)
+   These component files were referenced directly from index.html and
+   are merged here to reduce extra HTTP requests and ensure consistent
+   cascade ordering.
+   ============================================================ */
+@import url('utils/svg-icons.css');
+@import url('components/transition-fields-modal.css');
+@import url('components/quick-actions.css');
+@import url('components/auto-switch-notification.css');
+@import url('components/shadows.css');
+@import url('components/purple-accents.css');
+@import url('components/sidebar-inline.css');
+@import url('user-setup-modal.css');
+@import url('flowing-mvp-footer.css');
 
 /* ============================================================
    PHASE 4: LAYOUT (Page structure - sidebars, header)
@@ -79,16 +123,22 @@
 /* ============================================================
    PHASE 5: UTILITIES (Interactive features & enhancements)
    ============================================================ */
-@import url('utilities/state-indicators.css');        /* Status badges, state display */
-@import url('utilities/loading-dots.css');            /* Loading animations */
-@import url('utilities/sla-monitor.css');             /* SLA monitoring display */
-@import url('utilities/mentions-system.css');         /* @mentions & highlights */
-@import url('utilities/fonts.css');                   /* Font definitions & weights */
+@import url('utilities/state-indicators.css');
+/* Status badges, state display */
+@import url('utilities/loading-dots.css');
+/* Loading animations */
+@import url('utilities/sla-monitor.css');
+/* SLA monitoring display */
+@import url('utilities/mentions-system.css');
+/* @mentions & highlights */
+@import url('utilities/fonts.css');
+/* Font definitions & weights */
 
 /* ============================================================
    PHASE 6: FALLBACK (Legacy support)
    ============================================================ */
-@import url('main.css');  /* Fallback styles for unsupported features */
+@import url('main.css');
+/* Fallback styles for unsupported features */
 
 /* ============================================================
    PHASE 7: GLASSMORPHIC OVERRIDES (Must load LAST)
@@ -119,12 +169,12 @@
    FINAL OVERRIDES: Force transparency for AI backgrounds AND header consistency
    ============================================================ */
 body {
-  background: transparent !important;
+   background: transparent !important;
 }
 
 body.theme-dark,
 body.theme-light {
-  background: transparent !important;
+   background: transparent !important;
 }
 
 body.theme-dark .main-wrapper,
@@ -133,7 +183,7 @@ body.theme-dark .app-container,
 body.theme-light .app-container,
 body.theme-dark .board-wrapper,
 body.theme-light .board-wrapper {
-  background: transparent !important;
+   background: transparent !important;
 }
 
 /* Header styles managed by transparency-manager.css - no overrides needed */

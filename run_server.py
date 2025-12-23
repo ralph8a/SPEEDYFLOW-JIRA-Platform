@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from api.server import app  # type: ignore
 import logging
+import argparse
 
 # Configure logging to reduce noise
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
@@ -36,8 +37,28 @@ app.config.update({
 })
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run SpeedyFlow development server')
+    parser.add_argument('--log', action='store_true', help='Enable file logging to logs/server.log')
+    parser.add_argument('--log-file', default='logs/server.log', help='Path to server log file')
+    args = parser.parse_args()
+
     PORT = 5005
     HOST = '127.0.0.1'
+
+    # Configure optional file logging
+    if args.log:
+        log_path = Path(args.log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        fh = logging.FileHandler(str(log_path), encoding='utf-8')
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        logging.getLogger().addHandler(fh)
+        # Ensure Flask app logs propagate to root logger
+        try:
+            app.logger.addHandler(fh)
+        except Exception:
+            pass
+        logging.info(f'File logging enabled: {log_path}')
     
     print("\n" + "="*60)
     print("SPEEDYFLOW - JIRA Service Desk Platform")

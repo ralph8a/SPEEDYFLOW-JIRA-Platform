@@ -444,6 +444,7 @@ body.theme-dark .toast-content p {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -460,7 +461,8 @@ body.theme-dark .toast-content p {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6); /* Slightly darker for consistency */
+  background: rgba(0, 0, 0, 0.6);
+  /* Slightly darker for consistency */
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
@@ -480,7 +482,8 @@ body.theme-dark .toast-content p {
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.3));
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); /* TODO: Use .shadow-modal-heavy class */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  /* TODO: Use .shadow-modal-heavy class */
   max-width: 90vw;
   max-height: 90vh;
   overflow: hidden;
@@ -718,6 +721,12 @@ body.theme-dark .setting-item select {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
+  /* Allow vertical scrolling when the grid is taller than the available space
+     (use footer height variables when present). This ensures the 4-column
+     grid can scroll independently instead of pushing other elements. */
+  max-height: calc(var(--flowing-footer-max, 640px) - var(--flowing-header-height, 72px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .report-card {

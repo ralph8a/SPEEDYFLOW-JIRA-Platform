@@ -8,9 +8,10 @@ class NotificationsPanel {
   constructor() {
     this.notifications = [];
     this.unreadCount = 0;
-    this.pollInterval = null;
+    this.eventSource = null;
     this.isOpen = false;
-    // polling interval for notifications refreshing
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
   }
 
   /**
@@ -18,19 +19,19 @@ class NotificationsPanel {
    */
   async init() {
     console.log('🔔 Initializing Notifications System...');
-
+    
     // Setup click handler
     this.setupButtonHandler();
-
+    
     // Load existing notifications
     await this.loadNotifications();
-
-    // Start polling for notifications (SSE removed)
-    this.startPolling();
-
+    
+    // Connect to SSE stream
+    this.connectSSE();
+    
     // Update badge
     this.updateBadge();
-
+    
     console.log('✅ Notifications System ready');
   }
 
@@ -61,19 +62,19 @@ class NotificationsPanel {
       console.log('🔄 Fetching notifications from /api/notifications...');
       const response = await fetch('/api/notifications');
       console.log('📡 Response status:', response.status);
-
+      
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
+      
       const result = await response.json();
       console.log('📦 Response data:', result);
-
+      
       // Handle wrapped response format: {success, data: {notifications: []}}
       const data = result.data || result;
       this.notifications = data.notifications || [];
       this.unreadCount = this.notifications.filter(n => !n.read).length;
-
+      
       this.updateBadge();
-
+      
       console.log(`📬 Loaded ${this.notifications.length} notifications (${this.unreadCount} unread)`);
       console.log('📋 Notifications array:', this.notifications);
     } catch (error) {
@@ -84,20 +85,67 @@ class NotificationsPanel {
   }
 
   /**
-   * Start polling for notifications (SSE removed)
+   * Connect to SSE stream for real-time updates
    */
-  startPolling() {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
+  connectSSE() {
+    if (this.eventSource) {
+      this.eventSource.close();
     }
 
-    console.log('ℹ️ Starting notifications polling (every 30s)');
-
-    // Load immediately and then poll periodically
-    this.loadNotifications().catch(() => { });
-    this.pollInterval = setInterval(() => {
-      this.loadNotifications().catch(() => { });
-    }, 30000);
+    console.log('📡 Connecting to SSE stream...');
+    
+    try {
+      this.eventSource = new EventSource('/api/notifications/stream');
+      
+      this.eventSource.onopen = () => {
+        console.log('✅ SSE connection established');
+        this.reconnectAttempts = 0;
+      };
+      
+      this.eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'ping' || data.type === 'connected') {
+            return; // Ignore keep-alive messages
+          }
+          
+          console.log('📬 New notification received:', data);
+          
+          // Add to list if not duplicate
+          if (!this.notifications.find(n => n.id === data.id)) {
+            this.notifications.unshift(data);
+            this.unreadCount++;
+            this.updateBadge();
+            
+            // Update panel if open
+            if (this.isOpen) {
+              this.renderNotifications();
+            }
+          }
+        } catch (e) {
+          console.error('❌ Error parsing SSE message:', e);
+        }
+      };
+      
+      this.eventSource.onerror = (error) => {
+        console.error('❌ SSE connection error:', error);
+        this.eventSource.close();
+        
+        // Attempt reconnection with exponential backoff
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.reconnectAttempts++;
+          const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+          console.log(`🔄 Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+          
+          setTimeout(() => this.connectSSE(), delay);
+        } else {
+          console.error('❌ Max reconnection attempts reached');
+        }
+      };
+    } catch (error) {
+      console.error('❌ Failed to create SSE connection:', error);
+    }
   }
 
   /**
@@ -133,7 +181,7 @@ class NotificationsPanel {
     const modal = document.createElement('div');
     modal.id = 'notificationsModal';
     // Note: Styles are defined in cards-modals.css specifically for #notificationsModal
-
+    
     modal.innerHTML = `
       <div class="bg-modal-overlay"></div>
       <div class="bg-modal-content" style="max-width: 600px;">
@@ -151,12 +199,12 @@ class NotificationsPanel {
     `;
 
     document.body.appendChild(modal);
-
+    
     // Close on overlay click
     modal.querySelector('.bg-modal-overlay').addEventListener('click', () => {
       this.closePanel();
     });
-
+    
     // Close on Escape key
     const escapeHandler = (e) => {
       if (e.key === 'Escape') {
@@ -165,13 +213,13 @@ class NotificationsPanel {
       }
     };
     document.addEventListener('keydown', escapeHandler);
-
+    
     this.isOpen = true;
-
+    
     // Load notifications before rendering
     await this.loadNotifications();
     this.renderNotifications();
-
+    
     console.log('✅ Notification panel opened');
   }
 
@@ -215,14 +263,14 @@ class NotificationsPanel {
       `;
       return;
     }
-
+    
     console.log(`✅ Rendering ${this.notifications.length} notifications`);
 
     // Group by date
     const grouped = this.groupByDate(this.notifications);
-
+    
     let html = '';
-
+    
     if (grouped.today.length > 0) {
       html += '<div class="notif-date-header">Today</div>';
       html += grouped.today.map(n => this.renderNotificationCard(n)).join('');
@@ -239,30 +287,30 @@ class NotificationsPanel {
     }
 
     container.innerHTML = html;
-
+    
     // Attach click handlers to notification cards
     this.attachNotificationClickHandlers(container);
   }
-
+  
   /**
    * Attach click handlers to notification cards
    */
   attachNotificationClickHandlers(container) {
     const cards = container.querySelectorAll('.notif-card[data-issue-key]');
     console.log(`🖱️ Attaching click handlers to ${cards.length} notification cards`);
-
+    
     cards.forEach(card => {
       const issueKey = card.getAttribute('data-issue-key');
       const notifId = card.getAttribute('data-notif-id');
-
+      
       if (!issueKey) return;
-
+      
       card.style.cursor = 'pointer';
-
+      
       card.addEventListener('click', (e) => {
         e.preventDefault();
         console.log(`📍 Notification clicked: ${issueKey}`);
-
+        
         // Open issue details in right sidebar
         if (window.openIssueDetails) {
           console.log(`🔍 Opening issue details for: ${issueKey}`);
@@ -271,7 +319,7 @@ class NotificationsPanel {
         } else {
           console.warn('⚠️ window.openIssueDetails not available');
         }
-
+        
         // Mark as read
         if (notifId) {
           this.markAsRead(notifId);
@@ -286,16 +334,16 @@ class NotificationsPanel {
   groupByDate(notifications) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+    
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-
+    
     const grouped = { today: [], yesterday: [], older: [] };
-
+    
     notifications.forEach(notif => {
       const date = new Date(notif.created_at || notif.timestamp);
       date.setHours(0, 0, 0, 0);
-
+      
       if (date.getTime() === today.getTime()) {
         grouped.today.push(notif);
       } else if (date.getTime() === yesterday.getTime()) {
@@ -304,7 +352,7 @@ class NotificationsPanel {
         grouped.older.push(notif);
       }
     });
-
+    
     return grouped;
   }
 
@@ -316,10 +364,10 @@ class NotificationsPanel {
     const time = this.formatTime(notif.created_at || notif.timestamp);
     const isUnread = !notif.read;
     const issueKey = notif.issue_key || notif.key;
-
+    
     // Build clear message
     const message = this.buildClearMessage(notif);
-
+    
     const card = `
       <div class="notif-card ${isUnread ? 'unread' : ''}" 
            data-issue-key="${issueKey || ''}"
@@ -344,7 +392,7 @@ class NotificationsPanel {
         </div>
       </div>
     `;
-
+    
     return card;
   }
 
@@ -355,7 +403,7 @@ class NotificationsPanel {
     const user = notif.user || notif.actor || 'Someone';
     const action = notif.action || notif.type || 'updated';
     const summary = notif.summary || notif.title || '';
-
+    
     // Action verb mapping for clarity
     const actionMap = {
       'mention': 'mentioned you in',
@@ -373,26 +421,26 @@ class NotificationsPanel {
       'resolved': 'resolved',
       'closed': 'closed'
     };
-
+    
     const verb = actionMap[action.toLowerCase()] || action;
-
+    
     let msg = `<strong style="color: #1e293b;">${user}</strong> ${verb}`;
-
+    
     // Add ticket summary if available
     if (summary) {
       msg += ` <span style="color: #64748b; font-style: italic;">"${this.truncate(summary, 50)}"</span>`;
     }
-
+    
     return msg;
   }
-
+  
   /**
    * Build notification message (legacy fallback)
    */
   buildMessage(notif) {
     return this.buildClearMessage(notif);
   }
-
+  
   /**
    * Truncate text with ellipsis
    */
@@ -436,7 +484,7 @@ class NotificationsPanel {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-
+    
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
@@ -448,7 +496,7 @@ class NotificationsPanel {
       const response = await fetch(`/api/notifications/${notifId}/read`, {
         method: 'POST'
       });
-
+      
       if (response.ok) {
         const notif = this.notifications.find(n => n.id == notifId);
         if (notif && !notif.read) {
@@ -468,26 +516,23 @@ class NotificationsPanel {
    * Cleanup on destroy
    */
   destroy() {
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
-      this.pollInterval = null;
-      console.log('🔌 Polling stopped');
+    if (this.eventSource) {
+      this.eventSource.close();
+      console.log('🔌 SSE connection closed');
     }
-
     this.closePanel();
   }
 }
 
-// Notifications panel disabled — provide a minimal no-op stub for compatibility
-window.notificationsPanel = {
-  init: async () => { console.log('ℹ️ Notifications panel disabled (init noop)'); },
-  destroy: () => { console.log('ℹ️ Notifications panel disabled (destroy noop)'); },
-  show: (msg, level) => { console.log('🔕 Notification (disabled):', level, msg); },
-  markAsRead: async (id) => { /* noop */ },
-  loadNotifications: async () => { return []; }
-};
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    window.notificationsPanel = new NotificationsPanel();
+    window.notificationsPanel.init();
+  });
+} else {
+  window.notificationsPanel = new NotificationsPanel();
+  window.notificationsPanel.init();
+}
 
-// Backwards-compatible alias some modules may use
-window.notificationPanel = window.notificationPanel || window.notificationsPanel;
-
-console.log('ℹ️ Notifications panel disabled (stub installed)');
+console.log('✅ Notifications panel module loaded');

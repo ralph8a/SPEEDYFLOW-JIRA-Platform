@@ -28,49 +28,25 @@
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
   <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
   
-  <!-- SVG ICONS STYLES: Centralized icon styling -->
-  <link rel="stylesheet" href="/static/css/utils/svg-icons.css?v={{ timestamp }}">
-  
-  <!-- BOARD VIEW STYLING (Kanban) -->
-  <link rel="stylesheet" href="/static/views/board/kanban.css?v={{ timestamp }}">
-  
-  <!-- LIST VIEW STYLING -->
-  <link rel="stylesheet" href="/static/views/list/list-view.css?v={{ timestamp }}">
-  
-  <!-- DRAG & DROP TRANSITIONS STYLING -->
-  <link rel="stylesheet" href="/static/views/board/transition-bar-vertical.css?v={{ timestamp }}">
-  <link rel="stylesheet" href="/static/views/list/transition-bar-horizontal.css?v={{ timestamp }}">
-  <link rel="stylesheet" href="/static/css/components/transition-fields-modal.css?v={{ timestamp }}">
-  
-  <!-- QUICK ACTIONS STYLING (Quick Triage & Smart Filters) -->
-  <link rel="stylesheet" href="/static/css/components/quick-actions.css?v={{ timestamp }}">
-  
-  <!-- AUTO-SWITCH NOTIFICATION STYLING -->
-  <link rel="stylesheet" href="/static/css/components/auto-switch-notification.css?v={{ timestamp }}">
-  <!-- GLOBAL SHADOWS: add depth to UI components -->
-  <link rel="stylesheet" href="/static/css/components/shadows.css?v={{ timestamp }}">
-  <!-- Purple accents for Flowing MVP -->
-  <link rel="stylesheet" href="/static/css/components/purple-accents.css?v={{ timestamp }}">
-  
-  <!-- Sidebar layout overrides (moved from inline to component CSS) -->
-  <link rel="stylesheet" href="/static/css/components/sidebar-inline.css?v={{ timestamp }}">
-  
-  <!-- DEBUG SCRIPT (removed) -->
-  <!-- Deprecated debug helpers removed to reduce duplicate UI initialization and avoid DOM conflicts. -->
-  
-  <!-- Chart.js for interactive charts -->
+    <!-- The following component CSS files were consolidated into app.bundle.css
+      to reduce requests and ensure consistent cascade ordering:
+      utils/svg-icons.css,
+      components/transition-fields-modal.css,
+      components/quick-actions.css,
+      components/auto-switch-notification.css,
+      components/shadows.css,
+      components/purple-accents.css,
+      components/sidebar-inline.css,
+      user-setup-modal.css,
+      flowing-mvp-footer.css
+    -->
+    <!-- Chart.js for interactive charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Emoji -> SVG runtime replacer (uses SVGIcons.render) -->
-  <script src="/static/js/utils/emoji-replacer.js?v={{ timestamp }}"></script>
-  
-  <!-- USER SETUP MODAL (First-time configuration) -->
-  <link rel="stylesheet" href="/static/css/user-setup-modal.css?v={{ timestamp }}">
-  
-  <!-- FLOWING MVP FOOTER STYLES -->
-  <link rel="stylesheet" href="/static/css/flowing-mvp-footer.css?v={{ timestamp }}">
+    <!-- Emoji -> SVG runtime replacer (uses SVGIcons.render) -->
+    <script src="/static/js/utils/emoji-replacer.js?v={{ timestamp }}"></script>
   
 </head>
-<body class="theme-light">
+<body class="theme-dark">
   <!-- Removed debug logs: BODY load console messages were only used during early development. -->
   
   <div class="app-container" role="application" aria-label="SpeedyFlow Ticket Workspace">
@@ -257,13 +233,36 @@
   </div>
 
 
-      <!-- Flowing Content root is created inside #flowingFooter by flowing-mvp-footer.js -->
+      <!-- Flowing Content root: header, balanced view and footer declared in the template
+           so the JS can assume their presence and avoid creating fallbacks. -->
 
-  <!-- Constants & Configuration (MUST load first) -->
+      <div id="flowing-root" class="flowing-root" aria-hidden="false">
+        <div id="flowingHeader" class="flowing-header" role="footer" aria-hidden="false" style="display:flex;align-items:center;gap:12px;margin-right:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="flowing-brand" style="font-weight:600;">Flowing</div>
+            <div id="flowingContextBadge" class="context-badge" aria-hidden="false"></div>
+          </div>
+          <div>
+            <button id="flowingToggleBtn" class="flowing-toggle-btn" aria-label="Toggle Flowing" aria-expanded="false">▾</button>
+          </div>
+        </div>
+
+        <div id="balancedView" class="flowing-view balanced-view" style="display:none;" aria-hidden="true">
+          <div id="balancedContentContainer" class="balanced-content-container"></div>
+        </div>
+
+        <div id="flowingFooter" class="flowing-footer" aria-hidden="false"></div>
+      </div>
+
+      <!-- Constants & Configuration (MUST load first) -->
   <script src="/static/js/constants/card-sizing.js"></script>
+  <script src="/static/js/sla-monitor.js?v={{ timestamp }}"></script>
   
   <!-- SVG Icons Module - Centralized icon library -->
+  <!-- Load authoritative SVGIcons implementation early to avoid race conditions -->
   <script src="/static/js/utils/svg-icons.js?v={{ timestamp }}"></script>
+  <!-- Bridge: will only inject if authoritative implementation is missing -->
+  <script src="/static/js/svg-icons.js?v={{ timestamp }}"></script>
   
   <!-- Theme Manager - Centralized theme control -->
   <script src="/static/js/theme-manager.js?v={{ timestamp }}"></script>
@@ -271,13 +270,8 @@
   <script src="/static/js/sidebar-tooltip-manager.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-actions.js?v={{ timestamp }}"></script>
   <script src="/static/js/header-menu-controller.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/mentions-autocomplete.js?v={{ timestamp }}"></script>
   <!-- Comments module must load before right-sidebar to provide comment utilities -->
-  <script src="/static/js/modules/comments.js?v={{ timestamp }}"></script>
-  <script src="/static/js/right-sidebar.js?v={{ timestamp }}"></script>
-  <script src="/static/js/mentions-system.js?v={{ timestamp }}"></script>
-  <script src="/static/js/notifications-panel.js?v={{ timestamp }}"></script>
-  <script src="/static/js/sla-monitor.js?v={{ timestamp }}"></script>
+  <!-- Notifications panel removed (disabled) -->
   
   <!-- ===== GLASSMORPHISM & TRANSPARENCY ===== -->
   <script src="/static/js/glassmorphism-opacity-controller.js?v={{ timestamp }}"></script>
@@ -298,13 +292,8 @@
   <script src="/static/js/modules/ai-queue-analyzer.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/view-toggle-filters.js?v={{ timestamp }}"></script>
   <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/ml-comment-suggestions.js?v={{ timestamp }}"></script>
   <!-- Previously disabled: ml-anomaly-dashboard.js (obsolete) - removed to avoid auto-opening modals -->
 
-  <!-- ===== DRAG & DROP TRANSITIONS ===== -->
-  <script src="/static/views/board/drag-transition-vertical.js?v={{ timestamp }}"></script>
-  <script src="/static/views/list/list-view-transitions.js?v={{ timestamp }}"></script>
-  
   <!-- ===== QUICK ACTIONS (Quick Triage & Smart Filters) ===== -->
   <script src="/static/js/quick-triage.js?v={{ timestamp }}"></script>
   <script src="/static/js/smart-filters.js?v={{ timestamp }}"></script>
@@ -314,13 +303,11 @@
     <!-- FLOWING MVP FOOTER -->
     <!-- Flowing Content (rendered dynamically by `flowing-mvp-footer.js`) -->
   <!-- Root container for Flowing MVP (required by flowing-mvp-footer.js) -->
-  
-  <div id="flowingFooter" class="flowing-footer" aria-hidden="false"></div>
   <!-- Flowing audio utilities (optional but recommended) -->
   <script src="/static/js/flowing-mvp-audio.js?v={{ timestamp }}"></script>
   <!-- Lightweight shim for FlowingContext to enable header suggestions in dev/test -->
-  <script src="/static/js/flowing-context-shim.js?v={{ timestamp }}"></script>
-  <script src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
+
+  <script type="module" data-flowing-footer src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
   <!-- Loader fallback: ensures footer script is loaded if original request failed -->
   <script src="/static/js/flowing-mvp-loader.js?v={{ timestamp }}"></script>
 

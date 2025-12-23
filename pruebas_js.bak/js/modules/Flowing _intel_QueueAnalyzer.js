@@ -20,20 +20,26 @@ class AIQueueAnalyzer {
   }
 
   attachButton() {
-    // Try primary and known fallback buttons
-    const primaryBtn = document.getElementById('mlAnalyzeBtn');
-    const fallbackBtn = document.getElementById('aiAnalyzeBtn');
-    const quickActionBtn = document.getElementById('quickActionBtn');
-
-    const btn = primaryBtn || fallbackBtn || quickActionBtn;
+    // Try primary button ID
+    const btn = document.getElementById('mlAnalyzeBtn');
     if (btn) {
-      console.log(`✅ Found analysis button (${btn.id})`);
+      console.log('✅ Found mlAnalyzeBtn (primary)');
       btn.addEventListener('click', () => {
-        console.log(`🖱️ ${btn.id} clicked`);
+        console.log('🖱️ mlAnalyzeBtn clicked');
         this.analyze();
       });
     } else {
-      console.warn('⚠️ No analysis button found (expected mlAnalyzeBtn / aiAnalyzeBtn / quickActionBtn)');
+      console.warn('⚠️ mlAnalyzeBtn not found (it should be in header)');
+    }
+    
+    // Fallback: try secondary button ID
+    const btnAlt = document.getElementById('aiAnalyzeBtn');
+    if (btnAlt && btnAlt !== btn) {
+      console.log('✅ Found aiAnalyzeBtn (fallback)');
+      btnAlt.addEventListener('click', () => {
+        console.log('🖱️ aiAnalyzeBtn clicked');
+        this.analyze();
+      });
     }
   }
 
@@ -44,19 +50,19 @@ class AIQueueAnalyzer {
       console.error('❌ Missing desk or queue:', { desk: window.state?.currentDesk, queue: window.state?.currentQueue });
       return;
     }
-
+    
     console.log('🧠 Starting ML analysis:', { desk: window.state.currentDesk, queue: window.state.currentQueue });
-
+    
     const cacheKey = `ml_analysis_${window.state.currentDesk}_${window.state.currentQueue}`;
-
+    
     this.showModal();
-
+    
     // 🚀 LEVEL 1: Check memory cache (INSTANT - <1ms)
     if (window.mlAnalysisCache && window.mlAnalysisCache[cacheKey]) {
       const cached = window.mlAnalysisCache[cacheKey];
       const age = Date.now() - cached.timestamp;
       const maxAge = window.state?.issues?.length >= 50 ? 3 * 60 * 60 * 1000 : 15 * 60 * 1000;
-
+      
       if (age < maxAge) {
         console.log(`💨 Using memory cache (${(age / 1000).toFixed(0)}s old) - INSTANT LOAD`);
         this.results = cached.data;
@@ -65,25 +71,25 @@ class AIQueueAnalyzer {
         return;
       }
     }
-
+    
     // 🏃 LEVEL 2: Check LocalStorage (FAST - <10ms)
     const localCached = window.CacheManager?.get(cacheKey);
     if (localCached) {
       console.log('💾 Using LocalStorage cache - FAST LOAD');
-
+      
       // Store in memory for next time
       window.mlAnalysisCache = window.mlAnalysisCache || {};
       window.mlAnalysisCache[cacheKey] = {
         data: localCached,
         timestamp: Date.now()
       };
-
+      
       this.results = localCached;
       this.renderResults(this.results);
       this.showCacheIndicator('localStorage', 0);
       return;
     }
-
+    
     // 📡 LEVEL 3: Fetch from backend (NETWORK - ~500ms)
     console.log('📡 Fetching from backend...');
     this.showLoading();
@@ -93,9 +99,9 @@ class AIQueueAnalyzer {
         desk_id: window.state.currentDesk,
         queue_id: window.state.currentQueue
       };
-
+      
       console.log('📤 Sending request to /api/ai/analyze-queue:', body);
-
+      
       const response = await fetch('/api/ai/analyze-queue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,14 +116,14 @@ class AIQueueAnalyzer {
 
       let data = await response.json();
       console.log('✅ AI Analysis Response:', data);
-
+      
       // El decorador @json_response envuelve la respuesta en {success, data, timestamp}
       // Extraer los datos reales si están envueltos
       if (data.success && data.data) {
         console.log('📦 Unwrapping response from json_response decorator');
         data = data.data;
       }
-
+      
       console.log('✅ Processed data:', data);
       console.log('📊 Response keys:', Object.keys(data));
       this.results = data;
@@ -128,23 +134,23 @@ class AIQueueAnalyzer {
         this.showError(data.error);
         return;
       }
-
+      
       // Store in ALL cache levels for next time
       const cacheKey = `ml_analysis_${window.state.currentDesk}_${window.state.currentQueue}`;
-
+      
       // Memory cache (LEVEL 1)
       window.mlAnalysisCache = window.mlAnalysisCache || {};
       window.mlAnalysisCache[cacheKey] = {
         data: data,
         timestamp: Date.now()
       };
-
+      
       // LocalStorage cache (LEVEL 2)
       const ttl = window.state?.issues?.length >= 50 ? 3 * 60 * 60 * 1000 : 15 * 60 * 1000;
       if (window.CacheManager) {
         window.CacheManager.set(cacheKey, data, ttl);
       }
-
+      
       console.log(`💾 Cached ML analysis in memory + localStorage (TTL: ${(ttl / (60 * 60 * 1000)).toFixed(1)}h)`);
       this.showCacheIndicator('backend', 0);
 
@@ -245,7 +251,7 @@ class AIQueueAnalyzer {
     `;
     document.getElementById('aiQueueFooter').style.display = 'none';
   }
-
+  
   /**
    * Show cache indicator with refresh button
    * @param {string} source - Cache source: 'memory', 'localStorage', or 'backend'
@@ -254,21 +260,21 @@ class AIQueueAnalyzer {
   showCacheIndicator(source, age) {
     const indicator = document.getElementById('mlAnalysisCacheIndicator');
     if (!indicator) return;
-
+    
     const sourceIcons = {
       memory: '💨',
       localStorage: '💾',
       backend: '📡'
     };
-
+    
     const sourceLabels = {
       memory: 'En memoria',
       localStorage: 'En caché local',
       backend: 'Del servidor'
     };
-
+    
     const ageText = age > 0 ? ` • ${this.formatAge(age)} atrás` : '';
-
+    
     indicator.innerHTML = `
       <span style="display: flex; align-items: center; gap: 6px;">
         ${sourceIcons[source]} ${sourceLabels[source]}${ageText}
@@ -285,7 +291,7 @@ class AIQueueAnalyzer {
     `;
     indicator.style.display = 'flex';
   }
-
+  
   /**
    * Format cache age for display
    * @param {number} ms - Age in milliseconds
@@ -295,29 +301,29 @@ class AIQueueAnalyzer {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-
+    
     if (hours > 0) return `${hours}h ${minutes % 60}m`;
     if (minutes > 0) return `${minutes}m`;
     return `${seconds}s`;
   }
-
+  
   /**
    * Refresh analysis by clearing cache and re-analyzing
    */
   async refreshAnalysis() {
     const cacheKey = `ml_analysis_${window.state?.currentDesk}_${window.state?.currentQueue}`;
-
+    
     // Clear all cache levels
     if (window.mlAnalysisCache) {
       delete window.mlAnalysisCache[cacheKey];
       console.log('🗑️ Cleared memory cache for ML analysis');
     }
-
+    
     if (window.CacheManager) {
       window.CacheManager.remove(cacheKey);
       console.log('🗑️ Cleared LocalStorage cache for ML analysis');
     }
-
+    
     // Re-analyze with fresh data
     console.log('🔄 Refreshing ML analysis with recent data...');
     await this.analyze();
@@ -325,7 +331,7 @@ class AIQueueAnalyzer {
 
   renderResults(data) {
     const content = document.getElementById('aiQueueContent');
-
+    
     let html = `
       <div class="ai-results-summary">
         <p>
@@ -383,7 +389,7 @@ class AIQueueAnalyzer {
     html += `</div>`;
     content.innerHTML = html;
     document.getElementById('aiQueueFooter').style.display = 'flex';
-
+    
     // Add click listeners to issue keys to open ticket details
     content.querySelectorAll('.ai-issue-key').forEach(keyElement => {
       keyElement.style.cursor = 'pointer';
@@ -391,10 +397,10 @@ class AIQueueAnalyzer {
         e.stopPropagation();
         const issueKey = keyElement.textContent.trim();
         console.log('🎯 Opening ticket from AI recommendations:', issueKey);
-
+        
         // Close AI modal
         this.close();
-
+        
         // Open ticket details
         if (typeof showTicketDetails === 'function') {
           showTicketDetails(issueKey);
@@ -429,7 +435,7 @@ class AIQueueAnalyzer {
 
   async applySelected() {
     const checkboxes = document.querySelectorAll('#aiQueueContent input[type="checkbox"]:checked');
-
+    
     if (checkboxes.length === 0) {
       alert('Selecciona al menos un campo para actualizar');
       return;
@@ -440,9 +446,9 @@ class AIQueueAnalyzer {
       const issueKey = cb.dataset.issue;
       const field = cb.dataset.field;
       const value = JSON.parse(cb.dataset.value);
-
+      
       console.log(`🔧 Preparing update for ${issueKey}.${field}:`, value);
-
+      
       if (!updates[issueKey]) {
         updates[issueKey] = { fields: {} };
       }
@@ -450,7 +456,7 @@ class AIQueueAnalyzer {
     });
 
     console.log('📤 Applying updates:', updates);
-
+    
     // Show progress
     const footer = document.getElementById('aiQueueFooter');
     const originalFooter = footer.innerHTML;
@@ -469,7 +475,7 @@ class AIQueueAnalyzer {
     for (const [issueKey, data] of Object.entries(updates)) {
       try {
         console.log(`🔄 Updating ${issueKey} with:`, data);
-
+        
         const response = await fetch(`/api/issues/${issueKey}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -498,10 +504,10 @@ class AIQueueAnalyzer {
     if (errors > 0) {
       message += `\n\n❌ ${errors} errores:\n${errorDetails.join('\n')}`;
     }
-
+    
     alert(message);
     this.closeModal();
-
+    
     // Refresh issues
     if (window.loadIssues && window.state && window.state.currentQueue) {
       console.log('🔄 Refreshing issues...');

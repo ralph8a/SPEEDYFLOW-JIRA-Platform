@@ -209,6 +209,9 @@ body.theme-dark .flowing-footer {
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
+  /* Ensure header uses the canonical header height variable so collapsed footer
+      can match this height exactly. */
+  height: var(--flowing-header-height, 72px);
   cursor: pointer;
   transition: all var(--transition-base, 0.25s) ease;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -284,9 +287,6 @@ body.theme-dark .footer-title {
    We use the `balanced-active` class added to the footer by JS, and also
    respect the expanded state class to avoid overlaps when footer is large. */
 .flowing-footer.balanced-active .flowing-composer,
-.flowing-footer.balanced-active #flowingMessages,
-.flowing-footer.balanced-active #flowingInput,
-.flowing-footer.balanced-active #flowingSendBtn,
 .flowing-footer.balanced-active #flowingToggleHit,
 .flowing-footer.balanced-active .flowing-toggle-btn,
 .flowing-footer.balanced-active .flowing-context-badge,
@@ -297,9 +297,7 @@ body.theme-dark .footer-title {
 
 /* Fallback: also hide when footer is expanded AND balanced view visible via body class
    This covers edge cases where balanced-active wasn't added due to DOM mapping issues. */
-body.flowing-footer-expanded .flowing-view.balanced-view~.flowing-composer,
-body.flowing-footer-expanded .flowing-view.balanced-view~#flowingMessages,
-body.flowing-footer-expanded .flowing-view.balanced-view~#flowingInput {
+body.flowing-footer-expanded .flowing-view.balanced-view~.flowing-composer {
   display: none !important;
 }
 
@@ -1649,9 +1647,10 @@ body.sidebar-collapsed .flowing-footer {
   margin: 0 16px !important;
 }
 
-/* Collapsed State */
+/* Collapsed State - make collapsed footer height equal to header height */
 .flowing-footer.collapsed {
-  max-height: 56px;
+  height: var(--flowing-header-height, 72px) !important;
+  max-height: var(--flowing-header-height, 72px) !important;
   overflow: hidden;
 }
 
@@ -1686,7 +1685,8 @@ body.sidebar-collapsed .flowing-footer {
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
-  padding: 14px 24px;
+  /* tighter toggle padding to reduce unused space in header */
+  padding: 10px 16px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2216,14 +2216,16 @@ body.sidebar-collapsed .flowing-footer {
 #balancedView {
   box-sizing: border-box;
   width: 100%;
-  padding: 16px 24px 24px 24px;
+  /* Reduced outer padding so content can better fill the container */
+  padding: 8px 12px 12px 12px;
   overflow-x: hidden;
 }
 
 .footer-two-columns {
   display: grid;
-  grid-template-columns: 60% 40%;
-  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  /* Slightly tighter column gap to reduce empty space between columns */
+  gap: 0.75rem;
   padding: 0;
   width: 100%;
   box-sizing: border-box;
@@ -2245,8 +2247,8 @@ body.sidebar-collapsed .flowing-footer {
   height: calc(var(--flowing-footer-max, 640px) - var(--flowing-header-height, 72px));
   max-height: calc(var(--flowing-footer-max, 640px) - var(--flowing-header-height, 72px));
   overflow-y: auto;
-  padding: 8px 12px;
-  /* minimal internal padding so content touches footer edges */
+  /* reduced padding so children use more of the available space */
+  padding: 6px 8px;
   background: transparent;
   /* make container transparent so footer glass shows through */
 }
@@ -2256,6 +2258,8 @@ body.sidebar-collapsed .flowing-footer {
 .flowing-footer .footer-two-columns .panel-card {
   max-width: 100%;
   box-sizing: border-box;
+  /* reduce internal panel padding so descriptions and details take more space */
+  padding: 8px;
 }
 
 /* Remove horizontal scroll inside footer two-columns and allow children to shrink */
@@ -2276,6 +2280,24 @@ body.sidebar-collapsed .flowing-footer {
 .footer-two-columns .left-column,
 .footer-two-columns .right-column {
   background: transparent;
+}
+
+/* SLA grid inside left-column: make monitor take twice the width of breach (2:1) */
+.footer-sla-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+
+  /* Stack SLA panels on narrow viewports */
+  .footer-sla-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Panels keep subtle card background but with some transparency to blend */
@@ -2313,6 +2335,7 @@ body.theme-dark .footer-two-columns .panel-card {
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
+  min-width: 0;
 }
 
 .footer-two-columns .sla-monitor-container>.sla-monitor,
@@ -2322,7 +2345,8 @@ body.theme-dark .footer-two-columns .panel-card {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
   border-radius: 10px;
-  padding: 12px;
+  /* slightly smaller internal padding to give more usable area */
+  padding: 8px;
   min-height: 140px;
   display: flex;
   flex-direction: column;
@@ -2424,9 +2448,6 @@ body.theme-dark .footer-two-columns .panel-card {
 
 /* ===== Balanced view container adjustments ===== */
 /* Ensure balanced overlay content fills the footer overlay area and scrolls internally */
-.flowing-header {
-  /* header styles are defined earlier; keep placeholder for specificity tuning */
-}
 
 .flowing-footer.balanced-active .flowing-content {
   /* position content below the header and let it fill the overlay height */
@@ -2450,7 +2471,8 @@ body.theme-dark .footer-two-columns .panel-card {
   box-sizing: border-box;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 8px 12px 20px 12px;
+  /* reduced padding to allow content to expand closer to edges */
+  padding: 6px 8px 12px 8px;
 }
 
 /* Ensure the two-column layout inside balanced content stretches to full height and scrolls internally */
@@ -2461,29 +2483,26 @@ body.theme-dark .footer-two-columns .panel-card {
 }
 
 /* On very small viewports, ensure balanced overlay does not exceed viewport */
-@media (max-height: 600px) {
-  .flowing-footer.balanced-active {
-    top: calc(var(--flowing-footer-overlay-top, 56px));
-    height: calc(100vh - var(--flowing-footer-overlay-top, 56px));
+@media (max-width: 1100px) {
+
+  /* On narrower viewports stack columns into single column and adapt SLA panels.
+     SLA Breach will be placed below the SLA Monitor by natural document flow
+     — do not force grid-column/grid-row or explicit full-width here. */
+  .footer-two-columns {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
   }
 
-  .flowing-footer.balanced-active .flowing-content {
-    min-height: 200px;
+  /* Ensure SLA panels follow normal flow and do not have forced full-width */
+  .footer-two-columns .sla-monitor-wrapper,
+  .footer-two-columns .sla-monitor-container,
+  .footer-two-columns .sla-breach-risk,
+  .footer-two-columns .breach-risk-content {
+    min-width: 0;
+    width: auto;
+    margin-top: 0.5rem;
   }
-}
 
-.risk-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.risk-title {
-  font-weight: 700;
-  color: var(--ff-text-primary, #1f2937);
-  font-size: 14px;
 }
 
 .risk-badge {
@@ -2551,8 +2570,20 @@ body.theme-dark .footer-two-columns .panel-card {
 
 
 @media (max-width: 1100px) {
+
+  /* On narrower viewports stack footer columns and let SLA panels adapt
+     by natural document flow; do not hide the breach panel. */
   .footer-two-columns {
     grid-template-columns: 1fr;
+  }
+
+  .footer-two-columns .sla-monitor-wrapper,
+  .footer-two-columns .sla-monitor-container,
+  .footer-two-columns .sla-breach-risk,
+  .footer-two-columns .breach-risk-content {
+    min-width: 0;
+    width: auto;
+    margin-top: 0.5rem;
   }
 }
 
@@ -2758,7 +2789,6 @@ body.theme-dark .flowing-footer,
 }
 
 .flowing-composer textarea,
-.flowing-composer #flowingInput,
 .flowing-composer .flowing-input,
 .flowing-composer #unifiedInput {
   flex: 1 1 auto !important;
