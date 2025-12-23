@@ -137,8 +137,8 @@ class FlowingFooter {
             } catch (e) { /* ignore */ }
         }
 
-        // Set balanced view as the default active view
-        try { this.setActiveView('balanced'); } catch (e) { /* ignore */ }
+        // Start collapsed (only header + suggestions)
+        try { this.collapse(); } catch (e) { /* ignore */ }
 
         console.log('✅ Flowing MVP ready');
     }
@@ -411,6 +411,12 @@ class FlowingFooter {
         this.footer.classList.add('expanded');
         this.isExpanded = true;
 
+        // Add balanced-active styling when expanded so overlay rules apply
+        try {
+            if (this.footer && this.footer.classList) this.footer.classList.add('balanced-active');
+            if (document && document.body && document.body.classList) document.body.classList.add('flowing-balanced-active');
+        } catch (e) { /* ignore */ }
+
         // Adjust content padding for expanded footer
         this.adjustContentPadding(false);
 
@@ -432,6 +438,13 @@ class FlowingFooter {
         try { this.computeBalancedOverlayPosition(); } catch (e) { /* ignore */ }
 
         console.log('🤖 Flowing MVP expanded');
+        // Update global state to reflect Flowing MVP as the single source of truth
+        try {
+            if (!window.state) window.state = {};
+            window.state.viewMode = 'balanced';
+            // keep selectedIssue unchanged here; switchToBalancedView sets it
+            try { window.dispatchEvent(new CustomEvent('flowing:expanded', { detail: { issueKey: this.context?.selectedIssue || null } })); } catch (e) { }
+        } catch (e) { /* ignore */ }
     }
 
     collapse() {
@@ -440,6 +453,12 @@ class FlowingFooter {
         this.footer.classList.add('collapsed');
         this.footer.classList.remove('expanded');
         this.isExpanded = false;
+
+        // Remove balanced-active styling when collapsed
+        try {
+            if (this.footer && this.footer.classList) this.footer.classList.remove('balanced-active');
+            if (document && document.body && document.body.classList) document.body.classList.remove('flowing-balanced-active');
+        } catch (e) { /* ignore */ }
 
         // Adjust content padding for collapsed footer
         this.adjustContentPadding(true);
@@ -458,6 +477,13 @@ class FlowingFooter {
         document.documentElement.style.removeProperty('--flowing-footer-max');
 
         console.log('🤖 Flowing MVP collapsed');
+        // Update global state when collapsed — Flowing MVP is authoritative
+        try {
+            if (!window.state) window.state = {};
+            window.state.selectedIssue = null;
+            window.state.viewMode = 'kanban';
+            try { window.dispatchEvent(new CustomEvent('flowing:collapsed')); } catch (e) { }
+        } catch (e) { /* ignore */ }
     }
 
     adjustContentPadding(isCollapsed) {
@@ -488,17 +514,7 @@ class FlowingFooter {
 
     // Removed public API methods as they are not being used anywhere in the codebase.
 
-    // Centralized view switcher to ensure exactly one view is visible at a time
-    setActiveView() {
-        // Simplified to always show the balanced view
-        const balancedView = document.getElementById('balancedView');
-        if (balancedView) {
-            balancedView.style.display = 'block';
-            balancedView.setAttribute('aria-hidden', 'false');
-        }
-
-        this.activeView = 'balanced';
-    }
+    // NOTE: chat view removed. Balanced content is shown only when expanded.
 
     switchToBalancedView(issueKey) {
         console.log('🎯 Switching to balanced view for:', issueKey);
@@ -506,8 +522,8 @@ class FlowingFooter {
         // Ensure footer is expanded when showing balanced view so layout/padding are correct
         try { this.expand(); } catch (e) { /* ignore */ }
 
-        // Switch views centrally
-        this.setActiveView('balanced');
+        // Ensure expanded state so balanced content is visible
+        // (no separate chat view; expand() handles showing balanced content)
 
         // Load ticket details into balanced view
         this.loadTicketIntoBalancedView(issueKey);
@@ -515,6 +531,14 @@ class FlowingFooter {
         // Update context
         this.context.selectedIssue = issueKey;
         this.updateContextBadge();
+
+        // Reflect authoritative context in global window.state for compatibility
+        try {
+            if (!window.state) window.state = {};
+            window.state.selectedIssue = issueKey;
+            window.state.viewMode = 'balanced';
+            try { window.dispatchEvent(new CustomEvent('flowing:switchedToBalanced', { detail: { issueKey } })); } catch (e) { }
+        } catch (e) { /* ignore */ }
 
         if (this.suggestionElement) {
             this.suggestionElement.textContent = `${issueKey} - Viewing details`;
@@ -644,7 +668,7 @@ class FlowingFooter {
             this.loadCommentsForBalancedView(issueKey);
             // adjust heights after comments load
             setTimeout(() => this.adjustCommentsHeight(), 120);
-            // register a resize listener once so the comments area adapts to viewport/left-column changes
+            // register a resize listener once so the comments area adapts to viewport/left-section changes
             try {
                 if (!this._balancedResizeRegistered) {
                     this._balancedResizeRegistered = true;
@@ -670,9 +694,13 @@ class FlowingFooter {
     async initializeSLAMonitor(issueKey) {
         console.log('⏱️ Initializing SLA Monitor for:', issueKey);
 
-        const slaContainer = document.querySelector('.sla-monitor-container');
+        // Prefer the SLA container inside the balanced view to avoid clashing with right-sidebar copies
+        const balancedContainer = document.getElementById('balancedContentContainer');
+        const slaContainer = (balancedContainer && balancedContainer.querySelector('.right-section .sla-monitor-container')) || (balancedContainer && balancedContainer.querySelector('.sla-monitor-container')) || document.querySelector('.sla-monitor-container');
         if (!slaContainer) {
             console.warn('⚠️ SLA container not found');
+            // still render breach risk fallback so user sees a meaningful UI even when SLA panel is missing
+            this.renderBreachRisk(issueKey, null);
             return;
         }
 
@@ -680,11 +708,13 @@ class FlowingFooter {
         if (!window.slaMonitor || typeof window.slaMonitor.init !== 'function') {
             console.warn('⚠️ SLA Monitor not available');
             slaContainer.innerHTML = `
-        <div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px;">
-          <i class="fas fa-info-circle" style="margin-bottom:8px;font-size:16px;"></i><br>
-          SLA Monitor not available
-        </div>
-      `;
+                <div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px;">
+                    <i class="fas fa-info-circle" style="margin-bottom:8px;font-size:16px;"></i><br>
+                    SLA Monitor not available
+                </div>
+            `;
+            // show breach-risk fallback when SLA module is not present
+            this.renderBreachRisk(issueKey, null);
             return;
         }
 
@@ -711,40 +741,39 @@ class FlowingFooter {
                     console.warn('Could not set slaContainer transparent:', e);
                 }
 
-                // Wait for DOM to be ready before customizing (nextTick)
-                setTimeout(() => {
-                    // Customize layout for footer compact view
-                    // `.sla - panel` was removed — fallback to `.sla - monitor` or `.sla - cycle`
-                    const slaPanelElement = slaContainer.querySelector('.sla-panel') || slaContainer.querySelector('.sla-monitor') || slaContainer.querySelector('.sla-cycle');
-                    if (slaPanelElement) {
-                        console.log('🔧 Customizing SLA panel layout...');
-                        console.log('📋 Panel HTML:', slaPanelElement.innerHTML.substring(0, 200));
+                // Wait for DOM to be ready before customizing (with retries)
+                const attemptCompactAdjust = (attempt = 0) => {
+                    try {
+                        let slaPanelElement = slaContainer.querySelector('.sla-panel') || slaContainer.querySelector('.sla-monitor') || slaContainer.querySelector('.sla-cycle');
+                        if (!slaPanelElement && slaContainer.firstElementChild) slaPanelElement = slaContainer.firstElementChild;
+                        if (!slaPanelElement) {
+                            if (attempt < 3) {
+                                // try again after a small delay
+                                setTimeout(() => attemptCompactAdjust(attempt + 1), 180);
+                                return;
+                            }
+                            console.warn('⚠️ SLA panel element not found after retries');
+                            return;
+                        }
 
-                        // Hide "SLA Monitor" title
-                        const titleElement = slaPanelElement.querySelector('h3');
+                        console.log('🔧 Customizing SLA panel layout (attempt', attempt + 1, ')...');
+                        try { console.log('📋 Panel HTML:', slaPanelElement.innerHTML.substring(0, 200)); } catch (e) { /* ignore */ }
+
+                        // Hide "SLA Monitor" title if present (compact header)
+                        const titleElement = slaPanelElement.querySelector('h3') || slaPanelElement.querySelector('.sla-title');
                         if (titleElement) {
                             titleElement.style.display = 'none';
                             console.log('✅ Hidden title');
                         }
 
                         // Move refresh button next to status badge (use SLA monitor's real classes)
-                        const refreshBtn = slaPanelElement.querySelector('.sla-refresh-btn') ||
-                            slaPanelElement.querySelector('.refresh-sla-btn') ||
-                            slaPanelElement.querySelector('.btn-refresh-sla') ||
-                            slaPanelElement.querySelector('button[onclick*="refresh"]') ||
-                            Array.from(slaPanelElement.querySelectorAll('button')).find(btn =>
-                                (btn.textContent || '').toLowerCase().includes('↻') || (btn.textContent || '').toLowerCase().includes('refresh')
-                            );
+                        const refreshBtn = slaPanelElement.querySelector('.sla-refresh-btn') || slaPanelElement.querySelector('.refresh-sla-btn') || slaPanelElement.querySelector('.btn-refresh-sla') || slaPanelElement.querySelector('button[onclick*="refresh"]') || Array.from(slaPanelElement.querySelectorAll('button')).find(btn => (btn.textContent || '').toLowerCase().includes('↻') || (btn.textContent || '').toLowerCase().includes('refresh'));
 
                         // Status badge is rendered as .cycle-status inside the SLA panel
-                        const statusBadge = slaPanelElement.querySelector('.cycle-status') ||
-                            slaPanelElement.querySelector('.cycle-status.healthy') ||
-                            Array.from(slaPanelElement.querySelectorAll('[class*="status"]')).find(el =>
-                                (el.textContent || '').toLowerCase().includes('on track') || (el.textContent || '').toLowerCase().includes('breach') || (el.textContent || '').toLowerCase().includes('breached')
-                            );
+                        const statusBadge = slaPanelElement.querySelector('.cycle-status') || slaPanelElement.querySelector('.cycle-status.healthy') || Array.from(slaPanelElement.querySelectorAll('[class*="status"]')).find(el => (el.textContent || '').toLowerCase().includes('on track') || (el.textContent || '').toLowerCase().includes('breach') || (el.textContent || '').toLowerCase().includes('breached'));
 
-                        console.log('🔍 Refresh button:', refreshBtn);
-                        console.log('🔍 Status badge:', statusBadge);
+                        console.log('🔍 Refresh button:', !!refreshBtn);
+                        console.log('🔍 Status badge:', !!statusBadge);
 
                         if (refreshBtn && statusBadge) {
                             // Get the container of the status badge (cycle-header)
@@ -762,35 +791,27 @@ class FlowingFooter {
                                 refreshBtn.style.justifyContent = 'center';
                                 refreshBtn.style.border = '1px solid rgba(255,255,255,0.06)';
                                 // Move the refresh button into the status container
-                                statusContainer.appendChild(refreshBtn);
+                                try { statusContainer.appendChild(refreshBtn); }
+                                catch (e) { /* ignore */ }
                                 console.log('✅ Moved refresh button next to status badge');
                             }
                         }
 
                         // Move "Updated" next to "Remaining" (side-by-side)
-                        // Updated element from SLA monitor is '.sla-last-updated'
-                        const updatedElement = slaPanelElement.querySelector('.sla-last-updated') ||
-                            Array.from(slaPanelElement.querySelectorAll('*')).find(el =>
-                                (el.textContent || '').includes('Updated:')
-                            );
+                        const updatedElement = slaPanelElement.querySelector('.sla-last-updated') || Array.from(slaPanelElement.querySelectorAll('*')).find(el => (el.textContent || '').includes('Updated:'));
 
                         // Find the detail row that contains the 'Remaining' label, then its value
                         let remainingValue = null;
                         const detailRows = Array.from(slaPanelElement.querySelectorAll('.detail-row'));
-                        const remainingRow = detailRows.find(row => {
-                            const lbl = row.querySelector('.detail-label');
-                            return lbl && /remaining/i.test(lbl.textContent || '');
-                        });
-                        if (remainingRow) {
-                            remainingValue = remainingRow.querySelector('.detail-value') || remainingRow.querySelector('span');
-                        } else {
-                            // Fallback: search generically for text
+                        const remainingRow = detailRows.find(row => { const lbl = row.querySelector('.detail-label'); return lbl && /remaining/i.test(lbl.textContent || ''); });
+                        if (remainingRow) remainingValue = remainingRow.querySelector('.detail-value') || remainingRow.querySelector('span');
+                        else {
                             const found = Array.from(slaPanelElement.querySelectorAll('*')).find(el => /remaining/i.test(el.textContent || ''));
                             remainingValue = found;
                         }
 
-                        console.log('🔍 Updated element:', updatedElement);
-                        console.log('🔍 Remaining value element:', remainingValue);
+                        console.log('🔍 Updated element:', !!updatedElement);
+                        console.log('🔍 Remaining value element:', !!remainingValue);
 
                         if (updatedElement && remainingValue) {
                             try {
@@ -805,17 +826,19 @@ class FlowingFooter {
                                 }
 
                                 console.log('✅ Moved Updated next to Remaining');
-                            } catch (e) {
-                                console.warn('⚠️ Could not move Updated next to Remaining:', e);
-                            }
+                            } catch (e) { console.warn('⚠️ Could not move Updated next to Remaining:', e); }
                         }
 
                         // Reduce padding for compact view but keep panel visuals (do not override background/border)
-                        slaPanelElement.style.padding = '0';
+                        try { slaPanelElement.style.padding = '0'; } catch (e) { /* ignore */ }
+                        // Mark container to help CSS debugging
+                        try { slaContainer.classList.add('flowing-sla-compact'); } catch (e) { /* ignore */ }
+                    } catch (e) {
+                        console.warn('Error applying compact SLA adjustments', e);
                     }
-
                     console.log('✅ SLA Monitor rendered (compact mode)');
-                }, 100); // Wait 100ms for DOM to stabilize
+                };
+                attemptCompactAdjust(0);
 
                 // Calculate and render breach risk
                 this.renderBreachRisk(issueKey);
@@ -891,6 +914,24 @@ class FlowingFooter {
           </div>
         `;
 
+                // Ensure right-section occupies its grid cell even if global CSS applies restrictive rules
+                try {
+                    const right = container.querySelector('.right-section');
+                    const left = container.querySelector('.left-section');
+                    if (right) {
+                        right.style.flex = '1 1 auto';
+                        right.style.maxWidth = 'none';
+                        right.style.width = 'auto';
+                        right.style.minWidth = '0';
+                        right.style.boxSizing = 'border-box';
+                    }
+                    if (left) {
+                        left.style.flex = '1 1 50%';
+                        left.style.minWidth = '0';
+                        left.style.boxSizing = 'border-box';
+                    }
+                } catch (e) { console.warn('Could not enforce balanced sections inline styles', e); }
+
                 // Show no risk if no SLA
                 this.renderBreachRisk(issueKey, null);
             }
@@ -903,7 +944,9 @@ class FlowingFooter {
     }
 
     renderBreachRisk(issueKey, slaData = null) {
-        const riskContainer = document.querySelector('.breach-risk-content');
+        // Prefer the breach container inside the balanced view to avoid colliding with other instances
+        const balancedContainer = document.getElementById('balancedContentContainer');
+        const riskContainer = (balancedContainer && balancedContainer.querySelector('.right-section .breach-risk-content')) || (balancedContainer && balancedContainer.querySelector('.breach-risk-content')) || document.querySelector('.breach-risk-content');
         if (!riskContainer) return;
 
         // Get SLA data from window.slaMonitor (support multiple data shapes)
@@ -913,7 +956,7 @@ class FlowingFooter {
             riskContainer.innerHTML = `
             <div style="display:flex;align-items:center;gap:12px;padding:12px;">
                 <div style="width:50px;height:50px;border-radius:50%;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <i class="fas fa-check" style="font-size:20px;color:#10b981;"></i>
+                    ${typeof SVGIcons !== 'undefined' && SVGIcons.success ? SVGIcons.success({ size: 20, className: 'inline-icon' }) : '✓'}
                 </div>
                 <div style="flex:1;">
                     <p style="font-size:11px;color:#10b981;font-weight:600;margin:0;">LOW RISK</p>
@@ -970,6 +1013,8 @@ class FlowingFooter {
         const total = (elapsed + remaining) || 1;
         const percentage = Math.round((elapsed / total) * 100);
 
+        console.log('🔎 renderBreachRisk debug', { issueKey, cyclePreview: { elapsed, remaining, total, percentage }, cycleSample: cycle });
+
         // Determine risk level
         let riskLevel, riskColor, riskIcon, riskBg;
         if (percentage >= 90) {
@@ -994,46 +1039,56 @@ class FlowingFooter {
             riskIcon = 'fa-check';
         }
 
-        // Compact mode: show as badge
-        riskContainer.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">
-            <i class="${riskIcon}" style="font-size:16px;color:${riskColor};"></i>
-          </div>
-          <div style="font-size:12px;color:#374151;font-weight:600;">${riskLevel}</div>
-        </div>
-      `;
+        // Build SVG icon for the risk badge using SVGIcons (fallback to emoji)
+        let iconSVG = '';
+        try {
+            if (typeof SVGIcons !== 'undefined') {
+                if (riskLevel === 'CRITICAL') iconSVG = SVGIcons.error ? SVGIcons.error({ size: 16, className: 'inline-icon' }) : SVGIcons.xCircle ? SVGIcons.xCircle({ size: 16, className: 'inline-icon' }) : '❌';
+                else if (riskLevel === 'HIGH') iconSVG = SVGIcons.alert ? SVGIcons.alert({ size: 16, className: 'inline-icon' }) : '⚠️';
+                else if (riskLevel === 'MEDIUM') iconSVG = SVGIcons.alert ? SVGIcons.alert({ size: 16, className: 'inline-icon' }) : '⚠️';
+                else iconSVG = SVGIcons.success ? SVGIcons.success({ size: 16, className: 'inline-icon' }) : '✓';
+            } else {
+                iconSVG = (riskLevel === 'CRITICAL' ? '❌' : (riskLevel === 'HIGH' ? '⚠️' : (riskLevel === 'MEDIUM' ? '⚠️' : '✓')));
+            }
+        } catch (e) { iconSVG = (riskLevel === 'CRITICAL' ? '❌' : (riskLevel === 'HIGH' ? '⚠️' : (riskLevel === 'MEDIUM' ? '⚠️' : '✓'))); }
 
-        // Expanded mode: show detailed panel
+        // Compact mode: show as badge (initial state)
+        const compactHTML = `
+                <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                    <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:${riskColor};">${iconSVG}</div>
+                    <div style="font-size:12px;color:#374151;font-weight:600;">${riskLevel}</div>
+                </div>
+            `;
+
+        // Expanded mode: show detailed panel (uses same SVG icons)
         const expandedHTML = `
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="flex:1;display:flex;align-items:center;gap:8px;">
-            <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${riskBg};color:${riskColor};font-weight:700;font-size:16px;">
-              ${percentage >= 90 ? '!' : (percentage >= 75 ? '⚠️' : '✓')}
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:14px;color:#374151;font-weight:600;">Breach Risk</div>
-              <div style="font-size:12px;color:#6b7280;line-height:1.4;">
-                <div style="display:flex;justify-content:space-between;">
-                  <div>Elapsed:</div>
-                  <div>${(cycle.elapsedTime?.readable || cycle.elapsedTime || cycle.elapsed_time) || 'N/A'}</div>
+                <div style="display:flex;align-items:center;gap:12px;width:100%;">
+                    <div style="flex:1;display:flex;align-items:center;gap:8px;">
+                        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${riskBg};color:${riskColor};font-weight:700;font-size:16px;">${iconSVG}</div>
+                        <div style="flex:1;">
+                            <div style="font-size:14px;color:#374151;font-weight:600;">Breach Risk</div>
+                            <div style="font-size:12px;color:#6b7280;line-height:1.4;">
+                                <div style="display:flex;justify-content:space-between;">
+                                    <div>Elapsed:</div>
+                                    <div>${(cycle.elapsedTime?.readable || cycle.elapsedTime || cycle.elapsed_time) || 'N/A'}</div>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;">
+                                    <div>Remaining:</div>
+                                    <div class="${percentage >= 75 ? 'risk-warning' : ''}">${(cycle.remainingTime?.readable || cycle.remainingTime || cycle.remaining_time) || 'N/A'}</div>
+                                </div>
+                                ${percentage >= 75 ? `<div style="margin-top:4px;color:${riskColor};font-weight:600;">${SVGIcons.alert ? SVGIcons.alert({ size: 12, className: 'inline-icon' }) : ''} Near deadline — attention recommended</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="width:72px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:${riskBg};color:${riskColor};font-weight:700;font-size:24px;">
+                        ${percentage}%
+                    </div>
                 </div>
-                <div style="display:flex;justify-content:space-between;">
-                  <div>Remaining:</div>
-                  <div class="${percentage >= 75 ? 'risk-warning' : ''}">${(cycle.remainingTime?.readable || cycle.remainingTime || cycle.remaining_time) || 'N/A'}</div>
-                </div>
-                ${percentage >= 75 ? `<div style="margin-top:4px;color:${riskColor};font-weight:600;">${SVGIcons.alert ? SVGIcons.alert({ size: 12, className: 'inline-icon' }) : ''} Near deadline — attention recommended</div>` : ''}
-              </div>
-            </div>
-          </div>
-          <div style="width:72px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:${riskBg};color:${riskColor};font-weight:700;font-size:24px;">
-            ${percentage}%
-          </div>
-        </div>
-      `;
+            `;
 
-        // Toggle between compact and expanded modes on click
-        riskContainer.innerHTML = expandedHTML;
+        // Ensure the risk container fills available width and show compact badge by default
+        try { riskContainer.style.width = '100%'; } catch (e) { /* ignore */ }
+        riskContainer.innerHTML = compactHTML;
         riskContainer.style.cursor = 'pointer';
         riskContainer.onclick = () => {
             const isExpanded = riskContainer.classList.toggle('expanded');
@@ -1075,8 +1130,8 @@ class FlowingFooter {
         try {
             const container = document.getElementById('balancedContentContainer');
             if (!container) return;
-            const leftCol = container.querySelector('.left-column');
-            const rightCol = container.querySelector('.right-column');
+            const leftCol = container.querySelector('.left-section');
+            const rightCol = container.querySelector('.right-section');
             if (!leftCol || !rightCol) return;
             const commentsSection = rightCol.querySelector('.comments-section');
             const composer = rightCol.querySelector('.comment-composer');
@@ -1148,7 +1203,7 @@ class FlowingFooter {
                 thumbFrag.appendChild(t);
             } else {
                 const commentsSection = document.querySelector('.comments-section');
-                const leftCol = document.querySelector('.left-column');
+                const leftCol = document.querySelector('.left-section');
                 if (!commentsSection || !leftCol) return;
 
                 link.textContent = filename;
@@ -1435,24 +1490,315 @@ class FlowingFooter {
         } catch (e) { console.warn('addFooterAttachments error', e); }
     }
 
-    formatCommentTime(timestamp) {
-        if (window.commentsModule && typeof window.commentsModule.formatCommentTime === 'function') {
-            return window.commentsModule.formatCommentTime(timestamp);
-        }
-        if (!timestamp) return '';
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-        if (diffMins < 1) return 'just now';
-        if (diffMins === 1) return '1 minute ago';
-        if (diffHours < 1) return `${diffMins} minutes ago`;
-        if (diffHours === 1) return '1 hour ago';
-        if (diffDays < 1) return `${diffHours} hours ago`;
-        if (diffDays === 1) return '1 day ago';
-        return `${diffDays} days ago`;
+    renderBalancedContent(issue) {
+        const container = document.getElementById('balancedContentContainer');
+        if (!container) return;
+
+        console.log('🎨 Rendering balanced content for:', issue.key);
+        // Helper to safely get nested fields from multiple sources
+        const getField = (fieldKey) => {
+            // Try from issue.fields first
+            if (issue.fields && issue.fields[fieldKey] !== undefined) {
+                return issue.fields[fieldKey];
+            }
+            // Try from issue.custom_fields
+            if (issue.custom_fields && issue.custom_fields[fieldKey] !== undefined) {
+                return issue.custom_fields[fieldKey];
+            }
+            // Try from issue.serviceDesk.requestFieldValues
+            if (issue.serviceDesk?.requestFieldValues && issue.serviceDesk.requestFieldValues[fieldKey] !== undefined) {
+                return issue.serviceDesk.requestFieldValues[fieldKey];
+            }
+            // Try direct access
+            if (issue[fieldKey] !== undefined) {
+                return issue[fieldKey];
+            }
+            return null;
+        };
+
+        // Format field value (same logic as right-sidebar)
+        const formatValue = (value) => {
+            if (!value) return '';
+            if (typeof value === 'string') return value;
+            if (value.name) return value.name;
+            if (value.displayName) return value.displayName;
+            if (value.value) return value.value;
+            if (Array.isArray(value)) {
+                return value.map(v => v.name || v.value || v).join(', ');
+            }
+            return String(value);
+        };
+
+        // Extract key fields from multiple sources (same as right-sidebar)
+        const summary = issue.summary || getField('summary') || 'No title';
+        // If no description provided, keep empty so we can hide the section
+        const rawDescription = issue.description || getField('description') || '';
+        // Helper to escape HTML
+        const escapeHtml = (str) => String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        // Normalize line endings and remove excessive blank lines and leading breaks
+        const normalizeDescription = (txt) => {
+            if (!txt) return '';
+            let s = String(txt).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            // Remove leading blank lines/spaces
+            s = s.replace(/^\s*\n+/, '');
+            // Collapse 3+ consecutive newlines to two (paragraph)
+            s = s.replace(/\n{3,}/g, '\n\n');
+            // Trim trailing whitespace
+            s = s.replace(/\s+$/g, '');
+            return s;
+        };
+        const cleanedDescription = normalizeDescription(rawDescription);
+        // Convert to safe HTML with <br> for line breaks so layout is consistent
+        const description = cleanedDescription ? escapeHtml(cleanedDescription).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') : '';
+
+        // Standard fields
+        const priority = formatValue(issue.priority || getField('priority'));
+        const assignee = formatValue(issue.assignee || getField('assignee'));
+        const status = formatValue(issue.status || getField('status'));
+        const reporter = formatValue(issue.reporter || getField('reporter'));
+        const created = issue.created || getField('created');
+        const updated = issue.updated || getField('updated');
+
+        // Custom fields - Multiple field mappings (from CUSTOM_FIELDS_REFERENCE.json)
+        const requestType = formatValue(getField('customfield_10010'));
+
+        // Criticidad - try multiple possible field IDs
+        const criticidad = formatValue(getField('customfield_10125') || getField('customfield_10037'));
+
+        // Tipo de Solicitud
+        const tipoSolicitud = formatValue(getField('customfield_10156'));
+
+        // Plataforma - try multiple possible field IDs
+        const plataforma = formatValue(getField('customfield_10169') || getField('customfield_10129'));
+
+        // Área - try multiple possible field IDs
+        const area = formatValue(getField('customfield_10168') || getField('customfield_10130'));
+
+        // Empresa - try multiple possible field IDs
+        const empresa = formatValue(getField('customfield_10143') || getField('customfield_10131'));
+
+        // Producto - try multiple possible field IDs
+        const producto = formatValue(getField('customfield_10144') || getField('customfield_10132'));
+
+        // Contact info - try multiple possible field IDs
+        const email = formatValue(getField('customfield_10141') || getField('customfield_10133'));
+        const phone = formatValue(getField('customfield_10142') || getField('customfield_10134'));
+
+        // Additional info fields
+        const pais = formatValue(getField('customfield_10165') || getField('customfield_10166'));
+        const paisCodigo = formatValue(getField('customfield_10167'));
+        const notasAnalisis = formatValue(getField('customfield_10149'));
+        const resolucion = formatValue(getField('customfield_10151'));
+        const reporter2 = formatValue(getField('customfield_10111')); // Reporter/Informador
+
+        // Format dates
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        // Collect long custom fields (strings > 120 chars) to show as full-width blocks
+        let longCustomFieldsHTML = '';
+        try {
+            const fld = issue.fields || {};
+            Object.keys(fld).forEach(k => {
+                if (!/^customfield_/.test(k)) return;
+                const raw = fld[k];
+                const val = formatValue(raw);
+                if (val && val.length > 120) {
+                    const label = k.replace('customfield_', 'CF-');
+                    longCustomFieldsHTML += `
+                <div style="grid-column: 1 / -1;">
+                    <label style="font-size: 10px; font-weight: 700; color: #9ca3af; display:block; margin-bottom:6px;">${label}</label>
+                    <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${val}</div>
+                </div>
+                `;
+                }
+            });
+        } catch (e) { console.warn('Could not collect long custom fields', e); }
+
+        // Build essential fields HTML dynamically using available mappings when possible
+        const buildEssentialFieldsHTML = (mapping) => {
+            const keys = [];
+            // preferred order: form_fields, contact_info, system_fields
+            try {
+                if (mapping && mapping.categories) {
+                    const cats = mapping.categories;
+                    ['form_fields', 'contact_info', 'system_fields'].forEach(cat => {
+                        const f = cats[cat] && cats[cat].fields ? Object.keys(cats[cat].fields) : [];
+                        f.forEach(k => { if (!keys.includes(k)) keys.push(k); });
+                    });
+                }
+            } catch (e) { /* ignore */ }
+
+            // ensure common core fields are present
+            ['priority', 'assignee', 'status', 'reporter', 'email', 'phone', 'summary'].forEach(k => { if (!keys.includes(k)) keys.push(k); });
+
+            let html = '';
+            // render up to many fields into the grid; filter out very long fields (handled earlier)
+            keys.forEach(k => {
+                let val = '';
+                if (k === 'priority') val = priority;
+                else if (k === 'assignee') val = assignee;
+                else if (k === 'status') val = status;
+                else if (k === 'reporter') val = reporter;
+                else val = formatValue(getField(k));
+                if (!val) return; // skip empty
+                // label from mapping if available
+                const label = (mapping && mapping.categories && (function () {
+                    for (const cat of ['form_fields', 'contact_info', 'system_fields']) {
+                        const f = mapping.categories[cat] && mapping.categories[cat].fields;
+                        if (f && f[k] && f[k].label) return f[k].label;
+                    }
+                    return k.replace(/_/g, ' ').replace(/customfield /g, 'CF ').replace(/customfield_/, 'CF-');
+                })()) || k;
+
+                html += `
+                    <div class="field-wrapper" style="display:flex;flex-direction:column;gap:6px;">
+                        <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">${label}</label>
+                        <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${val}</div>
+                    </div>
+                `;
+            });
+            return html;
+        };
+
+        // Try to obtain mapping from global or fetch fallback (non-blocking)
+        let mappingObj = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
+        const fetchMappingIfNeeded = async () => {
+            if (mappingObj) return mappingObj;
+            try {
+                const resp = await fetch('/data/CUSTOM_FIELDS_REFERENCE.json');
+                if (resp.ok) { mappingObj = await resp.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+            } catch (e) { /* ignore */ }
+            try {
+                const resp2 = await fetch('/static/data/CUSTOM_FIELDS_REFERENCE.json');
+                if (resp2.ok) { mappingObj = await resp2.json(); window.CUSTOM_FIELDS_REFERENCE = mappingObj; return mappingObj; }
+            } catch (e) { /* ignore */ }
+            return null;
+        };
+
+        // Initial essential fields HTML (best-effort without mapping)
+        let initialEssentialHTML = buildEssentialFieldsHTML(mappingObj || {});
+
+        // Helper: format phone numbers into a readable form (best-effort)
+        const formatPhoneNumber = (p) => {
+            if (!p) return '';
+            const s = String(p);
+            const digits = s.replace(/[^0-9]/g, '');
+            if (!digits) return s;
+            // Common formats
+            if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+            if (digits.length === 11) return `+${digits.slice(0, 1)} ${digits.slice(1, 4)} ${digits.slice(4, 7)}-${digits.slice(7)}`;
+            if (digits.length > 11) return `+${digits.slice(0, digits.length - 10)} ${digits.slice(-10, -7)} ${digits.slice(-7, -4)}-${digits.slice(-4)}`;
+            return s;
+        };
+
+        // Prioritized short custom fields (show under description as normal fields)
+        const prioritizedOrder = [
+            { label: 'Email', value: email },
+            { label: 'Empresa', value: empresa },
+            { label: 'País', value: pais },
+            { label: 'Teléfono', value: phone },
+            { label: 'Producto', value: producto },
+            { label: 'Plataforma', value: plataforma },
+            { label: 'Tipo de solicitud', value: tipoSolicitud }
+        ];
+
+        let prioritizedFieldsHTML = '';
+        try {
+            prioritizedOrder.forEach(entry => {
+                let val = entry.value;
+                if (!val) return;
+                if (entry.label === 'Teléfono') val = formatPhoneNumber(val);
+                val = escapeHtml(String(val));
+                prioritizedFieldsHTML += `
+                    <div class="field-wrapper" style="display:flex;flex-direction:column;gap:6px;">
+                        <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; margin-bottom: 4px;">${entry.label}</label>
+                        <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${val}</div>
+                    </div>
+                `;
+            });
+        } catch (e) { console.warn('Could not build prioritized fields', e); }
+
+        // FOUR-COLUMN GRID: description spans 3 columns, 4th column reserved for SLA/Attachments/Comments
+        // Layout adjusted to two symmetric sections (left 50% / right 50%).
+        container.innerHTML = `
+            <div class="purple-divider" style="margin:0"></div>
+
+            <div class="footer-grid-4" style="display: grid; grid-template-columns: 50% 50%; gap: 12px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+
+                <div class="left-section" style="grid-column: 1 / span 1; display: flex; flex-direction: column; gap: 12px;">
+                    ${description ? `
+                    <div class="field-wrapper ticket-description-field" style="display:flex;flex-direction:column;gap:6px;">
+                        <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; margin-bottom: 4px;">Descripción</label>
+                        <div id="ticketDescriptionContent" class="field-input description-input" style="padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: #4b5563; line-height: 1.4; max-height: 7.5em; overflow: auto; white-space: pre-wrap;">${description ? `${description}` : ''}</div>
+                    </div>
+                    ` : ''}
+
+                    ${prioritizedFieldsHTML ? prioritizedFieldsHTML : ''}
+
+                    ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
+
+                    <div id="essentialFieldsGrid" class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        ${initialEssentialHTML}
+                    </div>
+                </div>
+
+                <div class="right-section" style="grid-column: 2 / span 1; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="sla-monitor-wrapper">
+                        <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+                            <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">Loading SLA...</div>
+                        </div>
+                        <div class="breach-risk-content" style="margin-top:8px;"></div>
+                    </div>
+
+                    <div class="attachments-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+                        <h4 style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px 0;display:flex;align-items:center;gap:8px;">Attachments</h4>
+                        <div id="attachmentsListRight" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+                        <div id="attachmentsListHeader" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:#6b7280;font-size:12px;"></div>
+                    </div>
+
+                    <div class="purple-divider"></div>
+
+                    <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; max-height: 360px; overflow-y: auto;">
+                        <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><div class="attachments-list" id="attachmentsListFooter"></div></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">Comments</h4>
+                            <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
+                        </div>
+
+                        <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
+                            <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" style="flex:1; resize: vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div style="display:flex; gap:8px;">
+                                    <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip ? SVGIcons.paperclip({ size: 14, className: 'inline-icon' }) : ''}</button>
+                                    <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
+                                </div>
+                                <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
+                            </div>
+                        </div>
+
+                        <div class="comments-list" style="display: flex; flex-direction: column; gap: 8px;">
+                            <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">Loading comments...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
     }
 }
 
@@ -1460,7 +1806,30 @@ class FlowingFooter {
 try {
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
-            window._flowingFooter = new FlowingFooter();
+            // Create instance and expose backwards-compatible public API shims
+            const _inst = new FlowingFooter();
+            window._flowingFooter = _inst;
+
+            // Public wrapper names expected by legacy callers
+            try {
+                // common public aliases
+                window._flowingFooter.public_switchToBalancedView = _inst.switchToBalancedView.bind(_inst);
+                window._flowingFooter.public_expand = _inst.expand.bind(_inst);
+                window._flowingFooter.public_collapse = _inst.collapse.bind(_inst);
+                window._flowingFooter.public_toggle = _inst.toggle.bind(_inst);
+
+                // 'flowing_' prefixed API used by FlowingShell.callFooter
+                window._flowingFooter.flowing_switchToBalancedView = _inst.switchToBalancedView.bind(_inst);
+                window._flowingFooter.flowing_expand = _inst.expand.bind(_inst);
+                window._flowingFooter.flowing_collapse = _inst.collapse.bind(_inst);
+                window._flowingFooter.flowing_toggle = _inst.toggle.bind(_inst);
+
+                // Expose a lightweight proxy object `window.flowingFooter` for older code
+                window.flowingFooter = window.flowingFooter || {};
+                ['switchToBalancedView', 'expand', 'collapse', 'toggle', 'renderBalancedContent', 'renderAttachmentsForBalanced'].forEach(fn => {
+                    if (typeof _inst[fn] === 'function') window.flowingFooter[fn] = _inst[fn].bind(_inst);
+                });
+            } catch (e) { console.warn('Could not attach footer compatibility shims', e); }
         }, 50);
     });
 } catch (e) { console.warn('Footer init error', e); }

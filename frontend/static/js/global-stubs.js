@@ -33,90 +33,52 @@
             return undefined;
         }
 
-        // DOM fallback implementations
-        function domExpand() {
-            try {
-                const footer = document.getElementById('flowingFooter');
-                const toggleBtn = document.getElementById('flowingToggleBtn');
-                if (footer) {
-                    footer.classList.remove('collapsed');
-                    footer.classList.add('expanded');
-                }
-                try { if (toggleBtn) toggleBtn.textContent = '▾'; } catch (e) { }
-            } catch (e) { /* ignore */ }
-        }
-
-        function domCollapse() {
-            try {
-                const footer = document.getElementById('flowingFooter');
-                const toggleBtn = document.getElementById('flowingToggleBtn');
-                if (footer) {
-                    footer.classList.add('collapsed');
-                    footer.classList.remove('expanded');
-                }
-                try { if (toggleBtn) toggleBtn.textContent = '▴'; } catch (e) { }
-            } catch (e) { /* ignore */ }
-        }
-
-        function domSwitchToBalanced(issueKey) {
-            try {
-                const chatView = document.getElementById('chatOnlyView');
-                const balancedView = document.getElementById('balancedView');
-                if (chatView) chatView.style.display = 'none';
-                if (balancedView) balancedView.style.display = 'block';
-                // dispatch event for modules to load details
-                try { window.dispatchEvent(new CustomEvent('openIssueDetails', { detail: { issueKey } })); } catch (e) { }
-            } catch (e) { /* ignore */ }
-        }
-
-        function domSwitchToChat() {
-            // Chat view has been removed; fallback to collapse to preserve UX
-            try { domCollapse(); } catch (e) { /* ignore */ }
-        }
+        // NOTE: DOM fallbacks removed. Flowing MVP (window._flowingFooter) is the
+        // single source of truth for expand/collapse and view switching. If the
+        // footer API is not available, FlowingShell methods will no-op and log a
+        // warning so integration issues surface during development.
 
         return {
             expand(issueKey) {
-                // Try footer API first, else DOM fallback
                 const res = callFooter('flowing_expand', []);
-                if (res === undefined) domExpand();
-                try { window.dispatchEvent(new CustomEvent('flowing:expanded', { detail: { issueKey } })); } catch (e) { }
+                if (res === undefined) {
+                    console.warn('FlowingShell: expand requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
             },
             collapse() {
                 const res = callFooter('flowing_collapse', []);
-                if (res === undefined) domCollapse();
-                try { window.dispatchEvent(new CustomEvent('flowing:collapsed')); } catch (e) { }
+                if (res === undefined) {
+                    console.warn('FlowingShell: collapse requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
             },
             toggle() {
-                // Prefer footer toggle if present
                 const res = callFooter('flowing_toggle', []);
                 if (res === undefined) {
-                    // fallback toggle based on DOM class
-                    try {
-                        const footer = document.getElementById('flowingFooter');
-                        if (footer && footer.classList && footer.classList.contains('expanded')) this.collapse(); else this.expand();
-                    } catch (e) { this.expand(); }
+                    console.warn('FlowingShell: toggle requested but footer API unavailable — no-op');
+                    return undefined;
                 }
+                return res;
             },
             switchToBalancedView(issueKey) {
-                // Set state
-                window.selectedIssueKey = issueKey;
-                if (window.state && typeof window.state === 'object') { window.state.selectedIssue = issueKey; window.state.viewMode = 'balanced'; }
-
-                // Expand + delegate to footer to load content
-                const resExp = callFooter('flowing_expand', []);
-                if (resExp === undefined) domExpand();
-
                 const res = callFooter('flowing_switchToBalancedView', [issueKey]);
-                if (res === undefined) domSwitchToBalanced(issueKey);
-
-                try { window.dispatchEvent(new CustomEvent('flowing:switchedToBalanced', { detail: { issueKey } })); } catch (e) { }
+                if (res === undefined) {
+                    console.warn('FlowingShell: switchToBalancedView requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
             },
             switchToChatView() {
-                // Chat view has been removed. Treat requests to switch back as a collapse action.
-                if (window.state && typeof window.state === 'object') { window.state.selectedIssue = null; window.state.viewMode = 'kanban'; }
+                // Chat view removed: delegate to collapse on the footer
                 const res = callFooter('flowing_collapse', []);
-                if (res === undefined) domCollapse();
-                try { window.dispatchEvent(new CustomEvent('flowing:collapsed')); } catch (e) { }
+                if (res === undefined) {
+                    console.warn('FlowingShell: switchToChatView (collapse) requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
             }
         };
     })();
