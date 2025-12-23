@@ -22,8 +22,7 @@
   
   <!-- THEME BLOCKER: Prevents flash by applying theme BEFORE CSS renders -->
   <script src="/static/js/theme-blocker.js"></script>
-  <!-- FlowingContext shim (load early so other scripts can access window._FlowingContext safely) -->
-  <script src="/static/js/flowing-context-shim.js?v={{ timestamp }}"></script>
+  <!-- FlowingContext shim removed (deprecated) -->
   
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
   <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
@@ -233,25 +232,27 @@
   </div>
 
 
-      <!-- Flowing Content root: header, balanced view and footer declared in the template
-           so the JS can assume their presence and avoid creating fallbacks. -->
+      <!-- Flowing Content root: footer contains header and balanced view so
+           the header is positioned relative to the footer (prevents it from
+           appearing as a top-of-page banner). JS still may move or reuse
+           nodes inside the footer at runtime. -->
 
       <div id="flowing-root" class="flowing-root" aria-hidden="false">
-        <div id="flowingHeader" class="flowing-header" role="footer" aria-hidden="false" style="display:flex;align-items:center;gap:12px;margin-right:8px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="flowing-brand" style="font-weight:600;">Flowing</div>
-            <div id="flowingContextBadge" class="context-badge" aria-hidden="false"></div>
+        <div id="flowingFooter" class="flowing-footer" aria-hidden="false">
+          <div id="flowingHeader" class="flowing-header" role="footer" aria-hidden="false" style="display:flex;align-items:center;gap:12px;margin-right:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="flowing-brand" style="font-weight:600;">Flowing</div>
+              <div id="flowingContextBadge" class="context-badge" aria-hidden="false"></div>
+            </div>
+            <div>
+              <button id="flowingToggleBtn" class="flowing-toggle-btn" aria-label="Toggle Flowing" aria-expanded="false">▾</button>
+            </div>
           </div>
-          <div>
-            <button id="flowingToggleBtn" class="flowing-toggle-btn" aria-label="Toggle Flowing" aria-expanded="false">▾</button>
+
+          <div id="balancedView" class="flowing-view balanced-view" style="display:none;" aria-hidden="true">
+            <div id="balancedContentContainer" class="balanced-content-container"></div>
           </div>
         </div>
-
-        <div id="balancedView" class="flowing-view balanced-view" style="display:none;" aria-hidden="true">
-          <div id="balancedContentContainer" class="balanced-content-container"></div>
-        </div>
-
-        <div id="flowingFooter" class="flowing-footer" aria-hidden="false"></div>
       </div>
 
       <!-- Constants & Configuration (MUST load first) -->
@@ -303,9 +304,7 @@
     <!-- FLOWING MVP FOOTER -->
     <!-- Flowing Content (rendered dynamically by `flowing-mvp-footer.js`) -->
   <!-- Root container for Flowing MVP (required by flowing-mvp-footer.js) -->
-  <!-- Flowing audio utilities (optional but recommended) -->
-  <script src="/static/js/flowing-mvp-audio.js?v={{ timestamp }}"></script>
-  <!-- Lightweight shim for FlowingContext to enable header suggestions in dev/test -->
+    <!-- Flowing audio utilities removed (deprecated) -->
 
   <script type="module" data-flowing-footer src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
   <!-- Loader fallback: ensures footer script is loaded if original request failed -->

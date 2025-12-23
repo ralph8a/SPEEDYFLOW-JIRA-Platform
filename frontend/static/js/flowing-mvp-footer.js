@@ -119,8 +119,7 @@ class FlowingFooter {
             }
         } catch (e) { /* ignore */ }
 
-        // Initialize audio controls (sound alerts)
-        try { window.FlowingAudio && window.FlowingAudio.attachControls && window.FlowingAudio.attachControls(); } catch (e) { /* ignore */ }
+        // Audio utilities are deprecated and removed — no-op here.
 
         // Ensure footer responds to sidebar collapse/expand events
         try {
@@ -194,7 +193,6 @@ class FlowingFooter {
             if (!this.toggleBtn.dataset.flowingListenerAttached) {
                 this.toggleBtn.addEventListener('click', (ev) => {
                     this.toggle();
-                    try { window.FlowingAudio && window.FlowingAudio.playAlert && window.FlowingAudio.playAlert('beep'); } catch (ee) { }
                     try { this.toggleBtn.setAttribute('aria-expanded', String(!!this.isExpanded)); this.toggleBtn.textContent = this.isExpanded ? '▴' : '▾'; } catch (err) { }
                 });
 
@@ -364,14 +362,9 @@ class FlowingFooter {
             // Fade in new suggestion after a brief delay
             setTimeout(() => {
                 this.suggestionElement.classList.add('visible');
-                try {
-                    // Play gentle alert depending on suggestion importance
-                    const type = (suggestion.type || 'info').toLowerCase();
-                    const level = type === 'critical' ? 3 : (type === 'warning' ? 2 : 1);
-                    if (window.FlowingAudio && window.FlowingAudio.playAlert) {
-                        try { window.FlowingAudio.playAlert(level); } catch (e) { /* ignore */ }
-                    }
-                } catch (e) { /* ignore */ }
+                    try {
+                        // Audio alerts deprecated — no-op
+                    } catch (e) { /* ignore */ }
             }, 50);
         }, 260); // shorter fade to feel snappier but avoid flash
     }
@@ -1860,6 +1853,15 @@ try {
                     if (typeof _inst[fn] === 'function') window.flowingFooter[fn] = _inst[fn].bind(_inst);
                 });
             } catch (e) { console.warn('Could not attach footer compatibility shims', e); }
+
+            // Central registry for Flowing-related singletons so other modules
+            // can discover footer/context in a single place without reaching
+            // into many disparate globals. Audio & FlowingContext are deprecated
+            // and intentionally not registered here.
+            try {
+                window._flowing = window._flowing || {};
+                window._flowing.footer = window._flowingFooter;
+            } catch (e) { console.warn('Could not set window._flowing registry', e); }
         }, 50);
     });
 } catch (e) { console.warn('Footer init error', e); }
