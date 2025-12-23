@@ -273,8 +273,8 @@ class FlowingFooter {
 
     _throttledAnalyzeSuggestions() {
         const now = Date.now();
-        // limit to once every 2.5s
-        if (now - this.lastAnalyzeAt < 2500) return;
+        // limit to once every 1s
+        if (now - this.lastAnalyzeAt < 1000) return;
         this.lastAnalyzeAt = now;
         this.analyzeSuggestions();
         // Immediately update suggestion display after analyzing
@@ -1015,8 +1015,9 @@ class FlowingFooter {
 
                 // Ensure right-section occupies its grid cell even if global CSS applies restrictive rules
                 try {
-                    const right = container.querySelector('.right-section');
-                    const left = container.querySelector('.left-section');
+                    // Use the balanced container (may be outside of this function scope)
+                    const right = balancedContainer?.querySelector('.right-section');
+                    const left = balancedContainer?.querySelector('.left-section');
                     if (right) {
                         right.style.flex = '1 1 auto';
                         right.style.maxWidth = 'none';
@@ -1151,51 +1152,43 @@ class FlowingFooter {
             }
         } catch (e) { iconSVG = (riskLevel === 'CRITICAL' ? '❌' : (riskLevel === 'HIGH' ? '⚠️' : (riskLevel === 'MEDIUM' ? '⚠️' : '✓'))); }
 
-        // Compact mode: show as badge (initial state)
+        // Compact mode: show as badge (initial state) using class-based markup so CSS can style it
         const compactHTML = `
-                <div style="display:flex;align-items:center;gap:8px;width:100%;">
-                    <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:${riskColor};">${iconSVG}</div>
-                    <div style="font-size:12px;color:#374151;font-weight:600;">${riskLevel}</div>
-                </div>
-            `;
+            <div class="breach-risk-compact">
+                <div class="breach-risk-icon" aria-hidden="true">${iconSVG}</div>
+                <div class="breach-risk-label">${riskLevel}</div>
+            </div>
+        `;
 
-        // Expanded mode: show detailed panel (uses same SVG icons)
+        // Expanded mode: detailed panel
         const expandedHTML = `
-                <div style="display:flex;align-items:center;gap:12px;width:100%;">
-                    <div style="flex:1;display:flex;align-items:center;gap:8px;">
-                        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${riskBg};color:${riskColor};font-weight:700;font-size:16px;">${iconSVG}</div>
-                        <div style="flex:1;">
-                            <div style="font-size:14px;color:#374151;font-weight:600;">Breach Risk</div>
-                            <div style="font-size:12px;color:#6b7280;line-height:1.4;">
-                                <div style="display:flex;justify-content:space-between;">
-                                    <div>Elapsed:</div>
-                                    <div>${(cycle.elapsedTime?.readable || cycle.elapsedTime || cycle.elapsed_time) || 'N/A'}</div>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;">
-                                    <div>Remaining:</div>
-                                    <div class="${percentage >= 75 ? 'risk-warning' : ''}">${(cycle.remainingTime?.readable || cycle.remainingTime || cycle.remaining_time) || 'N/A'}</div>
-                                </div>
-                                ${percentage >= 75 ? `<div style="margin-top:4px;color:${riskColor};font-weight:600;">${SVGIcons.alert ? SVGIcons.alert({ size: 12, className: 'inline-icon' }) : ''} Near deadline — attention recommended</div>` : ''}
-                            </div>
+            <div class="breach-risk-expanded">
+                <div class="breach-risk-main">
+                    <div class="breach-risk-icon-large" aria-hidden="true">${iconSVG}</div>
+                    <div class="breach-risk-details">
+                        <div class="breach-risk-title">Breach Risk</div>
+                        <div class="breach-risk-times">
+                            <div class="br-row"><span>Elapsed:</span><span>${(cycle.elapsedTime?.readable || cycle.elapsedTime || cycle.elapsed_time) || 'N/A'}</span></div>
+                            <div class="br-row"><span>Remaining:</span><span class="${percentage >= 75 ? 'risk-warning' : ''}">${(cycle.remainingTime?.readable || cycle.remainingTime || cycle.remaining_time) || 'N/A'}</span></div>
+                            ${percentage >= 75 ? `<div class="br-warning" style="color:${riskColor};font-weight:600;">${SVGIcons.alert ? SVGIcons.alert({ size: 12, className: 'inline-icon' }) : ''} Near deadline — attention recommended</div>` : ''}
                         </div>
                     </div>
-                    <div style="width:72px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:${riskBg};color:${riskColor};font-weight:700;font-size:24px;">
-                        ${percentage}%
-                    </div>
                 </div>
-            `;
+                <div class="breach-risk-percentage">${percentage}%</div>
+            </div>
+        `;
 
         // Ensure the risk container fills available width and show compact badge by default
         try { riskContainer.style.width = '100%'; } catch (e) { /* ignore */ }
+        // Expose color/background as CSS variables so styles can be themed in CSS
+        try { riskContainer.style.setProperty('--breach-color', riskColor); riskContainer.style.setProperty('--breach-bg', riskBg); riskContainer.style.setProperty('--breach-percentage-bg', riskBg); } catch (e) { /* ignore */ }
+        riskContainer.classList.remove('expanded');
         riskContainer.innerHTML = compactHTML;
         riskContainer.style.cursor = 'pointer';
+        // Toggle expanded/compact on click
         riskContainer.onclick = () => {
-            const isExpanded = riskContainer.classList.toggle('expanded');
-            riskContainer.innerHTML = isExpanded ? expandedHTML : compactHTML;
-            if (isExpanded) {
-                // Recalculate and render on expand
-                this.renderBreachRisk(issueKey);
-            }
+            const expanded = riskContainer.classList.toggle('expanded');
+            riskContainer.innerHTML = expanded ? expandedHTML : compactHTML;
         };
     }
 
@@ -1290,12 +1283,19 @@ class FlowingFooter {
         const attachments = issue?.fields?.attachment || issue.attachments || issue.serviceDesk?.requestFieldValues?.attachments || [];
         const frag = document.createDocumentFragment();
         const thumbFrag = document.createDocumentFragment();
-        if (!attachments || attachments.length === 0) return { frag, thumbFrag };
+        const items = [];
+        const thumbs = [];
+        if (!attachments || attachments.length === 0) return { frag, thumbFrag, items, thumbs };
 
+        const seen = new Set();
         attachments.forEach(att => {
-            const url = att.content || att.self || att.url || (`/api/issues/${issue.key}/attachments/${att.id}`);
+            const url = att.content || att.self || att.url || (att.id ? `/api/issues/${issue.key}/attachments/${att.id}` : null) || '';
             const filename = att.filename || att.name || att.displayName || 'attachment';
-            const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/'));
+            const idKey = String(url || filename).trim();
+            if (!idKey || seen.has(idKey)) return; // dedupe by url/filename
+            seen.add(idKey);
+
+            const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(filename) || (att.mimeType && att.mimeType.startsWith('image/')) || /\.(png|jpe?g|gif|webp|svg)$/i.test(String(url || ''));
 
             const item = document.createElement('div');
             item.className = 'attachment-item';
@@ -1318,28 +1318,37 @@ class FlowingFooter {
                 const t = document.createElement('div'); t.className = 'attachment-thumb-compact'; t.title = filename; t.style.width = '40px'; t.style.height = '30px'; t.style.borderRadius = '6px'; t.style.overflow = 'hidden'; t.style.display = 'inline-flex'; t.style.alignItems = 'center'; t.style.justifyContent = 'center'; t.style.cursor = 'pointer';
                 t.addEventListener('click', () => window.open(url, '_blank'));
                 const timg = document.createElement('img'); timg.src = url; timg.alt = filename; timg.style.width = '100%'; timg.style.height = '100%'; timg.style.objectFit = 'cover'; t.appendChild(timg);
+                thumbs.push(t);
                 thumbFrag.appendChild(t);
             } else {
-                const commentsSection = document.querySelector('.comments-section');
-                const leftCol = document.querySelector('.left-section');
-                if (!commentsSection || !leftCol) return;
-
+                // Non-image attachment: create a simple link + download button and a compact thumb
+                const link = document.createElement('a');
+                link.className = 'attachment-link';
+                link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
                 link.textContent = filename;
                 item.appendChild(link);
-                const dl = document.createElement('a'); dl.className = 'attachment-download-btn'; dl.href = url; dl.target = '_blank'; dl.rel = 'noopener noreferrer'; dl.download = ''; dl.title = 'Download'; dl.style.marginLeft = '6px'; dl.style.textDecoration = 'none'; dl.textContent = '⬇';
+
+                const dl = document.createElement('a');
+                dl.className = 'attachment-download-btn';
+                dl.href = url; dl.target = '_blank'; dl.rel = 'noopener noreferrer'; dl.download = ''; dl.title = 'Download'; dl.style.marginLeft = '6px'; dl.style.textDecoration = 'none'; dl.textContent = '⬇';
                 item.appendChild(dl);
 
                 const short = filename.length > 10 ? filename.slice(0, 8) + '…' : filename;
-                const t = document.createElement('div'); t.className = 'attachment-thumb-compact'; t.title = filename; t.style.minWidth = '40px'; t.style.height = '30px'; t.style.borderRadius = '6px'; t.style.display = 'inline-flex'; t.style.alignItems = 'center'; t.style.justifyContent = 'center'; t.style.padding = '4px'; t.style.background = '#f3f4f6'; t.style.color = '#374151'; t.style.fontSize = '11px'; t.style.cursor = 'pointer';
+                const t = document.createElement('div');
+                t.className = 'attachment-thumb-compact';
+                t.title = filename;
+                t.style.minWidth = '40px'; t.style.height = '30px'; t.style.borderRadius = '6px'; t.style.display = 'inline-flex'; t.style.alignItems = 'center'; t.style.justifyContent = 'center'; t.style.padding = '4px'; t.style.background = '#f3f4f6'; t.style.color = '#374151'; t.style.fontSize = '11px'; t.style.cursor = 'pointer';
                 t.textContent = short;
                 t.addEventListener('click', () => window.open(url, '_blank'));
+                thumbs.push(t);
                 thumbFrag.appendChild(t);
             }
 
+            items.push(item);
             frag.appendChild(item);
         });
 
-        return { frag, thumbFrag };
+        return { frag, thumbFrag, items, thumbs };
     }
 
     renderAttachmentsForBalanced(issue) {
@@ -1348,27 +1357,28 @@ class FlowingFooter {
             const headerContainer = document.getElementById('attachmentsListHeader');
             if (!rightContainer && !headerContainer) return;
 
-            const { frag, thumbFrag } = this.buildAttachmentsHTML(issue);
-            if (!frag && !thumbFrag) {
-                if (rightContainer) {
-                    while (rightContainer.firstChild) rightContainer.removeChild(rightContainer.firstChild);
-                }
-                if (headerContainer) {
-                    while (headerContainer.firstChild) headerContainer.removeChild(headerContainer.firstChild);
-                }
+            const { frag, thumbFrag, items, thumbs } = this.buildAttachmentsHTML(issue);
+            if ((!items || items.length === 0) && (!thumbs || thumbs.length === 0)) {
+                if (rightContainer) { while (rightContainer.firstChild) rightContainer.removeChild(rightContainer.firstChild); }
+                if (headerContainer) { while (headerContainer.firstChild) headerContainer.removeChild(headerContainer.firstChild); }
                 const preview = document.getElementById('attachmentsPreviewFooter'); if (preview && preview.classList && typeof preview.classList.remove === 'function') preview.classList.remove('show');
                 return;
             }
 
             try {
-                if (rightContainer) {
-                    while (rightContainer.firstChild) rightContainer.removeChild(rightContainer.firstChild);
-                    // append thumbs first, then full items
-                    if (thumbFrag) rightContainer.appendChild(thumbFrag);
-                    if (frag) rightContainer.appendChild(frag);
+                // Clear targets first
+                if (rightContainer) { while (rightContainer.firstChild) rightContainer.removeChild(rightContainer.firstChild); }
+                if (headerContainer) { while (headerContainer.firstChild) headerContainer.removeChild(headerContainer.firstChild); }
+
+                // If there is a dedicated header container, render compact thumbs there
+                if (headerContainer && thumbs && thumbs.length) {
+                    thumbs.forEach(node => headerContainer.appendChild(node.cloneNode(true)));
                 }
-                if (headerContainer) {
-                    while (headerContainer.firstChild) headerContainer.removeChild(headerContainer.firstChild);
+
+                // Render full items into the right container (one representation per attachment)
+                if (rightContainer && items && items.length) {
+                    // Use grid layout for items
+                    items.forEach(node => rightContainer.appendChild(node.cloneNode(true)));
                 }
             } catch (e) { /* ignore */ }
         } catch (e) {
@@ -1381,21 +1391,26 @@ class FlowingFooter {
         try {
             const right = document.getElementById('attachmentsListRight');
             const header = document.getElementById('attachmentsListHeader');
-            if (!right && !header) return;
+            const footerPreview = document.getElementById('attachmentsListFooter');
+            const attachmentsPreview = document.getElementById('attachmentsPreviewFooter');
+            if (!right && !header && !footerPreview) return;
 
-            const { frag, thumbFrag } = this.buildAttachmentsHTML(issue);
-            if ((!frag || !frag.hasChildNodes()) && (!thumbFrag || !thumbFrag.hasChildNodes())) {
+            const { frag, thumbFrag, items, thumbs } = this.buildAttachmentsHTML(issue);
+            if ((!items || items.length === 0) && (!thumbs || thumbs.length === 0)) {
                 if (right) { while (right.firstChild) right.removeChild(right.firstChild); }
                 if (header) { while (header.firstChild) header.removeChild(header.firstChild); }
+                if (footerPreview) { while (footerPreview.firstChild) footerPreview.removeChild(footerPreview.firstChild); }
+                if (attachmentsPreview && attachmentsPreview.classList && typeof attachmentsPreview.classList.remove === 'function') attachmentsPreview.classList.remove('show');
                 return;
             }
 
-            // Footer prefers the full list (no header thumbs)
-            if (right) {
-                while (right.firstChild) right.removeChild(right.firstChild);
-                if (frag) right.appendChild(frag);
-            }
-            if (header) { while (header.firstChild) header.removeChild(header.firstChild); }
+            // Footer prefers the full list in the right section and compact thumbs in the composer preview
+            try {
+                if (right) { while (right.firstChild) right.removeChild(right.firstChild); if (items && items.length) items.forEach(node => right.appendChild(node.cloneNode(true))); }
+                if (header) { while (header.firstChild) header.removeChild(header.firstChild); if (thumbs && thumbs.length) thumbs.forEach(node => header.appendChild(node.cloneNode(true))); }
+                if (footerPreview) { while (footerPreview.firstChild) footerPreview.removeChild(footerPreview.firstChild); if (thumbs && thumbs.length) thumbs.forEach(node => footerPreview.appendChild(node.cloneNode(true))); }
+                if (attachmentsPreview && attachmentsPreview.classList && typeof attachmentsPreview.classList.add === 'function') attachmentsPreview.classList.add('show');
+            } catch (e) { /* ignore */ }
         } catch (e) {
             console.warn('renderFooterAttachments error', e);
         }
@@ -1634,6 +1649,56 @@ class FlowingFooter {
             return null;
         };
 
+        // Helper: find a human-friendly label for a field using mapping files or fallbacks
+        const findMappingLabel = (mapping, key) => {
+            if (!key) return null;
+            try {
+                if (mapping) {
+                    // mapping.categories.{cat}.fields.{key}.label
+                    if (mapping.categories) {
+                        for (const cat of Object.keys(mapping.categories)) {
+                            const f = mapping.categories[cat] && mapping.categories[cat].fields;
+                            if (f && f[key] && f[key].label) return f[key].label;
+                        }
+                    }
+                    // mapping.fields.{key}.label (possible alternate shape)
+                    if (mapping.fields && mapping.fields[key] && mapping.fields[key].label) return mapping.fields[key].label;
+                    // top-level mapping key
+                    if (mapping[key] && mapping[key].label) return mapping[key].label;
+                }
+            } catch (e) { /* ignore */ }
+            return null;
+        };
+
+        const humanizeKey = (k) => {
+            if (!k) return '';
+            return String(k).replace(/^customfield_/, 'CF-').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        };
+
+        // Helper to render a field block (label + value). Keeps inline styles
+        // to preserve existing look while centralizing templates to avoid duplication.
+        const renderFieldBlock = (label, value, opts = {}) => {
+            const fullWidth = !!opts.fullWidth;
+            const wrapperAttrs = opts.wrapperAttrs || '';
+            const wrapperClass = opts.wrapperClass || 'field-wrapper';
+            const lab = escapeHtml(String(label || ''));
+            const valEsc = escapeHtml(String(value || ''));
+            if (fullWidth) {
+                return `
+                <div style="grid-column: 1 / -1;">
+                    <label class="field-label" style="font-size:10px;font-weight:700;color:#9ca3af;display:block;margin-bottom:6px;">${lab}</label>
+                    <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${valEsc}</div>
+                </div>
+                `;
+            }
+            return `
+                <div class="${wrapperClass}" ${wrapperAttrs} style="display:flex;flex-direction:column;gap:6px;">
+                    <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">${lab}</label>
+                    <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${valEsc}</div>
+                </div>
+            `;
+        };
+
         // Format field value (same logic as right-sidebar)
         const formatValue = (value) => {
             if (!value) return '';
@@ -1736,13 +1801,9 @@ class FlowingFooter {
                 const raw = fld[k];
                 const val = formatValue(raw);
                 if (val && val.length > 120) {
-                    const label = k.replace('customfield_', 'CF-');
-                    longCustomFieldsHTML += `
-                <div style="grid-column: 1 / -1;">
-                    <label style="font-size: 10px; font-weight: 700; color: #9ca3af; display:block; margin-bottom:6px;">${label}</label>
-                    <div style="padding:8px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">${val}</div>
-                </div>
-                `;
+                    const label = humanizeKey(k) || k.replace('customfield_', 'CF-');
+                    // Use centralized renderer for long blocks
+                    longCustomFieldsHTML += renderFieldBlock(label, val, { fullWidth: true });
                 }
             });
         } catch (e) { console.warn('Could not collect long custom fields', e); }
@@ -1774,21 +1835,21 @@ class FlowingFooter {
                 else if (k === 'reporter') val = reporter;
                 else val = formatValue(getField(k));
                 if (!val) return; // skip empty
-                // label from mapping if available
-                const label = (mapping && mapping.categories && (function () {
-                    for (const cat of ['form_fields', 'contact_info', 'system_fields']) {
-                        const f = mapping.categories[cat] && mapping.categories[cat].fields;
-                        if (f && f[k] && f[k].label) return f[k].label;
-                    }
-                    return k.replace(/_/g, ' ').replace(/customfield /g, 'CF ').replace(/customfield_/, 'CF-');
-                })()) || k;
+                // label from mapping if available, otherwise sensible fallback
+                const labelFromMapping = findMappingLabel(mapping, k);
+                const coreFallbacks = {
+                    'priority': 'Priority',
+                    'assignee': 'Assignee',
+                    'status': 'Status',
+                    'reporter': 'Reporter',
+                    'email': 'Email',
+                    'phone': 'Phone',
+                    'summary': 'Summary'
+                };
+                const label = labelFromMapping || coreFallbacks[k] || humanizeKey(k) || k;
 
-                html += `
-                    <div class="field-wrapper" style="display:flex;flex-direction:column;gap:6px;">
-                        <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">${label}</label>
-                        <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${val}</div>
-                    </div>
-                `;
+                // Use centralized renderer to ensure consistent markup/styling
+                html += renderFieldBlock(label, val);
             });
             return html;
         };
@@ -1824,98 +1885,393 @@ class FlowingFooter {
             return s;
         };
 
-        // Prioritized short custom fields (show under description as normal fields)
-        const prioritizedOrder = [
-            { label: 'Email', value: email },
-            { label: 'Empresa', value: empresa },
-            { label: 'País', value: pais },
-            { label: 'Teléfono', value: phone },
-            { label: 'Producto', value: producto },
-            { label: 'Plataforma', value: plataforma },
-            { label: 'Tipo de solicitud', value: tipoSolicitud }
+        // Prioritized short custom fields (informer first, then ticket metadata)
+        // We build these deliberately and insert them into the 3-column grid so
+        // they don't occupy a single vertical column and waste space.
+        const prioritizedDefs = [
+            { label: 'Empresa', keys: ['customfield_10143', 'customfield_10131'] },
+            { label: 'Teléfono', keys: ['customfield_10142', 'customfield_10134'] },
+            { label: 'Email', keys: ['customfield_10141', 'customfield_10133'] },
+            { label: 'Tipo de solicitud', keys: ['customfield_10156', 'customfield_10010'] },
+            { label: 'Servicio', keys: ['customfield_10144', 'customfield_10132', 'product', 'producto'] },
+            { label: 'Plataforma', keys: ['customfield_10169', 'customfield_10129'] },
+            { label: 'Versión', keys: ['fixVersions', 'versions', 'customfield_10152'] }
         ];
+
+        const getFirstAvailable = (keys) => {
+            for (const k of (keys || [])) {
+                if (!k) continue;
+                // support some common non-customfield keys
+                if (k === 'fixVersions' || k === 'versions') {
+                    const v = issue.fixVersions || getField('fixVersions') || getField('versions');
+                    if (v !== undefined && v !== null && ((Array.isArray(v) && v.length) || String(v).trim() !== '')) return v;
+                    continue;
+                }
+                // direct field lookup
+                const v = getField(k);
+                if (v !== undefined && v !== null && ((Array.isArray(v) && v.length) || String(v).trim() !== '')) return v;
+            }
+            return null;
+        };
 
         let prioritizedFieldsHTML = '';
         try {
-            prioritizedOrder.forEach(entry => {
-                let val = entry.value;
+            prioritizedDefs.forEach(def => {
+                const raw = getFirstAvailable(def.keys);
+                if (!raw) return;
+                let val = formatValue(raw);
                 if (!val) return;
-                if (entry.label === 'Teléfono') val = formatPhoneNumber(val);
-                val = escapeHtml(String(val));
-                prioritizedFieldsHTML += `
-                    <div class="field-wrapper" style="display:flex;flex-direction:column;gap:6px;">
-                        <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; margin-bottom: 4px;">${entry.label}</label>
-                        <div class="field-input" style="padding: 6px 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; font-size: 12px; color: var(--field-text);">${val}</div>
-                    </div>
-                `;
+                if (def.label === 'Teléfono') val = formatPhoneNumber(val);
+                // prefer mapping label for first available key
+                let resolvedLabel = def.label;
+                try {
+                    const mappingLabel = (function () {
+                        for (const k of def.keys) {
+                            const l = findMappingLabel(mappingObj, k);
+                            if (l) return l;
+                        }
+                        return null;
+                    })();
+                    if (mappingLabel) resolvedLabel = mappingLabel;
+                } catch (e) { /* ignore */ }
+
+                // Use centralized renderer; include data attribute for priority fields
+                prioritizedFieldsHTML += renderFieldBlock(resolvedLabel, val, { wrapperAttrs: 'data-priority-field="true"' });
             });
         } catch (e) { console.warn('Could not build prioritized fields', e); }
 
-        // FOUR-COLUMN GRID: description spans 3 columns, 4th column reserved for SLA/Attachments/Comments
-        // Layout adjusted to two symmetric sections (left 50% / right 50%).
+        // TWO-COLUMN LAYOUT with left-side grid for description + 3-column fields
+        // Description spans full width of the left-side area; fields use a 3-column grid
+        // and long fields span all 3 columns.
+        // Build combined fields HTML (prioritized first so it appears on top)
+        const combinedFieldsHTML = `${prioritizedFieldsHTML || ''}${initialEssentialHTML || ''}`;
+
+        // Build the remaining "all fields" panel (exclude duplicates and SLA/priority/severity fields)
+        let remainingFieldsHTML = '';
+        try {
+            const shownLabels = new Set();
+            // mark prioritized labels as shown
+            prioritizedDefs.forEach(d => { if (d && d.label) shownLabels.add(String(d.label).toLowerCase()); });
+            // core labels already included
+            ['priority', 'assignee', 'status', 'reporter', 'email', 'phone', 'summary'].forEach(k => shownLabels.add(String(k).toLowerCase()));
+
+            const mappingAll = window.CUSTOM_FIELDS_REFERENCE || mappingObj || {};
+
+            // iterate all fields in issue.fields and include those not already shown
+            const fieldsObj = issue.fields || {};
+            Object.keys(fieldsObj).forEach(k => {
+                if (!k) return;
+                // Skip standard fields and only include customfields or version-like fields
+                if (!/^customfield_/i.test(k) && k !== 'fixVersions' && k !== 'versions') return;
+                // Exclude SLA-like or priority/severity-looking fields by key
+                if (/sla/i.test(k) || /severity/i.test(k) || /priority/i.test(k)) return;
+
+                const raw = fieldsObj[k];
+                const val = formatValue(raw);
+                if (!val) return;
+
+                // Determine a label if available in mapping or fallback to a humanized key
+                let labelTxt = findMappingLabel(mappingAll, k) || humanizeKey(k) || k;
+                const labelKey = String(labelTxt || k).toLowerCase();
+                if (shownLabels.has(labelKey)) return; // avoid duplicates
+                if (/sla/i.test(labelTxt) || /severity/i.test(labelTxt) || /priority/i.test(labelTxt)) return;
+
+                shownLabels.add(labelKey);
+
+                // If the field is long, render as full-width block, otherwise use standard block
+                if (String(val).length > 120) {
+                    remainingFieldsHTML += renderFieldBlock(labelTxt, val, { fullWidth: true });
+                } else {
+                    remainingFieldsHTML += renderFieldBlock(labelTxt, val);
+                }
+            });
+        } catch (e) { console.warn('Could not build remaining fields list', e); }
+
         container.innerHTML = `
             <div class="purple-divider" style="margin:0"></div>
 
-            <div class="footer-grid-4" style="display: grid; grid-template-columns: 50% 50%; gap: 12px; padding: 16px 20px; height: 100%; max-height: 100%; overflow: auto; align-items:stretch; position:relative; box-sizing:border-box;">
+                                                <!-- Reverting recent move: inject footer-specific styles inline to restore previous grid behavior -->
+                                                <style>
+                                                /* Footer-specific layout & compact SLA visuals (moved back from central CSS to avoid recent grid regressions) */
+#balancedContentContainer .field-input.description-input {
+    font-size: 12px;
+    line-height: 1.4;
+    max-height: calc(1.4em * 6);
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
 
-                <div class="left-section" style="grid-column: 1 / span 1; display: flex; flex-direction: column; gap: 12px; height:100%; min-height:0; box-sizing:border-box;">
-                    ${description ? `
-                    <div class="field-wrapper ticket-description-field" style="display:flex;flex-direction:column;gap:6px;">
-                        <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; margin-bottom: 4px;">Descripción</label>
-                        <div id="ticketDescriptionContent" class="field-input description-input" style="padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: #4b5563; line-height: 1.4; max-height: none; overflow: auto; white-space: pre-wrap;">${description ? `${description}` : ''}</div>
-                    </div>
-                    ` : ''}
+#balancedContentContainer .footer-grid-5 {
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-                    ${prioritizedFieldsHTML ? prioritizedFieldsHTML : ''}
+#balancedContentContainer .footer-grid-5>.left-section,
+#balancedContentContainer .footer-grid-5>.right-section,
+#balancedContentContainer .footer-grid-5 .right-grid,
+#balancedContentContainer .footer-grid-5 .attachments-section,
+#balancedContentContainer .footer-grid-5 .comments-section,
+#balancedContentContainer .footer-grid-5 .left-grid {
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+}
 
-                    ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
+#balancedContentContainer .attachments-section img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
 
-                    <div id="essentialFieldsGrid" class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                        ${initialEssentialHTML}
+#balancedContentContainer .attachments-section .attachment-item {
+    padding: 8px;
+    border-radius: 8px;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--card-border, #e5e7eb);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+#balancedContentContainer .attachments-section .attachment-thumb {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+#balancedContentContainer .attachments-section .attachment-thumb-compact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 6px;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--card-border, #e5e7eb);
+    box-sizing: border-box;
+}
+
+#balancedContentContainer .attachments-section #attachmentsListRight {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    align-items: start;
+}
+
+#balancedContentContainer .attachments-section #attachmentsListHeader {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 6px;
+}
+
+#balancedContentContainer .attachments-preview-footer .attachments-list .attachment-item {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--card-border, #e5e7eb);
+    margin-right: 6px;
+}
+
+/* Compact SLA visuals used by Flowing footer */
+#balancedContentContainer .sla-monitor-wrapper {
+    align-self: start;
+}
+
+#balancedContentContainer .sla-monitor-container {
+    background: transparent !important;
+    border: none !important;
+    padding: 6px !important;
+    box-shadow: none !important;
+}
+
+#balancedContentContainer .sla-monitor-container .sla-panel,
+#balancedContentContainer .sla-monitor-container .sla-cycle,
+#balancedContentContainer .sla-monitor-container .sla-content {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+#balancedContentContainer .flowing-sla-compact .cycle-status {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    display: inline-flex;
+    align-items: center;
+}
+
+#balancedContentContainer .flowing-sla-compact .progress-bar {
+    height: 6px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-radius: 4px !important;
+    overflow: hidden;
+}
+
+#balancedContentContainer .flowing-sla-compact .progress-fill {
+    height: 6px !important;
+    box-shadow: none !important;
+    border-radius: 4px !important;
+}
+
+#balancedContentContainer .flowing-sla-compact .detail-row {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 6px !important;
+}
+
+#balancedContentContainer .flowing-sla-compact .sla-title {
+    display: none !important;
+}
+
+#balancedContentContainer .flowing-sla-compact .cycle-name {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+
+#balancedContentContainer .flowing-sla-compact .sla-refresh-btn {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+}
+
+#balancedContentContainer .breach-wrapper .breach-risk-content {
+    padding: 6px 8px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+#balancedContentContainer .breach-risk-percentage {
+    width: 56px !important;
+    height: 56px !important;
+    font-size: 20px !important;
+    border-radius: 10px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#balancedContentContainer .breach-risk-compact .breach-risk-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+}
+                                                </style>
+
+                                                <div class="footer-grid-5" style="display: grid; grid-template-columns: repeat(3, 1fr) 320px 1fr; gap: 12px; padding: 16px 20px; height: 100%; max-height: 100%; overflow-y: auto; overflow-x: hidden; align-items:stretch; position:relative; box-sizing:border-box;">
+
+                <div class="left-section" style="grid-column: 1 / span 3; display: flex; flex-direction: column; gap: 12px; height:100%; min-height:0; box-sizing:border-box;">
+                    <div class="left-grid" style="display:flex;flex-direction:column;gap:12px;height:100%;min-height:0;">
+                        ${description ? `
+                        <div class="field-wrapper ticket-description-field" style="display:flex;flex-direction:column;gap:6px;">
+                            <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; margin-bottom: 4px;">Descripción</label>
+                            <div id="ticketDescriptionContent" class="field-input description-input" style="padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; color: #4b5563; line-height: 1.4 !important; max-height: calc(1.4em * 6) !important; overflow-y: auto !important; white-space: pre-wrap !important; font-size:12px !important;">${description ? `${description}` : ''}</div>
+                        </div>
+                        ` : ''}
+
+                        ${longCustomFieldsHTML ? longCustomFieldsHTML : ''}
+
+                        <div id="essentialFieldsGrid" class="essential-fields-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                            ${combinedFieldsHTML}
+                        </div>
+
+                        <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+                            <button id="toggleAllFieldsBtn" class="all-fields-toggle" style="padding:6px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-size:12px;cursor:pointer;">Show all fields</button>
+                        </div>
+
+                        <div id="allFieldsPanel" class="all-fields-panel" style="display:none; grid-template-columns: repeat(3,1fr); gap:8px; margin-top:8px;">
+                            ${remainingFieldsHTML}
+                        </div>
                     </div>
                 </div>
 
-                <div class="right-section" style="grid-column: 2 / span 1; display: flex; flex-direction: column; gap: 12px; height:100%; min-height:0; box-sizing:border-box;">
-                    <div class="sla-monitor-wrapper">
-                        <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-                            <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">Loading SLA...</div>
-                        </div>
-                        <div class="breach-risk-content" style="margin-top:8px;"></div>
-                    </div>
-
-                    <div class="attachments-section" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
-                        <h4 style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px 0;display:flex;align-items:center;gap:8px;">Attachments</h4>
-                        <div id="attachmentsListRight" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
-                        <div id="attachmentsListHeader" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:#6b7280;font-size:12px;"></div>
-                    </div>
-
-                    <div class="purple-divider"></div>
-
-                    <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; min-height: 0; overflow: auto; box-sizing:border-box;">
-                        <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><div class="attachments-list" id="attachmentsListFooter"></div></div>
-                        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                            <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">Comments</h4>
-                            <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
-                        </div>
-
-                        <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
-                            <textarea id="footerCommentText" placeholder="Write a comment..." rows="2" style="flex:1; resize: vertical; min-height:40px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
-                            <div style="display:flex; flex-direction:column; gap:8px;">
-                                <div style="display:flex; gap:8px;">
-                                    <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip ? SVGIcons.paperclip({ size: 14, className: 'inline-icon' }) : ''}</button>
-                                    <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
-                                </div>
-                                <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
+                <div class="right-section" style="display: contents;"> 
+                        <div class="sla-monitor-wrapper" style="grid-column: 4 / span 1;">
+                            <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+                                <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">Loading SLA...</div>
                             </div>
                         </div>
+                        <div class="breach-wrapper" style="grid-column: 5 / span 1;">
+                            <div class="breach-risk-content" style="margin-top:0;"></div>
+                        </div>
 
-                        <div class="comments-list" style="display: flex; flex-direction: column; gap: 8px;">
-                            <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">Loading comments...</p>
+                        <div class="attachments-section" style="grid-column: 4 / -1; display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+                            <h4 style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px 0;display:flex;align-items:center;gap:8px;">Attachments</h4>
+                            <div id="attachmentsListRight" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; align-items:start;"></div>
+                            <div id="attachmentsListHeader" style="margin-top:8px;display:grid;grid-template-columns: repeat(2, 1fr);gap:8px;align-items:center;color:#6b7280;font-size:12px;"></div>
+                        </div>
+
+                        <div class="purple-divider" style="grid-column: 4 / -1;"></div>
+
+                        <div class="comments-section" style="grid-column: 4 / -1; display: grid; grid-template-rows: auto auto 1fr; gap: 8px; background: transparent; border-radius: 10px; padding: 14px; min-height: 0; box-sizing:border-box; height:100%;">
+                            <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><div class="attachments-list" id="attachmentsListFooter"></div></div>
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">Comments</h4>
+                                <span id="commentCountFooter" style="font-size:12px; color:#6b7280;">(0)</span>
+                            </div>
+
+                            <div class="comment-composer" style="display:flex; gap:8px; align-items:flex-start; margin:10px 0 12px 0;">
+                                <textarea id="footerCommentText" placeholder="Write a comment..." rows="3" style="flex:1; resize: vertical; min-height:48px; max-height:120px; padding:8px 10px; border:1px solid rgba(0,0,0,0.08); border-radius:8px; font-size:13px;"></textarea>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <div style="display:flex; gap:8px;">
+                                        <button id="attachFooterBtn" class="comment-toolbar-btn" title="Attach file" style="padding:8px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer;">${SVGIcons.paperclip ? SVGIcons.paperclip({ size: 14, className: 'inline-icon' }) : ''}</button>
+                                        <button class="btn-add-comment-footer" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;">Send</button>
+                                    </div>
+                                    <label style="font-size:11px; color:#6b7280; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="commentInternalFooter"> Internal</label>
+                                </div>
+                            </div>
+
+                            <div class="comments-list" style="overflow:auto; display: grid; grid-template-columns: 1fr; gap: 8px;">
+                                <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">Loading comments...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+
+        // Post-render adjustments: deduplicate fields (by label) so prioritized fields don't repeat
+        try {
+            const essentialGrid = container.querySelector('#essentialFieldsGrid');
+            if (essentialGrid) {
+                const seen = new Set();
+                const nodes = Array.from(essentialGrid.querySelectorAll('.field-wrapper'));
+                nodes.forEach(n => {
+                    const lab = n.querySelector('.field-label');
+                    const txt = lab ? (lab.textContent || '').trim().toLowerCase() : '';
+                    if (!txt) return;
+                    if (seen.has(txt)) {
+                        try { n.parentNode && n.parentNode.removeChild(n); } catch (e) { /* ignore */ }
+                    } else seen.add(txt);
+                });
+            }
+        } catch (e) { console.warn('Could not dedupe essential fields', e); }
+
+        // Attach toggle handler for "Show all fields"
+        try {
+            const toggleBtn = container.querySelector('#toggleAllFieldsBtn');
+            const panel = container.querySelector('#allFieldsPanel');
+            if (toggleBtn && panel) {
+                toggleBtn.addEventListener('click', () => {
+                    const isHidden = panel.style.display === 'none' || !panel.style.display;
+                    panel.style.display = isHidden ? 'grid' : 'none';
+                    toggleBtn.textContent = isHidden ? 'Hide all fields' : 'Show all fields';
+                });
+            }
+        } catch (e) { console.warn('Could not attach all fields toggle', e); }
 
     }
 }

@@ -54,12 +54,7 @@
           "example_value": "se inicia analisis",
           "in_use": true
         },
-        "customfield_10151": {
-          "label": "Resolución",
-          "type": "text",
-          "example_value": "se ha dado respuesta a lo que generaba el problema...",
-          "in_use": true
-        },
+        
         "customfield_10165": {
           "label": "País",
           "type": "select",
@@ -165,6 +160,13 @@
           "type": "link",
           "example_value": "SLA War Room",
           "in_use": false
+        }
+        ,
+        "customfield_10151": {
+          "label": "SLA field requirement",
+          "type": "text",
+          "example_value": "se ha dado respuesta a lo que generaba el problema...",
+          "in_use": true
         }
       }
     },
