@@ -2198,8 +2198,7 @@ class FlowingFooter {
                     </div>
                 </div>
 
-                <div class="right-section" style="display: contents;"> 
-                        <div class="sla-monitor-wrapper" style="grid-column: 4 / span 1;">
+                    <div class="sla-monitor-wrapper" style="grid-column: 4 / span 1;">
                             <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
                                 <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">Loading SLA...</div>
                             </div>
@@ -2237,9 +2236,9 @@ class FlowingFooter {
                             <div class="comments-list" style="overflow:auto; display: grid; grid-template-columns: 1fr; gap: 8px;">
                                 <p style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">Loading comments...</p>
                             </div>
-                        </div>
                     </div>
                 </div>
+            </div>
             </div>
         `;
 
