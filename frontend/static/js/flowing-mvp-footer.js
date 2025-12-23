@@ -1847,13 +1847,13 @@ class FlowingFooter {
         container.innerHTML = `
             <div class="purple-divider" style="margin:0"></div>
 
-            <div class="footer-grid-4" style="display: grid; grid-template-columns: 50% 50%; gap: 12px; padding: 16px 20px; max-height: calc(60vh - 250px); overflow-y: auto; align-items:start; position:relative;">
+            <div class="footer-grid-4" style="display: grid; grid-template-columns: 50% 50%; gap: 12px; padding: 16px 20px; height: 100%; max-height: 100%; overflow: auto; align-items:stretch; position:relative; box-sizing:border-box;">
 
-                <div class="left-section" style="grid-column: 1 / span 1; display: flex; flex-direction: column; gap: 12px;">
+                <div class="left-section" style="grid-column: 1 / span 1; display: flex; flex-direction: column; gap: 12px; height:100%; min-height:0; box-sizing:border-box;">
                     ${description ? `
                     <div class="field-wrapper ticket-description-field" style="display:flex;flex-direction:column;gap:6px;">
                         <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; margin-bottom: 4px;">Descripción</label>
-                        <div id="ticketDescriptionContent" class="field-input description-input" style="padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: #4b5563; line-height: 1.4; max-height: 7.5em; overflow: auto; white-space: pre-wrap;">${description ? `${description}` : ''}</div>
+                        <div id="ticketDescriptionContent" class="field-input description-input" style="padding: 8px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; font-size: 13px; color: #4b5563; line-height: 1.4; max-height: none; overflow: auto; white-space: pre-wrap;">${description ? `${description}` : ''}</div>
                     </div>
                     ` : ''}
 
@@ -1866,7 +1866,7 @@ class FlowingFooter {
                     </div>
                 </div>
 
-                <div class="right-section" style="grid-column: 2 / span 1; display: flex; flex-direction: column; gap: 12px;">
+                <div class="right-section" style="grid-column: 2 / span 1; display: flex; flex-direction: column; gap: 12px; height:100%; min-height:0; box-sizing:border-box;">
                     <div class="sla-monitor-wrapper">
                         <div class="sla-monitor-container" style="background: rgba(249, 250, 251, 0.5); border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
                             <div style="text-align: center; padding: 12px; color: #9ca3af; font-size: 11px;">Loading SLA...</div>
@@ -1882,7 +1882,7 @@ class FlowingFooter {
 
                     <div class="purple-divider"></div>
 
-                    <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; max-height: 360px; overflow-y: auto;">
+                    <div class="comments-section" style="flex: 1; background: transparent; border-radius: 10px; padding: 14px; min-height: 0; overflow: auto; box-sizing:border-box;">
                         <div class="attachments-preview-footer" id="attachmentsPreviewFooter" style="margin-bottom:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;"><div class="attachments-list" id="attachmentsListFooter"></div></div>
                         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
                             <h4 style="font-size: 13px; font-weight: 600; color: #374151; margin: 0; display: flex; align-items: center; gap: 6px;">Comments</h4>
