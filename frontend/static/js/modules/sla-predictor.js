@@ -43,29 +43,10 @@
                 will_breach
             });
 
-            // For backward compatibility, merge prediction into window.slaMonitor.slaData
-            // if the SLA monitor is present so consumers that read that structure
-            // continue to work. Also dispatch a global event so consumers can
-            // update UI without directly calling the predictor.
-            try {
-                if (global && global.slaMonitor && global.slaMonitor.slaData) {
-                    try {
-                        const existing = global.slaMonitor.slaData[issueKey] || {};
-                        global.slaMonitor.slaData[issueKey] = Object.assign({}, existing, { model: normalized, prediction: normalized });
-                        if (!global.slaMonitor.slaData[issueKey].ongoingCycle) {
-                            global.slaMonitor.slaData[issueKey].ongoingCycle = existing.ongoingCycle || {};
-                        }
-                        try { global.slaMonitor.slaData[issueKey].ongoingCycle.prediction = normalized; } catch (e) { /* ignore */ }
-                    } catch (e) { /* ignore */ }
-                }
-            } catch (e) { /* ignore */ }
-
-            try {
-                if (global && typeof global.dispatchEvent === 'function') {
-                    try { global.dispatchEvent(new CustomEvent('sla:prediction', { detail: { issueKey, prediction: normalized } })); } catch (e) { /* ignore */ }
-                }
-            } catch (e) { /* ignore */ }
-
+            // Return the normalized prediction. This module is intentionally
+            // side-effect free: it does not mutate `window.slaMonitor.slaData`
+            // nor dispatch global events. Consumers should call this function
+            // and decide how to store or broadcast the result.
             return normalized;
         } catch (err) {
             try { console.warn('sla-predictor: fetch failed', err); } catch (e) { }
