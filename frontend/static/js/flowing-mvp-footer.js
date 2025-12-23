@@ -184,10 +184,20 @@ class FlowingFooter {
             try {
                 // Do not forcibly remove attributes set by other modules. Keep
                 // attribute-level state intact; prefer class/style-only changes.
-                this.headerEl.style.display = this.headerEl.style.display || 'block';
+                // Ensure header uses flex layout to match markup and remain visible.
+                this.headerEl.style.display = this.headerEl.style.display || 'flex';
                 this.headerEl.style.visibility = this.headerEl.style.visibility || 'visible';
             } catch (e) { /* ignore */ }
         }
+
+        // Ensure the header element is a child of the footer so it inherits
+        // footer attributes and positioning (prevents it being rendered as a
+        // page-top banner if moved elsewhere).
+        try {
+            if (this.headerEl && this.footer && this.headerEl.parentElement !== this.footer) {
+                this.footer.insertBefore(this.headerEl, this.footer.firstChild);
+            }
+        } catch (e) { /* ignore */ }
 
         // Start collapsed (only header + suggestions)
         try { this.collapse(); } catch (e) { /* ignore */ }
@@ -453,8 +463,7 @@ class FlowingFooter {
     expand() {
         if (!this.footer) return;
 
-        this.footer.classList.remove('collapsed');
-        this.footer.classList.add('expanded');
+        // Show balanced content while keeping header visible (show semantics)
         this.isExpanded = true;
 
         // Add balanced-active styling when expanded so overlay rules apply
@@ -496,8 +505,7 @@ class FlowingFooter {
     collapse() {
         if (!this.footer) return;
 
-        this.footer.classList.add('collapsed');
-        this.footer.classList.remove('expanded');
+        // Hide balanced content while keeping header visible (hide semantics)
         this.isExpanded = false;
 
         // Remove balanced-active styling when collapsed
@@ -548,10 +556,39 @@ class FlowingFooter {
             const maxH = Math.max(240, viewportH - headerH - 40); // leave margin to viewport bottom
 
             if (balancedEl) {
-                balancedEl.style.minHeight = '240px';
-                balancedEl.style.maxHeight = `${maxH}px`;
-                balancedEl.style.height = 'auto';
-                balancedEl.style.overflowY = 'auto';
+                // Prefer to size the balanced content to the actual rendered
+                // footer height so the layout uses the maximum available space
+                // and content isn't cut. Fall back to viewport-based max when
+                // footer measurements are unavailable.
+                try {
+                    const footerRect = (this.footer && typeof this.footer.getBoundingClientRect === 'function') ? this.footer.getBoundingClientRect() : null;
+                    let availableHeight;
+                    if (footerRect && footerRect.height > 0) {
+                        // Reserve space for header within the footer
+                        availableHeight = Math.max(240, Math.floor(footerRect.height - headerH - 16));
+                    } else {
+                        // Fallback: use viewport-based calculation
+                        availableHeight = Math.max(240, maxH);
+                    }
+
+                    balancedEl.style.minHeight = '240px';
+                    balancedEl.style.maxHeight = `${availableHeight}px`;
+                    // Use explicit height to ensure contents can expand to fill
+                    // the footer's vertical space instead of being clipped.
+                    balancedEl.style.height = `${availableHeight}px`;
+                    balancedEl.style.overflowY = 'auto';
+
+                    // Ensure balanced content is padded below header so it doesn't
+                    // render beneath the footer header when the balanced view is active.
+                    try { balancedEl.style.paddingTop = (headerH + 16) + 'px'; } catch (e) { /* ignore */ }
+                } catch (e) {
+                    // Best-effort fallback
+                    balancedEl.style.minHeight = '240px';
+                    balancedEl.style.maxHeight = `${maxH}px`;
+                    balancedEl.style.height = 'auto';
+                    balancedEl.style.overflowY = 'auto';
+                    try { balancedEl.style.paddingTop = (headerH + 16) + 'px'; } catch (e) { /* ignore */ }
+                }
             }
         } catch (e) {
             console.warn('adjustContentPadding error', e);
@@ -639,6 +676,13 @@ class FlowingFooter {
                 this.footer.style.setProperty('--flowing-footer-overlay-top', topOffset + 'px');
                 this.footer.style.setProperty('--flowing-footer-overlay-height', available + 'px');
             }
+
+            // After updating CSS vars that control footer height, allow the
+            // browser to reflow and then adjust balanced content sizing so it
+            // fills the available footer height (prevents cutting content).
+            try {
+                setTimeout(() => { try { this.adjustContentPadding(false); } catch (e) { /* ignore */ } }, 50);
+            } catch (e) { /* ignore */ }
         } catch (e) { /* ignore */ }
     }
 
@@ -1183,20 +1227,39 @@ class FlowingFooter {
             const composer = rightCol.querySelector('.comment-composer');
             if (!commentsSection) return;
 
-            // Increase minimum comments height and compute available space
-            const MIN_COMMENT_HEIGHT = 500; // px
-            const paddingReserve = 40; // breathing room
+            // Compute available height for comments based on the footer's
+            // rendered height (preferred) and fall back to the left column's
+            // height. Reserve space for the header and composer.
+            const paddingReserve = 16; // breathing room
+            const MIN_COMMENT_HEIGHT = 120; // preferred minimum for comments area
 
             const leftHeight = leftCol.getBoundingClientRect().height;
             const composerHeight = composer ? composer.getBoundingClientRect().height : 0;
-            const available = Math.floor(leftHeight - composerHeight - paddingReserve);
 
-            // computedMax is the maximum allowed height we can use; ensure it's at least 120
-            const computedMax = Math.max(120, available);
-            // computedMin will be MIN_COMMENT_HEIGHT unless the available space is smaller
+            // Try to base sizing on the actual footer's height so comments
+            // can expand to the maximum available area inside the footer.
+            let footerInner = null;
+            try {
+                const footerRect = (this.footer && typeof this.footer.getBoundingClientRect === 'function') ? this.footer.getBoundingClientRect() : null;
+                if (footerRect && footerRect.height > 0) {
+                    const headerEl = document.getElementById('flowingHeader') || (this.footer && this.footer.querySelector('.flowing-header'));
+                    const headerH = (headerEl && typeof headerEl.getBoundingClientRect === 'function') ? Math.round(headerEl.getBoundingClientRect().height) : 72;
+                    footerInner = Math.max(120, Math.floor(footerRect.height - headerH - paddingReserve));
+                }
+            } catch (e) { footerInner = null; }
+
+            // Preferred available height: use footerInner if present, otherwise left column
+            let available = Math.floor((footerInner !== null ? footerInner : leftHeight) - composerHeight - paddingReserve);
+            // Never allow negative/too-small heights
+            if (!Number.isFinite(available) || available < 120) available = 120;
+
+            // computedMax should reflect the maximal usable height for comments
+            const computedMax = Math.max(MIN_COMMENT_HEIGHT, available);
             const computedMin = Math.min(MIN_COMMENT_HEIGHT, computedMax);
 
+            // Set explicit height so comments fill the available footer area
             commentsSection.style.maxHeight = `${computedMax}px`;
+            commentsSection.style.height = `${computedMax}px`;
             commentsSection.style.minHeight = `${computedMin}px`;
             commentsSection.style.overflowY = 'auto';
 

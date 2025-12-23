@@ -107,7 +107,9 @@ body.flowing-balanced-active .board-wrapper {
 /* Balanced content container layout - minimal layout rules so JS-inserted content is visible */
 .balanced-content-container,
 #balancedContentContainer {
-  padding: 16px;
+  /* Add top padding to account for the footer header so balanced content
+     doesn't render underneath the header. Uses CSS variable set by JS. */
+  padding: calc(var(--flowing-header-height, 72px) + 16px) 16px 16px 16px;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
