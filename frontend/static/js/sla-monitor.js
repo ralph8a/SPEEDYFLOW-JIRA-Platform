@@ -146,31 +146,13 @@ class SLAMonitor {
       const pred = data.prediction || data;
       if (!pred) return;
 
-      // Build small risk summary
-      const riskWrap = document.createElement('div');
-      riskWrap.className = 'sla-breach-prediction';
-      riskWrap.style.marginTop = '8px';
-      riskWrap.style.padding = '8px';
-      riskWrap.style.borderTop = '1px dashed rgba(0,0,0,0.06)';
-
-      const level = pred.risk_level || pred.risk || 'LOW';
-      const prob = typeof pred.breach_probability === 'number' ? (pred.breach_probability * 100).toFixed(1) + '%' : (pred.breach_probability || 'N/A');
-      const label = document.createElement('div');
-      label.style.display = 'flex'; label.style.alignItems = 'center'; label.style.justifyContent = 'space-between';
-      const left = document.createElement('div'); left.style.fontWeight = '700'; left.style.color = '#374151'; left.textContent = `Predicted SLA Risk: ${level}`;
-      const right = document.createElement('div'); right.style.fontSize = '12px'; right.style.color = '#6b7280'; right.textContent = `Prob: ${prob}`;
-      label.appendChild(left); label.appendChild(right);
-
-      riskWrap.appendChild(label);
-
-      // add explanatory text
-      const expl = document.createElement('div'); expl.style.fontSize = '12px'; expl.style.color = '#4b5563'; expl.style.marginTop = '6px';
-      expl.textContent = pred.will_breach ? 'Model predicts an elevated chance of SLA breach — consider urgent action.' : 'Model predicts low/medium risk.';
-      riskWrap.appendChild(expl);
-
-      // Append below content if exists, else at end
-      const contentEl = container.querySelector('.sla-content') || container;
-      contentEl.appendChild(riskWrap);
+      // NOTE: Previously this method created and appended a DOM node
+      // with the breach prediction into the SLA panel. To avoid having
+      // multiple UI locations (and to centralize presentation in the
+      // Flowing footer / balanced view), we now only merge the
+      // prediction into the SLA data model and notify consumers.
+      // Consumers (FlowingFooter or a dedicated SLA panel renderer)
+      // should render the prediction UI by reading `slaMonitor.slaData`.
       // Merge prediction into SLA data model so other consumers (e.g., Flowing footer)
       // can read the model/prediction without depending on DOM-only attachments.
       try {
@@ -191,8 +173,9 @@ class SLAMonitor {
         }
         try { this.slaData[issueKey].ongoingCycle.prediction = pred; } catch (e) { /* ignore */ }
 
-        // If the Flowing footer is present, trigger a re-render of the breach card so it picks up the prediction
+        // Notify consumers: dispatch an event and call footer renderer if present
         try {
+          try { window.dispatchEvent(new CustomEvent('sla:prediction', { detail: { issueKey, prediction: pred } })); } catch (e) { /* ignore */ }
           const footer = (typeof window.getFlowingFooter === 'function') ? window.getFlowingFooter() : (window._flowingFooter || window.flowingFooter);
           if (footer && typeof footer.renderBreachRisk === 'function') {
             try { footer.renderBreachRisk(issueKey); } catch (e) { /* ignore */ }
