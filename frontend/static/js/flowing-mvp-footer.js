@@ -121,6 +121,26 @@ class FlowingFooter {
 
         // Audio utilities are deprecated and removed — no-op here.
 
+        // Listen for SLA prediction notifications so the footer can re-render
+        // breach cards when model predictions arrive. This centralizes UI
+        // rendering in FlowingFooter while keeping the SLA predictor as a
+        // data-only module.
+        try {
+            if (!this._slaPredictionAttached) {
+                window.addEventListener('sla:prediction', (ev) => {
+                    try {
+                        const issueKey = ev?.detail?.issueKey || (ev && ev.detail);
+                        if (!issueKey) return;
+                        // Render breach risk for the issue (footer will decide where to show it)
+                        if (typeof this.renderBreachRisk === 'function') {
+                            try { this.renderBreachRisk(issueKey); } catch (e) { /* ignore */ }
+                        }
+                    } catch (e) { /* ignore */ }
+                }, { passive: true });
+                this._slaPredictionAttached = true;
+            }
+        } catch (e) { /* ignore */ }
+
         // Ensure footer responds to sidebar collapse/expand events
         try {
             if (typeof window.addEventListener === 'function') {
