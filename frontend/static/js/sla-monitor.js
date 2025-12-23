@@ -191,9 +191,12 @@ class SLAMonitor {
         try { this.slaData[issueKey].ongoingCycle.prediction = pred; } catch (e) { /* ignore */ }
 
         // If the Flowing footer is present, trigger a re-render of the breach card so it picks up the prediction
-        if (window._flowingFooter && typeof window._flowingFooter.renderBreachRisk === 'function') {
-          try { window._flowingFooter.renderBreachRisk(issueKey); } catch (e) { /* ignore */ }
-        }
+        try {
+          const footer = (typeof window.getFlowingFooter === 'function') ? window.getFlowingFooter() : (window._flowingFooter || window.flowingFooter);
+          if (footer && typeof footer.renderBreachRisk === 'function') {
+            try { footer.renderBreachRisk(issueKey); } catch (e) { /* ignore */ }
+          }
+        } catch (e) { /* ignore */ }
       } catch (e) {
         console.warn('Could not merge SLA prediction into slaData:', e);
       }

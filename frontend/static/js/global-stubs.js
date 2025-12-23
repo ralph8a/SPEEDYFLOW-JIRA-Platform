@@ -18,14 +18,24 @@
     })();
     window.FlowingShell = window.FlowingShell || (function () {
         // Internal helper to call footer API when available
+        // Use a centralized accessor so modules don't reach into multiple globals.
+        function getFlowingFooter() {
+            try {
+                if (window._flowing && window._flowing.footer) return window._flowing.footer;
+                if (window._flowingFooter) return window._flowingFooter;
+                if (window.flowingFooter) return window.flowingFooter;
+            } catch (e) { /* ignore */ }
+            return null;
+        }
+
+        // expose helper for other modules
+        try { window.getFlowingFooter = getFlowingFooter; } catch (e) { /* ignore */ }
+
         function callFooter(method, args) {
             try {
-                if (window._flowingFooter && typeof window._flowingFooter[method] === 'function') {
-                    return window._flowingFooter[method](...args);
-                }
-                // proxy compatibility
-                if (window.flowingFooter && typeof window.flowingFooter[method] === 'function') {
-                    return window.flowingFooter[method](...args);
+                const footer = getFlowingFooter();
+                if (footer && typeof footer[method] === 'function') {
+                    return footer[method](...args);
                 }
             } catch (e) {
                 console.warn('FlowingShell: footer call failed', method, e);
