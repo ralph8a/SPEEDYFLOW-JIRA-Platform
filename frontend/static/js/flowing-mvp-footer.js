@@ -89,6 +89,36 @@ class FlowingFooter {
         this.setupContextWatcher();
         this.startSuggestionRotation();
 
+        // Consolidated handler: Flowing MVP is the single source of truth for
+        // switching to the balanced view. Listen for the 'flowing:switchedToBalanced'
+        // event emitted by any legacy callers or integrations and route it here.
+        try {
+            if (!this._flowingEventAttached) {
+                window.addEventListener('flowing:switchedToBalanced', (ev) => {
+                    try {
+                        if (!ev || ev.detail === undefined || ev.detail === null) return;
+                        let issueKey = null;
+                        if (typeof ev.detail === 'string') issueKey = ev.detail;
+                        else if (typeof ev.detail === 'object' && ev.detail.issueKey) issueKey = ev.detail.issueKey;
+                        else if (typeof ev.detail === 'object' && ev.detail.key) issueKey = ev.detail.key;
+                        else issueKey = ev.detail;
+
+                        if (!issueKey) return;
+
+                        // If we're already showing the requested issue and expanded, ignore
+                        if (this.context && this.context.selectedIssue === issueKey && this.isExpanded) {
+                            console.log('🔕 flowing:switchedToBalanced ignored (already active):', issueKey);
+                            return;
+                        }
+
+                        console.log('📣 FlowingFooter handling flowing:switchedToBalanced ->', issueKey);
+                        this.switchToBalancedView(issueKey);
+                    } catch (e) { console.warn('Error handling flowing:switchedToBalanced', e); }
+                }, { passive: true });
+                this._flowingEventAttached = true;
+            }
+        } catch (e) { /* ignore */ }
+
         // Initialize audio controls (sound alerts)
         try { window.FlowingAudio && window.FlowingAudio.attachControls && window.FlowingAudio.attachControls(); } catch (e) { /* ignore */ }
 

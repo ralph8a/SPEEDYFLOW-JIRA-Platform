@@ -27,18 +27,18 @@ window.rightSidebar = window.rightSidebar || {
 // If the real footer is available, call its public API; otherwise dispatch a
 // centralized CustomEvent so other modules (e.g., flowing-mvp-footer) can react.
 function openIssueDetailsImpl(issueKey) {
+  console.warn('⚠️ right-sidebar is deprecated. Use Flowing MVP API instead (window._flowingFooter.public_switchToBalancedView).');
   try {
     if (!issueKey) return;
-
-    // Dispatch a centralized CustomEvent so any listener (Flowing MVP or others)
-    // can react and open the balanced view. Right-sidebar is deprecated and
-    // should not call Flowing internals directly.
-    try {
-      window.dispatchEvent(new CustomEvent('flowing:switchedToBalanced', { detail: issueKey }));
-    } catch (e) { /* ignore */ }
+    // Prefer calling the Flowing MVP public API directly when available
+    if (window._flowingFooter && typeof window._flowingFooter.public_switchToBalancedView === 'function') {
+      try { window._flowingFooter.public_switchToBalancedView(issueKey); return; } catch (e) { /* ignore */ }
+    }
+    // As a final fallback do nothing (right-sidebar deprecated)
   } catch (err) { /* silent */ }
 }
 
+// Keep a tiny compatibility wrapper that warns and forwards to Flowing when possible
 window.openIssueDetails = window.openIssueDetails || function (issueKey) { return openIssueDetailsImpl(issueKey); };
 window.closeSidebar = window.closeSidebar || function () { /* no-op */ };
 window.initRightSidebar = window.initRightSidebar || function () { /* no-op */ };
