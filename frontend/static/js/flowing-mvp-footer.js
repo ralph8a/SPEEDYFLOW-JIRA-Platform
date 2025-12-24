@@ -2173,8 +2173,8 @@ class FlowingFooter {
 
                                                 <div class="footer-grid-5" style="display: grid; grid-template-columns: repeat(3, 1fr) 320px 1fr; gap: 12px; padding: 16px 20px; height: 100%; max-height: 100%; overflow-y: auto; overflow-x: hidden; align-items:stretch; position:relative; box-sizing:border-box;">
 
-                <div class="left-section" style="grid-column: 1 / span 3; display: flex; flex-direction: column; gap: 12px; height:100%; min-height:0; box-sizing:border-box;">
-                    <div class="left-grid" style="display:flex;flex-direction:column;gap:12px;height:100%;min-height:0;">
+                <div class="left-section" style="grid-column: 1 / span 3; grid-row: 1 / -1; display: flex; flex-direction: column; gap: 12px; height:100%; min-height:0; box-sizing:border-box;">
+                    <div class="left-grid" style="display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;overflow:auto;box-sizing:border-box;">
                         ${description ? `
                         <div class="field-wrapper ticket-description-field" style="display:flex;flex-direction:column;gap:6px;">
                             <label class="field-label" style="color: #6b7280; font-weight: 600; font-size: 11px; margin-bottom: 4px;">Descripción</label>
