@@ -2474,16 +2474,57 @@ async function renderKanban() {
   setTimeout(() => {
     console.log('🎯 [App] Setting up issue card click handlers via canonical handler...');
     try {
-      setupIssueCardClickHandlersLocal();
+      // Prefer any existing global setup function provided by older modules
+      if (typeof setupIssueCardClickHandlers === 'function') {
+        console.log('✅ [App] Calling existing setupIssueCardClickHandlers()');
+        try { setupIssueCardClickHandlers(); } catch (e) { console.warn('setupIssueCardClickHandlers threw', e); }
+      } else if (window.setupIssueCardClickHandlers && typeof window.setupIssueCardClickHandlers === 'function') {
+        console.log('✅ [App] Calling window.setupIssueCardClickHandlers()');
+        try { window.setupIssueCardClickHandlers(); } catch (e) { console.warn('window.setupIssueCardClickHandlers threw', e); }
+      } else {
+        // Fallback to local binder
+        try { setupIssueCardClickHandlersLocal(); } catch (err) { console.warn('⚠️ Failed to setup local handlers in timeout:', err); }
+      }
     } catch (err) {
-      console.warn('⚠️ Failed to setup local handlers in timeout:', err);
+      console.warn('⚠️ Error while attempting to initialize click handlers:', err);
     }
 
-    // Debug: Test button existence
-    const buttons = document.querySelectorAll('.issue-details-btn, .btn-view-details, .issuedetailsbutton');
+    // Debug: Test button existence and ensure every details button has a handler
+    const buttons = document.querySelectorAll('.issue-details-btn, .btn-view-details, .issuedetailsbutton, .issue-details-button, .issue-details');
     console.log('🔍 [Debug] Found', buttons.length, 'details buttons after setup');
     buttons.forEach((btn, i) => {
-      console.log(`🔍 [Debug] Button ${i + 1}:`, btn.getAttribute('data-issue-key'), 'visible:', btn.offsetParent !== null);
+      try {
+        const key = btn.getAttribute('data-issue-key') || (btn.dataset && btn.dataset.issueKey) || (btn.closest && btn.closest('[data-issue-key]') && btn.closest('[data-issue-key]').getAttribute('data-issue-key'));
+        console.log(`🔍 [Debug] Button ${i + 1}:`, key, 'visible:', btn.offsetParent !== null);
+
+        // If the button has already been bound by our local setup, skip
+        if (btn._flowingBound) return;
+
+        // If an inline onclick exists or legacy openIssueDetails exists, respect it
+        if (btn.getAttribute('onclick') || btn.onclick) {
+          console.log('ℹ️ [Debug] Button has inline onclick or handler; leaving as-is');
+          btn._flowingBound = true;
+          return;
+        }
+
+        // Force-attach a safe handler to call the canonical loader
+        if (key) {
+          console.log('🔧 [Force] Attaching manual click handler for:', key);
+          btn.addEventListener('click', function (e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (_) { }
+            try {
+              if (typeof window.loadIssueDetails === 'function') {
+                window.loadIssueDetails(key);
+              } else if (window.openIssueDetails) {
+                // Back-compat fallback (should be rare)
+                try { window.openIssueDetails(key); } catch (__) { /* ignore */ }
+              }
+            } catch (err) { console.warn('Manual click handler failed for', key, err); }
+          }, { passive: false });
+          // mark as bound so delegated handler won't double-handle
+          btn._flowingBound = true;
+        }
+      } catch (e) { console.warn('Error inspecting details button', e); }
     });
   }, 100);
 }
