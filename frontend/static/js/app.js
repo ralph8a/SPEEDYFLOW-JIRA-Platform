@@ -2488,7 +2488,8 @@ async function renderKanban() {
   }, 100);
 }
 
-// Canonical loader for issue details. Use per-button handlers (no delegated listener).
+// Canonical loader for issue details. Robust to race conditions: if no renderer
+// or orchestrator is available yet, queue the request and replay when ready.
 async function loadIssueDetails(issueOrKey) {
   if (!issueOrKey) return;
   try {
@@ -2509,8 +2510,12 @@ async function loadIssueDetails(issueOrKey) {
     // Otherwise treat as issue key (string)
     const issueKey = String(issueOrKey);
 
+    // Helper: check for available handlers
+    const hasFlowing = window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function';
+    const hasRenderer = window.balancedViewRenderer && typeof window.balancedViewRenderer.renderBalancedContent === 'function';
+
     // Prefer Flowing-V2 orchestrator when available
-    if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
+    if (hasFlowing) {
       try {
         if (typeof window.flowingV2.isVisible === 'function' && window.flowingV2.isVisible()) {
           window.flowingV2.hide();
@@ -2526,7 +2531,7 @@ async function loadIssueDetails(issueOrKey) {
     }
 
     // If we have the balanced renderer available, attempt to fetch the issue payload
-    if (window.balancedViewRenderer && typeof window.balancedViewRenderer.renderBalancedContent === 'function') {
+    if (hasRenderer) {
       try {
         const resp = await fetch(`/api/issues/${encodeURIComponent(issueKey)}`);
         if (resp && resp.ok) {
@@ -2541,9 +2546,77 @@ async function loadIssueDetails(issueOrKey) {
       }
     }
 
-    // Legacy fallback removed: callers should use the canonical loader `loadIssueDetails`.
+    // No handler available right now. Queue the request and attempt delivery later
+    window.app = window.app || {};
+    window.app._pendingIssueDetails = window.app._pendingIssueDetails || [];
 
-    console.warn('No issue details handler available for', issueKey);
+    // If a delivery run is in progress, don't re-enqueue (avoid tight loops)
+    if (window.app._processingPending) {
+      console.info('loadIssueDetails: processing in-flight, skipping enqueue for', issueKey);
+      return;
+    }
+
+    // Enqueue if not already present
+    if (!window.app._pendingIssueDetails.includes(issueKey)) {
+      window.app._pendingIssueDetails.push(issueKey);
+    }
+
+    // Create a deliver function if missing
+    if (!window.app._deliverPendingIssueDetails) {
+      window.app._deliverPendingIssueDetails = async function deliverPending() {
+        if (!window.app._pendingIssueDetails || window.app._pendingIssueDetails.length === 0) return;
+        // Set processing flag to avoid re-entrancy
+        window.app._processingPending = true;
+        const keys = window.app._pendingIssueDetails.splice(0);
+        for (const k of keys) {
+          try {
+            // Try to load without re-queueing (handlers should be available by now)
+            if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
+              await window.flowingV2.loadTicketIntoBalancedView(k);
+            } else if (window.balancedViewRenderer && typeof window.balancedViewRenderer.renderBalancedContent === 'function') {
+              try {
+                const resp = await fetch(`/api/issues/${encodeURIComponent(k)}`);
+                if (resp && resp.ok) {
+                  const json = await resp.json();
+                  const issueData = json.data || json.payload || json.result || json;
+                  if (issueData) await window.balancedViewRenderer.renderBalancedContent(issueData);
+                }
+              } catch (e) { console.warn('deliverPending: failed fetch for', k, e); }
+            } else {
+              console.info('deliverPending: no handler available yet for', k);
+              // If still no handler, re-enqueue for a later attempt
+              window.app._pendingIssueDetails.push(k);
+            }
+          } catch (e) {
+            console.warn('deliverPendingIssueDetails failed for', k, e);
+          }
+        }
+        window.app._processingPending = false;
+      };
+
+      // Replay when balanced renderer signals ready
+      try {
+        document.addEventListener('balanced:ready', () => {
+          setTimeout(() => { try { window.app._deliverPendingIssueDetails(); } catch (e) { /* ignore */ } }, 50);
+        });
+      } catch (e) { /* ignore */ }
+
+      // Also poll briefly for Flowing-V2 or renderer to appear (short-lived fallback)
+      (function shortPollForHandlers() {
+        let attempts = 0;
+        const iv = setInterval(() => {
+          attempts++;
+          const ready = (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') || (window.balancedViewRenderer && typeof window.balancedViewRenderer.renderBalancedContent === 'function');
+          if (ready || attempts > 40) { // ~10s @250ms
+            try { window.app._deliverPendingIssueDetails(); } catch (e) { /* ignore */ }
+            clearInterval(iv);
+          }
+        }, 250);
+      })();
+    }
+
+    console.info('Queued loadIssueDetails for', issueKey);
+    return;
   } catch (err) {
     console.warn('loadIssueDetails error', err);
   }
