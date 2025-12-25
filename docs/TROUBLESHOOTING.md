@@ -320,7 +320,7 @@ Las sugerencias se limpian de la UI.
 ###### ✅ Flujo de Eventos
 ```javascript
 // 1. Usuario abre ticket
-openIssueDetails(issueKey) 
+loadIssueDetails(issueKey) 
   → dispatch CustomEvent('ticketSelected')
 
 // 2. Comment Suggestions escucha evento

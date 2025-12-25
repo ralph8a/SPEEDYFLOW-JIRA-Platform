@@ -20,7 +20,7 @@ class SidebarInlineEditor {
     console.log(`📝 Initializing inline editor for ${issueKey}`);
     this.currentIssue = issueKey;
     this.pendingChanges = {};
-    
+
     // Agregar botón de AI suggestions en el sidebar
     this.addAISuggestionsButton();
   }
@@ -61,7 +61,7 @@ class SidebarInlineEditor {
    */
   async loadAISuggestions() {
     console.log(`🤖 Loading AI suggestions for ${this.currentIssue}`);
-    
+
     const btn = document.getElementById('aiSuggestionsBtn');
     if (btn) {
       btn.innerHTML = '⏳ Analyzing...';
@@ -92,7 +92,7 @@ class SidebarInlineEditor {
 
       const data = await response.json();
       this.aiSuggestions = data.suggestions || [];
-      
+
       console.log(`✅ Received ${this.aiSuggestions.length} AI suggestions`);
 
       if (this.aiSuggestions.length === 0) {
@@ -329,8 +329,8 @@ class SidebarInlineEditor {
     alert(`Successfully applied ${successCount} of ${this.aiSuggestions.length} suggestions!`);
 
     // Recargar el sidebar
-    if (window.openIssueDetails) {
-      window.openIssueDetails(this.currentIssue);
+    if (typeof window.loadIssueDetails === 'function') {
+      window.loadIssueDetails(this.currentIssue);
     }
 
     // Actualizar el modal de ML si está abierto
@@ -410,7 +410,7 @@ class SidebarInlineEditor {
    */
   removeSuggestionUI(field) {
     const fieldElements = document.querySelectorAll('.field-item, .detail-section');
-    
+
     for (const el of fieldElements) {
       const suggestion = el.querySelector('.inline-ai-suggestion');
       if (suggestion) {
@@ -429,7 +429,7 @@ class SidebarInlineEditor {
    */
   updateFieldValue(field, newValue) {
     const fieldElements = document.querySelectorAll('.field-item, .detail-section');
-    
+
     for (const el of fieldElements) {
       const label = el.querySelector('.field-label, .detail-label');
       if (label && label.textContent.includes(field)) {
@@ -437,7 +437,7 @@ class SidebarInlineEditor {
         if (valueEl) {
           valueEl.textContent = this.formatSuggestionValue(newValue);
           valueEl.classList.add('field-updated');
-          
+
           // Remover highlight después de 3 segundos
           setTimeout(() => valueEl.classList.remove('field-updated'), 3000);
         }
@@ -461,11 +461,11 @@ class SidebarInlineEditor {
    */
   refreshMLAnalysisModal() {
     console.log('🔄 Refreshing ML analysis modal...');
-    
+
     // Si el modal de Smart Functions está abierto, recalcular
     if (window.smartFunctionsModal && window.smartFunctionsModal.isOpen) {
       console.log('📊 Recalculating ML analysis stats');
-      
+
       // Disparar evento personalizado para actualizar
       const event = new CustomEvent('mlAnalysisUpdate', {
         detail: { issueKey: this.currentIssue }

@@ -2683,7 +2683,7 @@ After: "John Doe commented on "Fix login bug"..."
 - Attaches click listeners to all notification cards with issue keys
 - Sets cursor to pointer for visual feedback
 - On click:
-  1. Opens issue details using `window.openIssueDetails(issueKey)`
+  1. Opens issue details using `window.loadIssueDetails(issueKey)`
   2. Closes the notification panel
   3. Marks notification as read via `markAsRead(notifId)`
 
@@ -2693,7 +2693,7 @@ User clicks notification
     ↓
 Extract issueKey from data-issue-key attribute
     ↓
-Call window.openIssueDetails(issueKey)
+Call window.loadIssueDetails(issueKey)
     ↓
 Close notification panel
     ↓
@@ -2703,7 +2703,7 @@ Decrement unread count badge
 ```
 
 **Error Handling**:
-- Checks if `window.openIssueDetails` exists before calling
+- Checks if `window.loadIssueDetails` exists before calling
 - Logs warnings if function not available
 - Gracefully handles missing issue keys
 
@@ -2745,7 +2745,7 @@ class NotificationsPanel {
 ```
 
 ##### Dependencies
-- **Frontend**: `app.js` (for `window.openIssueDetails()`)
+- **Frontend**: `app.js` (for `window.loadIssueDetails()`)
 - **Backend**: `/api/notifications` endpoint
 - **CSS**: `cards-modals.css` (notification card styling)
 - **Integration**: Right sidebar for issue details display

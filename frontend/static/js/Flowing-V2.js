@@ -556,9 +556,19 @@ class FlowingV2 {
 
     // === SECTION: Load a ticket and render full balanced view ===
     async loadTicketIntoBalancedView(issueKey, issueObj = null) {
+        // Accept either (issueKey, issueObj) OR a single issue object as the first param
         if (!issueKey && !issueObj) return null;
         try {
-            let issue = issueObj || null;
+            let issue = null;
+            let issueKeyStr = null;
+            if (issueKey && typeof issueKey === 'object') {
+                // caller passed an issue object as first argument
+                issue = issueKey;
+                try { issueKeyStr = issue && (issue.key || (issue.fields && issue.fields.key)) ? issue.key || issue.fields.key : null; } catch (__) { issueKeyStr = null; }
+            } else {
+                issueKeyStr = issueKey;
+                issue = issueObj || null;
+            }
 
             // Try common global caches first
             try {
@@ -573,7 +583,8 @@ class FlowingV2 {
             // Fallback: fetch minimal issue representation
             if (!issue) {
                 try {
-                    const resp = await fetch(`/api/servicedesk/request/${issueKey}`);
+                    const keyToFetch = issueKeyStr || issueKey;
+                    const resp = await fetch(`/api/servicedesk/request/${keyToFetch}`);
                     if (resp && resp.ok) {
                         const d = await resp.json();
                         issue = d?.data || d;
@@ -587,9 +598,14 @@ class FlowingV2 {
                     const content = await this.renderBalancedContent(issue);
                     const balancedMain = document.getElementById('BalancedMain') || (this.root && this.root.querySelector('#BalancedMain')) || document.querySelector('#BalancedMain');
                     if (balancedMain) {
-                        try { balancedMain.innerHTML = ''; } catch (__) { /* ignore */ }
-                        if (content && content.nodeType) balancedMain.appendChild(content);
-                        else if (typeof content === 'string') balancedMain.innerHTML = content;
+                        // Only replace BalancedMain content if the renderer returned a node/string
+                        if (content && (content.nodeType || typeof content === 'string')) {
+                            try { balancedMain.innerHTML = ''; } catch (__) { /* ignore */ }
+                            if (content.nodeType) balancedMain.appendChild(content);
+                            else balancedMain.innerHTML = content;
+                        } else {
+                            // Renderer likely wrote directly into the DOM; do not clear
+                        }
                     }
                 }
             } catch (e) { console.warn('FlowingV2: renderBalancedContent failed', e); }

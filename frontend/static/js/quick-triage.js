@@ -44,7 +44,7 @@ class QuickTriage {
   isSnoozed(issueKey) {
     const snoozeData = this.snoozedTickets[issueKey];
     if (!snoozeData) return false;
-    
+
     const now = Date.now();
     if (now > snoozeData.until) {
       // Snooze expired, remove it
@@ -78,11 +78,11 @@ class QuickTriage {
       // Filter criteria
       const isUnassigned = !issue.assignee || issue.assignee === 'Unassigned' || issue.assignee === 'No assignee';
       const isHighPriority = issue.severity === 'Critico' || issue.severity === 'Alto' || issue.severity === 'Mayor';
-      
+
       // Use last_real_change like app.js cards, fallback to updated or created
       const lastChange = issue.last_real_change || issue.updated || issue.created;
       const isStale = this.isOlderThan(lastChange, 3); // 3+ days without changes
-      
+
       return isUnassigned || isHighPriority || isStale;
     });
   }
@@ -104,8 +104,8 @@ class QuickTriage {
    */
   async open() {
     // Get current issues from window.app cache
-    const allIssues = window.app?.issuesCache 
-      ? Array.from(window.app.issuesCache.values()) 
+    const allIssues = window.app?.issuesCache
+      ? Array.from(window.app.issuesCache.values())
       : [];
 
     if (allIssues.length === 0) {
@@ -114,7 +114,7 @@ class QuickTriage {
     }
 
     const triageIssues = this.filterTriageIssues(allIssues);
-    
+
     if (triageIssues.length === 0) {
       this.showAllClearState();
       return;
@@ -148,7 +148,7 @@ class QuickTriage {
     `;
 
     document.body.appendChild(modal);
-    
+
     // Animate in
     setTimeout(() => modal.classList.add('active'), 10);
   }
@@ -174,12 +174,12 @@ class QuickTriage {
 
       return `
         <div class="triage-issue-card" data-issue-key="${issue.key}">
-          <div class="triage-issue-header">
-            <span class="triage-issue-key" onclick="openIssueDetails('${issue.key}')">${issue.key}</span>
+            <div class="triage-issue-header">
+            <span class="triage-issue-key" onclick="window.loadIssueDetails('${issue.key}')">${issue.key}</span>
             <span class="triage-severity ${severityClass}">${issue.severity || 'Normal'}</span>
             ${ageTag ? `<span class="triage-age-tag">${ageTag}</span>` : ''}
           </div>
-          <div class="triage-issue-summary" onclick="openIssueDetails('${issue.key}')">${issue.summary || 'No summary'}</div>
+          <div class="triage-issue-summary" onclick="window.loadIssueDetails('${issue.key}')">${issue.summary || 'No summary'}</div>
           <div class="triage-issue-meta">
             ${isUnassigned ? '<span class="triage-meta-badge unassigned">👤 Unassigned</span>' : `<span class="triage-meta-badge">👤 ${issue.assignee}</span>`}
             ${issue.status ? `<span class="triage-meta-badge">📊 ${issue.status}</span>` : ''}
@@ -219,12 +219,12 @@ class QuickTriage {
    */
   getAgeTag(dateString) {
     if (!dateString) return null;
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays > 30) return '🔴 30+ days';
     if (diffDays > 14) return '🟠 14+ days';
     if (diffDays > 7) return '🟡 7+ days';

@@ -395,11 +395,11 @@ class AIQueueAnalyzer {
         // Close AI modal
         this.close();
 
-        // Open ticket details
+        // Open ticket details (prefer orchestrator / canonical loader)
         if (typeof showTicketDetails === 'function') {
           showTicketDetails(issueKey);
-        } else if (typeof openIssueDetails === 'function') {
-          openIssueDetails(issueKey);
+        } else if (typeof window.loadIssueDetails === 'function') {
+          window.loadIssueDetails(issueKey);
         } else if (window.rightSidebar) {
           window.rightSidebar.open(issueKey);
         }

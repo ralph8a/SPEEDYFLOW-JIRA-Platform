@@ -209,8 +209,11 @@ export async function renderBalancedContent(issue) {
             <div id="BalancedMain" class="footer-grid-6">
                 <div class="left-arriba widget widget-contacts" role="region" aria-label="Contact and comments">
                     <div id="contactCardContainer" class="contact-card-container"></div>
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
-                        <h4>Chat with ${escapeHtml(reporterName || 'Reporter')}</h4>
+                    <div style="display:flex; align-items:center; gap:12px; justify-content:space-between; margin-top:6px;">
+                        <div style="display:flex;flex-direction:column;">
+                            <div class="issue-key-badge" id="balancedIssueKey" style="font-weight:600; color:var(--accent-color,#7c3aed);">${escapeHtml(issue && issue.key ? issue.key : '')}</div>
+                            <h4 style="margin:0;">Chat with ${escapeHtml(reporterName || 'Reporter')}</h4>
+                        </div>
                         <span id="commentCountFooter">(0)</span>
                     </div>
                     <div class="comments-section">

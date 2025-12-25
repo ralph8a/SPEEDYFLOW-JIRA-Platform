@@ -2389,11 +2389,11 @@ async function renderKanban() {
         window.transparencyManager.applyTransparency();
       }
 
-      // Re-setup click handlers
-      if (typeof setupIssueCardClickHandlers === 'function') {
-        setupIssueCardClickHandlers();
-      } else if (window.setupIssueCardClickHandlers) {
-        window.setupIssueCardClickHandlers();
+      // Re-setup click handlers (use app-local canonical handler)
+      try {
+        setupIssueCardClickHandlersLocal();
+      } catch (err) {
+        console.warn('Failed to setup local issue card click handlers', err);
       }
 
       currentColumnChunk = endIdx;
@@ -2446,97 +2446,142 @@ async function renderKanban() {
 
   // Setup issue card click handlers (for details buttons)
   console.log('🎯 [App] About to setup click handlers...');
+  // Local fallback implementation so app does not depend on deprecated external files.
+  function setupIssueCardClickHandlersLocal() {
+    try {
+      const selector = '.btn-view-details, .issue-details-btn, .issuedetailsbutton, .issue-details-button, .issue-details, .btn-view-details';
+      const nodes = document.querySelectorAll(selector);
+      nodes.forEach(btn => {
+        if (!btn || btn._flowingBound) return;
+        btn.addEventListener('click', async function (e) {
+          try {
+            e.preventDefault(); e.stopPropagation();
+            const issueKey = btn.getAttribute('data-issue-key') || (btn.dataset && btn.dataset.issueKey) || (btn.closest && btn.closest('[data-issue-key]') && btn.closest('[data-issue-key]').getAttribute('data-issue-key'));
+            if (!issueKey) return;
+            // Canonical handler for opening issue details within the app
+            try {
+              await loadIssueDetails(issueKey);
+            } catch (err) {
+              console.warn('loadIssueDetails failed in click handler', err);
+            }
+          } catch (err) { console.warn('details button handler failed', err); }
+        }, { passive: false });
+        btn._flowingBound = true;
+      });
+    } catch (e) { console.warn('setupIssueCardClickHandlersLocal failed', e); }
+  }
 
   setTimeout(() => {
-    console.log('🎯 [App] Timeout fired, checking functions...');
-    console.log('🎯 [App] setupIssueCardClickHandlers exists?', typeof setupIssueCardClickHandlers);
-    console.log('🎯 [App] window.setupIssueCardClickHandlers exists?', typeof window.setupIssueCardClickHandlers);
-
-    if (typeof setupIssueCardClickHandlers === 'function') {
-      console.log('✅ [App] Calling setupIssueCardClickHandlers...');
-      setupIssueCardClickHandlers();
-    } else if (window.setupIssueCardClickHandlers) {
-      console.log('✅ [App] Calling window.setupIssueCardClickHandlers...');
-      window.setupIssueCardClickHandlers();
-    } else {
-      console.error('❌ [App] No setupIssueCardClickHandlers function found!');
+    console.log('🎯 [App] Setting up issue card click handlers via canonical handler...');
+    try {
+      setupIssueCardClickHandlersLocal();
+    } catch (err) {
+      console.warn('⚠️ Failed to setup local handlers in timeout:', err);
     }
 
     // Debug: Test button existence
-    const buttons = document.querySelectorAll('.issue-details-btn');
+    const buttons = document.querySelectorAll('.issue-details-btn, .btn-view-details, .issuedetailsbutton');
     console.log('🔍 [Debug] Found', buttons.length, 'details buttons after setup');
     buttons.forEach((btn, i) => {
       console.log(`🔍 [Debug] Button ${i + 1}:`, btn.getAttribute('data-issue-key'), 'visible:', btn.offsetParent !== null);
-
-      // Centralized handler: wire kanban card button to FlowingV2 show/hide + loader.
-      try {
-        const issueKey = btn.getAttribute('data-issue-key') || btn.dataset.issueKey;
-        // Avoid re-binding
-        if (!btn._flowingBound) {
-          btn.addEventListener('click', async function (e) {
-            try {
-              e.preventDefault();
-              e.stopPropagation();
-              if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
-                // If visible, hide; otherwise load the ticket (which will call show())
-                try {
-                  if (typeof window.flowingV2.isVisible === 'function' && window.flowingV2.isVisible()) {
-                    window.flowingV2.hide();
-                    return;
-                  }
-                } catch (e) { /* ignore */ }
-                try { await window.flowingV2.loadTicketIntoBalancedView(issueKey); } catch (err) { console.warn('flowingV2 load failed', err); }
-                return;
-              }
-              // Fallback to legacy global
-              if (typeof window.openIssueDetails === 'function') {
-                window.openIssueDetails(issueKey);
-                return;
-              }
-            } catch (err) { console.warn('details button handler failed', err); }
-          }, { passive: false });
-          btn._flowingBound = true;
-        }
-      } catch (e) { console.warn('Could not bind details button', e); }
     });
   }, 100);
 }
 
-// Delegated handler: ensure any dynamically-added kanban card details buttons
-// wired to FlowingV2 hide/show + loader. This avoids binding in multiple places.
-(function () {
+// Canonical loader for issue details. Use per-button handlers (no delegated listener).
+async function loadIssueDetails(issueOrKey) {
+  if (!issueOrKey) return;
+  try {
+    // If caller provided a full issue object, prefer to render it directly
+    if (typeof issueOrKey === 'object') {
+      const issueObj = issueOrKey;
+      if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
+        try { await window.flowingV2.loadTicketIntoBalancedView(issueObj); return; } catch (err) { console.warn('flowingV2.loadTicketIntoBalancedView failed for object', err); }
+      }
+      if (window.balancedViewRenderer && typeof window.balancedViewRenderer.renderBalancedContent === 'function') {
+        try { await window.balancedViewRenderer.renderBalancedContent(issueObj); return; } catch (err) { console.warn('balancedViewRenderer.renderBalancedContent failed for object', err); }
+      }
+      // Nothing else to do for object
+      console.warn('No renderer available for issue object', issueObj && issueObj.key);
+      return;
+    }
+
+    // Otherwise treat as issue key (string)
+    const issueKey = String(issueOrKey);
+
+    // Prefer Flowing-V2 orchestrator when available
+    if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
+      try {
+        if (typeof window.flowingV2.isVisible === 'function' && window.flowingV2.isVisible()) {
+          window.flowingV2.hide();
+          return;
+        }
+      } catch (__) { /* ignore */ }
+      try {
+        await window.flowingV2.loadTicketIntoBalancedView(issueKey);
+        return;
+      } catch (err) {
+        console.warn('flowingV2.loadTicketIntoBalancedView failed', err);
+      }
+    }
+
+    // If we have the balanced renderer available, attempt to fetch the issue payload
+    if (window.balancedViewRenderer && typeof window.balancedViewRenderer.renderBalancedContent === 'function') {
+      try {
+        const resp = await fetch(`/api/issues/${encodeURIComponent(issueKey)}`);
+        if (resp && resp.ok) {
+          const json = await resp.json();
+          const issueData = json.data || json.payload || json.result || json;
+          if (issueData) {
+            try { await window.balancedViewRenderer.renderBalancedContent(issueData); return; } catch (err) { console.warn('balancedViewRenderer.renderBalancedContent failed after fetch', err); }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch issue for balanced renderer', err);
+      }
+    }
+
+    // Legacy fallback removed: callers should use the canonical loader `loadIssueDetails`.
+
+    console.warn('No issue details handler available for', issueKey);
+  } catch (err) {
+    console.warn('loadIssueDetails error', err);
+  }
+}
+
+// Delegated handler: catch clicks on dynamically-created details buttons and
+// route them to the canonical loader. This ensures buttons added after initial
+// render are handled without requiring manual re-binding everywhere.
+(function attachDelegatedDetailsHandler() {
   try {
     if (typeof window === 'undefined') return;
     if (window._flowingDetailsDelegated) return;
     document.addEventListener('click', async function (e) {
       try {
-        const btn = e.target && e.target.closest && e.target.closest('.issuedetailsbutton');
+        const btn = e.target && e.target.closest && e.target.closest('.issuedetailsbutton, .btn-view-details, .issue-details-btn, .issue-details-button, .issue-details');
         if (!btn) return;
-        const issueKey = btn.getAttribute('data-issue-key') || (btn.dataset && btn.dataset.issueKey) || (btn.closest && btn.closest('[data-issue-key]') && btn.closest('[data-issue-key]').getAttribute('data-issue-key'));
-        if (!issueKey) return;
         // If a specific handler was bound already, let it handle the event
         if (btn._flowingBound) return;
+        const issueKey = btn.getAttribute('data-issue-key') || (btn.dataset && btn.dataset.issueKey) || (btn.closest && btn.closest('[data-issue-key]') && btn.closest('[data-issue-key]').getAttribute('data-issue-key'));
+        if (!issueKey) return;
         e.preventDefault();
         e.stopPropagation();
-        if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
-          try {
-            if (typeof window.flowingV2.isVisible === 'function' && window.flowingV2.isVisible()) {
-              window.flowingV2.hide();
-              return;
-            }
-          } catch (__) { /* ignore */ }
-          try { await window.flowingV2.loadTicketIntoBalancedView(issueKey); } catch (err) { console.warn('flowingV2 load failed', err); }
-          return;
-        }
-        if (typeof window.openIssueDetails === 'function') {
-          window.openIssueDetails(issueKey);
-          return;
-        }
+        try { await loadIssueDetails(issueKey); } catch (err) { console.warn('delegated loadIssueDetails failed', err); }
       } catch (err) { console.warn('delegated details handler failed', err); }
     }, { passive: false });
     window._flowingDetailsDelegated = true;
   } catch (e) { console.warn('Could not attach delegated details handler', e); }
 })();
+
+// Expose canonical function globally for backward compatibility
+window.loadIssueDetails = loadIssueDetails;
+// Also expose on `window.app` namespace for legacy callers that use `window.app.loadIssueDetails`
+window.app = window.app || {};
+if (typeof window.app.loadIssueDetails !== 'function') {
+  window.app.loadIssueDetails = loadIssueDetails;
+}
+
+// Legacy global 'openIssueDetails' alias removed. Use `window.loadIssueDetails` or `window.app.loadIssueDetails` instead.
 
 /**
  * Apply SLA styling to all visible ticket keys
@@ -3064,7 +3109,7 @@ function attachListEventListeners() {
 
   // View details behavior is centralized via `window.setupIssueCardClickHandlers`
   // and `window.openIssueDetails`. Avoid adding duplicate listeners here.
-  console.log('ℹ️ [App] Details click handlers delegated to setupIssueCardClickHandlers/openIssueDetails');
+  console.log('ℹ️ [App] Details click handlers will be set up via setupIssueCardClickHandlersLocal -> loadIssueDetails');
 
   // Assignee edit toggle checkbox
   const editToggle = document.getElementById('enableAssigneeEdit');
@@ -3954,8 +3999,8 @@ async function loadSLAForListView(issues) {
   console.log(`✅ SLA data loaded: ${issuesToFetch.length} issues (Total: ${state.listView.slaLoadedCount})`);
 }
 
-// Export openIssueDetails to global scope for onclick handlers
-window.openIssueDetails = openIssueDetails;
+// Legacy: do not create/alias `window.openIssueDetails` here.
+// Use the canonical `window.loadIssueDetails` / `window.app.loadIssueDetails` instead.
 
 /**
  * Show notification toast

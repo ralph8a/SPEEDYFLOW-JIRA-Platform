@@ -263,13 +263,16 @@ class NotificationsPanel {
         e.preventDefault();
         console.log(`📍 Notification clicked: ${issueKey}`);
 
-        // Open issue details in right sidebar
-        if (window.openIssueDetails) {
+        // Open issue details using canonical loader
+        if (typeof window.loadIssueDetails === 'function') {
           console.log(`🔍 Opening issue details for: ${issueKey}`);
-          window.openIssueDetails(issueKey);
+          window.loadIssueDetails(issueKey);
+          this.closePanel();
+        } else if (window.app && typeof window.app.loadIssueDetails === 'function') {
+          window.app.loadIssueDetails(issueKey);
           this.closePanel();
         } else {
-          console.warn('⚠️ window.openIssueDetails not available');
+          console.warn('⚠️ No handler available to open issue details');
         }
 
         // Mark as read
