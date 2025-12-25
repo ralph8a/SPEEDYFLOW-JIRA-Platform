@@ -35,3 +35,4 @@ node_modules/
 .idea/
 .vscode/
 # Ignored large data files\napi/data/full_ml_tickets.json\napi/data/discarded_ml_ticketss.json\n
+data/app.db
