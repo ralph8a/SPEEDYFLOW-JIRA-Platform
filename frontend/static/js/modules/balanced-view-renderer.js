@@ -1,0 +1,235 @@
+// Balanced View Renderer Module (clean)
+// Minimal, DOM-focused renderer used by Flowing-V2 for the balanced/footer UI.
+// Uses the project's CUSTOM_FIELDS_REFERENCE mapping when available to
+// render custom fields with correct labels and ordering.
+
+export async function renderBalancedContent(issue) {
+    try {
+        // Ensure a container exists
+        let container = document.getElementById('balancedContentContainer');
+        if (!container) {
+            try {
+                container = document.createElement('div');
+                container.id = 'balancedContentContainer';
+                container.className = 'flowing-v2-root';
+                const parent = document.getElementById('app') || document.getElementById('root') || document.body || document.documentElement;
+                parent.appendChild(container);
+            } catch (e) { /* ignore */ }
+        }
+        if (!container) return;
+
+        const escapeHtml = (str) => String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const getField = (k) => {
+            try {
+                if (!issue) return null;
+                if (issue.fields && issue.fields[k] !== undefined) return issue.fields[k];
+                if (issue.custom_fields && issue.custom_fields[k] !== undefined) return issue.custom_fields[k];
+                if (issue.serviceDesk?.requestFieldValues && issue.serviceDesk.requestFieldValues[k] !== undefined) return issue.serviceDesk.requestFieldValues[k];
+                if (issue[k] !== undefined) return issue[k];
+            } catch (e) { /* ignore */ }
+            return null;
+        };
+
+        const formatValue = (v) => {
+            if (v === null || v === undefined) return '';
+            if (typeof v === 'string') return v;
+            if (Array.isArray(v)) return v.map(x => x && (x.name || x.value || x)).join(', ');
+            return (v && (v.name || v.displayName || v.value)) || String(v);
+        };
+
+        const summary = escapeHtml(issue && (issue.summary || issue.key) || 'No title');
+        const description = escapeHtml(formatValue(issue && (issue.description || getField('description'))));
+
+        // Attempt to load the custom-fields mapping (non-blocking fallback to fetch)
+        let mapping = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
+        if (!mapping) {
+            try {
+                const resp = await fetch('/data/CUSTOM_FIELDS_REFERENCE.json');
+                if (resp && resp.ok) {
+                    mapping = await resp.json();
+                    try { window.CUSTOM_FIELDS_REFERENCE = mapping; } catch (_) { /* ignore */ }
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        const findMappingLabel = (key) => {
+            try {
+                if (!mapping || !mapping.categories) return null;
+                for (const catName of Object.keys(mapping.categories)) {
+                    const cat = mapping.categories[catName];
+                    if (!cat || !cat.fields) continue;
+                    if (Object.prototype.hasOwnProperty.call(cat.fields, key)) return cat.fields[key].label || null;
+                }
+            } catch (e) { /* ignore */ }
+            return null;
+        };
+
+        const renderFieldBlock = (label, rawVal, opts = {}) => {
+            const v = escapeHtml(formatValue(rawVal));
+            const style = opts.fullWidth ? ' style="flex-basis:100%"' : '';
+            return `<div class="field-wrapper"${style}><label class="field-label">${escapeHtml(label)}</label><div class="field-input">${v}</div></div>`;
+        };
+
+        const humanizeKey = (k) => {
+            if (!k) return '';
+            return String(k)
+                .replace(/^customfield_/, '')
+                .replace(/_/g, ' ')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .replace(/\b\w/g, c => c.toUpperCase());
+        };
+
+        // Prioritized essential fields (canonical names); mapping labels will override when available
+        const prioritizedKeys = ['priority', 'assignee', 'status', 'reporter', 'summary'];
+        const displayedKeys = new Set();
+        let longCustomFieldsHTML = '';
+        let fieldsHtml = '';
+
+        for (const k of prioritizedKeys) {
+            let val = getField(k) || (issue.fields && issue.fields[k]);
+            // 'summary' is a top-level property
+            if (k === 'summary' && !val) val = issue && (issue.summary || issue.key);
+            if (!val) continue;
+            const label = findMappingLabel(k) || humanizeKey(k);
+            fieldsHtml += renderFieldBlock(label, val, { fullWidth: k === 'summary' });
+            displayedKeys.add(k);
+        }
+
+        // If mapping exists, iterate mapping categories to render known custom fields in order
+        if (mapping && mapping.categories) {
+            try {
+                for (const catName of Object.keys(mapping.categories)) {
+                    const cat = mapping.categories[catName];
+                    if (!cat || !cat.fields) continue;
+                    for (const fieldId of Object.keys(cat.fields)) {
+                        if (displayedKeys.has(fieldId)) continue;
+                        const raw = (issue.fields && issue.fields[fieldId]) || (issue.custom_fields && issue.custom_fields[fieldId]) || issue[fieldId];
+                        if (raw === undefined || raw === null) continue;
+                        const label = cat.fields[fieldId] && cat.fields[fieldId].label ? cat.fields[fieldId].label : humanizeKey(fieldId);
+                        const val = formatValue(raw);
+                        if (!val) continue;
+                        if (String(val).length > 200 || (Array.isArray(raw) && raw.length > 5)) {
+                            longCustomFieldsHTML += renderFieldBlock(label, raw, { fullWidth: true });
+                        } else {
+                            fieldsHtml += renderFieldBlock(label, raw);
+                        }
+                        displayedKeys.add(fieldId);
+                    }
+                }
+            } catch (e) { /* ignore mapping iteration errors */ }
+        }
+
+        // Fallback: include a few standard remaining fields not covered by mapping
+        const extras = ['labels', 'components', 'fixVersions', 'created', 'updated', 'duedate'];
+        for (const ex of extras) {
+            if (displayedKeys.has(ex)) continue;
+            const raw = getField(ex) || (issue.fields && issue.fields[ex]) || issue[ex];
+            if (!raw) continue;
+            const label = findMappingLabel(ex) || humanizeKey(ex);
+            fieldsHtml += renderFieldBlock(label, raw);
+            displayedKeys.add(ex);
+        }
+
+        // Build remaining fields list
+        let remainingFieldsHTML = '';
+        try {
+            const allObj = Object.assign({}, issue.fields || {}, issue.custom_fields || {});
+            Object.keys(allObj).forEach(k => {
+                if (!k) return;
+                if (displayedKeys.has(k)) return;
+                if (/^(attachment|comment|worklog|issuelinks|timetracking)$/i.test(k)) return;
+                const raw = allObj[k];
+                const val = formatValue(raw);
+                if (!val) return;
+                remainingFieldsHTML += renderFieldBlock(findMappingLabel(k) || humanizeKey(k), raw);
+            });
+        } catch (e) { /* ignore */ }
+
+        if (longCustomFieldsHTML) fieldsHtml = `${longCustomFieldsHTML}${fieldsHtml}`;
+
+        // Inject template
+        container.innerHTML = `
+            <div id="BalancedMain" class="footer-grid-5">
+                <div class="left-arriba widget widget-comments" role="region" aria-label="Comments">
+                    <div class="comments-section">
+                        <div class="attachments-preview-footer" id="AttachmentsPreviewFooter"><div class="attachments-list" id="AttachmentsListFooter"></div></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <h4>Comments</h4>
+                            <span id="commentCountFooter">(0)</span>
+                        </div>
+                        <div class="comment-composer">
+                            <textarea id="footerCommentText" placeholder="Write a comment..."></textarea>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div style="display:flex; gap:8px;"><button id="attachFooterBtn" class="comment-toolbar-btn">Attach</button><button class="btn-add-comment-footer">Send</button></div>
+                                <label><input type="checkbox" id="commentInternalFooter"> Internal</label>
+                            </div>
+                        </div>
+                        <div class="comments-list"><p>Loading comments...</p></div>
+                    </div>
+                </div>
+
+                <div class="description-block widget widget-description" role="region" aria-label="Description and fields">
+                    <div class="ticket-description-field">
+                        <label class="field-label">Descripción</label>
+                        <div id="ticketDescriptionContent" class="field-input description-input">${description}</div>
+                    </div>
+                    <div id="essentialFieldsGrid" class="essential-fields-grid">${fieldsHtml}</div>
+                    <div style="display:flex; justify-content:flex-end;"><button id="toggleAllFieldsBtn" class="all-fields-toggle">Show all fields</button></div>
+                    <div id="allFieldsPanel" class="all-fields-panel" style="display:none;">${remainingFieldsHTML || '<div style="color:#6b7280;padding:8px;">No additional fields</div>'}</div>
+                </div>
+
+                <div class="sla-monitor-wrapper widget widget-sla" role="region" aria-label="SLA">
+                    <div id="slaMonitorContainer" class="sla-monitor-container">Loading SLA...</div>
+                </div>
+
+                <div class="breach-wrapper widget widget-breach" role="region" aria-label="Breach risk">
+                    <div class="breach-risk-content"></div>
+                </div>
+
+                <div class="attachments-section widget widget-attachments" role="region" aria-label="Attachments">
+                    <h4>Attachments</h4>
+                    <div id="AttachmentsListRight" class="attachments-grid"></div>
+                    <div id="AttachmentsListHeader" class="attachments-grid"></div>
+                </div>
+            </div>
+        `;
+
+        // Attach toggle handler
+        try {
+            const toggleBtn = container.querySelector('#toggleAllFieldsBtn');
+            const panel = container.querySelector('#allFieldsPanel');
+            if (toggleBtn && panel) {
+                toggleBtn.addEventListener('click', () => {
+                    const hidden = panel.style.display === 'none' || !panel.style.display;
+                    panel.style.display = hidden ? 'block' : 'none';
+                    toggleBtn.textContent = hidden ? 'Hide all fields' : 'Show all fields';
+                });
+            }
+        } catch (e) { /* ignore */ }
+
+        // Signal ready for E2E tests
+        try {
+            if (container) {
+                try { container.dataset.balancedReady = '1'; } catch (__) { }
+                if (issue && issue.key) try { container.dataset.issueKey = issue.key; } catch (__) { }
+            }
+            const readyEvent = new CustomEvent('balanced:ready', { detail: { issueKey: issue && issue.key ? issue.key : null } });
+            if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') window.dispatchEvent(readyEvent);
+        } catch (e) { /* ignore */ }
+
+    } catch (e) { console.warn('balanced-view rendering error', e); }
+}
+
+// Expose a global shim for legacy code that expects a window-level renderer
+try {
+    if (typeof window !== 'undefined') {
+        window.balancedViewRenderer = window.balancedViewRenderer || {};
+        window.balancedViewRenderer.renderBalancedContent = renderBalancedContent;
+    }
+} catch (e) { /* ignore */ }

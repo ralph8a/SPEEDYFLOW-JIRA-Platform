@@ -37,7 +37,7 @@
 }
 
 /* Keep other large panels flat by default */
-:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-section, .right-section, .comments-section) {
+:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-arriba, .right-abajo, .comments-section) {
   box-shadow: none !important;
 }
 
@@ -73,7 +73,7 @@
 }
 
 /* Dark mode overrides: force readable backgrounds and contrast */
-body[data-theme="dark"] :where(.ticket-description-section, .field-input, .ml-actions-section, .comments-section, .suggestion-item, .flowing-footer, .left-section, .right-section, .panel, .panel-card, .issue-card) {
+body[data-theme="dark"] :where(.ticket-description-section, .field-input, .ml-actions-section, .comments-section, .suggestion-item, .flowing-footer, .left-arriba, .right-abajo, .panel, .panel-card, .issue-card) {
   background: linear-gradient(180deg, rgba(10, 12, 18, 0.6), rgba(8, 10, 14, 0.6)) !important;
   color: #e6eef8 !important;
   border-color: rgba(255, 255, 255, 0.04) !important;
@@ -160,8 +160,8 @@ body[data-theme="dark"] {
 .footer-subtext,
 .ticket-summary,
 .ticket-key,
-.left-section,
-.right-section {
+.left-arriba,
+.right-abajo {
   color: var(--ff-text-muted) !important;
 }
 
@@ -201,6 +201,6 @@ body[data-theme="dark"] .attachments-preview-footer {
 }
 
 /* Remove shadows for large layout panels to keep UI light and avoid heavy elevation */
-:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-section, .right-section) {
+:where(.panel, .panel-card, .sla-monitor-container, .ml-actions-section, .ticket-description-section, .left-arriba, .right-abajo) {
   box-shadow: none !important;
 }

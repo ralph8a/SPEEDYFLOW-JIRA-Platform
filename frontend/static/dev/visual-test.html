@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Flowing V2 — Visual Test</title>
+  <!-- Core styles (Flowing V2 + fallback footer styles) -->
+  <link rel="stylesheet" href="../css/flowing-v2.css">
+  <link rel="stylesheet" href="../css/flowing-mvp-footer.css">
+  <!-- Small page helpers -->
+  <link rel="stylesheet" href="./visual-test.css">
+</head>
+<body>
+  <h1>Flowing V2 — Visual Test (Attachments & Balanced View)</h1>
+
+  <p>Use the card below and click the top-right <strong>Open</strong> button to render the balanced footer with attachments, SLA and comments.</p>
+
+  <div class="card" style="position:relative; width:720px; border:1px solid #e5e7eb; padding:16px; margin:20px 0; border-radius:8px; background:#fff;">
+    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="card-title" style="font-weight:700">TEST-1: Example Issue</div>
+      <div style="position:relative;">
+        <button class="card-action-btn btn-open-balanced" data-issue-key="TEST-1" aria-label="Open balanced view">Open</button>
+      </div>
+    </div>
+    <div class="card-body" style="margin-top:12px; color:#374151;">
+      <p>Summary: Example ticket used to validate attachments rendering and Flowing V2 integration.</p>
+    </div>
+  </div>
+
+  <!-- Root container: Flowing-V2 will create the #balancedContentContainer inside #app if missing -->
+  <div id="app"></div>
+
+  <script type="module" src="./visual-test.js"></script>
+</body>
+</html>

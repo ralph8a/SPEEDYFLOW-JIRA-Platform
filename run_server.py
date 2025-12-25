@@ -8,6 +8,13 @@ Advanced modules (AI, SLA, automation) intentionally deferred.
 import os
 import sys
 from pathlib import Path
+
+# Allow running the dev server without ML/native deps by disabling ML-heavy imports.
+# Set this to '1' or 'true' to skip importing ML blueprints that require numpy/scipy/scikit-learn.
+os.environ.setdefault('SPEEDYFLOW_DISABLE_ML', os.environ.get('SPEEDYFLOW_DISABLE_ML', '1'))
+
+# Import the Flask app after ensuring the environment flag is set so that
+# `api.server` can conditionally skip ML-heavy blueprint imports.
 from api.server import app  # type: ignore
 import logging
 import argparse

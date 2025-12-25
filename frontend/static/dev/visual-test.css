@@ -1,0 +1,38 @@
+/* Minimal helpers for the visual test page */
+body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: #f8fafc;
+    color: #0f172a;
+    padding: 18px;
+}
+
+h1 {
+    margin: 0 0 16px 0;
+    font-size: 20px;
+}
+
+.card {
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+}
+
+.card-action-btn,
+.btn-open-balanced {
+    position: static;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.flowing-v2-root {
+    margin-top: 18px;
+}
+
+/* Make attachments images clearer inside the small test page */
+.attachments-preview-footer img,
+.attachment-img {
+    max-width: 160px;
+    max-height: 120px;
+}

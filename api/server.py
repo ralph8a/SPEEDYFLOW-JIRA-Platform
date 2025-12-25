@@ -55,94 +55,51 @@ from utils.api_migration import (  # noqa: E402
 from utils.db import init_db  # noqa: E402
 
 # Blueprint imports
-try:
-    from api.blueprints.issues import issues_bp  # noqa: E402
-except Exception:
-    issues_bp = None
-try:
-    from api.blueprints.comments_v2 import comments_v2_bp  # noqa: E402
-except Exception:
-    comments_v2_bp = None
-try:
-    from api.blueprints.attachments import attachments_bp  # noqa: E402
-except Exception:
-    attachments_bp = None
-try:
-    from api.blueprints.transitions import transitions_bp  # noqa: E402
-except Exception:
-    transitions_bp = None
-try:
-    from api.blueprints.ai import ai_bp  # noqa: E402
-except Exception:
-    ai_bp = None
-try:
-    from api.blueprints.notifications import notifications_bp  # noqa: E402
-except Exception:
-    notifications_bp = None
-try:
-    from api.blueprints.exports import exports_bp  # noqa: E402
-except Exception:
-    exports_bp = None
-try:
-    from api.blueprints.automations import automations_bp  # noqa: E402
-except Exception:
-    automations_bp = None
-try:
-    from api.blueprints.backgrounds import backgrounds_bp  # noqa: E402
-except Exception:
-    backgrounds_bp = None
-try:
-    from api.blueprints.webhooks import webhooks_bp  # noqa: E402
-except Exception:
-    webhooks_bp = None
-try:
-    from api.blueprints.kanban import kanban_bp  # noqa: E402
-except Exception:
-    kanban_bp = None
-try:
-    from api.blueprints.ai_suggestions import ai_suggestions_bp  # noqa: E402
-except Exception:
-    ai_suggestions_bp = None
-try:
-    from api.blueprints.header_suggestions import header_suggestions_bp  # noqa: E402
-except Exception:
-    header_suggestions_bp = None
-try:
-    from api.blueprints.sync import sync_bp  # noqa: E402
-except Exception:
-    sync_bp = None
-try:
-    from api.blueprints.sla import sla_bp  # noqa: E402
-except Exception:
-    sla_bp = None
-try:
-    from api.blueprints.copilot import copilot_bp  # noqa: E402
-except Exception:
-    copilot_bp = None
-try:
-    from api.blueprints.reports import reports_bp  # noqa: E402
-except Exception:
-    reports_bp = None
-try:
-    from api.blueprints.flowing_semantic_search import flowing_semantic_bp  # noqa: E402
-except Exception:
-    flowing_semantic_bp = None
-try:
-    from api.blueprints.flowing_comments_assistant import flowing_comments_bp  # noqa: E402
-except Exception:
-    flowing_comments_bp = None
-try:
-    from api.blueprints.comment_suggestions import comment_suggestions_bp  # noqa: E402
-except Exception:
-    comment_suggestions_bp = None
-try:
-    from api.blueprints.anomaly_detection import anomaly_detection_bp  # noqa: E402
-except Exception:
-    anomaly_detection_bp = None
-try:
-    from api.blueprints.models import models_bp  # noqa: E402
-except Exception:
-    models_bp = None
+# Allow disabling ML-heavy blueprint imports via environment variable. This
+# avoids importing numpy/scipy/scikit-learn on platforms without native
+# build toolchains (e.g., Windows dev machines without Visual C++).
+DISABLE_ML = os.getenv('SPEEDYFLOW_DISABLE_ML', '1').lower() in ('1', 'true', 'yes')
+
+# Blueprints which are considered ML-heavy and safe to skip when DISABLE_ML is set
+_SKIPPABLE_BLUEPRINTS = {
+    'ai', 'anomaly_detection', 'models', 'ai_suggestions', 'comment_suggestions',
+    'flowing_semantic_search', 'flowing_comments', 'flowing_comments_assistant'
+}
+
+def _safe_import_blueprint(module_path: str, symbol: str, bp_name: str | None = None):
+    _log = logging.getLogger(__name__)
+    if DISABLE_ML and bp_name and bp_name in _SKIPPABLE_BLUEPRINTS:
+        _log.info(f"Skipping ML-heavy blueprint import: {bp_name} due to SPEEDYFLOW_DISABLE_ML")
+        return None
+    try:
+        mod = __import__(module_path, fromlist=[symbol])
+        return getattr(mod, symbol)
+    except Exception as e:
+        _log.debug(f"Could not import {module_path}.{symbol}: {e}")
+        return None
+
+issues_bp = _safe_import_blueprint('api.blueprints.issues', 'issues_bp')
+comments_v2_bp = _safe_import_blueprint('api.blueprints.comments_v2', 'comments_v2_bp')
+attachments_bp = _safe_import_blueprint('api.blueprints.attachments', 'attachments_bp')
+transitions_bp = _safe_import_blueprint('api.blueprints.transitions', 'transitions_bp')
+ai_bp = _safe_import_blueprint('api.blueprints.ai', 'ai_bp', bp_name='ai')
+notifications_bp = _safe_import_blueprint('api.blueprints.notifications', 'notifications_bp')
+exports_bp = _safe_import_blueprint('api.blueprints.exports', 'exports_bp')
+automations_bp = _safe_import_blueprint('api.blueprints.automations', 'automations_bp')
+backgrounds_bp = _safe_import_blueprint('api.blueprints.backgrounds', 'backgrounds_bp')
+webhooks_bp = _safe_import_blueprint('api.blueprints.webhooks', 'webhooks_bp')
+kanban_bp = _safe_import_blueprint('api.blueprints.kanban', 'kanban_bp')
+ai_suggestions_bp = _safe_import_blueprint('api.blueprints.ai_suggestions', 'ai_suggestions_bp', bp_name='ai_suggestions')
+header_suggestions_bp = _safe_import_blueprint('api.blueprints.header_suggestions', 'header_suggestions_bp')
+sync_bp = _safe_import_blueprint('api.blueprints.sync', 'sync_bp')
+sla_bp = _safe_import_blueprint('api.blueprints.sla', 'sla_bp')
+copilot_bp = _safe_import_blueprint('api.blueprints.copilot', 'copilot_bp')
+reports_bp = _safe_import_blueprint('api.blueprints.reports', 'reports_bp')
+flowing_semantic_bp = _safe_import_blueprint('api.blueprints.flowing_semantic_search', 'flowing_semantic_bp', bp_name='flowing_semantic_search')
+flowing_comments_bp = _safe_import_blueprint('api.blueprints.flowing_comments_assistant', 'flowing_comments_bp', bp_name='flowing_comments')
+comment_suggestions_bp = _safe_import_blueprint('api.blueprints.comment_suggestions', 'comment_suggestions_bp', bp_name='comment_suggestions')
+anomaly_detection_bp = _safe_import_blueprint('api.blueprints.anomaly_detection', 'anomaly_detection_bp', bp_name='anomaly_detection')
+models_bp = _safe_import_blueprint('api.blueprints.models', 'models_bp', bp_name='models')
 
 try:  # pragma: no cover
     from core.api import (  # type: ignore

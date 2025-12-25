@@ -5,62 +5,111 @@
  * This module intentionally does not perform any DOM mutations; it only
  * returns a normalized prediction object for consumers to render.
  */
-(function (global) {
-    'use strict';
+/**
+ * SLA Predictor Module (ES module)
+ * Fetches and normalizes SLA breach predictions from the ML endpoint.
+ * Exports a pure function `predictSlaBreach(issueKey)` and a default API
+ * object. Also exposes `window.slaPredictor` for backward compatibility.
+ */
+// Enhanced SLA Predictor
+// - Tries multiple endpoints (prefer /ml/predict/breach when available)
+// - Accepts optional `ticketData` (summary/description/etc.) to ensure predictions
+//   are available immediately when opening a ticket.
+// - Simple client-side caching by issueKey+payload hash to avoid repeated calls.
 
-    async function predictSlaBreach(issueKey) {
-        if (!issueKey) return null;
+const _predictionCache = Object.create(null);
 
-        try {
-            const resp = await fetch('/api/models/predict/sla_breach', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ issue_key: issueKey })
-            });
+function _simpleHash(str) {
+    if (!str) return '0';
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+        h |= 0; // force 32bit
+    }
+    return (h >>> 0).toString(36);
+}
 
-            if (!resp || !resp.ok) return null;
-            const data = await resp.json();
-            const pred = data?.prediction || data;
-            if (!pred) return null;
+function _normalizePrediction(pred) {
+    if (!pred || typeof pred !== 'object') return null;
+    const risk_level = pred.risk_level || pred.risk || pred.level || 'LOW';
+    let breach_probability = null;
+    if (typeof pred.breach_probability === 'number') breach_probability = pred.breach_probability;
+    else if (typeof pred.probability === 'number') breach_probability = pred.probability;
+    else if (pred.breach_probability) {
+        const p = parseFloat(String(pred.breach_probability));
+        if (!Number.isNaN(p)) breach_probability = p;
+    }
 
-            // Normalize common fields so consumers have a consistent shape
-            const risk_level = pred.risk_level || pred.risk || pred.level || 'LOW';
-            let breach_probability = null;
-            if (typeof pred.breach_probability === 'number') breach_probability = pred.breach_probability;
-            else if (typeof pred.probability === 'number') breach_probability = pred.probability;
-            else if (pred.breach_probability) {
-                const p = parseFloat(String(pred.breach_probability));
-                if (!Number.isNaN(p)) breach_probability = p;
-            }
+    const will_breach = (pred.will_breach !== undefined && pred.will_breach !== null)
+        ? Boolean(pred.will_breach)
+        : (breach_probability !== null ? (breach_probability > 0.5) : false);
 
-            const will_breach = (pred.will_breach !== undefined && pred.will_breach !== null)
-                ? Boolean(pred.will_breach)
-                : (breach_probability !== null ? (breach_probability > 0.5) : false);
+    return Object.assign({}, pred, { risk_level, breach_probability, will_breach });
+}
 
-            const normalized = Object.assign({}, pred, {
-                risk_level,
-                breach_probability,
-                will_breach
-            });
+async function _tryEndpoint(url, payload) {
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!resp || !resp.ok) return null;
+        const data = await resp.json();
+        return data?.prediction || data || null;
+    } catch (e) {
+        try { console.warn('sla-predictor: endpoint request failed', url, e); } catch (_) { }
+        return null;
+    }
+}
 
-            // Return the normalized prediction. This module is intentionally
-            // side-effect free: it does not mutate `window.slaMonitor.slaData`
-            // nor dispatch global events. Consumers should call this function
-            // and decide how to store or broadcast the result.
+/**
+ * Predict breach using the best available model endpoint.
+ * @param {string} issueKey
+ * @param {object|null} ticketData - optional { summary, description, priority, ... }
+ * @param {object} opts - optional { endpoints: [urls], cache: true }
+ */
+export async function predictBreach(issueKey, ticketData = null, opts = {}) {
+    if (!issueKey && !ticketData) return null;
+
+    const endpoints = (opts && opts.endpoints) || [
+        '/ml/predict/breach',
+        '/api/models/predict/breach',
+        '/api/models/predict/sla_breach'
+    ];
+
+    const payload = ticketData && (typeof ticketData === 'object')
+        ? {
+            summary: ticketData.summary || (ticketData.fields && ticketData.fields.summary) || '',
+            description: ticketData.description || (ticketData.fields && ticketData.fields.description) || '',
+            issue_key: issueKey || undefined
+        }
+        : { issue_key: issueKey };
+
+    const cacheKey = `${issueKey || ''}:${_simpleHash(JSON.stringify(payload || {}))}`;
+    if (_predictionCache[cacheKey]) return _predictionCache[cacheKey];
+
+    for (let i = 0; i < endpoints.length; i++) {
+        const url = endpoints[i];
+        const raw = await _tryEndpoint(url, payload);
+        if (raw) {
+            const normalized = _normalizePrediction(raw);
+            try { _predictionCache[cacheKey] = normalized; } catch (e) { /* ignore cache failures */ }
             return normalized;
-        } catch (err) {
-            try { console.warn('sla-predictor: fetch failed', err); } catch (e) { }
-            return null;
         }
     }
 
-    const api = { predictSlaBreach };
+    return null;
+}
 
-    // Expose on window for classic script consumers
-    try { if (typeof global !== 'undefined') global.slaPredictor = global.slaPredictor || api; } catch (e) { /* ignore */ }
+// Backwards-compatible alias to the older function name
+export async function predictSlaBreach(issueKey, ticketData = null, opts = {}) {
+    return await predictBreach(issueKey, ticketData, opts);
+}
 
-    // CommonJS / AMD compatibility (if used in tooling)
-    if (typeof module !== 'undefined' && module.exports) module.exports = api;
-    else if (typeof define === 'function' && define.amd) define(() => api);
+const api = { predictBreach, predictSlaBreach };
 
-})(typeof window !== 'undefined' ? window : this);
+// Backwards-compatible global
+try { if (typeof window !== 'undefined') window.slaPredictor = window.slaPredictor || api; } catch (e) { /* ignore */ }
+
+export default api;

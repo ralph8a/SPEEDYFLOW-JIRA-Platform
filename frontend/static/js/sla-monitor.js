@@ -7,6 +7,8 @@ class SLAMonitor {
     this.slaData = {};
     this.currentIssue = null;
     this.refreshInterval = null;
+    // store ML predictions separately to avoid clobbering real SLA shapes
+    this.predictions = {};
   }
 
   /**
@@ -48,7 +50,102 @@ class SLAMonitor {
     }
 
     this.setupRefreshInterval();
+    // Kick off an asynchronous prediction fetch (do not block init)
+    try { this.predictBreachAndPublish(issueKey); } catch (e) { /* ignore */ }
     return this.slaData[issueKey];
+  }
+
+  /**
+   * Call the pure SLA predictor module (if present), store result and
+   * publish a `sla:prediction` event so consumers (UI) can react.
+   * This method is intentionally tolerant: predictors may be absent.
+   */
+  async predictBreachAndPublish(issueKey, ticketData = null) {
+    if (!issueKey) return null;
+    try {
+      const predictor = (typeof window !== 'undefined' && (window.slaPredictor || window.slaBreachRisk)) || null;
+      if (!predictor) return null;
+
+      // Prefer the new API name `predictBreach`, fall back to legacy `predictSlaBreach`.
+      const predictFn = (typeof predictor.predictBreach === 'function')
+        ? predictor.predictBreach.bind(predictor)
+        : (typeof predictor.predictSlaBreach === 'function') ? predictor.predictSlaBreach.bind(predictor) : null;
+      if (!predictFn) return null;
+
+      // Try to obtain ticket data locally to supply richer input to the predictor
+      let ticketData = null;
+      try {
+        if (typeof window !== 'undefined') {
+          // common app caches
+          if (window.state && Array.isArray(window.state.issues)) {
+            ticketData = window.state.issues.find(i => String(i.key) === String(issueKey)) || ticketData;
+          }
+          if (!ticketData && window.app && window.app.issuesCache && typeof window.app.issuesCache.get === 'function') {
+            try { ticketData = await window.app.issuesCache.get(issueKey); } catch (__) { /* ignore */ }
+          }
+        }
+      } catch (e) { /* ignore */ }
+
+      // If we still don't have ticket data, fetch a minimal representation (non-blocking is fine)
+      if (!ticketData) {
+        try {
+          const resp = await fetch(`/api/servicedesk/request/${issueKey}`);
+          if (resp && resp.ok) {
+            const d = await resp.json();
+            ticketData = d?.data || d;
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+      // Small heuristic: skip ML call for obviously closed/resolved tickets
+      try {
+        const status = ticketData && (ticketData.status || (ticketData.fields && ticketData.fields.status));
+        const statusName = status && (status.name || status.status || String(status)).toString().toLowerCase();
+        if (statusName && /closed|done|resolved|cancelled|archived/.test(statusName)) {
+          const closedPred = { will_breach: false, breach_probability: 0.0, risk_level: 'LOW', note: 'ticket-closed' };
+          try { this.predictions = this.predictions || {}; this.predictions[issueKey] = closedPred; } catch (e) { /* ignore */ }
+          try {
+            const evt = new CustomEvent('sla:prediction', { detail: { issueKey, prediction: closedPred, comparison: null } });
+            if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(evt);
+            else if (typeof document !== 'undefined' && document.dispatchEvent) document.dispatchEvent(evt);
+          } catch (e) { /* ignore */ }
+          return closedPred;
+        }
+      } catch (e) { /* ignore */ }
+
+      // Call predictor with ticket data when possible so the model can use summary/description
+      const prediction = await predictFn(issueKey, ticketData);
+      try { this.predictions = this.predictions || {}; this.predictions[issueKey] = prediction || null; } catch (e) { /* ignore */ }
+
+      // If there is SLA data, compute a simple comparison
+      let comparison = null;
+      try {
+        const sla = this.slaData && this.slaData[issueKey] ? this.slaData[issueKey] : null;
+        if (sla) {
+          const cycle = sla.cycles?.[0] || sla;
+          const sla_breached = !!cycle?.breached;
+          const pred_will = !!(prediction && prediction.will_breach);
+          comparison = {
+            matches: (pred_will === sla_breached),
+            sla_breached,
+            predicted_will_breach: pred_will,
+            predicted_probability: (prediction && (prediction.breach_probability || prediction.probability)) || null
+          };
+        }
+      } catch (e) { /* ignore */ }
+
+      // Publish event for UI consumers with prediction + optional comparison
+      try {
+        const evt = new CustomEvent('sla:prediction', { detail: { issueKey, prediction, comparison } });
+        if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(evt);
+        else if (typeof document !== 'undefined' && document.dispatchEvent) document.dispatchEvent(evt);
+      } catch (e) { /* ignore */ }
+
+      return prediction;
+    } catch (err) {
+      try { console.warn('sla-monitor: prediction failed', err); } catch (e) { }
+      return null;
+    }
   }
 
   /**
@@ -57,15 +154,61 @@ class SLAMonitor {
   renderSLAPanel(issueKey) {
     const slaData = this.slaData[issueKey];
 
-    // If no real SLA data, return an empty container marked hidden for
-    // accessibility. Avoid forcing inline `display` styles here so callers
-    // (like the Flowing footer) can decide presentation via CSS/classes.
+    // If no real SLA data is available, try to present an ML prediction
+    // if one is cached; otherwise render a placeholder and request a
+    // prediction asynchronously. This preserves the DOM-free predictor
+    // contract while allowing the UI to show a prediction panel when
+    // available.
     if (!slaData) {
-      console.log(`❌ No SLA data for ${issueKey}, not rendering panel`);
-      const container = document.createElement('div');
-      container.className = 'sla-panel-empty';
-      try { container.setAttribute('aria-hidden', 'true'); } catch (e) { /* ignore */ }
-      return container;
+      // If we already have a prediction cached, render it immediately
+      const pred = (this.predictions && this.predictions[issueKey]) ? this.predictions[issueKey] : null;
+      if (pred) {
+        try { console.log(`🔮 Rendering predicted SLA panel for ${issueKey}`); } catch (__) { }
+        // If we have SLA data, compute a lightweight comparison to show in the UI
+        let comparison = null;
+        try {
+          const sla = this.slaData && this.slaData[issueKey] ? this.slaData[issueKey] : null;
+          if (sla) {
+            const cycle = sla.cycles?.[0] || sla;
+            const sla_breached = !!cycle?.breached;
+            const pred_will = !!(pred && pred.will_breach);
+            comparison = { matches: (pred_will === sla_breached), sla_breached, predicted_will_breach: pred_will, predicted_probability: (pred && (pred.breach_probability || pred.probability)) || null };
+          }
+        } catch (e) { /* ignore */ }
+        return this._renderPredictionElement(issueKey, pred, comparison);
+      }
+
+      // No cached prediction: create a lightweight placeholder and
+      // request a prediction asynchronously. When the prediction
+      // event arrives, the placeholder will be replaced.
+      try { console.log(`❌ No SLA data for ${issueKey}, requesting prediction and rendering placeholder`); } catch (__) { }
+      const placeholder = document.createElement('div');
+      placeholder.className = 'sla-panel-empty sla-prediction-placeholder';
+      placeholder.id = `sla-prediction-placeholder-${issueKey}`;
+      try { placeholder.setAttribute('aria-hidden', 'true'); } catch (e) { /* ignore */ }
+
+      // Kick off an async prediction fetch (do not await)
+      try { this.predictBreachAndPublish(issueKey); } catch (e) { /* ignore */ }
+
+      // Listen for the prediction event and replace placeholder when available
+      try {
+        const handler = (ev) => {
+          try {
+            if (!ev || !ev.detail) return;
+            if (String(ev.detail.issueKey) !== String(issueKey)) return;
+            const p = ev.detail.prediction;
+            const comparison = ev.detail.comparison || null;
+            if (!p) return;
+            const newPanel = this._renderPredictionElement(issueKey, p, comparison);
+            if (newPanel && placeholder.parentNode) placeholder.parentNode.replaceChild(newPanel, placeholder);
+            // remove listener after first update
+            if (typeof window !== 'undefined' && window.removeEventListener) window.removeEventListener('sla:prediction', handler);
+          } catch (e) { /* ignore */ }
+        };
+        if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('sla:prediction', handler);
+      } catch (e) { /* ignore */ }
+
+      return placeholder;
     }
 
     console.log(`🎨 Rendering SLA panel for ${issueKey}:`, slaData);
@@ -134,6 +277,49 @@ class SLAMonitor {
   }
 
   // Prediction logic migrated to `frontend/static/js/modules/sla-predictor.js`.
+
+  /**
+   * Render a prediction-based SLA element (used when real SLA data is absent)
+   */
+  _renderPredictionElement(issueKey, pred, comparison = null) {
+    try {
+      const container = document.createElement('div');
+      container.className = 'sla-prediction-panel';
+      container.id = `sla-prediction-${issueKey}`;
+
+      const risk = pred?.risk_level || (pred?.risk || 'LOW');
+      const probRaw = (typeof pred?.breach_probability === 'number') ? pred.breach_probability : (typeof pred?.probability === 'number' ? pred.probability : null);
+      const prob = probRaw != null ? `${Math.round((probRaw || 0) * 100)}%` : 'N/A';
+      const will = (pred && (pred.will_breach !== undefined && pred.will_breach !== null)) ? (pred.will_breach ? 'Likely to breach' : 'Unlikely to breach') : (probRaw != null ? (probRaw > 0.5 ? 'Likely to breach' : 'Unlikely to breach') : 'Unknown');
+      const hours = (pred && (pred.hours_until_breach || pred.hours)) ? (pred.hours_until_breach || pred.hours) : null;
+      const matchText = comparison ? (comparison.matches ? 'Yes' : 'No') : '—';
+
+      container.innerHTML = `
+        <div class="sla-prediction">
+          <div class="sla-header">
+            <h3 class="sla-title">🔮 Predicted SLA</h3>
+          </div>
+          <div class="sla-content">
+            <div class="detail-row"><span class="detail-label">Risk:</span><span class="detail-value">${risk}</span></div>
+            <div class="detail-row"><span class="detail-label">Probability:</span><span class="detail-value">${prob}</span></div>
+            <div class="detail-row"><span class="detail-label">Verdict:</span><span class="detail-value">${will}</span></div>
+            ${hours ? `<div class="detail-row"><span class="detail-label">Hours to breach:</span><span class="detail-value">${hours}</span></div>` : ''}
+          </div>
+          <div class="sla-footer">
+            <div class="comparison-row"><span class="comparison-label">Matches SLA:</span><span class="comparison-value">${matchText}</span></div>
+            <small>Prediction generated by ML model</small>
+          </div>
+        </div>
+      `;
+
+      return container;
+    } catch (e) {
+      try { console.warn('sla-monitor: failed to render prediction element', e); } catch (__) { }
+      const empty = document.createElement('div');
+      empty.className = 'sla-prediction-empty';
+      return empty;
+    }
+  }
 
   /**
    * Render SLA cycle
@@ -265,5 +451,10 @@ class SLAMonitor {
   }
 }
 
-// Global instance
-window.slaMonitor = new SLAMonitor();
+// Create default instance and export for ES module consumers while
+// preserving the legacy global `window.slaMonitor` for backward compatibility.
+const slaMonitorInstance = new SLAMonitor();
+try { if (typeof window !== 'undefined') window.slaMonitor = window.slaMonitor || slaMonitorInstance; } catch (e) { /* ignore */ }
+
+export { SLAMonitor };
+export default slaMonitorInstance;

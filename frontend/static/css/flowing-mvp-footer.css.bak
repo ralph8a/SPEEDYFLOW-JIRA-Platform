@@ -1,3 +1,196 @@
+/* Minimal Flowing MVP Footer CSS (backup)
+   Only includes header/footer and balanced-view styles (light & dark)
+*/
+
+:root {
+  --flowing-header-height: 72px;
+  --flowing-footer-left: 280px;
+  --flowing-footer-right: 16px;
+  --flowing-footer-overlay-top: 72px;
+  --flowing-footer-overlay-height: calc(100% - var(--flowing-footer-overlay-top));
+  --flowing-bg-light: rgba(255, 255, 255, 0.95);
+  --flowing-bg-dark: rgba(17, 24, 39, 0.92);
+  --flowing-border: rgba(0, 0, 0, 0.06);
+}
+
+/* Footer anchored to bottom by default */
+.flowing-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--flowing-footer-left, 280px);
+  right: var(--flowing-footer-right, 16px);
+  width: calc(100% - var(--flowing-footer-left, 280px) - var(--flowing-footer-right, 16px));
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px 12px 0 0;
+  transition: all 0.22s ease;
+  background: var(--flowing-bg-light);
+  border-top: 1px solid var(--flowing-border);
+  box-sizing: border-box;
+}
+
+/* Dark mode footer */
+body.theme-dark .flowing-footer,
+[data-theme="dark"] .flowing-footer {
+  background: var(--flowing-bg-dark);
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Header inside the footer (minimal) */
+.flowing-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--flowing-header-height, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.flowing-header .flowing-brand {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+}
+
+body.theme-dark .flowing-header .flowing-brand,
+[data-theme="dark"] .flowing-header .flowing-brand {
+  color: #ffffff;
+}
+
+/* Balanced view overlay: footer covers board area */
+.flowing-footer.balanced-active {
+  position: fixed;
+  top: var(--flowing-footer-overlay-top, 72px);
+  bottom: auto;
+  height: var(--flowing-footer-overlay-height, calc(100% - var(--flowing-footer-overlay-top, 72px)));
+  left: var(--flowing-footer-left, 280px);
+  right: var(--flowing-footer-right, 16px);
+  width: calc(100% - var(--flowing-footer-left, 280px) - var(--flowing-footer-right, 16px));
+  border-radius: 12px;
+  z-index: 2000;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(124, 58, 237, 0.08);
+  box-sizing: border-box;
+}
+
+/* Dark mode balanced overlay */
+body.theme-dark .flowing-footer.balanced-active,
+[data-theme="dark"] .flowing-footer.balanced-active {
+  background: rgba(17, 24, 39, 0.92);
+}
+
+/* Hide chat-only UI pieces when balanced view is active */
+.flowing-footer.balanced-active .flowing-composer,
+.flowing-footer.balanced-active .flowing-toggle-btn,
+.flowing-footer.balanced-active .flowing-suggestion {
+  display: none !important;
+}
+
+/* Dim the main board while balanced view is open */
+body.flowing-balanced-active #kanbanView,
+body.flowing-balanced-active .board-wrapper {
+  opacity: 0.12 !important;
+  pointer-events: none !important;
+}
+
+/* Accessibility helper */
+.flowing-footer[aria-hidden="true"] {
+  display: none !important;
+}
+
+/* Balanced content container layout - minimal layout rules so JS-inserted content is visible */
+.balanced-content-container,
+#balancedContentContainer {
+  /* Add top padding to account for the footer header so balanced content
+     doesn't render underneath the header. Uses CSS variable set by JS. */
+  padding: calc(var(--flowing-header-height, 72px) + 16px) 16px 16px 16px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.balanced-wrapper {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+}
+
+.balanced-content-container .left-section {
+  flex: 1 1 auto;
+  min-width: 280px;
+  overflow: auto;
+}
+
+.balanced-content-container .right-section {
+  flex: 0 0 360px;
+  max-width: 360px;
+  overflow: auto;
+}
+
+/* Grid helpers for the 4-column layout */
+.footer-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  /* Mirrored inline defaults used by JS (can be overridden by inline styles) */
+  padding: 16px 20px;
+  max-height: calc(60vh - 250px);
+  overflow-y: auto;
+  align-items: start;
+  position: relative;
+}
+
+.footer-grid-4 .left-section {
+  grid-column: 1 / span 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.footer-grid-4 .right-section {
+  grid-column: 4 / span 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* When the 4-column grid is used as the footer balanced view, override
+   the default right-section sizing applied elsewhere so the right column
+   can occupy its grid cell (useful when JS switches the grid to 50%/50%). */
+.footer-grid-4>.right-section,
+.footer-grid-4 .right-section {
+  max-width: none !important;
+  flex: 1 1 auto !important;
+  min-width: 0;
+  width: auto;
+}
+
+.comments-section {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.comment-composer textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+/* Make sure balanced view is visible by default when active */
+.flowing-footer.balanced-active #balancedView {
+  display: block !important;
+}
 
 /* Minimal Flowing MVP Footer CSS
    Only includes header/footer and balanced-view styles (light & dark)

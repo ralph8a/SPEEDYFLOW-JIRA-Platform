@@ -1,0 +1,119 @@
+// Backup of global-stubs.js — created before Flowing-V2 migration
+// Original file preserved for review.
+
+// Global stubs to avoid ReferenceError when modules call missing functions
+// These are safe no-ops and can be overridden by full implementations.
+(function () {
+    // Centralized Flowing shell: unify expand/collapse and view switching logic here.
+
+    // Quiet module-level verbose console.log output unless explicitly enabled by
+    // setting `window.__FLOWING_DEBUG = true` from the browser console.
+    // This prevents noisy debug logs from altering developer workflows.
+    (function () {
+        try {
+            if (!window.__FLOWING_DEBUG) {
+                const _origLog = console.log.bind(console);
+                console.log = function () { /* suppressed debug */ };
+                // keep a pointer in case someone wants to restore
+                console.__flowing_orig_log = _origLog;
+            }
+        } catch (e) { /* silent */ }
+    })();
+    window.FlowingShell = window.FlowingShell || (function () {
+        // Internal helper to call footer API when available
+        // Use a centralized accessor so modules don't reach into multiple globals.
+        function getFlowingFooter() {
+            try {
+                if (window._flowing && window._flowing.footer) return window._flowing.footer;
+                if (window._flowingFooter) return window._flowingFooter;
+                if (window.flowingFooter) return window.flowingFooter;
+            } catch (e) { /* ignore */ }
+            return null;
+        }
+
+        // expose helper for other modules
+        try { window.getFlowingFooter = getFlowingFooter; } catch (e) { /* ignore */ }
+
+        function callFooter(method, args) {
+            try {
+                const footer = getFlowingFooter();
+                if (footer && typeof footer[method] === 'function') {
+                    return footer[method](...args);
+                }
+            } catch (e) {
+                console.warn('FlowingShell: footer call failed', method, e);
+            }
+            return undefined;
+        }
+
+        // NOTE: DOM fallbacks removed. Flowing MVP (window._flowingFooter) is the
+        // single source of truth for expand/collapse and view switching. If the
+        // footer API is not available, FlowingShell methods will no-op and log a
+        // warning so integration issues surface during development.
+
+        return {
+            expand(issueKey) {
+                const res = callFooter('flowing_expand', []);
+                if (res === undefined) {
+                    console.warn('FlowingShell: expand requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
+            },
+            collapse() {
+                const res = callFooter('flowing_collapse', []);
+                if (res === undefined) {
+                    console.warn('FlowingShell: collapse requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
+            },
+            toggle() {
+                const res = callFooter('flowing_toggle', []);
+                if (res === undefined) {
+                    console.warn('FlowingShell: toggle requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
+            },
+            switchToBalancedView(issueKey) {
+                const res = callFooter('flowing_switchToBalancedView', [issueKey]);
+                if (res === undefined) {
+                    console.warn('FlowingShell: switchToBalancedView requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
+            },
+            switchToChatView() {
+                // Chat view removed: delegate to collapse on the footer
+                const res = callFooter('flowing_collapse', []);
+                if (res === undefined) {
+                    console.warn('FlowingShell: switchToChatView (collapse) requested but footer API unavailable — no-op');
+                    return undefined;
+                }
+                return res;
+            }
+        };
+    })();
+
+    // Backwards-compatible helpers
+    window.expandFlowing = window.expandFlowing || function (issueKey) { return window.FlowingShell.expand(issueKey); };
+    window.collapseFlowing = window.collapseFlowing || function () { return window.FlowingShell.collapse(); };
+    window.toggleFlowing = window.toggleFlowing || function () { return window.FlowingShell.toggle(); };
+
+    // Centralized handler: open issue details in the Balanced view (delegates to FlowingShell)
+    window.openIssueDetails = window.openIssueDetails || function (issueKey) {
+        try {
+            console.log('🔗 [Global] openIssueDetails -> delegating to FlowingShell for', issueKey);
+            return window.FlowingShell.switchToBalancedView(issueKey);
+        } catch (err) {
+            console.warn('Error delegating openIssueDetails to FlowingShell', err);
+        }
+    };
+    window.closeSidebar = window.closeSidebar || function () { /* no-op */ };
+    window.initRightSidebar = window.initRightSidebar || function () { /* no-op */ };
+    window.setupIssueCardClickHandlers = window.setupIssueCardClickHandlers || function () { /* no-op */ };
+    window.setupMentionSystem = window.setupMentionSystem || function () { /* no-op */ };
+    window.setupAttachmentsSystem = window.setupAttachmentsSystem || function () { /* no-op */ };
+    window.setupCommentShortcuts = window.setupCommentShortcuts || function () { /* no-op */ };
+})();

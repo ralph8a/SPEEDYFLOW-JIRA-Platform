@@ -1,0 +1,11 @@
+﻿{
+  "name": "speedyflow-playwright-tests",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.35.0"
+  },
+  "scripts": {
+    "test": "playwright test --reporter=list"
+  }
+}

@@ -1,63 +1,18 @@
 /**
  * SLA Breach Risk Module
- * Responsible for fetching and normalizing SLA breach risk predictions from
- * the server ML endpoint. Exposes `window.slaBreachRisk.predictSlaBreach(issueKey)`.
- * This module intentionally does not perform any DOM mutations; it only
- * returns a normalized prediction object for consumers to render.
+ * Lightweight wrapper that delegates to the canonical `sla-predictor` module.
+ * Keeps the legacy `predictSlaBreach(issueKey)` API while reusing the
+ * improved predictor implementation.
  */
-(function (global) {
-    'use strict';
+import { predictBreach } from './sla-predictor.js';
 
-    async function predictSlaBreach(issueKey) {
-        if (!issueKey) return null;
+export async function predictSlaBreach(issueKey, ticketData = null, opts = {}) {
+    return await predictBreach(issueKey, ticketData, opts);
+}
 
-        try {
-            const resp = await fetch('/api/models/predict/sla_breach', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ issue_key: issueKey })
-            });
+const api = { predictSlaBreach };
 
-            if (!resp || !resp.ok) return null;
-            const data = await resp.json();
-            const pred = data?.prediction || data;
-            if (!pred) return null;
+// Backwards-compatible global
+try { if (typeof window !== 'undefined') window.slaBreachRisk = window.slaBreachRisk || api; } catch (e) { /* ignore */ }
 
-            // Normalize common fields so consumers have a consistent shape
-            const risk_level = pred.risk_level || pred.risk || pred.level || 'LOW';
-            let breach_probability = null;
-            if (typeof pred.breach_probability === 'number') breach_probability = pred.breach_probability;
-            else if (typeof pred.probability === 'number') breach_probability = pred.probability;
-            else if (pred.breach_probability) {
-                const p = parseFloat(String(pred.breach_probability));
-                if (!Number.isNaN(p)) breach_probability = p;
-            }
-
-            const will_breach = (pred.will_breach !== undefined && pred.will_breach !== null)
-                ? Boolean(pred.will_breach)
-                : (breach_probability !== null ? (breach_probability > 0.5) : false);
-
-            const normalized = Object.assign({}, pred, {
-                risk_level,
-                breach_probability,
-                will_breach
-            });
-
-            // Return normalized prediction (pure function: no side-effects)
-            return normalized;
-        } catch (err) {
-            try { console.warn('sla-breach-risk: fetch failed', err); } catch (e) { }
-            return null;
-        }
-    }
-
-    const api = { predictSlaBreach };
-
-    // Expose on window for classic script consumers
-    try { if (typeof global !== 'undefined') global.slaBreachRisk = global.slaBreachRisk || api; } catch (e) { /* ignore */ }
-
-    // CommonJS / AMD compatibility (if used in tooling)
-    if (typeof module !== 'undefined' && module.exports) module.exports = api;
-    else if (typeof define === 'function' && define.amd) define(() => api);
-
-})(typeof window !== 'undefined' ? window : this);
+export default api;

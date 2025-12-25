@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -23,16 +23,9 @@
   <!-- THEME BLOCKER: Prevents flash by applying theme BEFORE CSS renders -->
   <script src="/static/js/theme-blocker.js"></script>
   <!-- FlowingContext shim removed (deprecated) -->
-
-    <!-- SVG Icons Module - Centralized icon library -->
-  <!-- Load authoritative SVGIcons implementation early to avoid race conditions -->
-  <script src="/static/js/utils/svg-icons.js?v={{ timestamp }}"></script>
-  <!-- Bridge: will only inject if authoritative implementation is missing -->
-  <script src="/static/js/svg-icons.js?v={{ timestamp }}"></script>
-  
   
   <!-- PRIMARY CSS BUNDLE: All production styles orchestrated -->
-  <link rel="stylesheet" href="/static/css/app.bundle.css?v={{ timestamp }}">
+  <link rel="stylesheet" href="/static/css/app.bundle.css?v=1766541386">
   
     <!-- The following component CSS files were consolidated into app.bundle.css
       to reduce requests and ensure consistent cascade ordering:
@@ -49,7 +42,7 @@
     <!-- Chart.js for interactive charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- Emoji -> SVG runtime replacer (uses SVGIcons.render) -->
-    <script src="/static/js/utils/emoji-replacer.js?v={{ timestamp }}"></script>
+    <script src="/static/js/utils/emoji-replacer.js?v=1766541386"></script>
   
 </head>
 <body class="theme-dark">
@@ -264,48 +257,53 @@
 
       <!-- Constants & Configuration (MUST load first) -->
   <script src="/static/js/constants/card-sizing.js"></script>
-  <script type="module" src="/static/js/modules/sla-breach-risk.js?v={{ timestamp }}"></script>
-  <script type="module" src="/static/js/modules/sla-predictor.js?v={{ timestamp }}"></script>
-  <script type="module" src="/static/js/sla-monitor.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/sla-breach-risk.js?v=1766541386"></script>
+  <script src="/static/js/modules/sla-predictor.js?v=1766541386"></script>
+  <script src="/static/js/sla-monitor.js?v=1766541386"></script>
   
-
+  <!-- SVG Icons Module - Centralized icon library -->
+  <!-- Load authoritative SVGIcons implementation early to avoid race conditions -->
+  <script src="/static/js/utils/svg-icons.js?v=1766541386"></script>
+  <!-- Bridge: will only inject if authoritative implementation is missing -->
+  <script src="/static/js/svg-icons.js?v=1766541386"></script>
+  
   <!-- Theme Manager - Centralized theme control -->
-  <script src="/static/js/theme-manager.js?v={{ timestamp }}"></script>
-  <script src="/static/js/sidebar-toggle.js?v={{ timestamp }}"></script>
-  <script src="/static/js/sidebar-tooltip-manager.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/sidebar-actions.js?v={{ timestamp }}"></script>
-  <script src="/static/js/header-menu-controller.js?v={{ timestamp }}"></script>
+  <script src="/static/js/theme-manager.js?v=1766541386"></script>
+  <script src="/static/js/sidebar-toggle.js?v=1766541386"></script>
+  <script src="/static/js/sidebar-tooltip-manager.js?v=1766541386"></script>
+  <script src="/static/js/modules/sidebar-actions.js?v=1766541386"></script>
+  <script src="/static/js/header-menu-controller.js?v=1766541386"></script>
   <!-- Comments module must load before right-sidebar to provide comment utilities -->
-  <script src="/static/js/modules/comments.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/mentions-autocomplete.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/comments.js?v=1766541386"></script>
+  <script src="/static/js/modules/mentions-autocomplete.js?v=1766541386"></script>
   <!-- Notifications panel removed (disabled) -->
   
   <!-- ===== GLASSMORPHISM & TRANSPARENCY ===== -->
-  <script src="/static/js/glassmorphism-opacity-controller.js?v={{ timestamp }}"></script>
+  <script src="/static/js/glassmorphism-opacity-controller.js?v=1766541386"></script>
   
   <!-- ===== BACKGROUND & AI EFFECTS ===== -->
-  <script src="/static/js/background-manager.js?v={{ timestamp }}"></script>
-  <script src="/static/js/background-selector-ui.js?v={{ timestamp }}"></script>
-  <script src="/static/js/global-stubs.js?v={{ timestamp }}"></script>
+  <script src="/static/js/background-manager.js?v=1766541386"></script>
+  <script src="/static/js/background-selector-ui.js?v=1766541386"></script>
+  <script src="/static/js/global-stubs.js?v=1766541386"></script>
 
   <!-- ===== UI ENHANCEMENTS ===== -->
-  <script src="/static/js/app.js?v={{ timestamp }}"></script>
-  <script src="/static/js/auto-severity-config.js?v={{ timestamp }}"></script>
-  <script src="/static/js/filter-bar-manager.js?v={{ timestamp }}"></script>
-  <script src="/static/js/loading-state-manager.js?v={{ timestamp }}"></script>
-  <script src="/static/js/loading-dots.js?v={{ timestamp }}"></script>
+  <script src="/static/js/app.js?v=1766541386"></script>
+  <script src="/static/js/auto-severity-config.js?v=1766541386"></script>
+  <script src="/static/js/filter-bar-manager.js?v=1766541386"></script>
+  <script src="/static/js/loading-state-manager.js?v=1766541386"></script>
+  <script src="/static/js/loading-dots.js?v=1766541386"></script>
 
   <!-- ===== AI & ML MODULES ===== -->
-  <script src="/static/js/modules/ai-queue-analyzer.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/view-toggle-filters.js?v={{ timestamp }}"></script>
-  <script src="/static/js/modules/sidebar-inline-editor.js?v={{ timestamp }}"></script>
+  <script src="/static/js/modules/ai-queue-analyzer.js?v=1766541386"></script>
+  <script src="/static/js/modules/view-toggle-filters.js?v=1766541386"></script>
+  <script src="/static/js/modules/sidebar-inline-editor.js?v=1766541386"></script>
   <!-- Previously disabled: ml-anomaly-dashboard.js (obsolete) - removed to avoid auto-opening modals -->
 
   <!-- ===== QUICK ACTIONS (Quick Triage & Smart Filters) ===== -->
-  <script src="/static/js/quick-triage.js?v={{ timestamp }}"></script>
-  <script src="/static/js/smart-filters.js?v={{ timestamp }}"></script>
-  <script src="/static/js/smart-functions-modal.js?v={{ timestamp }}"></script>
-  <script src="/static/js/smart-analytics.js?v={{ timestamp }}"></script>
+  <script src="/static/js/quick-triage.js?v=1766541386"></script>
+  <script src="/static/js/smart-filters.js?v=1766541386"></script>
+  <script src="/static/js/smart-functions-modal.js?v=1766541386"></script>
+  <script src="/static/js/smart-analytics.js?v=1766541386"></script>
 
     <!-- FLOWING MVP FOOTER -->
     <!-- Flowing Content (rendered dynamically by `flowing-mvp-footer.js`) -->
@@ -313,16 +311,16 @@
     <!-- Flowing audio utilities removed (deprecated) -->
 
   <!-- Attachments helper module (ES module) - make available before footer loads -->
-  <script type="module" src="/static/js/modules/balanced-view-renderer.js?v={{ timestamp }}"></script>
-  <script type="module" src="/static/js/attachments-module.js?v={{ timestamp }}"></script>
+  <script type="module" src="/static/js/modules/balanced-view-renderer.js?v=1766541386"></script>
+  <script type="module" src="/static/js/attachments-module.js?v=1766541386"></script>
 
-  <script type="module" data-flowing-footer src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
+  <script type="module" data-flowing-footer src="/static/js/flowing-mvp-footer.js?v=1766541386"></script>
   <!-- Loader fallback: ensures footer script is loaded if original request failed -->
-  <script src="/static/js/flowing-mvp-loader.js?v={{ timestamp }}"></script>
+  <script src="/static/js/flowing-mvp-loader.js?v=1766541386"></script>
 
 
   <!-- User Setup Modal -->
-  <script src="/static/js/user-setup-modal.js?v={{ timestamp }}"></script>
+  <script src="/static/js/user-setup-modal.js?v=1766541386"></script>
 
   <!-- (duplicate script block removed) -->
 
