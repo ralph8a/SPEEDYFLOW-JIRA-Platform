@@ -5,9 +5,11 @@
 
     function loaded() {
         console.log('🔁 Flowing MVP loader: footer script loaded');
-        // If the script created the instance, log it
+        // If the script created the instance, log it. Also accept Flowing-V2 as a valid orchestrator.
         if (window[FOOTER_GLOBAL]) {
             console.log('✅ FlowingFooter instance available');
+        } else if (window.flowingV2) {
+            console.log('✅ FlowingV2 instance available (using Flowing-V2 as orchestrator)');
         } else {
             console.warn('⚠️ FlowingFooter instance not found after load');
         }
@@ -20,15 +22,39 @@
             return Promise.resolve(true);
         }
 
-        // If script tag already exists and is loaded, wait shortly for init
+        // If script tag already exists, attempt to wait for it to initialize properly.
         const existing = Array.from(document.getElementsByTagName('script')).find(s => s.src && s.src.indexOf('/static/js/flowing-mvp-footer.js') !== -1);
         if (existing) {
+            // If instance already present, resolve immediately
+            if (window[FOOTER_GLOBAL] || window.flowingV2) {
+                loaded();
+                return Promise.resolve(true);
+            }
+
             return new Promise((resolve) => {
-                // Wait a short period for initialization
-                setTimeout(() => {
-                    if (window[FOOTER_GLOBAL]) { loaded(); resolve(true); }
-                    else { console.warn('Flowing MVP loader: script present but instance missing'); resolve(false); }
-                }, 400);
+                let settled = false;
+
+                // If the existing script supports load events, listen for it (works for normal and module scripts)
+                try {
+                    existing.addEventListener('load', () => {
+                        if (window[FOOTER_GLOBAL] || window.flowingV2) { loaded(); settled = true; resolve(true); }
+                        else { /* allow fallback checks below */ }
+                    });
+                    existing.addEventListener('error', (e) => { console.error('❌ Flowing MVP loader: footer script errored while loading', e); if (!settled) { settled = true; resolve(false); } });
+                } catch (e) { /* ignore addEventListener errors */ }
+
+                // Poll for a short duration to allow module scripts to execute (modules are deferred)
+                let tries = 0;
+                const iv = setInterval(() => {
+                    tries++;
+                    if (window[FOOTER_GLOBAL] || window.flowingV2) {
+                        clearInterval(iv);
+                        if (!settled) { settled = true; loaded(); resolve(true); }
+                    } else if (tries > 20) { // ~4 seconds total (20 * 200ms)
+                        clearInterval(iv);
+                        if (!settled) { settled = true; console.warn('Flowing MVP loader: script present but instance missing'); resolve(false); }
+                    }
+                }, 200);
             });
         }
 

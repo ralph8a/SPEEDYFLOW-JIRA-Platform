@@ -2309,7 +2309,7 @@ async function renderKanban() {
           <div class="issue-card-key" id="key-${issue.key}">${issue.key}</div>
           ${severityBadgeHtml}
           ${timeAgo ? `<span class="issue-card-time">🕒 ${timeAgo}</span>` : ''}
-          <button class="issue-details-btn" data-issue-key="${issue.key}" title="View Details">
+          <button class="issue-details-btn issuedetailsbutton" data-issue-key="${issue.key}" title="View Details">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 18l6-6-6-6"/>
             </svg>
@@ -2468,21 +2468,75 @@ async function renderKanban() {
     buttons.forEach((btn, i) => {
       console.log(`🔍 [Debug] Button ${i + 1}:`, btn.getAttribute('data-issue-key'), 'visible:', btn.offsetParent !== null);
 
-      // Force setup this button manually if needed
-      if (!btn.onclick) {
-        console.log('🔧 [Force] Setting up button manually:', btn.getAttribute('data-issue-key'));
-        const issueKey = btn.getAttribute('data-issue-key');
-        btn.onclick = function () {
-          console.log('🎯 [Manual] Manual onclick for:', issueKey);
-          if (window.openIssueDetails) {
-            window.openIssueDetails(issueKey);
-          }
-        };
-        btn.style.background = 'rgba(255, 0, 0, 0.5)'; // Red to identify manual setup
-      }
+      // Centralized handler: wire kanban card button to FlowingV2 show/hide + loader.
+      try {
+        const issueKey = btn.getAttribute('data-issue-key') || btn.dataset.issueKey;
+        // Avoid re-binding
+        if (!btn._flowingBound) {
+          btn.addEventListener('click', async function (e) {
+            try {
+              e.preventDefault();
+              e.stopPropagation();
+              if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
+                // If visible, hide; otherwise load the ticket (which will call show())
+                try {
+                  if (typeof window.flowingV2.isVisible === 'function' && window.flowingV2.isVisible()) {
+                    window.flowingV2.hide();
+                    return;
+                  }
+                } catch (e) { /* ignore */ }
+                try { await window.flowingV2.loadTicketIntoBalancedView(issueKey); } catch (err) { console.warn('flowingV2 load failed', err); }
+                return;
+              }
+              // Fallback to legacy global
+              if (typeof window.openIssueDetails === 'function') {
+                window.openIssueDetails(issueKey);
+                return;
+              }
+            } catch (err) { console.warn('details button handler failed', err); }
+          }, { passive: false });
+          btn._flowingBound = true;
+        }
+      } catch (e) { console.warn('Could not bind details button', e); }
     });
   }, 100);
 }
+
+// Delegated handler: ensure any dynamically-added kanban card details buttons
+// wired to FlowingV2 hide/show + loader. This avoids binding in multiple places.
+(function () {
+  try {
+    if (typeof window === 'undefined') return;
+    if (window._flowingDetailsDelegated) return;
+    document.addEventListener('click', async function (e) {
+      try {
+        const btn = e.target && e.target.closest && e.target.closest('.issuedetailsbutton');
+        if (!btn) return;
+        const issueKey = btn.getAttribute('data-issue-key') || (btn.dataset && btn.dataset.issueKey) || (btn.closest && btn.closest('[data-issue-key]') && btn.closest('[data-issue-key]').getAttribute('data-issue-key'));
+        if (!issueKey) return;
+        // If a specific handler was bound already, let it handle the event
+        if (btn._flowingBound) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
+          try {
+            if (typeof window.flowingV2.isVisible === 'function' && window.flowingV2.isVisible()) {
+              window.flowingV2.hide();
+              return;
+            }
+          } catch (__) { /* ignore */ }
+          try { await window.flowingV2.loadTicketIntoBalancedView(issueKey); } catch (err) { console.warn('flowingV2 load failed', err); }
+          return;
+        }
+        if (typeof window.openIssueDetails === 'function') {
+          window.openIssueDetails(issueKey);
+          return;
+        }
+      } catch (err) { console.warn('delegated details handler failed', err); }
+    }, { passive: false });
+    window._flowingDetailsDelegated = true;
+  } catch (e) { console.warn('Could not attach delegated details handler', e); }
+})();
 
 /**
  * Apply SLA styling to all visible ticket keys

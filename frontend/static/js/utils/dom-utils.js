@@ -179,21 +179,8 @@ export function hide(element) {
  * @param {HTMLElement} element - Element to toggle
  * @param {boolean} force - Force show (true) or hide (false)
  */
-export function toggle(element, force = undefined) {
-  if (!element) return;
-  if (force === true) {
-    show(element);
-  } else if (force === false) {
-    hide(element);
-  } else {
-    const attrHidden = (element.getAttribute && element.getAttribute('aria-hidden') === 'true');
-    if (attrHidden || element.classList.contains('hidden') || element.style.display === 'none') {
-      show(element);
-    } else {
-      hide(element);
-    }
-  }
-}
+// NOTE: toggle() helper removed in favor of explicit show()/hide() semantics.
+// Use exported show(element) or hide(element) for deterministic visibility control.
 
 /**
  * Get/set element data attributes

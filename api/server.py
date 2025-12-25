@@ -1067,6 +1067,50 @@ def api_get_field_definitions():
         logger.error(f"Error getting field definitions: {e}")
         return {'error': str(e)}, 500
 
+# Serve data files (e.g. CUSTOM_FIELDS_REFERENCE.json) from repository `data/` folder
+@app.route('/data/<path:filename>')
+def serve_data_file(filename):
+    """Serve static JSON or other data files from the project's `data/` directory.
+
+    This avoids 404s for frontend requests like `/data/CUSTOM_FIELDS_REFERENCE.json`.
+    """
+    try:
+        data_dir = os.path.join(BASE_DIR, 'data')
+        return send_from_directory(data_dir, filename)
+    except Exception as e:
+        logger.warning(f"Data file not found or error serving {filename}: {e}")
+        return jsonify({'success': False, 'error': 'Data file not found', 'filename': filename}), 404
+
+
+# ML stub endpoints when ML is disabled
+if DISABLE_ML:
+    @app.route('/ml/predict/breach', methods=['POST'])
+    def ml_predict_breach_stub():
+        logger.info('ML disabled: received request to /ml/predict/breach')
+        return jsonify({
+            'success': False,
+            'error': 'ML_DISABLED',
+            'message': 'ML prediction endpoints are disabled in this environment.'
+        }), 501
+
+    @app.route('/api/models/predict/breach', methods=['POST'])
+    def api_models_predict_breach_stub():
+        logger.info('ML disabled: received request to /api/models/predict/breach')
+        return jsonify({
+            'success': False,
+            'error': 'ML_DISABLED',
+            'message': 'ML prediction endpoints are disabled in this environment.'
+        }), 501
+
+    @app.route('/api/models/predict/sla_breach', methods=['POST'])
+    def api_models_predict_sla_breach_stub():
+        logger.info('ML disabled: received request to /api/models/predict/sla_breach')
+        return jsonify({
+            'success': False,
+            'error': 'ML_DISABLED',
+            'message': 'ML prediction endpoints are disabled in this environment.'
+        }), 501
+
 # Health & Docs -------------------------------------------------------
 @app.route('/health', methods=['GET'])
 def health(): return jsonify({'status': 'ok', 'timestamp': datetime.now().isoformat()})

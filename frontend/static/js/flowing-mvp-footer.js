@@ -1,3 +1,9 @@
+// Ensure Flowing-V2 is explicitly imported so the footer module does
+// not depend on fragile global load ordering. This guarantees the
+// orchestrator is initialized before the footer delegates to it.
+import './Flowing-V2.js';
+import { showRecommendationBanner, hideRecommendationBanner } from './modules/recommendation-banner.js';
+
 /* Minimal Flowing MVP Footer shim
  * Replaces corrupted footer script with a safe, small implementation that
  * avoids top-level returns and delegates to Flowing-V2 / existing modules
@@ -21,37 +27,35 @@
                 try {
                     const btn = document.getElementById('flowingToggleBtn');
                     if (btn && !btn._flowingFooterShimBound) {
-                        btn.addEventListener('click', () => this.toggle());
+                        // Toggle button removed — now only show the balanced view.
+                        btn.addEventListener('click', () => this.show());
                         btn._flowingFooterShimBound = true;
                     }
                 } catch (e) { /* ignore */ }
             }
 
-            expand() {
+            // Visibility is centralized in Flowing-V2. Footer delegates to it when available.
+            show() {
                 try {
-                    if (this.balancedViewEl) {
-                        this.balancedViewEl.style.display = '';
-                        this.balancedViewEl.setAttribute('aria-hidden', 'false');
+                    if (global.flowingV2 && typeof global.flowingV2.show === 'function') {
+                        return global.flowingV2.show();
                     }
-                } catch (e) { console.warn('expand error', e); }
+                    // No-op: rely on canonical FlowingV2 for visibility control
+                    console.warn('FlowingFooter.show: FlowingV2 not available; no-op');
+                } catch (e) { console.warn('show error', e); }
             }
 
-            collapse() {
+            hide() {
                 try {
-                    if (this.balancedViewEl) {
-                        this.balancedViewEl.style.display = 'none';
-                        this.balancedViewEl.setAttribute('aria-hidden', 'true');
+                    if (global.flowingV2 && typeof global.flowingV2.hide === 'function') {
+                        return global.flowingV2.hide();
                     }
-                } catch (e) { console.warn('collapse error', e); }
+                    // No-op: rely on canonical FlowingV2 for visibility control
+                    console.warn('FlowingFooter.hide: FlowingV2 not available; no-op');
+                } catch (e) { console.warn('hide error', e); }
             }
 
-            toggle() {
-                try {
-                    if (!this.balancedViewEl) return;
-                    const hidden = this.balancedViewEl.getAttribute('aria-hidden') === 'true' || this.balancedViewEl.style.display === 'none';
-                    if (hidden) this.expand(); else this.collapse();
-                } catch (e) { console.warn('toggle error', e); }
-            }
+            // NOTE: toggle removed — the app now only exposes explicit show()/hide().
 
             // Switch to balanced view for an issue key
             async switchToBalancedView(issueKey) {
@@ -60,14 +64,13 @@
                     // Prefer Flowing-V2 orchestrator if present
                     if (global.flowingV2 && typeof global.flowingV2.loadTicketIntoBalancedView === 'function') {
                         await global.flowingV2.loadTicketIntoBalancedView(issueKey);
-                        this.expand();
                         return;
                     }
 
-                    // Fallback: try local loader
+                    // Fallback: try local loader and then show via delegated API
                     if (typeof this.loadTicketIntoBalancedView === 'function') {
                         await this.loadTicketIntoBalancedView(issueKey);
-                        this.expand();
+                        try { if (global.flowingV2 && typeof global.flowingV2.show === 'function') global.flowingV2.show(); else this.show(); } catch (__) { /* ignore */ }
                         return;
                     }
 
@@ -166,23 +169,8 @@
     try {
         if (!global._flowingFooter) {
             const inst = createFooterInstance();
-            // Public aliases for compatibility
+            // Minimal export: expose the shim instance only. Legacy aliases removed to avoid stale globals.
             global._flowingFooter = inst;
-            global._flowingFooter.public_switchToBalancedView = inst.switchToBalancedView.bind(inst);
-            global._flowingFooter.public_expand = inst.expand.bind(inst);
-            global._flowingFooter.public_collapse = inst.collapse.bind(inst);
-            global._flowingFooter.public_toggle = inst.toggle.bind(inst);
-
-            global._flowingFooter.flowing_switchToBalancedView = inst.switchToBalancedView.bind(inst);
-            global._flowingFooter.flowing_expand = inst.expand.bind(inst);
-            global._flowingFooter.flowing_collapse = inst.collapse.bind(inst);
-            global._flowingFooter.flowing_toggle = inst.toggle.bind(inst);
-
-            // Deprecated alias with a gentle warning
-            Object.defineProperty(global, 'flowingFooter', {
-                get() { console.warn('window.flowingFooter is deprecated — use window._flowingFooter instead'); return global._flowingFooter; },
-                set(v) { console.warn('Setting window.flowingFooter is deprecated — set window._flowingFooter instead'); global._flowingFooter = v; }
-            });
         }
     } catch (e) {
         console.warn('Error initializing FlowingFooter shim', e);
@@ -360,89 +348,9 @@ _appendNodesOrFragment(target, nodesOrFrag) {
 // Show a confirmation banner in the footer header for applying small field recommendations
 showFieldRecommendationBanner(fieldKey, fieldLabel, suggestedValue, meta = {}) {
     try {
-        const container = document.getElementById('balancedContentContainer');
-        if (!container) return;
-        // remove existing banner
-        const existing = document.getElementById('flowingRecBanner');
-        if (existing) {
-            if (typeof existing.remove === 'function') existing.remove();
-            else if (existing.parentNode) existing.parentNode.removeChild(existing);
-        }
-
-        const banner = document.createElement('div');
-        banner.id = 'flowingRecBanner';
-        // Styling delegated to CSS (#flowingRecBanner)
-
-        const left = document.createElement('div'); left.className = 'flowing-rec-left';
-        const title = document.createElement('div'); title.className = 'flowing-rec-title';
-        title.textContent = `Change ${fieldLabel} to ${suggestedValue}?`;
-        const subtitle = document.createElement('div'); subtitle.className = 'flowing-rec-subtitle';
-        subtitle.textContent = 'This will update the field on the ticket. You can preview or cancel.';
-        left.appendChild(title); left.appendChild(subtitle);
-
-        const rightBtns = document.createElement('div'); rightBtns.className = 'flowing-rec-right-btns';
-        const cancelBtn = document.createElement('button'); cancelBtn.type = 'button'; cancelBtn.textContent = 'Cancel'; cancelBtn.className = 'flowing-rec-cancel';
-        const applyBtn = document.createElement('button'); applyBtn.type = 'button'; applyBtn.textContent = 'Apply'; applyBtn.className = 'flowing-rec-apply';
-        rightBtns.appendChild(cancelBtn); rightBtns.appendChild(applyBtn);
-
-        banner.appendChild(left); banner.appendChild(rightBtns);
-
-        // insert banner after description if present, else at top of balanced container
-        const desc = container.querySelector('.ticket-description-section');
-        if (desc && desc.parentNode) desc.parentNode.insertBefore(banner, desc.nextSibling);
-        else container.insertBefore(banner, container.firstChild);
-
-        cancelBtn.addEventListener('click', () => {
-            if (banner) {
-                if (typeof banner.remove === 'function') banner.remove();
-                else if (banner.parentNode) banner.parentNode.removeChild(banner);
-            }
-        });
-        applyBtn.addEventListener('click', async () => {
-            try {
-                // Attempt to use app API if present
-                if (window.app && typeof window.app.updateIssueField === 'function') {
-                    await window.app.updateIssueField(window._flowingFooter?.context?.selectedIssue, fieldKey, suggestedValue, meta);
-                    if (banner) {
-                        if (typeof banner.remove === 'function') banner.remove();
-                        else if (banner.parentNode) banner.parentNode.removeChild(banner);
-                    }
-                    // update UI: replace field value in grid if present
-                    const fieldNodes = document.querySelectorAll('#essentialFieldsGrid .field-wrapper .field-input');
-                    fieldNodes.forEach(node => {
-                        if ((node.previousElementSibling || {}).textContent && (node.previousElementSibling.textContent || '').toLowerCase().includes(fieldLabel.toLowerCase())) {
-                            node.textContent = suggestedValue;
-                        }
-                    });
-                    console.log('✅ Applied recommendation via app.updateIssueField');
-                    return;
-                }
-                // Fallback: mock apply (no server)
-                // show a brief confirmation in the left pane
-                title.textContent = '';
-                subtitle.textContent = '';
-                const status = document.createElement('div'); status.style.fontWeight = '700'; status.style.color = '#10b981'; status.textContent = 'Recommendation applied (local preview)';
-                left.appendChild(status);
-                setTimeout(() => {
-                    if (banner) {
-                        if (typeof banner.remove === 'function') banner.remove();
-                        else if (banner.parentNode) banner.parentNode.removeChild(banner);
-                    }
-                }, 1600);
-            } catch (err) {
-                console.error('Could not apply recommendation', err);
-                title.textContent = '';
-                subtitle.textContent = '';
-                const statusErr = document.createElement('div'); statusErr.style.fontWeight = '700'; statusErr.style.color = '#ef4444'; statusErr.textContent = 'Failed to apply recommendation';
-                left.appendChild(statusErr);
-                setTimeout(() => {
-                    if (banner) {
-                        if (typeof banner.remove === 'function') banner.remove();
-                        else if (banner.parentNode) banner.parentNode.removeChild(banner);
-                    }
-                }, 2200);
-            }
-        });
+        const flow = (typeof window !== 'undefined' && window.flowingV2) || null;
+        const issueKey = (meta && meta.issueKey) || (flow && flow._lastLoadedIssueKey) || (window._flowingFooter && window._flowingFooter.context && window._flowingFooter.context.selectedIssue) || null;
+        try { return showRecommendationBanner(fieldKey, fieldLabel, suggestedValue, Object.assign({}, meta, { issueKey })); } catch (e) { /* ignore */ }
     } catch (e) { console.warn('showFieldRecommendationBanner error', e); }
 }
 
@@ -635,10 +543,10 @@ _deprecated_renderBalancedContent(issue) {
               <div class="footer-grid-5">
                                 <div class="left-arriba">
                   <div class="left-grid">
-                    <div class="field-wrapper ticket-description-field">
-                      <label class="field-label">${escapeHtml(title)}</label>
-                      <div id="ticketDescriptionContent" class="field-input description-input">${escapeHtml(desc)}</div>
-                    </div>
+                                        <div class="field-wrapper ticket-description-field">
+                                            <label class="field-label">${escapeHtml(title)}</label>
+                                            <div id="ticketDescriptionContent" class="field-value multiline description-input">${escapeHtml(desc).replace(/\n/g, '<br/>')}</div>
+                                        </div>
                   </div>
                 </div>
               </div>
@@ -658,25 +566,11 @@ try {
             const _inst = new FlowingFooter();
             window._flowingFooter = _inst;
 
-            // Public wrapper names expected by legacy callers
+            // Legacy global aliases intentionally removed. Consumers must use
+            // `window.flowingV2` APIs or register modules with Flowing-V2.
             try {
-                // common public aliases
-                window._flowingFooter.public_switchToBalancedView = _inst.switchToBalancedView.bind(_inst);
-                window._flowingFooter.public_expand = _inst.expand.bind(_inst);
-                window._flowingFooter.public_collapse = _inst.collapse.bind(_inst);
-                window._flowingFooter.public_toggle = _inst.toggle.bind(_inst);
-
-                // 'flowing_' prefixed API used by FlowingShell.callFooter
-                window._flowingFooter.flowing_switchToBalancedView = _inst.switchToBalancedView.bind(_inst);
-                window._flowingFooter.flowing_expand = _inst.expand.bind(_inst);
-                window._flowingFooter.flowing_collapse = _inst.collapse.bind(_inst);
-                window._flowingFooter.flowing_toggle = _inst.toggle.bind(_inst);
-
-                // Expose a lightweight proxy object `window.flowingFooter` for older code
-                window.flowingFooter = window.flowingFooter || {};
-                ['switchToBalancedView', 'expand', 'collapse', 'toggle', 'renderBalancedContent', 'renderAttachments'].forEach(fn => {
-                    if (typeof _inst[fn] === 'function') window.flowingFooter[fn] = _inst[fn].bind(_inst);
-                });
+                // Expose only the shim instance on `window._flowingFooter` to aid
+                // discovery; do NOT create legacy alias methods or proxy objects.
             } catch (e) { console.warn('Could not attach footer compatibility shims', e); }
 
             // Central registry for Flowing-related singletons so other modules

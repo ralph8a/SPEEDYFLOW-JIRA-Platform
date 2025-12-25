@@ -2,6 +2,7 @@
 // Minimal, DOM-focused renderer used by Flowing-V2 for the balanced/footer UI.
 // Uses the project's CUSTOM_FIELDS_REFERENCE mapping when available to
 // render custom fields with correct labels and ordering.
+import { show, hide } from '../utils/dom-utils.js';
 
 export async function renderBalancedContent(issue) {
     try {
@@ -45,6 +46,8 @@ export async function renderBalancedContent(issue) {
 
         const summary = escapeHtml(issue && (issue.summary || issue.key) || 'No title');
         const description = escapeHtml(formatValue(issue && (issue.description || getField('description'))));
+        const reporterObj = getField('reporter') || (issue && issue.fields && issue.fields.reporter) || null;
+        const reporterName = reporterObj && (reporterObj.displayName || reporterObj.name || reporterObj.key) ? String(reporterObj.displayName || reporterObj.name || reporterObj.key) : '';
 
         // Attempt to load the custom-fields mapping (non-blocking fallback to fetch)
         let mapping = window.CUSTOM_FIELDS_REFERENCE || window.customFieldsReference || null;
@@ -71,9 +74,52 @@ export async function renderBalancedContent(issue) {
         };
 
         const renderFieldBlock = (label, rawVal, opts = {}) => {
-            const v = escapeHtml(formatValue(rawVal));
-            const style = opts.fullWidth ? ' style="flex-basis:100%"' : '';
-            return `<div class="field-wrapper"${style}><label class="field-label">${escapeHtml(label)}</label><div class="field-input">${v}</div></div>`;
+            const fullWidth = !!opts.fullWidth;
+            const forceMultiline = !!opts.forceMultiline;
+
+            const makeSafe = (s) => escapeHtml(String(s === null || s === undefined ? '' : s));
+
+            let valueHtml = '';
+
+            try {
+                if (rawVal === null || rawVal === undefined) {
+                    valueHtml = '';
+                } else if (Array.isArray(rawVal)) {
+                    const items = rawVal.map(it => {
+                        if (it === null || it === undefined) return '';
+                        if (typeof it === 'object') return makeSafe(it.name || it.value || it.displayName || JSON.stringify(it));
+                        return makeSafe(it);
+                    }).filter(Boolean);
+                    // Prefer chips for modest-length lists, otherwise collapse to comma list
+                    if (items.length > 0 && items.length <= 8 && items.every(it => it.length < 40)) {
+                        valueHtml = `<div class="chip-list">${items.map(x => `<span class="chip">${x}</span>`).join('')}</div>`;
+                    } else {
+                        valueHtml = makeSafe(items.join(', '));
+                    }
+                } else if (typeof rawVal === 'object') {
+                    // Object-ish values: show a human-friendly string
+                    const fv = formatValue(rawVal);
+                    valueHtml = makeSafe(fv);
+                } else {
+                    const text = String(rawVal);
+                    // preserve newlines by converting to <br/> after escaping
+                    const escaped = makeSafe(text);
+                    if (/\n/.test(text)) valueHtml = escaped.replace(/\n/g, '<br/>');
+                    else valueHtml = escaped;
+                }
+            } catch (e) { valueHtml = makeSafe(formatValue(rawVal)); }
+
+            // Decide classes for the value container
+            const valueClasses = ['field-value'];
+            // heuristics for multiline/scroll
+            try {
+                const rawStr = (typeof rawVal === 'string') ? rawVal : (Array.isArray(rawVal) ? rawVal.join(', ') : JSON.stringify(rawVal || ''));
+                if (forceMultiline || /\n/.test(String(rawStr)) || String(rawStr).length > 180 || (Array.isArray(rawVal) && rawVal.length > 6)) valueClasses.push('multiline');
+                if (String(rawStr).length > 500) valueClasses.push('auto-scroll');
+            } catch (e) { /* ignore */ }
+
+            const style = fullWidth ? ' style="grid-column: 1 / -1;"' : '';
+            return `<div class="field-wrapper"${style}><label class="field-label">${escapeHtml(label)}</label><div class="${valueClasses.join(' ')}">${valueHtml}</div></div>`;
         };
 
         const humanizeKey = (k) => {
@@ -86,7 +132,9 @@ export async function renderBalancedContent(issue) {
         };
 
         // Prioritized essential fields (canonical names); mapping labels will override when available
-        const prioritizedKeys = ['priority', 'assignee', 'status', 'reporter', 'summary'];
+        // Note: 'reporter' is intentionally excluded here because reporter contact info
+        // is shown in the contact card located in the top-left.
+        const prioritizedKeys = ['priority', 'assignee', 'status', 'summary'];
         const displayedKeys = new Set();
         let longCustomFieldsHTML = '';
         let fieldsHtml = '';
@@ -143,7 +191,9 @@ export async function renderBalancedContent(issue) {
             Object.keys(allObj).forEach(k => {
                 if (!k) return;
                 if (displayedKeys.has(k)) return;
+                // Exclude large system collections and contact-like fields
                 if (/^(attachment|comment|worklog|issuelinks|timetracking)$/i.test(k)) return;
+                if (/(email|phone|contact|reporter)/i.test(k)) return;
                 const raw = allObj[k];
                 const val = formatValue(raw);
                 if (!val) return;
@@ -153,16 +203,18 @@ export async function renderBalancedContent(issue) {
 
         if (longCustomFieldsHTML) fieldsHtml = `${longCustomFieldsHTML}${fieldsHtml}`;
 
-        // Inject template
+        // Inject template using a 6-column top grid and a 4-column bottom grid
+        // Layout: column 1 (left) = contact card + comments; columns 2-5 = fields; column 6 (right) = description (long content)
         container.innerHTML = `
-            <div id="BalancedMain" class="footer-grid-5">
-                <div class="left-arriba widget widget-comments" role="region" aria-label="Comments">
+            <div id="BalancedMain" class="footer-grid-6">
+                <div class="left-arriba widget widget-contacts" role="region" aria-label="Contact and comments">
+                    <div id="contactCardContainer" class="contact-card-container"></div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+                        <h4>Chat with ${escapeHtml(reporterName || 'Reporter')}</h4>
+                        <span id="commentCountFooter">(0)</span>
+                    </div>
                     <div class="comments-section">
                         <div class="attachments-preview-footer" id="AttachmentsPreviewFooter"><div class="attachments-list" id="AttachmentsListFooter"></div></div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <h4>Comments</h4>
-                            <span id="commentCountFooter">(0)</span>
-                        </div>
                         <div class="comment-composer">
                             <textarea id="footerCommentText" placeholder="Write a comment..."></textarea>
                             <div style="display:flex; flex-direction:column; gap:8px;">
@@ -174,41 +226,88 @@ export async function renderBalancedContent(issue) {
                     </div>
                 </div>
 
-                <div class="description-block widget widget-description" role="region" aria-label="Description and fields">
-                    <div class="ticket-description-field">
-                        <label class="field-label">Descripción</label>
-                        <div id="ticketDescriptionContent" class="field-input description-input">${description}</div>
-                    </div>
-                    <div id="essentialFieldsGrid" class="essential-fields-grid">${fieldsHtml}</div>
+                <div class="top-fields">
+                    <div id="essentialFieldsGrid" class="essential-fields-grid fields-grid">${fieldsHtml}</div>
                     <div style="display:flex; justify-content:flex-end;"><button id="toggleAllFieldsBtn" class="all-fields-toggle">Show all fields</button></div>
-                    <div id="allFieldsPanel" class="all-fields-panel" style="display:none;">${remainingFieldsHTML || '<div style="color:#6b7280;padding:8px;">No additional fields</div>'}</div>
+                    <div id="allFieldsPanel" class="all-fields-panel hidden">${remainingFieldsHTML || '<div style="color:#6b7280;padding:8px;">No additional fields</div>'}</div>
                 </div>
 
-                <div class="sla-monitor-wrapper widget widget-sla" role="region" aria-label="SLA">
-                    <div id="slaMonitorContainer" class="sla-monitor-container">Loading SLA...</div>
+                <div class="right-abajo widget widget-description" role="region" aria-label="Description and fields">
+                    <div class="ticket-description-field">
+                            <label class="field-label">Descripción</label>
+                            <div id="ticketDescriptionContent" class="field-value multiline description-input">${description.replace(/\n/g, '<br/>')}</div>
+                        </div>
                 </div>
 
-                <div class="breach-wrapper widget widget-breach" role="region" aria-label="Breach risk">
-                    <div class="breach-risk-content"></div>
-                </div>
+                <div class="purple-divider" aria-hidden="true"></div>
 
-                <div class="attachments-section widget widget-attachments" role="region" aria-label="Attachments">
-                    <h4>Attachments</h4>
-                    <div id="AttachmentsListRight" class="attachments-grid"></div>
-                    <div id="AttachmentsListHeader" class="attachments-grid"></div>
+                <div class="bottom-grid">
+                    <div class="attachments-section widget widget-attachments" role="region" aria-label="Attachments">
+                        <h4>Attachments</h4>
+                        <div id="AttachmentsListRight" class="attachments-grid"></div>
+                        <div id="AttachmentsListHeader" class="attachments-grid"></div>
+                    </div>
+
+                    <div class="sla-monitor-wrapper widget widget-sla" role="region" aria-label="SLA">
+                        <div id="slaMonitorContainer" class="sla-monitor-container">Loading SLA...</div>
+                    </div>
+
+                    <div class="breach-wrapper widget widget-breach" role="region" aria-label="Breach risk">
+                        <div class="breach-risk-content"></div>
+                    </div>
+
+                    <div class="ml-recommendations widget widget-ml" role="region" aria-label="Recommendations">
+                        <h4>Recommendations</h4>
+                        <div id="mlRecommendationsContainer"></div>
+                    </div>
                 </div>
             </div>
         `;
 
-        // Attach toggle handler
+        // Attempt to render contact card into top-left container (if reporter data present)
+        try {
+            const contactTarget = '#contactCardContainer';
+            const reporterContact = {};
+            if (reporterObj) {
+                reporterContact.name = reporterObj.displayName || reporterObj.name || '';
+                reporterContact.email = reporterObj.emailAddress || reporterObj.email || '';
+                reporterContact.phone = reporterObj.phone || '';
+                reporterContact.avatarUrl = (reporterObj.avatarUrls && (reporterObj.avatarUrls['48x48'] || reporterObj.avatarUrls['24x24'])) || reporterObj.avatarUrl || reporterObj.avatar || '';
+                reporterContact.title = reporterObj.title || '';
+                reporterContact.organization = reporterObj.organization || '';
+            }
+            (function tryShowContact() {
+                try {
+                    let contactModule = null;
+                    if (typeof window !== 'undefined') {
+                        try { if (window.flowingV2 && typeof window.flowingV2.getModule === 'function') contactModule = window.flowingV2.getModule('contactCard'); } catch (__) { }
+                        if (!contactModule && window.contactCard) contactModule = window.contactCard;
+                    }
+                    if (contactModule && typeof contactModule.showContactCard === 'function') {
+                        try { contactModule.showContactCard(reporterContact, { containerSelector: contactTarget, autoClose: false }); return; } catch (e) { /* ignore */ }
+                    }
+                    // fallback: dynamic import
+                    try {
+                        import('/static/js/modules/contact-card.js?v=' + Date.now()).then(m => { try { if (m && typeof m.showContactCard === 'function') m.showContactCard(reporterContact, { containerSelector: contactTarget, autoClose: false }); } catch (e) { /* ignore */ } }).catch(() => { });
+                    } catch (e) { /* ignore */ }
+                } catch (e) { /* ignore */ }
+            })();
+        } catch (e) { /* ignore */ }
+
+        // Attach toggle handler -> refactored to explicit show/hide using utils
         try {
             const toggleBtn = container.querySelector('#toggleAllFieldsBtn');
             const panel = container.querySelector('#allFieldsPanel');
             if (toggleBtn && panel) {
                 toggleBtn.addEventListener('click', () => {
-                    const hidden = panel.style.display === 'none' || !panel.style.display;
-                    panel.style.display = hidden ? 'block' : 'none';
-                    toggleBtn.textContent = hidden ? 'Hide all fields' : 'Show all fields';
+                    const isHidden = panel.classList.contains('hidden') || panel.getAttribute('aria-hidden') === 'true' || panel.style.display === 'none';
+                    if (isHidden) {
+                        show(panel, 'block');
+                        toggleBtn.textContent = 'Hide all fields';
+                    } else {
+                        hide(panel);
+                        toggleBtn.textContent = 'Show all fields';
+                    }
                 });
             }
         } catch (e) { /* ignore */ }

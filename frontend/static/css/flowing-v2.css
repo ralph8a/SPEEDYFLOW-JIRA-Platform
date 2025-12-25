@@ -315,3 +315,226 @@
     padding: 10px;
     border: 1px solid rgba(255, 255, 255, 0.4);
 }
+
+/* Balanced grid layout: top area uses a 6-column grid (column 1 and 6 reserved for long content),
+   bottom area uses a 4-column grid for attachments / SLA / breach / ml */
+#BalancedMain.footer-grid-6 {
+    display: grid;
+    /* make columns 1 and 6 slightly wider to host long content */
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1.5fr;
+    /* ensure a sensible minimum height for field grid rows so variable content doesn't collapse */
+    grid-auto-rows: minmax(64px, auto);
+    gap: var(--flowing-gap);
+    align-items: start;
+}
+
+/* Column 1: left column for contact card + comments */
+#BalancedMain.footer-grid-6 .left-arriba {
+    grid-column: 1 / 2;
+}
+
+/* Columns 2-5: middle area for prioritized fields (4 columns) */
+#BalancedMain.footer-grid-6 .top-fields {
+    grid-column: 2 / span 4;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+#BalancedMain.footer-grid-6 .fields-grid {
+    display: contents;
+    /* allow inner field-wrapper blocks to flow into the 4-column grid */
+}
+
+/* Field item polish: consistent sizing, overflow handling, and chip/tag layout */
+#BalancedMain.footer-grid-6 .top-fields .field-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 8px;
+    min-height: 64px;
+    align-items: stretch;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    transition: box-shadow 140ms ease, transform 120ms ease;
+}
+
+#BalancedMain.footer-grid-6 .top-fields .field-wrapper:hover {
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.03);
+    transform: translateY(-2px);
+}
+
+#BalancedMain.footer-grid-6 .top-fields .field-label {
+    font-size: 0.85rem;
+    color: var(--flowing-muted);
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+#BalancedMain.footer-grid-6 .top-fields .field-value {
+    font-size: 0.95rem;
+    color: #0f172a;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Values that should allow multiline rendering */
+#BalancedMain.footer-grid-6 .top-fields .field-value.multiline {
+    white-space: normal;
+    display: -webkit-box;
+    line-clamp: 4;
+    /* clamp to 4 lines where supported */
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-height: calc(1.3rem * 4.6);
+}
+
+/* Backwards compatibility: legacy modules may query .field-input; map basic behaviors */
+#BalancedMain.footer-grid-6 .top-fields .field-input {
+    font-size: 0.95rem;
+    color: #0f172a;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+#BalancedMain.footer-grid-6 .top-fields .field-input.multiline {
+    white-space: normal;
+    display: -webkit-box;
+    line-clamp: 4;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-height: calc(1.3rem * 4.6);
+}
+
+#BalancedMain.footer-grid-6 .top-fields .field-input.auto-scroll {
+    max-height: 6.4rem;
+    overflow: auto;
+    white-space: normal;
+}
+
+/* Allow long content to scroll inside the field value if needed */
+#BalancedMain.footer-grid-6 .top-fields .field-value.auto-scroll {
+    max-height: 6.4rem;
+    overflow: auto;
+    white-space: normal;
+}
+
+/* Chip / tag lists inside fields */
+#BalancedMain.footer-grid-6 .top-fields .field-value .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+#BalancedMain.footer-grid-6 .top-fields .chip {
+    background: #f3f4f6;
+    color: #111827;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Make sure images/icons in values don't overflow */
+#BalancedMain.footer-grid-6 .top-fields .field-value img,
+#BalancedMain.footer-grid-6 .top-fields .field-value svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Align action controls to the end of the field row if present */
+#BalancedMain.footer-grid-6 .top-fields .field-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* Ensure every field grid cell stretches to fill its track so vertical spacing is consistent */
+#BalancedMain.footer-grid-6 .top-fields>.field-wrapper {
+    align-self: stretch;
+}
+
+/* Ensure the expandable panel spans all four field columns */
+#BalancedMain.footer-grid-6 .top-fields #allFieldsPanel {
+    grid-column: 1 / -1;
+}
+
+/* Place the toggle button at the end of the fields row */
+#BalancedMain.footer-grid-6 .top-fields .all-fields-toggle {
+    grid-column: 1 / -1;
+    justify-self: end;
+}
+
+/* Column 6: right column reserved for long description/content */
+#BalancedMain.footer-grid-6 .right-abajo {
+    grid-column: 6 / 7;
+}
+
+/* When used within the grid, allow right column to size by the grid, not a fixed width */
+#BalancedMain.footer-grid-6 .right-abajo {
+    width: auto;
+}
+
+.purple-divider {
+    grid-column: 1 / -1;
+    height: 6px;
+    background: linear-gradient(90deg, rgba(111, 66, 193, 0.95), rgba(111, 66, 193, 0.4));
+    border-radius: 4px;
+    opacity: 0.16;
+    margin: 6px 0;
+}
+
+#BalancedMain.footer-grid-6 .bottom-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--flowing-gap);
+    margin-top: 6px;
+}
+
+/* Ensure attachments / SLA / breach cards fill their grid cells */
+#BalancedMain.footer-grid-6 .attachments-section,
+#BalancedMain.footer-grid-6 .sla-monitor-wrapper,
+#BalancedMain.footer-grid-6 .breach-wrapper,
+#BalancedMain.footer-grid-6 .ml-recommendations {
+    background: var(--flowing-bg);
+    border-radius: var(--flowing-radius);
+    padding: 12px;
+    border: 1px solid var(--flowing-border);
+}
+
+/* Small responsive tweak: collapse to column layout on narrow screens */
+@media (max-width: 960px) {
+    #BalancedMain.footer-grid-6 {
+        grid-template-columns: 1fr;
+    }
+
+    #BalancedMain.footer-grid-6 .description-block,
+    #BalancedMain.footer-grid-6 .top-fields,
+    #BalancedMain.footer-grid-6 .bottom-grid {
+        grid-column: 1 / -1;
+    }
+
+    #BalancedMain.footer-grid-6 .top-fields {
+        grid-template-columns: 1fr;
+    }
+
+    #BalancedMain.footer-grid-6 .bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}

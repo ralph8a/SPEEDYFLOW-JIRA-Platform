@@ -256,7 +256,7 @@
             </div>
           </div>
 
-          <div id="balancedView" class="flowing-view balanced-view" style="display:none;" aria-hidden="true">
+          <div id="balancedView" class="flowing-view balanced-view balanced-hidden">
             <div id="balancedContentContainer" class="balanced-content-container"></div>
           </div>
         </div>
@@ -316,7 +316,9 @@
   <script type="module" src="/static/js/modules/balanced-view-renderer.js?v={{ timestamp }}"></script>
   <script type="module" src="/static/js/attachments-module.js?v={{ timestamp }}"></script>
 
-  <script type="module" data-flowing-footer src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
+    <!-- Flowing V2 orchestrator (DI-first) is imported by the footer module
+      to ensure deterministic loading and avoid relying on globals -->
+    <script type="module" data-flowing-footer src="/static/js/flowing-mvp-footer.js?v={{ timestamp }}"></script>
   <!-- Loader fallback: ensures footer script is loaded if original request failed -->
   <script src="/static/js/flowing-mvp-loader.js?v={{ timestamp }}"></script>
 

@@ -382,7 +382,7 @@ class FlowingV2 {
                 // auto-inject CSS for Flowing V2
                 try { this.ensureCssInjected(); } catch (e) { /* ignore */ }
                 // expose API surface and helper to register modules at runtime
-                ['init', 'renderBalancedContent', 'renderAttachments', 'loadComments', 'loadTicketIntoBalancedView', 'renderSLAPanel', 'adjustCommentsHeight', 'setModules', 'registerModule', 'registerModules', 'getModule', 'requireModules', 'listRegisteredModules', 'ensureCssInjected'].forEach(fn => {
+                ['init', 'renderBalancedContent', 'renderAttachments', 'loadComments', 'loadTicketIntoBalancedView', 'renderSLAPanel', 'adjustCommentsHeight', 'show', 'hide', 'isVisible', 'setModules', 'registerModule', 'registerModules', 'getModule', 'requireModules', 'listRegisteredModules', 'ensureCssInjected'].forEach(fn => {
                     if (typeof this[fn] === 'function') window.flowingV2[fn] = this[fn].bind(this);
                 });
                 // expose config
@@ -496,6 +496,64 @@ class FlowingV2 {
         } catch (e) { console.warn('FlowingV2: adjustCommentsHeight failed', e); }
     }
 
+    // Inject a small visibility helper CSS so we can toggle balanced view
+    // visibility via class manipulation instead of setting inline styles.
+    ensureVisibilityCss() {
+        if (typeof document === 'undefined') return;
+        if (this._visibilityCssInjected) return;
+        try {
+            const id = 'flowing-v2-visibility-css';
+            if (document.getElementById(id)) { this._visibilityCssInjected = true; return; }
+            const style = document.createElement('style');
+            style.id = id;
+            style.type = 'text/css';
+            // Hide balanced view only when the 'balanced-hidden' class is present.
+            style.appendChild(document.createTextNode(`\n                .flowing-view.balanced-view.balanced-hidden { display: none !important; }\n            `));
+            (document.head || document.getElementsByTagName('head')[0] || document.documentElement).appendChild(style);
+            this._visibilityCssInjected = true;
+        } catch (e) { /* ignore */ }
+    }
+
+    // === SECTION: Visibility API (centralized show/hide) ===
+    isVisible() {
+        try {
+            const bv = document.getElementById('balancedView') || document.querySelector('.flowing-view.balanced-view') || document.querySelector(this.rootSelector) || this.root;
+            if (!bv) return false;
+            // Visibility is now driven by a single class; if the class 'balanced-hidden'
+            // is present the view is considered hidden.
+            return !bv.classList.contains('balanced-hidden');
+        } catch (e) { return false; }
+    }
+
+    show() {
+        try {
+            if (typeof document === 'undefined') return;
+            if (this.isVisible && this.isVisible()) return;
+            // Ensure helper CSS exists
+            try { this.ensureVisibilityCss(); } catch (_) { }
+            const bv = document.getElementById('balancedView') || document.querySelector('.flowing-view.balanced-view') || document.querySelector(this.rootSelector) || this.root;
+            if (bv) {
+                try { bv.classList.remove('balanced-hidden'); } catch (_) { }
+            }
+            try { this.adjustCommentsHeight(); } catch (_) { }
+        } catch (e) { console.warn('FlowingV2.show failed', e); }
+    }
+
+    hide() {
+        try {
+            if (typeof document === 'undefined') return;
+            try { this.ensureVisibilityCss(); } catch (_) { }
+            const bv = document.getElementById('balancedView') || document.querySelector('.flowing-view.balanced-view') || document.querySelector(this.rootSelector) || this.root;
+            if (bv) {
+                try { bv.classList.add('balanced-hidden'); } catch (_) { }
+            }
+        } catch (e) { console.warn('FlowingV2.hide failed', e); }
+    }
+
+    // toggle() removed intentionally: Flowing-V2 now exposes explicit show() / hide()
+    // and the application should call those methods directly. Removing toggle
+    // avoids ambiguous UI state and prevents accidental toggling from legacy callers.
+
     // === SECTION: Load a ticket and render full balanced view ===
     async loadTicketIntoBalancedView(issueKey, issueObj = null) {
         if (!issueKey && !issueObj) return null;
@@ -571,6 +629,11 @@ class FlowingV2 {
 
             // Adjust UI
             try { this.adjustCommentsHeight(); } catch (e) { /* ignore */ }
+            // Centralized: show the balanced view after rendering
+            try { if (typeof this.show === 'function') this.show(); } catch (e) { /* ignore */ }
+
+            // Remember last loaded issue for other modules (e.g., recommendation banner)
+            try { this._lastLoadedIssueKey = issue && issue.key ? issue.key : null; } catch (e) { /* ignore */ }
 
             return issue || true;
         } catch (e) {
