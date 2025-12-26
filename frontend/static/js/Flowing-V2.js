@@ -51,6 +51,35 @@ import './modules/mentions-autocomplete.js';
 import SlaPredictorModule from './modules/sla-predictor.js';
 import SlaBreachModule from './modules/sla-breach-risk.js';
 
+// Canonical selectors and utility helpers used by FlowingV2 to avoid duplicated queries
+// and to centralize DOM lookup behavior across the app.
+const CANONICAL = {
+    DETAILS_BUTTONS: '.issue-details-btn, .btn-view-details, .issuedetailsbutton, .issue-details-button, .issue-details',
+    COMMENTS_LIST: '.comments-section .comments-list',
+    COMMENT_COUNT: '#commentCountFooter',
+    ATTACHMENTS_CONTAINERS: ['#AttachmentsListRight', '#AttachmentsListFooter', '#AttachmentsListHeader'],
+    BALANCED_MAIN: '#BalancedMain',
+    SLA_MONITOR: '#slaMonitorContainer',
+    ROOT_CANDIDATES: ['#balancedContentContainer', '.flowing-v2-root', '.flowing-view.balanced-view']
+};
+
+function findFirstMatching(selectors) {
+    if (!selectors) return null;
+    if (typeof selectors === 'string') selectors = selectors.split(',').map(s => s.trim());
+    for (const s of selectors) {
+        try {
+            if (s.startsWith('#')) {
+                const el = document.getElementById(s.slice(1));
+                if (el) return el;
+            } else {
+                const el = document.querySelector(s);
+                if (el) return el;
+            }
+        } catch (e) { /* ignore invalid selectors */ }
+    }
+    return null;
+}
+
 // === SECTION: SHARED REGISTRY & IMPORTS ===
 // UniqueVarRegistry is used throughout; FlowingV2 imports canonical modules
 // above so it can be the single orchestrator. Use the comments below to
@@ -186,6 +215,33 @@ class FlowingV2 {
         } catch (e) { /* ignore */ }
     }
 
+    // Attach a canonical delegated handler for issue details buttons.
+    // This does NOT run automatically; call `flowingV2.attachDetailsDelegated()`
+    // from app bootstrap if you want Flowing-V2 to manage delegation.
+    attachDetailsDelegated() {
+        try {
+            if (typeof document === 'undefined') return;
+            if (this._detailsDelegatedBound || window._flowingDetailsDelegated) { this._detailsDelegatedBound = true; return; }
+            document.addEventListener('click', async (e) => {
+                try {
+                    const btn = e.target && e.target.closest && e.target.closest(CANONICAL.DETAILS_BUTTONS);
+                    if (!btn) return;
+                    if (btn._flowingBound) return;
+                    const issueKey = btn.getAttribute('data-issue-key') || (btn.dataset && btn.dataset.issueKey) || (btn.closest && btn.closest('[data-issue-key]') && btn.closest('[data-issue-key]').getAttribute('data-issue-key'));
+                    if (!issueKey) return;
+                    try { e.preventDefault(); e.stopPropagation(); } catch (_) { }
+                    if (typeof window.loadIssueDetails === 'function') {
+                        await window.loadIssueDetails(issueKey);
+                    } else if (window.flowingV2 && typeof window.flowingV2.loadTicketIntoBalancedView === 'function') {
+                        await window.flowingV2.loadTicketIntoBalancedView(issueKey);
+                    }
+                } catch (err) { console.warn('FlowingV2 delegated details handler failed', err); }
+            }, { passive: false });
+            this._detailsDelegatedBound = true;
+            try { window._flowingDetailsDelegated = true; } catch (e) { /* ignore */ }
+        } catch (e) { console.warn('FlowingV2.attachDetailsDelegated failed', e); }
+    }
+
     // === SECTION: Dependency Injection API ===
     // Register a single module by friendly name (accepts short aliases)
     registerModule(name, module) {
@@ -267,27 +323,24 @@ class FlowingV2 {
     createRootContainer(opts = {}) {
         if (typeof document === 'undefined') return null;
         const sel = String(this.rootSelector || '#balancedContentContainer');
-        // Try to find existing node first (safe for any selector)
+
+        // Attempt to find existing element with a safe lookup (handles invalid selectors)
         try {
-            const found = document.querySelector(sel);
+            const found = sel && sel.startsWith('#') ? document.getElementById(sel.slice(1)) : document.querySelector(sel);
             if (found) return found;
         } catch (e) {
-            // ignore invalid selector
+            // ignore invalid selector and continue with known candidates
         }
 
-        // Determine id to use
-        const id = sel.startsWith('#') ? sel.slice(1) : (sel || 'balancedContentContainer');
+        // Try known root candidates (canonical list)
+        const candidate = findFirstMatching(CANONICAL.ROOT_CANDIDATES);
+        if (candidate) return candidate;
 
-        // If an element with the id exists, return it
+        // Build a minimal root container and attach to a sensible parent
         try {
-            const byId = document.getElementById(id);
-            if (byId) return byId;
-        } catch (e) { /* ignore */ }
-
-        // Build root structure
-        try {
+            const rootId = (this.rootSelector && this.rootSelector.startsWith('#')) ? this.rootSelector.slice(1) : 'balancedContentContainer';
             const rootEl = document.createElement('div');
-            rootEl.id = id;
+            rootEl.id = rootId;
             rootEl.className = 'flowing-v2-root';
 
             // Left section (main)
@@ -352,7 +405,7 @@ class FlowingV2 {
             try { parent.appendChild(rootEl); } catch (e) { document.documentElement.appendChild(rootEl); }
 
             // Register the created root in the registry
-            try { this.registry.ensure(id, rootEl, { owner: 'FlowingV2' }); } catch (e) { /* ignore */ }
+            try { this.registry.ensure(rootEl.id, rootEl, { owner: 'FlowingV2' }); } catch (e) { /* ignore */ }
             return rootEl;
         } catch (err) {
             try { console.warn('FlowingV2.createRootContainer failed', err); } catch (__) { }
@@ -382,9 +435,9 @@ class FlowingV2 {
                 // auto-inject CSS for Flowing V2
                 try { this.ensureCssInjected(); } catch (e) { /* ignore */ }
                 // expose API surface and helper to register modules at runtime
-                ['init', 'renderBalancedContent', 'renderAttachments', 'loadComments', 'loadTicketIntoBalancedView', 'renderSLAPanel', 'adjustCommentsHeight', 'show', 'hide', 'isVisible', 'setModules', 'registerModule', 'registerModules', 'getModule', 'requireModules', 'listRegisteredModules', 'ensureCssInjected'].forEach(fn => {
-                    if (typeof this[fn] === 'function') window.flowingV2[fn] = this[fn].bind(this);
-                });
+                    ['init', 'renderBalancedContent', 'renderAttachments', 'loadComments', 'loadTicketIntoBalancedView', 'renderSLAPanel', 'adjustCommentsHeight', 'show', 'hide', 'isVisible', 'setModules', 'registerModule', 'registerModules', 'getModule', 'requireModules', 'listRegisteredModules', 'attachDetailsDelegated', 'ensureCssInjected'].forEach(fn => {
+                        if (typeof this[fn] === 'function') window.flowingV2[fn] = this[fn].bind(this);
+                    });
                 // expose config
                 try { window.flowingV2.cssPath = this.cssPath; } catch (e) { }
                 // expose resolved module references under window.flowingV2.modules for convenience
@@ -428,7 +481,7 @@ class FlowingV2 {
     // === SECTION: Render: Attachments ===
     async renderAttachments(issue) {
         // Use injected attachmentsModule when available, otherwise fall back to window.attachmentsModule
-        const container = document.getElementById('AttachmentsListRight') || document.getElementById('AttachmentsListFooter') || document.getElementById('AttachmentsListHeader');
+        const container = findFirstMatching(CANONICAL.ATTACHMENTS_CONTAINERS);
         if (!container) return null;
         if (!this.attachmentsModule || typeof this.attachmentsModule.renderFullItemsInto !== 'function') {
             console.error('FlowingV2: attachmentsModule not provided. Call flowingV2.setModules({ attachmentsModule }) or init({ attachmentsModule }).');
@@ -458,7 +511,7 @@ class FlowingV2 {
             console.error('FlowingV2: commentsModule not provided. Call flowingV2.setModules({ commentsModule }) or init({ commentsModule }).');
             return null;
         }
-        return this.commentsModule.loadIssueComments(issueKey, { listSelector: '.comments-section .comments-list', countSelector: '#commentCountFooter', order: 'desc' });
+        return this.commentsModule.loadIssueComments(issueKey, { listSelector: CANONICAL.COMMENTS_LIST, countSelector: CANONICAL.COMMENT_COUNT, order: 'desc' });
     }
 
     // === SECTION: SLA API ===
@@ -473,7 +526,7 @@ class FlowingV2 {
     // === SECTION: Layout Helpers ===
     adjustCommentsHeight() {
         try {
-            const container = document.querySelector(this.rootSelector) || document.getElementById('balancedContentContainer');
+            const container = findFirstMatching([this.rootSelector].concat(CANONICAL.ROOT_CANDIDATES));
             if (!container) return;
             const left = container.querySelector('.left-arriba');
             const comments = container.querySelector('.comments-section');
@@ -519,9 +572,8 @@ class FlowingV2 {
         try {
             const bv = document.getElementById('balancedView') || document.querySelector('.flowing-view.balanced-view') || document.querySelector(this.rootSelector) || this.root;
             if (!bv) return false;
-            // Visibility is now driven by a single class; if the class 'balanced-hidden'
-            // is present the view is considered hidden.
-            return !bv.classList.contains('balanced-hidden');
+            // Minimal visibility check: presence of the 'balanced-hidden' class
+            return !(bv.classList && bv.classList.contains('balanced-hidden'));
         } catch (e) { return false; }
     }
 
@@ -529,12 +581,21 @@ class FlowingV2 {
         try {
             if (typeof document === 'undefined') return;
             if (this.isVisible && this.isVisible()) return;
-            // Ensure helper CSS exists
+
+            // Ensure helper CSS exists (lightweight)
             try { this.ensureVisibilityCss(); } catch (_) { }
-            const bv = document.getElementById('balancedView') || document.querySelector('.flowing-view.balanced-view') || document.querySelector(this.rootSelector) || this.root;
+
+            // Locate or create the balanced view container
+            let bv = document.getElementById('balancedView') || document.querySelector('.flowing-view.balanced-view') || document.querySelector(this.rootSelector) || this.root;
+            if (!bv) {
+                try { bv = this.createRootContainer() || this.root; } catch (_) { /* ignore */ }
+            }
+
             if (bv) {
                 try { bv.classList.remove('balanced-hidden'); } catch (_) { }
+                try { if (bv.setAttribute) bv.setAttribute('aria-hidden', 'false'); } catch (_) { }
             }
+
             try { this.adjustCommentsHeight(); } catch (_) { }
         } catch (e) { console.warn('FlowingV2.show failed', e); }
     }
@@ -543,10 +604,14 @@ class FlowingV2 {
         try {
             if (typeof document === 'undefined') return;
             try { this.ensureVisibilityCss(); } catch (_) { }
+
             const bv = document.getElementById('balancedView') || document.querySelector('.flowing-view.balanced-view') || document.querySelector(this.rootSelector) || this.root;
             if (bv) {
                 try { bv.classList.add('balanced-hidden'); } catch (_) { }
+                try { if (bv.setAttribute) bv.setAttribute('aria-hidden', 'true'); } catch (_) { }
             }
+
+            try { this.adjustCommentsHeight(); } catch (_) { }
         } catch (e) { console.warn('FlowingV2.hide failed', e); }
     }
 
@@ -570,58 +635,57 @@ class FlowingV2 {
                 issue = issueObj || null;
             }
 
-            // Try common global caches first
-            try {
-                if (!issue && typeof window !== 'undefined' && window.state && Array.isArray(window.state.issues)) {
-                    issue = window.state.issues.find(i => String(i.key) === String(issueKey)) || issue;
-                }
-                if (!issue && typeof window !== 'undefined' && window.app && window.app.issuesCache && typeof window.app.issuesCache.get === 'function') {
-                    try { issue = await window.app.issuesCache.get(issueKey); } catch (__) { /* ignore */ }
-                }
-            } catch (e) { /* ignore */ }
-
-            // Fallback: fetch minimal issue representation
-            if (!issue) {
+            // Prefer fetching a fresh copy by issueKey when available. Use provided issueObj only as a fallback.
+            if (issueKeyStr) {
                 try {
-                    const keyToFetch = issueKeyStr || issueKey;
-                    const resp = await fetch(`/api/servicedesk/request/${keyToFetch}`);
+                    const resp = await fetch(`/api/servicedesk/request/${encodeURIComponent(issueKeyStr)}`);
                     if (resp && resp.ok) {
                         const d = await resp.json();
-                        issue = d?.data || d;
+                        issue = d?.data || d || issue;
+                    } else {
+                        // fetch failed or not ok -> fallback to provided object if any
+                        if (!issue && issueObj) issue = issueObj;
                     }
-                } catch (e) { /* ignore */ }
+                } catch (e) {
+                    // network/fetch error -> fallback to provided object if available
+                    if (!issue && issueObj) issue = issueObj;
+                }
+            } else {
+                // no issue key provided; use provided issue object if present
+                if (!issue && issueObj) issue = issueObj;
             }
+
+            if (!issue) return null;
 
             // Render balanced content (balanced renderer expects an issue object)
             try {
-                if (issue) {
-                    const content = await this.renderBalancedContent(issue);
-                    const balancedMain = document.getElementById('BalancedMain') || (this.root && this.root.querySelector('#BalancedMain')) || document.querySelector('#BalancedMain');
-                    if (balancedMain) {
-                        // Only replace BalancedMain content if the renderer returned a node/string
-                        if (content && (content.nodeType || typeof content === 'string')) {
-                            try { balancedMain.innerHTML = ''; } catch (__) { /* ignore */ }
-                            if (content.nodeType) balancedMain.appendChild(content);
-                            else balancedMain.innerHTML = content;
-                        } else {
-                            // Renderer likely wrote directly into the DOM; do not clear
-                        }
+                const content = await this.renderBalancedContent(issue);
+                const balancedMain = (this.root && this.root.querySelector(CANONICAL.BALANCED_MAIN)) || findFirstMatching(CANONICAL.BALANCED_MAIN) || document.querySelector(CANONICAL.BALANCED_MAIN);
+                if (balancedMain) {
+                    // Only replace BalancedMain content if the renderer returned a node/string
+                    if (content && (content.nodeType || typeof content === 'string')) {
+                        try { balancedMain.innerHTML = ''; } catch (__) { /* ignore */ }
+                        if (content.nodeType) balancedMain.appendChild(content);
+                        else balancedMain.innerHTML = content;
+                    } else {
+                        // Renderer likely wrote directly into the DOM; do not clear
                     }
                 }
             } catch (e) { console.warn('FlowingV2: renderBalancedContent failed', e); }
 
             // Render attachments and comments (best-effort)
             try { await this.renderAttachments(issue); } catch (e) { /* ignore */ }
-            try { await this.loadComments(issueKey); } catch (e) { /* ignore */ }
+            try { await this.loadComments(issueKeyStr || (issue && issue.key)); } catch (e) { /* ignore */ }
 
             // Render SLA panel into the SLA container
             try {
-                const panelContainer = document.getElementById('slaMonitorContainer') || (this.root && this.root.querySelector('#slaMonitorContainer')) || document.querySelector('#slaMonitorContainer');
+                const panelContainer = (this.root && this.root.querySelector(CANONICAL.SLA_MONITOR)) || findFirstMatching(CANONICAL.SLA_MONITOR) || document.querySelector(CANONICAL.SLA_MONITOR);
                 if (panelContainer) {
                     let panel = null;
                     try {
-                        if (this.slaMonitor && typeof this.slaMonitor.renderSLAPanel === 'function') panel = this.slaMonitor.renderSLAPanel(issueKey);
-                        else if (typeof window !== 'undefined' && window.slaMonitor && typeof window.slaMonitor.renderSLAPanel === 'function') panel = window.slaMonitor.renderSLAPanel(issueKey);
+                        const keyToUse = issueKeyStr || (issue && issue.key);
+                        if (this.slaMonitor && typeof this.slaMonitor.renderSLAPanel === 'function') panel = this.slaMonitor.renderSLAPanel(keyToUse);
+                        else if (typeof window !== 'undefined' && window.slaMonitor && typeof window.slaMonitor.renderSLAPanel === 'function') panel = window.slaMonitor.renderSLAPanel(keyToUse);
                     } catch (e) { console.warn('FlowingV2: slaMonitor render failed', e); }
                     if (panel) {
                         try { panelContainer.innerHTML = ''; } catch (__) { /* ignore */ }
@@ -632,14 +696,15 @@ class FlowingV2 {
 
             // Ensure prediction is requested/published using local ticket data to avoid refetch
             try {
+                const keyToUse = issueKeyStr || (issue && issue.key);
                 if (this.slaMonitor && typeof this.slaMonitor.predictBreachAndPublish === 'function') {
-                    await this.slaMonitor.predictBreachAndPublish(issueKey, issue);
+                    await this.slaMonitor.predictBreachAndPublish(keyToUse, issue);
                 } else if (this.slaPredictor && typeof this.slaPredictor.predictBreach === 'function') {
-                    const pred = await this.slaPredictor.predictBreach(issueKey, issue);
-                    try { const evt = new CustomEvent('sla:prediction', { detail: { issueKey, prediction: pred } }); if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(evt); } catch (e) { /* ignore */ }
+                    const pred = await this.slaPredictor.predictBreach(keyToUse, issue);
+                    try { const evt = new CustomEvent('sla:prediction', { detail: { issueKey: keyToUse, prediction: pred } }); if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(evt); } catch (e) { /* ignore */ }
                 } else if (typeof window !== 'undefined' && window.slaPredictor && typeof window.slaPredictor.predictBreach === 'function') {
-                    const pred = await window.slaPredictor.predictBreach(issueKey, issue);
-                    try { const evt = new CustomEvent('sla:prediction', { detail: { issueKey, prediction: pred } }); if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(evt); } catch (e) { /* ignore */ }
+                    const pred = await window.slaPredictor.predictBreach(keyToUse, issue);
+                    try { const evt = new CustomEvent('sla:prediction', { detail: { issueKey: keyToUse, prediction: pred } }); if (typeof window !== 'undefined' && window.dispatchEvent) window.dispatchEvent(evt); } catch (e) { /* ignore */ }
                 }
             } catch (e) { console.warn('FlowingV2: predictor publish failed', e); }
 
